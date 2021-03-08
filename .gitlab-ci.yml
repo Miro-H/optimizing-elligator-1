@@ -5,11 +5,11 @@ image: ubuntu
 build:
     stage: build
     before_script:
-        - apt update \
-            && DEBIAN_FRONTEND=noninteractive apt -y -q install make \
+        - apt update
+            && DEBIAN_FRONTEND=noninteractive apt -y -q install make
                 build-essential libtool libsubunit-dev autoconf pkg-config texinfo wget
-        - cd /tmp && wget https://github.com/libcheck/check/archive/0.15.2.tar.gz \
-            && tar xvf 0.15.2.tar.gz && cd check-* && autoreconf --install \
+        - cd /tmp && wget https://github.com/libcheck/check/archive/0.15.2.tar.gz
+            && tar xvf 0.15.2.tar.gz && cd check-* && autoreconf --install
             && ./configure --prefix=/usr && make && make check && make install
     script:
         - make all
