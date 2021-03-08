@@ -20,6 +20,8 @@ CFLAGS += -Wall -Werror
 DEPS = $(wildcard $(IDIR)/*.h)
 
 LIBS = -lcheck
+# libcheck is installed in /usr/local/lib, which is not checked by default in gcc
+CFLAGS += -L/usr/local/lib
 
 # Main target, building all tests
 all: compile-example-test
