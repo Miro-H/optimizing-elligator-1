@@ -5,7 +5,7 @@ image: ubuntu
 build:
     stage: build
     before_script:
-        - apt update && apt -y install build-essentials make gcc
+        - apt update && apt -y install build-essential make gcc
     script:
         - make all
     artifacts:
