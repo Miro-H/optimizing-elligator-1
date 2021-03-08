@@ -1,3 +1,7 @@
 # Ignore compiled tests
 bin/*
 !bin/.keep
+
+# Ignore generated log files from tests
+logs/*
+!logs/.keep
