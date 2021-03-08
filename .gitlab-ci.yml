@@ -3,24 +3,23 @@ image: ubuntu
 
 # Build the project
 build:
-  stage: build
-  before_script:
-    - apt update && apt -y install build-essentials make gcc
-  script:
-    - make all
-  artifacts:
-    paths:
-      - tests
-      depending on your build setup it's most likely a good idea to cache outputs to reduce the build time
-      cache:
+    stage: build
+    before_script:
+        - apt update && apt -y install build-essentials make gcc
+    script:
+        - make all
+    artifacts:
         paths:
-          - "tests/src/obj/*.o"
-          - "tests/bin/*"
-          - "src/obj/*.o"
-          - "bin/*"
+            - tests
+    cache:
+        paths:
+            - "tests/src/obj/*.o"
+            - "tests/bin/*"
+            - "src/obj/*.o"
+            - "bin/*"
 
 # Run all tests
 test:
-  stage: test
-  script:
-    - ./tests/scripts/run_all_tests.sh
+    stage: test
+    script:
+        - ./tests/scripts/run_all_tests.sh
