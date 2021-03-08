@@ -21,7 +21,8 @@ DEPS = $(wildcard $(IDIR)/*.h)
 
 LIBS = -lcheck
 # libcheck is installed in /usr/local/lib, which is not checked by default in gcc
-CFLAGS += -L/usr/local/lib
+# but silence the error of clang (used on MacOS), which does not use -L
+CFLAGS += -L/usr/local/lib -Wno-error=unused-command-line-argument
 
 # Main target, building all tests
 all: compile-example-test
