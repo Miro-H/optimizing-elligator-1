@@ -11,14 +11,16 @@ build:
         - make all
     artifacts:
         paths:
-            - "/tmp/check*/"
+            - "/tmp/check*"
             - "$CI_PROJECT_DIR/tests/bin/"
             - "$CI_PROJECT_DIR/bin/"
+            - "/usr/local/lib/"
     cache:
         paths:
-            - "/tmp/check*/"
+            - "/tmp/check*"
             - "$CI_PROJECT_DIR/tests/bin/"
             - "$CI_PROJECT_DIR/bin/"
+            - "/usr/local/lib/"
 
 # Run all tests
 test:
