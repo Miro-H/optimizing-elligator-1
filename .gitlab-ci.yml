@@ -1,31 +1,37 @@
 # Official ubuntu docker image
 image: ubuntu
 
+.install-check-script: &install-check-script
+    - apt update
+    - DEBIAN_FRONTEND=noninteractive apt -y -q install make
+        build-essential libtool libsubunit-dev autoconf pkg-config texinfo wget
+    - cd /tmp
+    - wget https://github.com/libcheck/check/archive/0.15.2.tar.gz
+    - tar xvf 0.15.2.tar.gz && cd check-*
+    - autoreconf --install
+    - ./configure --prefix=/usr
+    - make
+    - make check
+    - make install
+
 # Build the project
 build:
     stage: build
     before_script:
-        - apt update
-        - DEBIAN_FRONTEND=noninteractive apt -y -q install make
-            build-essential libtool libsubunit-dev autoconf pkg-config texinfo wget
-        - cd /tmp
-        - wget https://github.com/libcheck/check/archive/0.15.2.tar.gz
-        - tar xvf 0.15.2.tar.gz && cd check-*
-        - autoreconf --install
-        - ./configure --prefix=/usr
-        - make
-        - make check
-        - make install
+        - [ ! -d /tmp/check-* ] && *install-check-script
     script:
         - cd $CI_PROJECT_DIR/tests
         - make all
+    artifacts:
+        paths:
+            - "/tmp/check*/"
+            - "$CI_PROJECT_DIR/tests/bin/"
+            - "$CI_PROJECT_DIR/bin/"
     cache:
         paths:
-            - "tests/src/obj/*.o"
-            - "tests/bin/*"
-            - "src/obj/*.o"
-            - "bin/*"
-            - "/tmp/check*/*"
+            - "/tmp/check*/"
+            - "$CI_PROJECT_DIR/tests/bin/"
+            - "$CI_PROJECT_DIR/bin/"
 
 # Run all tests
 test:
