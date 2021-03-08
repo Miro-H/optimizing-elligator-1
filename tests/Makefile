@@ -20,9 +20,20 @@ CFLAGS += -Wall -Werror
 DEPS = $(wildcard $(IDIR)/*.h)
 
 LIBS = -lcheck
-# libcheck is installed in /usr/local/lib, which is not checked by default in gcc
-# but silence the error of clang (used on MacOS), which does not use -L
-CFLAGS += -L/usr/local/lib -Wno-error=unused-command-line-argument
+
+ifeq ($(OS),Windows_NT)
+	# Do something windows specific if necessary
+else
+	UNAME_S := $(shell uname -s)
+	ifeq ($(UNAME_S),Darwin)
+		# Do something specific to MacOS if necessary
+	else
+		# Do something linux specific.
+		# libcheck is installed in /usr/local/lib, which is not checked by
+		# default in gcc (but -L is not used on MacOS)
+		CFLAGS += -L/usr/local/lib
+	endif
+endif
 
 # Main target, building all tests
 all: compile-example-test
