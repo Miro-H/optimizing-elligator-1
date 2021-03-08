@@ -12,10 +12,7 @@ build:
             && tar xvf 0.15.2.tar.gz && cd check-* && autoreconf --install
             && ./configure --prefix=/usr && make && make check && make install
     script:
-        - make all
-    artifacts:
-        paths:
-            - tests
+        - cd $CI_PROJECT_PATH/tests && make all
     cache:
         paths:
             - "tests/src/obj/*.o"
