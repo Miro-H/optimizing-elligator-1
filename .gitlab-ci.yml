@@ -1,32 +1,20 @@
 # Official ubuntu docker image
 image: ubuntu
 
-# Build the project
-build:
-    stage: build
+# Build and test the project
+test:
+    stage: test
     before_script:
-        - $CI_PROJECT_DIR/scripts/install-check.sh
+        - $CI_PROJECT_DIR/scripts/install-check.sh "$CI_PROJECT_DIR/check"
     script:
         - cd $CI_PROJECT_DIR/tests
         - make all
-    artifacts:
-        paths:
-            - "/tmp/check*"
-            - "$CI_PROJECT_DIR/tests/bin/"
-            - "$CI_PROJECT_DIR/bin/"
-            - "/usr/local/lib/"
-    cache:
-        paths:
-            - "/tmp/check*"
-            - "$CI_PROJECT_DIR/tests/bin/"
-            - "$CI_PROJECT_DIR/bin/"
-            - "/usr/local/lib/"
-
-# Run all tests
-test:
-    stage: test
-    script:
         - $CI_PROJECT_DIR/tests/scripts/run_all_tests.sh
     artifacts:
         paths:
-            - tests/logs
+            - "$CI_PROJECT_DIR/tests/logs"
+    cache:
+        paths:
+            - "$CI_PROJECT_DIR/check/"
+            - "$CI_PROJECT_DIR/tests/bin/"
+            - "$CI_PROJECT_DIR/bin/"

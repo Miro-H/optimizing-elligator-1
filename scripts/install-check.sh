@@ -21,7 +21,8 @@ if ! pkg-config --modversion check > /dev/null 2>&1; then
         texinfo \
         wget
 
-    cd /tmp
+    mkdir -p "$1"
+    cd "$1"
     wget $CHECK_RELEASE
     tar xvf *.tar.gz
 
