@@ -54,7 +54,7 @@ START_TEST(test_create_from_int64)
     ck_assert_uint_eq(a->sign, 0);
     big_int_destroy(a);
 
-    // Test negative integers
+    // Test negative integer
     t = -3412123;
     a = big_int_create(t);
     ck_assert_uint_eq(a->chunks[0], llabs(t));
@@ -62,6 +62,43 @@ START_TEST(test_create_from_int64)
     big_int_destroy(a);
 }
 END_TEST
+
+
+/**
+* \brief Test creating a BigInt from a hex string
+*/
+START_TEST(test_create_from_hex)
+{
+    BigInt *a;
+
+    // Test positive integer
+    a = big_int_create_from_hex("DEADBEEF");
+    ck_assert_uint_eq(a->chunks[0], 3735928559);
+    ck_assert_uint_eq(a->sign, 0);
+    big_int_destroy(a);
+
+    // Test negative integer
+    a = big_int_create_from_hex("-C0FFEE");
+    ck_assert_uint_eq(a->chunks[0], 12648430);
+    ck_assert_uint_eq(a->sign, 1);
+    big_int_destroy(a);
+
+    // Test multi-chunk positive integer
+    a = big_int_create_from_hex("F050000000000000000f00d");
+    ck_assert_uint_eq(a->chunks[0], 61453);
+    ck_assert_uint_eq(a->chunks[1], 251985920);
+    ck_assert_uint_eq(a->sign, 0);
+    big_int_destroy(a);
+
+    // Test multi-chunk negative integer
+    a = big_int_create_from_hex("-F050000000000000000f00d");
+    ck_assert_uint_eq(a->chunks[0], 61453);
+    ck_assert_uint_eq(a->chunks[1], 251985920);
+    ck_assert_uint_eq(a->sign, 1);
+    big_int_destroy(a);
+}
+END_TEST
+
 
 Suite *basic_arith_suite(void)
 {
@@ -74,6 +111,7 @@ Suite *basic_arith_suite(void)
 
     // tcase_add_test(tc_basic_arith, test_simple_add);
     tcase_add_test(tc_basic_arith, test_create_from_int64);
+    tcase_add_test(tc_basic_arith, test_create_from_hex);
 
     suite_add_tcase(s, tc_basic_arith);
 

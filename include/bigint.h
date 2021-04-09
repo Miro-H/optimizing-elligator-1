@@ -3,6 +3,7 @@
 #include <stdint.h>
 
 #define BIGINT_FIXED_SIZE 4
+#define BIGINT_CHUNK_HEX_SIZE (sizeof(uint64_t) * 2)
 
 /**
  * \brief Internal data structure for BigInts.
@@ -31,7 +32,7 @@ typedef struct egcd_results {
 
 // Create and destroy
 BigInt *big_int_create(int64_t x);
-BigInt *big_int_create_from_string(char* s);
+BigInt *big_int_create_from_hex(char* s);
 void big_int_destroy(BigInt *a);
 
 // Basic arithmetic operations

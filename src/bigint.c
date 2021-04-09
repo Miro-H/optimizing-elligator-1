@@ -13,6 +13,8 @@
  */
 #include <stdlib.h>
 #include <stdint.h>
+#include <inttypes.h>
+#include <string.h>
 
 // header files
 #include "bigint.h"
@@ -37,22 +39,13 @@ BigInt *big_int_alloc(uint64_t size)
         FATAL("Failed to malloc BigInt.\n");
 
     a->chunks = (uint64_t *) malloc(size * sizeof(uint64_t));
-    if (!a->chunks)
+    if (!a->chunks) {
+        free(a);
         FATAL("Failed to malloc %llu chunks for malloc.\n", size);
+    }
 
     return a;
 }
-
-
-/**
- * \brief Create BigInt from string
- */
-// BigInt create_big_int_string(char* s)
-// {
-//     assert(!"not yet implemented!");
-// }
-//
-//
 
 
 /**
@@ -73,6 +66,54 @@ BigInt *big_int_create(int64_t x)
     a->sign      = x < 0;
     a->overflow  = 0;
     a->size      = 1;
+
+    return a;
+}
+
+
+/**
+ * \brief Create BigInt from a hexadecimal string
+ */
+BigInt *big_int_create_from_hex(char* s)
+{
+    BigInt *a;
+    size_t s_len;
+    int64_t chunk_size, i;
+    char buf[BIGINT_CHUNK_HEX_SIZE + 1];
+    char *s_end;
+    long long parsed_int;
+
+    s_len = strlen(s);
+    s_end = s + s_len;
+    chunk_size = 1 + s_len / BIGINT_CHUNK_HEX_SIZE;
+
+    // Check if the given string is too large for our BigInts
+    if (chunk_size > BIGINT_FIXED_SIZE)
+        FATAL("Integer %s is larger than %lu bytes and currently not supported.",
+            s, BIGINT_FIXED_SIZE * sizeof(uint64_t));
+
+    // NOTE: Currently, all BigInts have size BIGINT_FIXED_SIZE
+    a = big_int_alloc(BIGINT_FIXED_SIZE);
+
+    a->overflow  = 0;
+    a->size      = chunk_size;
+
+    // Null terinate buffer to stop strtoll
+    buf[BIGINT_CHUNK_HEX_SIZE] = 0;
+    for (i = 0; i < chunk_size - 1; ++i) {
+        s_end -= BIGINT_CHUNK_HEX_SIZE;
+        strncpy(buf, s_end, BIGINT_CHUNK_HEX_SIZE);
+
+        a->chunks[i] = (uint64_t) strtoll(buf, NULL, 16);
+    }
+
+    // Parse the last (leftmost) chunk and store the sign bit
+    s_len = (size_t) ((uintptr_t) s_end - (uintptr_t) s);
+    buf[s_len] = 0;
+    strncpy(buf, s, s_len);
+    parsed_int = strtoll(buf, NULL, 16);
+    a->sign = parsed_int < 0;
+    a->chunks[i] = llabs(parsed_int);
 
     return a;
 }
