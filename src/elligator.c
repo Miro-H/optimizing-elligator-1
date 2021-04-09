@@ -150,12 +150,15 @@ BigInt chi(BigInt t, BigInt q) // chi function: chi(t) = t**((q-1)/2)
 }
 CurvePoint elligator_1_string_to_point(BigInt t, Curve curve)
 {
+    // TODO: assert t =/= +1, -1
     BigInt u0 = big_int_sub(create_big_int(1), t);
     BigInt u1 = big_int_add(create_big_int(1), t);
     u1 = big_int_inverse(u1, curve.q);
     u0 = big_int_mul(u0, u1);
     BigInt u = big_int_mod(u0, curve.q);  // u = (1 − t) / (1 + t)
 
+    // TODO: Optimization potential; reuse partial results for powers, instead
+    // of doing it from scratch each time
     BigInt v0 = big_int_pow(u, create_big_int(5), curve.q);
     BigInt v1 = big_int_pow(curve.r, create_big_int(2), curve.q);
     v1 = big_int_sub(v1, create_big_int(2));
@@ -177,17 +180,18 @@ CurvePoint elligator_1_string_to_point(BigInt t, Curve curve)
     Y0 = big_int_pow(Y0, Y1, curve.q);
     Y0 = big_int_mul(Y0, CHIV);
 
-    BigInt C2 = big_int_mul(curve.c, curve.c);
+    BigInt C2 = big_int_pow(curve.c, create_big_int(2), curve.q);
     C2 = big_int_inverse(C2, curve.q);
-    BigInt Y3 = big_int_mul(u, u);
+    BigInt Y3 = big_int_pow(u, create_big_int(2), curve.q);
     Y3 = big_int_add(Y3, C2);
+    Y3 = big_int_mod(Y3, curve.q);
     Y3 = chi(Y3, curve.q);
 
     Y0 = big_int_mul(Y0, Y3);
     BigInt Y = big_int_mod(Y0, curve.q);  // Y = (χ(v)v)**((q + 1) / 4)χ(v)χ(u**2 + 1 / c**2),
 
     BigInt X_plus_1 = big_int_add(create_big_int(1), X);
-    BigInt X_plus_1_squared = big_int_mul(X_plus_1, X_plus_1);
+    BigInt X_plus_1_squared = big_int_pow(X_plus_1, create_big_int(2), curve.q);
 
     BigInt x0 = big_int_sub(curve.c, create_big_int(1));
     x0 = big_int_mul(x0, curve.s);
