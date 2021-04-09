@@ -226,15 +226,19 @@ BigInt elligator_1_point_to_string(CurvePoint p, Curve curve)
     BigInt eta_r = big_int_mul(eta, curve.r);
     eta_r = big_int_add(create_big_int(1), eta_r);
     BigInt q_1 = big_int_add(curve.q, create_big_int(1));
-    BigInt X0 = big_int_inverse(create_big_int(4), curve.q);
+    // TODO: This is module order(q), which is q-1 if q is prime. Is this guaranteed?
+    BigInt X0 = big_int_inverse(create_big_int(4), curve.q-1);
     q_1 = big_int_mul(q_1, X0);
 
-    BigInt X1 = big_int_mul(eta_r, eta_r);
+    BigInt X1 = big_int_pow(eta_r, create_big_int(2), curve.q);
     X1 = big_int_sub(X1, create_big_int(1));
     X1 = big_int_pow(X1, q_1, curve.q);
     X1 = big_int_sub(X1, eta_r);
     BigInt X = big_int_mod(X1, curve.q); // X = −(1 + ηr) + ((1 + ηr)**2 − 1)**((q+1)/4)
 
+    // TODO: What happens if ηr =/= -2?
+    // TODO: Shouldn't p.x already be this value, i.e., p.x = 2s(c − 1)χ(c)/r
+    // if ηr =/= -2 and otherwise we just take the value of p.x?
     BigInt x0 = big_int_mul(create_big_int(2), curve.s);
     BigInt x1 = big_int_sub(curve.c, create_big_int(1));
     x0 = big_int_mul(x0, x1);
@@ -250,8 +254,8 @@ BigInt elligator_1_point_to_string(CurvePoint p, Curve curve)
     BigInt z1 = big_int_add(create_big_int(1), X);
     z0 = big_int_mul(z0, z1);
     z0 = big_int_mul(z0, x);
-    BigInt z2 = big_int_mul(X, X);
-    BigInt z3 = big_int_mul(curve.c, curve.c);
+    BigInt z2 = big_int_pow(X, create_big_int(2), curve.q);
+    BigInt z3 = big_int_pow(curve.c, create_big_int(2), curve.q);
     z3 = big_int_inverse(z3, curve.q);
     z2 = big_int_add(z2, z3);
     z0 = big_int_mul(z0, z2);
