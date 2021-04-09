@@ -21,10 +21,14 @@
 #include "debug.h"
 
 /*
+ * Macros
+ */
+#define MAX(a, b) ((a) > (b) ? (a) : (b))
+
+/*
  * Function prototypes
  */
 BigInt *big_int_alloc(uint64_t size);
-
 
 
 /**
@@ -41,7 +45,7 @@ BigInt *big_int_alloc(uint64_t size)
     a->chunks = (uint64_t *) malloc(size * sizeof(uint64_t));
     if (!a->chunks) {
         free(a);
-        FATAL("Failed to malloc %lu chunks for malloc.\n", size);
+        FATAL("Failed to malloc %llu chunks for malloc.\n", size);
     }
     a->alloc_size = size;
 
@@ -58,7 +62,7 @@ BigInt *big_int_create(int64_t x)
     BigInt *a;
 
     if (x < INT64_MIN)
-        FATAL("Integer %li has no unsigned equivalent and is thus not accepted as input!\n", x);
+        FATAL("Integer %lli has no unsigned equivalent and is thus not accepted as input!\n", x);
 
     // NOTE: Currently, all BigInts have size BIGINT_FIXED_SIZE
     a = big_int_alloc(BIGINT_FIXED_SIZE);
@@ -175,6 +179,101 @@ BigInt *big_int_neg(BigInt *a)
 }
 
 
+/**
+ * \brief Calculate r = a + b
+ */
+BigInt *big_int_add(BigInt *a, BigInt *b)
+{
+    BigInt *r, *aa, *bb;
+    uint8_t carry;
+    uint64_t i;
+
+    // Use subtractions when adequate
+    if (a->sign == 0 && b->sign == 1)
+        return big_int_sub(a, b);
+    else if (a->sign == 1 && b->sign == 0)
+        return big_int_sub(b, a);
+
+    // Assertion: a->sign == b->sign
+
+    // Simplify implementation by making sure we know the larger BigInt.
+    if (a->size < b->size) {
+        aa = b;
+        bb = a;
+    }
+    else {
+        aa = a;
+        bb = b;
+    }
+
+    // Assertion: aa->size >= bb->size
+
+    // NOTE: This would be aa->size + 1 for non-fixed BigInts
+    r = big_int_alloc(BIGINT_FIXED_SIZE);
+
+    // Since both BigInts have the same sign, the result has the same sign too
+    r->sign = aa->sign;
+
+    // First, add chunks where both have entries
+    for (i = 0; i < bb->size; ++i) {
+        r->chunks[i] = aa->chunks[i] + bb->chunks[i] + carry;
+
+        // if carry = 0: r < max(aa, bb) with overflow since we can add at most
+        //               UINT64_MAX
+        // if carry = 1: r <= max(aa, bb) with overflow since the value has to
+        //               increase by at least 1.
+        carry = r->chunks[i] < MAX(aa->chunks[i], bb->chunks[i]) - carry;
+    }
+
+    // Second, finish possible remaining chunks of larger integer
+    for (; i < aa->size; ++i) {
+        r->chunks[i] = aa->chunks[i] + carry;
+
+        // On an overflow, r = 0 and aa = MAX_INT
+        carry = r->chunks[i] < aa->chunks[i];
+    }
+
+    r->overflow = carry;
+
+    return r;
+}
+
+
+/**
+ * \brief Calculate r = a - b
+ */
+BigInt *big_int_sub(BigInt *a, BigInt *b)
+{
+    BigInt *r, *aa, *bb;
+    // uint8_t borrow;
+    // uint64_t i;
+
+    // Use additions when adequate
+    if (a->sign == b->sign)
+        return big_int_add(a, b);
+
+    // Simplify implementation by making sure we know the larger BigInt.
+    // In the return statement, we account for whether we calculated a-b or b-a.
+    if (a->size < b->size) {
+        aa = b;
+        bb = a;
+    }
+    else {
+        aa = a;
+        bb = b;
+    }
+
+    // Assertion: aa->size >= bb->size
+
+    r = big_int_alloc(BIGINT_FIXED_SIZE);
+
+    // TODO: finish this. Figure out what sign should be.
+
+    // Return r or -r, depending on whether we computed a-b or b-a
+    return (aa == a) ? r : big_int_neg(r);
+}
+
+
 // /**
 //  * \brief Calculate base^exponent mod q for BigInts
 //  */
@@ -226,32 +325,6 @@ BigInt *big_int_neg(BigInt *a)
 // // {
 // //     return big_int_mul_mod(a, big_int_inverse(b, q), q);
 // // }
-//
-//
-// /**
-//  * \brief Calculate a + b
-//  */
-// // TODO: add add_mod function, might remove this one
-// // BigInt big_int_add_mod(BigInt a, BigInt b, BigInt q)
-// // TODO: change for 256 bits
-// BigInt big_int_add(BigInt a, BigInt b)
-// {
-//     BigInt r = {a.x + b.x};
-//     return r;
-// }
-//
-//
-// /**
-//  * \brief Calculate a - b
-//  */
-// // TODO: add sub_mod function, might remove this one
-// // BigInt big_int_sub_mod(BigInt a, BigInt b, BigInt q)
-// // TODO: change for 256 bits
-// BigInt big_int_sub(BigInt a, BigInt b)
-// {
-//     BigInt r = {a.x - b.x};
-//     return r;
-// }
 //
 //
 // /**
