@@ -146,8 +146,7 @@ BigInt chi(BigInt t, BigInt q) // chi function: chi(t) = t**((q-1)/2)
     BigInt r1 = big_int_sub(q, create_big_int(1));
     r0 = big_int_mul(r1, r0);
     r0 = big_int_pow(t, r0, q);
-    BigInt r = big_int_mod(r0, q);
-    return r;
+    return r0;
 }
 CurvePoint elligator_1_string_to_point(BigInt t, Curve curve)
 {
