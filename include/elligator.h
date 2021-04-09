@@ -1,6 +1,8 @@
 #ifndef ELLIGATOR_H_    /* Include guard */
 #define ELLIGATOR_H_
+
 #include <stdint.h>
+#include "bigint.h"
 
 typedef struct CurvePoints
 {

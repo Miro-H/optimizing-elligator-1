@@ -23,8 +23,7 @@
  */
 BigInt create_big_int_string(char* s)
 {
-    assert("not yet implemented!");
-    return create_big_int(-1);
+    assert(!"not yet implemented!");
 }
 
 // TODO: change for 256 bits
@@ -59,7 +58,8 @@ BigInt big_int_pow(BigInt base, BigInt exponent, BigInt q)
 /**
  * \brief Calculate a * b
  */
- // TODO: add mul_mod function, might remove this one
+// TODO: add mul_mod function, might remove this one
+// TODO: change for 256 bits
 BigInt big_int_mul(BigInt a, BigInt b)
 {
     BigInt r = {a.x * b.x};
@@ -69,6 +69,7 @@ BigInt big_int_mul(BigInt a, BigInt b)
 /**
  * \brief Calculate a // b (integer division)
  */
+// TODO: change for 256 bits
 BigInt big_int_div(BigInt a, BigInt b)
 {
     BigInt r = {a.x / b.x};
@@ -79,47 +80,56 @@ BigInt big_int_div(BigInt a, BigInt b)
  * \brief Calculate (a // b) mod q (integer division mod q)
  */
 // TODO: uncomment when big_int_mul_mod exists
-// BigInt big_int_div(BigInt a, BigInt b, BigInt q)
+// BigInt big_int_div_mod(BigInt a, BigInt b, BigInt q)
 // {
 //     return big_int_mul_mod(a, big_int_inverse(b, q), q);
 // }
 
 
-/*
-BigInt big_int_add(BigInt a, BigInt b, BigInt q) // needs to be changed
-{
-    return BigInt((a.x + b.x) % q.x);
-}
-*/
-BigInt big_int_add(BigInt a, BigInt b) // needs to be changed
+/**
+ * \brief Calculate a + b
+ */
+// TODO: add add_mod function, might remove this one
+// BigInt big_int_add_mod(BigInt a, BigInt b, BigInt q)
+// TODO: change for 256 bits
+BigInt big_int_add(BigInt a, BigInt b)
 {
     BigInt r = {a.x + b.x};
     return r;
 }
-/*
-BigInt big_int_sub(BigInt a, BigInt b, BigInt q) // needs to be changed
-{
-    return BigInt((a.x - b.x) % q.x);
-}
-*/
-BigInt big_int_sub(BigInt a, BigInt b) // needs to be changed
+
+
+/**
+ * \brief Calculate a - b
+ */
+// TODO: add sub_mod function, might remove this one
+// BigInt big_int_sub_mod(BigInt a, BigInt b, BigInt q)
+// TODO: change for 256 bits
+BigInt big_int_sub(BigInt a, BigInt b)
 {
     BigInt r = {a.x - b.x};
     return r;
 }
-/*
-BigInt big_int_negate(BigInt a, BigInt q) // needs to be changed
-{
-    return BigInt((-a.x) % q.x);
-}
-*/
-BigInt big_int_negate(BigInt a) // needs to be changed
+
+
+/**
+ * \brief Calculate -a
+ */
+// TODO: add neg_mod function, might remove this one
+// BigInt big_int_neg(BigInt a, BigInt q)
+// TODO: change for 256 bits
+BigInt big_int_neg(BigInt a)
 {
     BigInt r = {-a.x};
     return r;
 }
 
-BigInt big_int_inverse(BigInt a, BigInt q) // a^(-1) mod q mod inverse
+
+/**
+ * \brief Calculate the inverse of a, namely a^-1 mod q
+ */
+// TODO: change for 256 bits
+BigInt big_int_inverse(BigInt a, BigInt q)
 {
     // Modular inversion computation
     if (big_int_compare(a, create_big_int(0)) < 0)
@@ -130,38 +140,46 @@ BigInt big_int_inverse(BigInt a, BigInt q) // a^(-1) mod q mod inverse
     }
 
     egcd_result res = egcd(a, q);
-    if (big_int_compare(q, create_big_int(1)) != 0)
-    {
-        return create_big_int(-1);
-    }
+    if (big_int_compare(res.g, create_big_int(1)) != 0)
+        assert(!"Non-invertible number given as argument to big_int_inverse.");
     else
-    {
         return big_int_mod(res.x, q);
-    }
 }
 
-BigInt big_int_mod(BigInt a, BigInt q) // needs to be changed
+
+/**
+ * \brief Calculate a mod q
+ */
+// TODO: change for 256 bits
+BigInt big_int_mod(BigInt a, BigInt q)
 {
     BigInt r = {a.x % q.x};
     return r;
 }
 
-uint64_t big_int_compare(BigInt a, BigInt b) // a==b: 0, a<b: -1, a>b: 1
+
+/**
+ * \brief Calculate a == b.
+ * \returns r, where a==b: r=0, a<b: r<0, a>b: r>0
+ */
+// TODO: change for 256 bits
+uint64_t big_int_compare(BigInt a, BigInt b)
 {
     if (a.x == b.x)
-    {
         return 0;
-    }
-    else if (a.x < b.x)
-    {
-        return -1;
-    }
-    else
-    {
-        return 1;
-    }
+
+    return (a.x < b.x) ? -1 : 1;
 }
 
+
+/**
+ * \brief Calculate the greatest common divisor using the extended Euclidean
+ *        algorithm.
+ * \returns egcd_result (x, y, g), where x * a + y * b = g
+ *          and g is the GCD.
+ */
+// TODO: change for 256 bits
+// TODO: Change to iterative instead of recursive variant
 egcd_result egcd(BigInt a, BigInt b) // Euclidean algorithm for gcd computation
 {
     if (big_int_compare(a, create_big_int(0)) == 0)
@@ -179,7 +197,13 @@ egcd_result egcd(BigInt a, BigInt b) // Euclidean algorithm for gcd computation
     }
 }
 
-BigInt chi(BigInt t, BigInt q) // chi function: chi(t) = t**((q-1)/2)
+
+/**
+ * \brief Calculate the Chi function chi(t) = t**((q-1)/2)
+ * \returns 0 if t = 0, 1 if t is a non-zero square, -1 otherwise (t is not a
+ *          square)
+ */
+BigInt chi(BigInt t, BigInt q)
 {
     BigInt r0 = big_int_inverse(create_big_int(2), q);
     BigInt r1 = big_int_sub(q, create_big_int(1));
