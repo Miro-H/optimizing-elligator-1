@@ -1,5 +1,5 @@
 # Official ubuntu docker image
-image: ubuntu
+image: amd64/ubuntu
 
 # Build and test the project
 test:
