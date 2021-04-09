@@ -5,7 +5,6 @@ In this repository, we look into a performance optimized implementation of [Elli
 This project is developed by the following people:
 - Christopher Vogelsanger
 - Freya Murphy
-- Karin Holzhauser
 - Miro Haller
 
 ## Development
