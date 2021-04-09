@@ -41,8 +41,9 @@ BigInt *big_int_alloc(uint64_t size)
     a->chunks = (uint64_t *) malloc(size * sizeof(uint64_t));
     if (!a->chunks) {
         free(a);
-        FATAL("Failed to malloc %llu chunks for malloc.\n", size);
+        FATAL("Failed to malloc %lu chunks for malloc.\n", size);
     }
+    a->alloc_size = size;
 
     return a;
 }
@@ -56,8 +57,8 @@ BigInt *big_int_create(int64_t x)
 {
     BigInt *a;
 
-    if (x < -INT64_MIN)
-        FATAL("Integer %lli has no unsigned equivalent and is thus not accepted as input!\n", x);
+    if (x < INT64_MIN)
+        FATAL("Integer %li has no unsigned equivalent and is thus not accepted as input!\n", x);
 
     // NOTE: Currently, all BigInts have size BIGINT_FIXED_SIZE
     a = big_int_alloc(BIGINT_FIXED_SIZE);
@@ -127,6 +128,50 @@ void big_int_destroy(BigInt *a)
     if (a->size > 0)
         free(a->chunks);
     free(a);
+}
+
+
+/**
+ * \brief Copy BigInt b to BigInt a, i.e., a := b
+ */
+void big_int_copy(BigInt *a, BigInt *b)
+{
+    // NOTE: For arbitrary sizes, we'd need a realloc here
+    if (a->alloc_size < b->size)
+        FATAL("Cannot copy larger BigInt into smaller one!\n");
+
+    a->sign     = b->sign;
+    a->overflow = b->overflow;
+    a->size     = b->size;
+
+    memcpy((void *) a->chunks, (void *) b->chunks, b->size * sizeof(uint64_t));
+}
+
+/**
+ * \brief Duplicate a BigInt
+ */
+BigInt *big_int_duplicate(BigInt *a)
+{
+    BigInt *b;
+
+    b = big_int_alloc(a->alloc_size);
+    big_int_copy(b, a);
+
+    return b;
+}
+
+
+/**
+ * \brief Calculate -a
+ */
+BigInt *big_int_neg(BigInt *a)
+{
+    BigInt *neg_a;
+
+    neg_a = big_int_duplicate(a);
+    neg_a->sign = !a->sign;
+
+    return neg_a;
 }
 
 
@@ -205,19 +250,6 @@ void big_int_destroy(BigInt *a)
 // BigInt big_int_sub(BigInt a, BigInt b)
 // {
 //     BigInt r = {a.x - b.x};
-//     return r;
-// }
-//
-//
-// /**
-//  * \brief Calculate -a
-//  */
-// // TODO: add neg_mod function, might remove this one
-// // BigInt big_int_neg(BigInt a, BigInt q)
-// // TODO: change for 256 bits
-// BigInt big_int_neg(BigInt a)
-// {
-//     BigInt r = {-a.x};
 //     return r;
 // }
 //

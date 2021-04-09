@@ -15,10 +15,11 @@
 // This would need to be changed for arbitrary sized integer operations!
 typedef struct BigInts
 {
-    uint64_t sign : 1;      // O: positive, 1: negative
-    uint64_t overflow : 1;  // 1 if operation overflowed
-    uint64_t size : 62;     // Number of chunks of the BigInt
-    uint64_t *chunks;       // 64-bit chunks in reverse order
+    uint64_t sign : 1;          // O: positive, 1: negative
+    uint64_t overflow : 1;      // 1 if operation overflowed
+    uint64_t size : 62;         // Number of chunks used in the BigInt
+    uint64_t alloc_size : 62;   // Number of chunks allocated for the BigInt (>= size)
+    uint64_t *chunks;           // 64-bit chunks in reverse order
 } BigInt;
 
 /**
@@ -30,10 +31,12 @@ typedef struct egcd_results {
     BigInt *x;
 } egcd_result;
 
-// Create and destroy
+// Meta functions
 BigInt *big_int_create(int64_t x);
 BigInt *big_int_create_from_hex(char* s);
 void big_int_destroy(BigInt *a);
+void big_int_copy(BigInt *a, BigInt *b);
+BigInt *big_int_duplicate(BigInt *a);
 
 // Basic arithmetic operations
 BigInt *big_int_neg(BigInt *a);

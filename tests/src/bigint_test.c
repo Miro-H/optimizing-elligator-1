@@ -100,6 +100,30 @@ START_TEST(test_create_from_hex)
 END_TEST
 
 
+/**
+* \brief Test negating BigInt
+*/
+START_TEST(test_negate)
+{
+    BigInt *a, *neg_a, *neg_neg_a;
+
+    // Flip the sign twice, check that we arrive at the same number again
+    a           = big_int_create(123);
+    neg_a       = big_int_neg(a);
+    neg_neg_a   = big_int_neg(neg_a);
+
+    // TODO: change to big_int_compare once implemented
+    ck_assert_uint_eq(a->chunks[0], neg_a->chunks[0]);
+    ck_assert_uint_eq(a->chunks[0], neg_neg_a->chunks[0]);
+    ck_assert_uint_ne(a->sign, neg_a->sign);
+    ck_assert_uint_eq(a->sign, neg_neg_a->sign);
+
+    big_int_destroy(a);
+    big_int_destroy(neg_a);
+    big_int_destroy(neg_neg_a);
+}
+
+
 Suite *basic_arith_suite(void)
 {
     Suite *s;
@@ -112,6 +136,7 @@ Suite *basic_arith_suite(void)
     // tcase_add_test(tc_basic_arith, test_simple_add);
     tcase_add_test(tc_basic_arith, test_create_from_int64);
     tcase_add_test(tc_basic_arith, test_create_from_hex);
+    tcase_add_test(tc_basic_arith, test_negate);
 
     suite_add_tcase(s, tc_basic_arith);
 
