@@ -227,7 +227,7 @@ BigInt elligator_1_point_to_string(CurvePoint p, Curve curve)
     eta_r = big_int_add(create_big_int(1), eta_r);
     BigInt q_1 = big_int_add(curve.q, create_big_int(1));
     // TODO: This is module order(q), which is q-1 if q is prime. Is this guaranteed?
-    BigInt X0 = big_int_inverse(create_big_int(4), curve.q-1);
+    BigInt X0 = big_int_inverse(create_big_int(4), big_int_sub(curve.q, create_big_int(1)));
     q_1 = big_int_mul(q_1, X0);
 
     BigInt X1 = big_int_pow(eta_r, create_big_int(2), curve.q);
