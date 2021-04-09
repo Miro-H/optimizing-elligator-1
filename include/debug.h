@@ -1,0 +1,62 @@
+/*
+ * This file is part of the ASL project "Censorship-avoiding high-speed EC
+ * (Elligator with Curve1174)"
+ * (https://gitlab.inf.ethz.ch/COURSE-ASL/asl21/team36).
+ *
+ * Short description of this file:
+ * Debug header file defining useful macros for debugging.
+ */
+
+#ifndef DEBUG_H_
+#define DEBUG_H_
+
+#include <stdio.h>
+#include <assert.h>
+
+// Set the log level to receive more output. Available levels are:
+// 0: quiet; no output
+// 1: fatal; only get fatal errors
+// 2: error; additionally, get non-fatal errors
+// 3: warnings; additionally, get warnings
+// 4: vebose; get general debug output
+#define LOG_LEVEL 4
+
+// Terminal colored print statements
+#define ANSI_COLOR_RED     "\x1b[31m"
+#define ANSI_COLOR_GREEN   "\x1b[32m"
+#define ANSI_COLOR_YELLOW  "\x1b[33m"
+#define ANSI_COLOR_BLUE    "\x1b[34m"
+#define ANSI_COLOR_MAGENTA "\x1b[35m"
+#define ANSI_COLOR_CYAN    "\x1b[36m"
+#define ANSI_COLOR_RESET   "\x1b[0m"
+
+#define PREFIX_FATAL "Fatal: "
+#define PREFIX_ERROR "Error: "
+#define PREFIX_WARNING "Warning: "
+#define PREFIX_DEBUG "Debug: "
+#define PREFIX_SUCCESS "Success: "
+
+const char *prefix[] = {
+    ANSI_COLOR_RED PREFIX_FATAL,
+    ANSI_COLOR_MAGENTA PREFIX_ERROR,
+    ANSI_COLOR_YELLOW PREFIX_WARNING,
+    ANSI_COLOR_BLUE PREFIX_DEBUG,
+    ANSI_COLOR_GREEN PREFIX_SUCCESS
+};
+
+#define LOG_PRINTF(lvl, fmt...)         \
+    if (lvl <= LOG_LEVEL) {             \
+        printf("%s", prefix[lvl-1]);    \
+        printf(fmt);                    \
+        printf(ANSI_COLOR_RESET);       \
+        if (lvl == 1)                   \
+            assert(0);                  \
+    }
+
+#define FATAL(fmt...) LOG_PRINTF(1, fmt)
+#define ERROR(fmt...) LOG_PRINTF(2, fmt)
+#define WARNING(fmt...) LOG_PRINTF(3, fmt)
+#define DEBUG(fmt...) LOG_PRINTF(4, fmt)
+#define SUCCESS(fmt...) LOG_PRINTF(5, fmt)
+
+#endif // DEBUG_H_
