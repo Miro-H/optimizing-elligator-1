@@ -15,6 +15,7 @@
 
 // Include header files
 #include "bigint.h"
+#include "debug.h"
 
 
 /**
@@ -122,6 +123,15 @@ START_TEST(test_addition)
     big_int_add(a, a, b); // a = a + b
     ck_assert_int_eq(big_int_compare(a, r), 0);
 
+    // addition with single chunk overflow
+    big_int_create(a, 4294967290);
+    big_int_create(b, 16);
+    big_int_create_from_hex(r, "10000000A");
+
+    big_int_add(a, a, b); // a = a + b
+    ck_assert_int_eq(big_int_compare(a, r), 0);
+    ck_assert_uint_eq(a->overflow, 0);
+
     // normal addition of a positive and a negative integers
     big_int_create(a, 123);
     big_int_create(b, -123412);
@@ -130,19 +140,93 @@ START_TEST(test_addition)
     big_int_add(a, a, b); // a = a + b
     ck_assert_int_eq(big_int_compare(a, r), 0);
 
-    // TODO: normal addition of a negative and a positive integers
-    // TODO: normal addition of two negative integers
+    // normal addition of a negative and a positive integers
+    big_int_create(a, -89545823);
+    big_int_create(b, 89545823);
+
+    big_int_add(a, a, b); // a = a + b
+    big_int_compare(a, big_int_zero);
+    ck_assert_int_eq(big_int_compare(a, big_int_zero), 0);
+
+    // normal addition of a negative and a positive integers
+    big_int_create(a, -4);
+    big_int_create(b, -2);
+    big_int_create(r, -6);
+
+    big_int_add(a, a, b); // a = a + b
+    big_int_compare(a, r);
+    ck_assert_int_eq(big_int_compare(a, r), 0);
+
+    // addition with single chunk underflow
+    big_int_create(a, -4294967295);
+    big_int_create(b, -2);
+    big_int_create_from_hex(r, "-100000001");
+
+    big_int_add(a, a, b); // a = a + b
+    big_int_compare(a, big_int_zero);
+    ck_assert_int_eq(big_int_compare(a, r), 0);
+    ck_assert_uint_eq(a->overflow, 0);
+
     // TODO: multi-chunk addition of two positive integers
+    big_int_create_from_hex(a, "A20B9BDB69E6C331825D79743C398D0E");
+    big_int_create_from_hex(b, "293D794457EA9BCA15E3E286B3998176");
+    big_int_create_from_hex(r, "CB49151FC1D15EFB98415BFAEFD30E84");
+
+    big_int_add(a, a, b); // a = a + b
+    big_int_compare(a, r);
+    ck_assert_int_eq(big_int_compare(a, r), 0);
+    ck_assert_uint_eq(a->overflow, 0);
+
     // TODO: multi-chunk addition of one positive integer and one negative integer
     // TODO: multi-chunk addition of one negative integer and one positive integer
     // TODO: multi-chunk addition of two negative integers
+    // TODO: test mixed sized BigInt ops
+
+    // TODO (low prio): test 256 overflows -> restriction of fixed size for bigints,
+    // but that should never occur in modulo ops.
 
     big_int_destroy(a);
     big_int_destroy(b);
     big_int_destroy(r);
 }
 
-// TODO: test subtraction
+/**
+* \brief Test subtractions of BigInts
+*/
+START_TEST(test_subtraction)
+{
+    BigInt *a, *b, *r;
+
+    // normal subtraction of two positive chunks
+    a = big_int_create(NULL, 123);
+    b = big_int_create(NULL, 123412);
+    r = big_int_create(NULL, -123289);
+
+    big_int_sub(a, a, b); // a = a + b
+    ck_assert_int_eq(big_int_compare(a, r), 0);
+
+    // TODO: normal subtraction of two negative chunks
+
+    // multi-chunk subtraction of two positive numbers
+    big_int_create_from_hex(a, "BA2980E4A996ED0AAEA5B0E3B65A7048");
+    big_int_create_from_hex(b, "531FEC5ED503B8D3");
+    big_int_create_from_hex(r, "BA2980E4A996ED0A5B85C484E156B775");
+
+    big_int_sub(a, a, b); // a = a + b
+    big_int_compare(a, r);
+    ck_assert_int_eq(big_int_compare(a, r), 0);
+    ck_assert_uint_eq(a->overflow, 0);
+
+    // TODO: multi-chunk subtraction of two negative numbers
+    // TODO: mixed signs (uses addition underneath, but test pos/neg and neg/pos)
+    // TODO: test chunk overflow
+    // TODO: test chunk underflow
+
+    big_int_destroy(a);
+    big_int_destroy(b);
+    big_int_destroy(r);
+}
+
 // TODO: test comparison
 
 Suite *basic_arith_suite(void)
@@ -158,6 +242,7 @@ Suite *basic_arith_suite(void)
     tcase_add_test(tc_basic_arith, test_create_from_hex);
     tcase_add_test(tc_basic_arith, test_negate);
     tcase_add_test(tc_basic_arith, test_addition);
+    tcase_add_test(tc_basic_arith, test_subtraction);
 
     suite_add_tcase(s, tc_basic_arith);
 

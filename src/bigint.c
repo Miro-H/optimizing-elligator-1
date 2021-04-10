@@ -184,9 +184,9 @@ BigInt *big_int_duplicate(BigInt *a)
  */
 void big_int_print(BigInt *a)
 {
-    printf("%d", 1 - 2 * a->sign);
-    for (int64_t i = 0; i < a->size; ++i) {
-        printf("%llu", a->chunks[i]);
+    printf("%s0x%llx", (a->sign == 1) ? "-" : "", a->chunks[0]);
+    for (int64_t i = 1; i < a->size; ++i) {
+        printf("%08llx", a->chunks[i]);
     }
 }
 
@@ -227,6 +227,7 @@ BigInt *big_int_add(BigInt *r, BigInt *a, BigInt *b)
     uint8_t carry;
     int64_t i;
     dbl_chunk_size_t sum;
+    uint64_t r_size;
 
     // Use subtractions when adequate
     if (a->sign != b->sign) {
@@ -261,15 +262,16 @@ BigInt *big_int_add(BigInt *r, BigInt *a, BigInt *b)
     // of size aa->size + 1
     r = big_int_get_res(r, aa);
 
-    // Since both BigInts have the same sign, the result has the same sign too
-    r->sign = aa->sign;
-
     // First, add chunks where both have entries
     carry = 0;
+    r_size = 0;
     for (i = 0; i < bb->size; ++i) {
         sum = aa->chunks[i] + bb->chunks[i] + carry;
         r->chunks[i] = sum % BIGINT_RADIX;
         carry = sum / BIGINT_RADIX;
+
+        if (r->chunks[i] != 0)
+            r_size = i;
     }
 
     // Second, finish possible remaining chunks of larger integer
@@ -277,9 +279,27 @@ BigInt *big_int_add(BigInt *r, BigInt *a, BigInt *b)
         sum = aa->chunks[i] + carry;
         r->chunks[i] = sum % BIGINT_RADIX;
         carry = sum / BIGINT_RADIX;
+
+        if (r->chunks[i] != 0)
+            r_size = i;
     }
 
-    r->overflow = carry;
+    // Since both BigInts have the same sign, the result has the same sign too
+    // except if there was an overflow that flipped it.
+
+    r->sign = aa->sign;
+    if (carry) {
+        if (i < r->alloc_size) {
+            r->chunks[i] = 1;
+            r_size++;
+        }
+        else {
+            WARNING("Addition overflow detected. Currently operations are limited to 256 bits.\n");
+            r->overflow = 1;
+            r->sign = !r->sign;
+        }
+    }
+    r->size = r_size + 1;
 
     return r;
 }
@@ -295,6 +315,7 @@ BigInt *big_int_sub(BigInt *r, BigInt *a, BigInt *b)
     int64_t i;
     dbl_chunk_size_t diff;
     uint8_t do_sign_switch;
+    uint64_t r_size;
 
     // Use addition operations depending on signs
     if (a->sign != b->sign) {
@@ -339,20 +360,30 @@ BigInt *big_int_sub(BigInt *r, BigInt *a, BigInt *b)
     // 0x0000000000000000 - 1 = 0xffffffff00000000
     //  | extra | chunk |        | extra | chunk |
     borrow = 0;
+    r_size = 0;
     for (i = 0; i < bb_abs->size; ++i) {
         diff = aa_abs->chunks[i] - bb_abs->chunks[i] - borrow;
         r->chunks[i] = diff % BIGINT_RADIX;
         borrow = (diff / BIGINT_RADIX) & 1;
+
+        if (r->chunks[i] != 0)
+            r_size = i;
     }
 
     for (; i < aa_abs->size; ++i) {
         diff = aa_abs->chunks[i] - borrow;
         r->chunks[i] = diff % BIGINT_RADIX;
         borrow = (diff / BIGINT_RADIX) & 1;
+
+        if (r->chunks[i] != 0)
+            r_size = i;
     }
 
     // Assertion: borrow = 0, because aa_abs >= bb_abs
     r->overflow = do_sign_switch;
+    // The sign is zero, because |a| >= |b| and we calculate |a| - |b|
+    r->sign = 0;
+    r->size = r_size + 1;
 
     if (a->sign == 1) {
         big_int_destroy(a_abs);
@@ -466,8 +497,9 @@ int8_t big_int_compare(BigInt *a, BigInt *b)
 {
     if (a->size == b->size) {
         if (big_int_is_zero(b)) {
-            if (big_int_is_zero(a))
-                return 0;
+            if (big_int_is_zero(a)) {
+                    return 0;
+            }
             return (a->sign == 1) ? -1 : 1;
         }
         else if (big_int_is_zero(a)) {
