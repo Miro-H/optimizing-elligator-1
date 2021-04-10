@@ -2,7 +2,7 @@
 #define BIGINT_H_
 #include <stdint.h>
 
-#define BIGINT_FIXED_SIZE 4
+#define BIGINT_FIXED_SIZE ((uint64_t) 4)
 #define BIGINT_CHUNK_HEX_SIZE (sizeof(chunk_size_t) * 2)
 
 // Change if larger chunks are used

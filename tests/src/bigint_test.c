@@ -52,27 +52,32 @@ START_TEST(test_create_from_hex)
 
     // Test positive integer
     a = big_int_create_from_hex(NULL, "DEADBEEF");
-    ck_assert_uint_eq(a->chunks[0], 3735928559);
+    ck_assert_uint_eq(a->chunks[0], 0xDEADBEEF);
     ck_assert_uint_eq(a->sign, 0);
 
     // Test negative integer
     big_int_create_from_hex(a, "-C0FFEE");
-    ck_assert_uint_eq(a->chunks[0], 12648430);
+    ck_assert_uint_eq(a->chunks[0], 0xC0FFEE);
+    ck_assert_uint_eq(a->sign, 1);
+
+    // Test negative integer of chunk size
+    big_int_create_from_hex(a, "-12345678");
+    ck_assert_uint_eq(a->chunks[0], 0x12345678);
     ck_assert_uint_eq(a->sign, 1);
 
     // Test multi-chunk positive integer
     big_int_create_from_hex(a, "F050000000000000000F00D");
-    ck_assert_uint_eq(a->chunks[0], 61453);
-    ck_assert_uint_eq(a->chunks[1], 0);
-    ck_assert_uint_eq(a->chunks[2], 251985920);
+    ck_assert_uint_eq(a->chunks[0], 0x0000F00D);
+    ck_assert_uint_eq(a->chunks[1], 0x00000000);
+    ck_assert_uint_eq(a->chunks[2], 0x0F050000);
     ck_assert_uint_eq(a->size, 3);
     ck_assert_uint_eq(a->sign, 0);
 
     // Test multi-chunk negative integer
     big_int_create_from_hex(a, "-F050000000000000000F00D");
-    ck_assert_uint_eq(a->chunks[0], 61453);
-    ck_assert_uint_eq(a->chunks[1], 0);
-    ck_assert_uint_eq(a->chunks[2], 251985920);
+    ck_assert_uint_eq(a->chunks[0], 0x0000F00D);
+    ck_assert_uint_eq(a->chunks[1], 0x00000000);
+    ck_assert_uint_eq(a->chunks[2], 0x0F050000);
     ck_assert_uint_eq(a->size, 3);
     ck_assert_uint_eq(a->sign, 1);
 
@@ -93,14 +98,12 @@ START_TEST(test_negate)
 
     // Flip 1
     a_neg = big_int_neg(NULL, a);
-    // TODO: change to big_int_compare once implemented
     ck_assert_uint_eq(a->chunks[0], a_neg->chunks[0]);
     ck_assert_uint_ne(a->sign, a_neg->sign);
 
     // Flip 2
     big_int_neg(a_neg, a_neg);
-    // TODO: change to big_int_compare once implemented
-    ck_assert_uint_eq(a->chunks[0], a_neg->chunks[0]);
+    ck_assert_int_eq(big_int_compare(a, a_neg), 0);
     ck_assert_uint_eq(a->sign, a_neg->sign);
 
     big_int_destroy(a);
@@ -213,7 +216,6 @@ START_TEST(test_subtraction)
     big_int_create_from_hex(r, "BA2980E4A996ED0A5B85C484E156B775");
 
     big_int_sub(a, a, b); // a = a + b
-    big_int_compare(a, r);
     ck_assert_int_eq(big_int_compare(a, r), 0);
     ck_assert_uint_eq(a->overflow, 0);
 
@@ -228,6 +230,53 @@ START_TEST(test_subtraction)
 }
 
 // TODO: test comparison
+// TODO: test +0 and -0 comparisons
+// TODO: test a < b
+// TODO: test a > b
+// TODO: test different cases (see bigint.c) for same/diff signs and same/diff sizes
+
+START_TEST(test_multiplication)
+{
+    BigInt *a, *b, *r;
+
+    // single chunk multiplication
+    a = big_int_create(NULL, 31180);
+    b = big_int_create(NULL, 22299);
+    r = big_int_create(NULL, 695282820);
+
+    big_int_mul(a, a, b);
+    ck_assert_int_eq(big_int_compare(a, r), 0);
+
+    // multi-chunk multiplication
+    big_int_create_from_hex(a, "859CC30B50220F05");
+    big_int_create_from_hex(b, "-F623FE531DA1D2B3");
+    big_int_create_from_hex(r, "-80776C98745C5CEA986DBE62FB479A7F");
+
+    big_int_mul(a, a, b);
+    ck_assert_int_eq(big_int_compare(a, r), 0);
+
+    // Zero multiplication
+    big_int_create(a, 0);
+    big_int_create_from_hex(b, "-F623FE531DA1D2B3");
+
+    big_int_mul(a, a, b);
+    ck_assert_int_eq(big_int_compare(a, big_int_zero), 0);
+
+    // Multiplications with zero chunks
+    big_int_create_from_hex(a, "859CC30B00000000");
+    big_int_create_from_hex(b, "F623FE531DA1D2B3");
+    big_int_create_from_hex(r, "80776C9827505E37ED8666B100000000");
+
+    big_int_mul(a, a, b);
+    ck_assert_int_eq(big_int_compare(a, r), 0);
+
+    // TODO: test multiply integers of different sizes
+    // TODO: what other things can we test?
+
+    big_int_destroy(a);
+    big_int_destroy(b);
+    big_int_destroy(r);
+}
 
 Suite *basic_arith_suite(void)
 {
@@ -243,6 +292,7 @@ Suite *basic_arith_suite(void)
     tcase_add_test(tc_basic_arith, test_negate);
     tcase_add_test(tc_basic_arith, test_addition);
     tcase_add_test(tc_basic_arith, test_subtraction);
+    tcase_add_test(tc_basic_arith, test_multiplication);
 
     suite_add_tcase(s, tc_basic_arith);
 

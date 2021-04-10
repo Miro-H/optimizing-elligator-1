@@ -29,6 +29,7 @@
  * Function prototypes
  */
 BigInt *big_int_alloc(uint64_t size);
+BigInt *big_int_calloc(uint64_t size);
 BigInt *big_int_get_res(BigInt *r, BigInt *a);
 
 /**
@@ -51,6 +52,28 @@ BigInt *big_int_alloc(uint64_t size)
 
     return a;
 }
+
+/**
+ * \brief Allocate a BigInt of the given size
+ */
+BigInt *big_int_calloc(uint64_t size)
+{
+    BigInt *a;
+
+    a = (BigInt *) calloc(1, sizeof(BigInt));
+    if (!a)
+        FATAL("Failed to calloc BigInt.\n");
+
+    a->chunks = (dbl_chunk_size_t *) calloc(size, sizeof(dbl_chunk_size_t));
+    if (!a->chunks) {
+        free(a);
+        FATAL("Failed to calloc %llu chunks for malloc.\n", size);
+    }
+    a->alloc_size = size;
+
+    return a;
+}
+
 
 /**
  * \brief if r = NULL:  allocate new BigInt, return pointer to new BigInt
@@ -93,18 +116,24 @@ BigInt *big_int_create_from_hex(BigInt *r, char* s)
 {
     size_t s_len;
     int64_t chunk_size, i;
-    char buf[BIGINT_CHUNK_HEX_SIZE + 1];
+    // buf needs space for zero byte and sign too
+    char buf[BIGINT_CHUNK_HEX_SIZE + 2];
     char *s_end;
     long long parsed_int;
 
     s_len = strlen(s);
     s_end = s + s_len;
+
+    // Don't count sign to integer size
+    if (*s == '-')
+        s_len--;
+
     // chunk_size = ceil(s_len/BIGINT_CHUNK_HEX_SIZE)
     chunk_size = (s_len + BIGINT_CHUNK_HEX_SIZE - 1) / BIGINT_CHUNK_HEX_SIZE;
 
     // Check if the given string is too large for our BigInts
     if (chunk_size > BIGINT_FIXED_SIZE)
-        FATAL("Integer %s is larger than %lu bytes and currently not supported.",
+        FATAL("Integer %s is larger than %llu bytes and currently not supported.",
             s, BIGINT_FIXED_SIZE * sizeof(chunk_size_t));
 
     // NOTE: Currently, all BigInts have size BIGINT_FIXED_SIZE. For dynamic arbitrary
@@ -133,7 +162,6 @@ BigInt *big_int_create_from_hex(BigInt *r, char* s)
     parsed_int = (int64_t) STR_TO_CHUNK(buf, NULL, 16);
     r->sign = parsed_int < 0;
     r->chunks[i] = (dbl_chunk_size_t) (CHUNK_ABS(parsed_int) % BIGINT_RADIX);
-
     return r;
 }
 
@@ -184,8 +212,8 @@ BigInt *big_int_duplicate(BigInt *a)
  */
 void big_int_print(BigInt *a)
 {
-    printf("%s0x%llx", (a->sign == 1) ? "-" : "", a->chunks[0]);
-    for (int64_t i = 1; i < a->size; ++i) {
+    printf("%s0x%llx", (a->sign == 1) ? "-" : "", a->chunks[a->size-1]);
+    for (int64_t i = a->size-2; i >= 0; --i) {
         printf("%08llx", a->chunks[i]);
     }
 }
@@ -394,6 +422,62 @@ BigInt *big_int_sub(BigInt *r, BigInt *a, BigInt *b)
 }
 
 
+/**
+ * \brief Calculate a * b
+ */
+BigInt *big_int_mul(BigInt *r, BigInt *a, BigInt *b)
+{
+    int64_t i, j;
+    dbl_chunk_size_t carry;
+    BigInt *r_loc;
+
+    // NOTE: for arbitrary sized BigInts, this would define the alloc/realloc
+    // size and not throw an error.
+    if (a->size + b->size > BIGINT_FIXED_SIZE)
+        FATAL("Product requires %llu > %llu bytes to be stored!\n",
+            a->size + b->size, BIGINT_FIXED_SIZE);
+    if (r && r->alloc_size < a->size + b->size)
+        FATAL("Result array for product is too small, requires %llu > %llu bytes\n",
+            a->size + b->size, BIGINT_FIXED_SIZE);
+
+    // For MUL, we we have aliasing and a separate BigInt for r is necessary
+
+    // zero out r_loc
+    r_loc = big_int_calloc(BIGINT_FIXED_SIZE);
+
+    r_loc->size = a->size + b->size;
+    r_loc->sign = a->sign != b->sign;
+
+    for (i = 0; i < b->size; ++i) {
+        // shortcut for zero chunk
+        if (b->chunks[i] == 0)
+            r_loc->chunks[i + a->size] = 0;
+        else {
+            // Multiply and add chunks
+            carry = 0;
+            for (j = 0; j < a->size; ++j) {
+                carry += a->chunks[j] * b->chunks[i] + r_loc->chunks[i + j];
+                r_loc->chunks[i + j] = carry % BIGINT_RADIX;
+                carry /= BIGINT_RADIX;
+            }
+            r_loc->chunks[i + a->size] = carry;
+        }
+    }
+
+    // Find actual size of r (at least 1)
+    for (i = r_loc->size - 1; i > 0; --i) {
+        if (r_loc->chunks[i])
+            break;
+        r_loc->size--;
+    }
+
+    if (r)
+        big_int_copy(r, r_loc);
+
+    return r;
+}
+
+
 // /**
 //  * \brief Calculate base^exponent mod q for BigInts
 //  */
@@ -414,17 +498,6 @@ BigInt *big_int_sub(BigInt *r, BigInt *a, BigInt *b)
 //         p = big_int_mod(big_int_mul(b, b), q);
 //     }
 //     return result;
-// }
-//
-// /**
-//  * \brief Calculate a * b
-//  */
-// // TODO: add mul_mod function, might remove this one
-// // TODO: change for 256 bits
-// BigInt big_int_mul(BigInt a, BigInt b)
-// {
-//     BigInt r = {a.x * b.x};
-//     return r;
 // }
 //
 // /**
