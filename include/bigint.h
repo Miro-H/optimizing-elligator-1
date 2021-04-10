@@ -40,10 +40,17 @@ typedef struct egcd_results {
     BigInt *x;
 } egcd_result;
 
+static dbl_chunk_size_t chunk_zero = 0;
 static dbl_chunk_size_t chunk_one = 1;
 
 // Special BigInts, never free those!
-static BigInt *big_int_zero = &((BigInt) {0});
+static BigInt *big_int_zero = &((BigInt) {
+    .sign = 0,
+    .overflow = 0,
+    .size = 1,
+    .alloc_size = 0,
+    .chunks = &chunk_zero,
+});
 static BigInt *big_int_one = &((BigInt) {
     .sign = 0,
     .overflow = 0,
