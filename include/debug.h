@@ -36,7 +36,7 @@
 #define PREFIX_DEBUG "Debug: "
 #define PREFIX_SUCCESS "Success: "
 
-const char *prefix[] = {
+static const char *prefix[] = {
     ANSI_COLOR_RED PREFIX_FATAL,
     ANSI_COLOR_MAGENTA PREFIX_ERROR,
     ANSI_COLOR_YELLOW PREFIX_WARNING,
