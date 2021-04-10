@@ -46,21 +46,21 @@ static dbl_chunk_size_t chunk_zero = 0;
 static dbl_chunk_size_t chunk_one = 1;
 
 // Special BigInts, never free those!
-static BigInt *big_int_zero = &((BigInt) {
+__attribute__((unused)) static BigInt *big_int_zero = &((BigInt) {
     .sign = 0,
     .overflow = 0,
     .size = 1,
     .alloc_size = 0,
     .chunks = &chunk_zero,
 });
-static BigInt *big_int_one = &((BigInt) {
+__attribute__((unused)) static BigInt *big_int_one = &((BigInt) {
     .sign = 0,
     .overflow = 0,
     .size = 1,
     .alloc_size = 0,
     .chunks = &chunk_one,
 });
-static BigInt *big_int_min_one = &((BigInt) {
+__attribute__((unused)) static BigInt *big_int_min_one = &((BigInt) {
     .sign = 0,
     .overflow = 0,
     .size = 1,
