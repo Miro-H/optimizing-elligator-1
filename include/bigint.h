@@ -2,7 +2,9 @@
 #define BIGINT_H_
 #include <stdint.h>
 
-#define BIGINT_FIXED_SIZE ((uint64_t) 4)
+// one more chunk than needed for 256 bits, because division may require an
+// additional chunk for intermediate results.
+#define BIGINT_FIXED_SIZE ((uint64_t) 5)
 #define BIGINT_CHUNK_HEX_SIZE (sizeof(chunk_size_t) * 2)
 
 // Change if larger chunks are used
@@ -88,6 +90,7 @@ BigInt *big_int_add(BigInt *r, BigInt *a, BigInt *b);
 BigInt *big_int_sub(BigInt *r, BigInt *a, BigInt *b);
 BigInt *big_int_mul(BigInt *r, BigInt *a, BigInt *b);
 BigInt *big_int_div(BigInt *r, BigInt *a, BigInt *b);
+BigInt *big_int_div_rem(BigInt *q, BigInt *r, BigInt *a, BigInt *b);
 
 // Modular arithmetic
 BigInt *big_int_mod(BigInt *a, BigInt *q);

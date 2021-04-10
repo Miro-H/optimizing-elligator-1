@@ -26,11 +26,13 @@
 #define MAX(a, b) ((a) > (b) ? (a) : (b))
 
 /*
- * Function prototypes
+ * Function prototypes (for internal use)
  */
 BigInt *big_int_alloc(uint64_t size);
 BigInt *big_int_calloc(uint64_t size);
 BigInt *big_int_get_res(BigInt *r, BigInt *a);
+BigInt *big_int_create_from_dbl_chunk(BigInt *r, dbl_chunk_size_t chunk,
+    uint8_t sign);
 
 /**
  * \brief Allocate a BigInt of the given size
@@ -85,7 +87,6 @@ BigInt *big_int_get_res(BigInt *r, BigInt *a) {
 }
 
 
-
 /**
  * \brief Create BigInt from 64-bit integer
  *        Precondition: x fits into chunk_size_t
@@ -104,6 +105,31 @@ BigInt *big_int_create(BigInt *r, int64_t x)
     r->sign      = x < 0;
     r->overflow  = 0;
     r->size      = 1;
+
+    return r;
+}
+
+
+/**
+ * \brief Create BigInt from a double chunks and a sign
+ */
+BigInt *big_int_create_from_dbl_chunk(BigInt *r, dbl_chunk_size_t chunk,
+    uint8_t sign)
+{
+    if (!r)
+        r = big_int_alloc(BIGINT_FIXED_SIZE);
+
+    r->sign = sign;
+
+    r->chunks[0] = chunk % BIGINT_RADIX;
+
+    if (chunk >= BIGINT_RADIX) {
+        r->chunks[1] = chunk / BIGINT_RADIX;
+        r->size = 2;
+    }
+    else {
+        r->size = 1;
+    }
 
     return r;
 }
@@ -446,7 +472,7 @@ BigInt *big_int_mul(BigInt *r, BigInt *a, BigInt *b)
     r_loc = big_int_calloc(BIGINT_FIXED_SIZE);
 
     r_loc->size = a->size + b->size;
-    r_loc->sign = a->sign != b->sign;
+    r_loc->sign = a->sign ^ b->sign;
 
     for (i = 0; i < b->size; ++i) {
         // shortcut for zero chunk
@@ -471,12 +497,67 @@ BigInt *big_int_mul(BigInt *r, BigInt *a, BigInt *b)
         r_loc->size--;
     }
 
-    if (r)
+    if (r) {
         big_int_copy(r, r_loc);
+        big_int_destroy(r_loc);
+    }
 
     return r;
 }
 
+
+/**
+ * \brief Calculate quotient q and remainder r, such that: a = q * b + r
+ * \param r if r is not NULL, it will be set to the remainder.
+ * \returns pointer to q
+ */
+BigInt *big_int_div_rem(BigInt *q, BigInt *r, BigInt *a, BigInt *b)
+{
+    dbl_chunk_size_t a_tmp, b_tmp;
+    BigInt *factor;
+
+    // NOTE: for arbitrary sized BigInts, this size would be a->size - b->size + 1
+    if (!q)
+        q = big_int_alloc(BIGINT_FIXED_SIZE);
+
+    // Special cases that return zero: divisor larger than dividend, zero dividend
+    if (b->size > a->size || big_int_is_zero(a))
+        return big_int_create(r, 0);
+
+    if (big_int_is_zero(b))
+        FATAL("Division by zero!");
+
+    q->sign = a->sign ^ b->sign;
+
+    // Simple case for small BigInts, just use normal C division
+    if (a->size <= 2) {
+        a_tmp = a->chunks[1] * BIGINT_RADIX + a->chunks[0];
+        b_tmp = b->chunks[1] * BIGINT_RADIX + b->chunks[0];
+
+        big_int_create_from_dbl_chunk(q, a_tmp / b_tmp, q->sign);
+        if (r)
+            big_int_create_from_dbl_chunk(r, a_tmp % b_tmp, q->sign);
+        return q;
+    }
+
+    // Division for a->size > 2
+    // Normalize
+    // TODO: choose power of two here?
+    factor = big_int_create(NULL, BIGINT_RADIX / (b->chunks[b->size - 1] + 1));
+    big_int_mul(a, a, factor);
+
+    // TODO: finish this implementation
+
+    return r;
+}
+
+/**
+ * \brief Calculate r = a // b (integer division)
+ */
+BigInt *big_int_div(BigInt *q, BigInt *a, BigInt *b)
+{
+    return big_int_div_rem(q, NULL, a, b);
+}
 
 // /**
 //  * \brief Calculate base^exponent mod q for BigInts
@@ -498,16 +579,6 @@ BigInt *big_int_mul(BigInt *r, BigInt *a, BigInt *b)
 //         p = big_int_mod(big_int_mul(b, b), q);
 //     }
 //     return result;
-// }
-//
-// /**
-//  * \brief Calculate a // b (integer division)
-//  */
-// // TODO: change for 256 bits
-// BigInt big_int_div(BigInt a, BigInt b)
-// {
-//     BigInt r = {a.x / b.x};
-//     return r;
 // }
 //
 // /**
