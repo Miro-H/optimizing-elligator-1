@@ -29,7 +29,7 @@
  * Function prototypes
  */
 BigInt *big_int_alloc(uint64_t size);
-
+BigInt *big_int_get_res(BigInt *r, BigInt *a);
 
 /**
  * \brief Allocate a BigInt of the given size
@@ -42,7 +42,7 @@ BigInt *big_int_alloc(uint64_t size)
     if (!a)
         FATAL("Failed to malloc BigInt.\n");
 
-    a->chunks = (uint64_t *) malloc(size * sizeof(uint64_t));
+    a->chunks = (dbl_chunk_size_t *) malloc(size * sizeof(dbl_chunk_size_t));
     if (!a->chunks) {
         free(a);
         FATAL("Failed to malloc %llu chunks for malloc.\n", size);
@@ -52,36 +52,45 @@ BigInt *big_int_alloc(uint64_t size)
     return a;
 }
 
+/**
+ * \brief if r = NULL:  allocate new BigInt, return pointer to new BigInt
+ *        otherwise:    use the given BigInt, return pointer to r. Note that if
+ *                      r = a, then this is an in-place modification.
+ */
+BigInt *big_int_get_res(BigInt *r, BigInt *a) {
+    return (!r) ? big_int_duplicate(a) : r;
+}
+
+
 
 /**
  * \brief Create BigInt from 64-bit integer
- *        Precondition x >= -INT64_MIN
+ *        Precondition: x fits into chunk_size_t
  */
-BigInt *big_int_create(int64_t x)
+BigInt *big_int_create(BigInt *r, int64_t x)
 {
-    BigInt *a;
-
-    if (x < INT64_MIN)
-        FATAL("Integer %lli has no unsigned equivalent and is thus not accepted as input!\n", x);
+    if (x > BIGINT_RADIX_SIGNED || x == INT64_MIN || x < -BIGINT_RADIX_SIGNED)
+        FATAL("Integer %lli does not fit into a single chunk of %lu bytes\n",
+            x, sizeof(chunk_size_t));
 
     // NOTE: Currently, all BigInts have size BIGINT_FIXED_SIZE
-    a = big_int_alloc(BIGINT_FIXED_SIZE);
+    if (!r)
+        r = big_int_alloc(BIGINT_FIXED_SIZE);
 
-    a->chunks[0] = llabs(x);
-    a->sign      = x < 0;
-    a->overflow  = 0;
-    a->size      = 1;
+    r->chunks[0] = (dbl_chunk_size_t) CHUNK_ABS(x);
+    r->sign      = x < 0;
+    r->overflow  = 0;
+    r->size      = 1;
 
-    return a;
+    return r;
 }
 
 
 /**
  * \brief Create BigInt from a hexadecimal string
  */
-BigInt *big_int_create_from_hex(char* s)
+BigInt *big_int_create_from_hex(BigInt *r, char* s)
 {
-    BigInt *a;
     size_t s_len;
     int64_t chunk_size, i;
     char buf[BIGINT_CHUNK_HEX_SIZE + 1];
@@ -90,18 +99,23 @@ BigInt *big_int_create_from_hex(char* s)
 
     s_len = strlen(s);
     s_end = s + s_len;
-    chunk_size = 1 + s_len / BIGINT_CHUNK_HEX_SIZE;
+    // chunk_size = ceil(s_len/BIGINT_CHUNK_HEX_SIZE)
+    chunk_size = (s_len + BIGINT_CHUNK_HEX_SIZE - 1) / BIGINT_CHUNK_HEX_SIZE;
 
     // Check if the given string is too large for our BigInts
     if (chunk_size > BIGINT_FIXED_SIZE)
         FATAL("Integer %s is larger than %lu bytes and currently not supported.",
-            s, BIGINT_FIXED_SIZE * sizeof(uint64_t));
+            s, BIGINT_FIXED_SIZE * sizeof(chunk_size_t));
 
-    // NOTE: Currently, all BigInts have size BIGINT_FIXED_SIZE
-    a = big_int_alloc(BIGINT_FIXED_SIZE);
+    // NOTE: Currently, all BigInts have size BIGINT_FIXED_SIZE. For dynamic arbitrary
+    // precision integers, we'd need to check that r has the right size!
+    if (!r)
+        r = big_int_alloc(BIGINT_FIXED_SIZE);
+    else if (r->alloc_size < chunk_size)
+        FATAL("The given output BigInt is not large enough to store %s!\n", s);
 
-    a->overflow  = 0;
-    a->size      = chunk_size;
+    r->overflow  = 0;
+    r->size      = chunk_size;
 
     // Null terinate buffer to stop strtoll
     buf[BIGINT_CHUNK_HEX_SIZE] = 0;
@@ -109,18 +123,18 @@ BigInt *big_int_create_from_hex(char* s)
         s_end -= BIGINT_CHUNK_HEX_SIZE;
         strncpy(buf, s_end, BIGINT_CHUNK_HEX_SIZE);
 
-        a->chunks[i] = (uint64_t) strtoll(buf, NULL, 16);
+        r->chunks[i] = (dbl_chunk_size_t) STR_TO_CHUNK(buf, NULL, 16);
     }
 
     // Parse the last (leftmost) chunk and store the sign bit
     s_len = (size_t) ((uintptr_t) s_end - (uintptr_t) s);
     buf[s_len] = 0;
     strncpy(buf, s, s_len);
-    parsed_int = strtoll(buf, NULL, 16);
-    a->sign = parsed_int < 0;
-    a->chunks[i] = llabs(parsed_int);
+    parsed_int = (int64_t) STR_TO_CHUNK(buf, NULL, 16);
+    r->sign = parsed_int < 0;
+    r->chunks[i] = (dbl_chunk_size_t) (CHUNK_ABS(parsed_int) % BIGINT_RADIX);
 
-    return a;
+    return r;
 }
 
 
@@ -129,7 +143,7 @@ BigInt *big_int_create_from_hex(char* s)
  */
 void big_int_destroy(BigInt *a)
 {
-    if (a->size > 0)
+    if (a->alloc_size > 0)
         free(a->chunks);
     free(a);
 }
@@ -148,7 +162,7 @@ void big_int_copy(BigInt *a, BigInt *b)
     a->overflow = b->overflow;
     a->size     = b->size;
 
-    memcpy((void *) a->chunks, (void *) b->chunks, b->size * sizeof(uint64_t));
+    memcpy((void *) a->chunks, (void *) b->chunks, b->size * sizeof(dbl_chunk_size_t));
 }
 
 /**
@@ -158,7 +172,7 @@ BigInt *big_int_duplicate(BigInt *a)
 {
     BigInt *b;
 
-    b = big_int_alloc(a->alloc_size);
+    b = big_int_alloc(a->size);
     big_int_copy(b, a);
 
     return b;
@@ -166,37 +180,72 @@ BigInt *big_int_duplicate(BigInt *a)
 
 
 /**
- * \brief Calculate -a
+ * \brief Print a BigInt to stdout
  */
-BigInt *big_int_neg(BigInt *a)
+void big_int_print(BigInt *a)
 {
-    BigInt *neg_a;
+    printf("%d", 1 - 2 * a->sign);
+    for (int64_t i = 0; i < a->size; ++i) {
+        printf("%llu", a->chunks[i]);
+    }
+}
 
-    neg_a = big_int_duplicate(a);
-    neg_a->sign = !a->sign;
 
-    return neg_a;
+/**
+ * \brief Calculate r = -a
+ * \param r Result value, see big_int_get_res.
+ */
+BigInt *big_int_neg(BigInt *r, BigInt *a)
+{
+    r = big_int_get_res(r, a);
+    r->sign = !a->sign;
+
+    return r;
+}
+
+
+/**
+ * \brief Calculate r = |a|
+ * \param r Result value, see big_int_get_res.
+ */
+BigInt *big_int_abs(BigInt *r, BigInt *a)
+{
+    r = big_int_get_res(r, a);
+    r->sign = 0;
+
+    return r;
 }
 
 
 /**
  * \brief Calculate r = a + b
+ * \param r Result value, see big_int_get_res.
  */
-BigInt *big_int_add(BigInt *a, BigInt *b)
+BigInt *big_int_add(BigInt *r, BigInt *a, BigInt *b)
 {
-    BigInt *r, *aa, *bb;
+    BigInt *aa, *bb, *neg;
     uint8_t carry;
-    uint64_t i;
+    int64_t i;
+    dbl_chunk_size_t sum;
 
     // Use subtractions when adequate
-    if (a->sign == 0 && b->sign == 1)
-        return big_int_sub(a, b);
-    else if (a->sign == 1 && b->sign == 0)
-        return big_int_sub(b, a);
+    if (a->sign != b->sign) {
+        if (a->sign == 0) {
+            neg = big_int_neg(NULL, b);
+            r = big_int_sub(r, a, neg);
+        }
+        else {
+            neg = big_int_neg(NULL, a);
+            r = big_int_sub(r, b, neg);
+        }
+        big_int_destroy(neg);
+        return r;
+    }
 
     // Assertion: a->sign == b->sign
 
-    // Simplify implementation by making sure we know the larger BigInt.
+    // Simplify implementation by making sure we know the larger BigInt (in
+    // terms of chunks, not numerical value)
     if (a->size < b->size) {
         aa = b;
         bb = a;
@@ -208,29 +257,26 @@ BigInt *big_int_add(BigInt *a, BigInt *b)
 
     // Assertion: aa->size >= bb->size
 
-    // NOTE: This would be aa->size + 1 for non-fixed BigInts
-    r = big_int_alloc(BIGINT_FIXED_SIZE);
+    // NOTE: for non-fixed BigInts we would need to make sure that r is at least
+    // of size aa->size + 1
+    r = big_int_get_res(r, aa);
 
     // Since both BigInts have the same sign, the result has the same sign too
     r->sign = aa->sign;
 
     // First, add chunks where both have entries
+    carry = 0;
     for (i = 0; i < bb->size; ++i) {
-        r->chunks[i] = aa->chunks[i] + bb->chunks[i] + carry;
-
-        // if carry = 0: r < max(aa, bb) with overflow since we can add at most
-        //               UINT64_MAX
-        // if carry = 1: r <= max(aa, bb) with overflow since the value has to
-        //               increase by at least 1.
-        carry = r->chunks[i] < MAX(aa->chunks[i], bb->chunks[i]) - carry;
+        sum = aa->chunks[i] + bb->chunks[i] + carry;
+        r->chunks[i] = sum % BIGINT_RADIX;
+        carry = sum / BIGINT_RADIX;
     }
 
     // Second, finish possible remaining chunks of larger integer
     for (; i < aa->size; ++i) {
-        r->chunks[i] = aa->chunks[i] + carry;
-
-        // On an overflow, r = 0 and aa = MAX_INT
-        carry = r->chunks[i] < aa->chunks[i];
+        sum = aa->chunks[i] + carry;
+        r->chunks[i] = sum % BIGINT_RADIX;
+        carry = sum / BIGINT_RADIX;
     }
 
     r->overflow = carry;
@@ -242,35 +288,78 @@ BigInt *big_int_add(BigInt *a, BigInt *b)
 /**
  * \brief Calculate r = a - b
  */
-BigInt *big_int_sub(BigInt *a, BigInt *b)
+BigInt *big_int_sub(BigInt *r, BigInt *a, BigInt *b)
 {
-    BigInt *r, *aa, *bb;
-    // uint8_t borrow;
-    // uint64_t i;
+    BigInt *b_neg, *a_abs, *b_abs, *aa_abs, *bb_abs;
+    int borrow;
+    int64_t i;
+    dbl_chunk_size_t diff;
+    uint8_t do_sign_switch;
 
-    // Use additions when adequate
-    if (a->sign == b->sign)
-        return big_int_add(a, b);
+    // Use addition operations depending on signs
+    if (a->sign != b->sign) {
+        b_neg = big_int_neg(NULL, b);
+        r = big_int_add(r, a, b_neg);
+        big_int_destroy(b_neg);
+        return r;
+    }
 
-    // Simplify implementation by making sure we know the larger BigInt.
-    // In the return statement, we account for whether we calculated a-b or b-a.
-    if (a->size < b->size) {
-        aa = b;
-        bb = a;
+    // If a, b < 0; calculate -(|a| - |b|) instead
+    if (a->sign == 1) {
+        a_abs = big_int_abs(NULL, a);
+        b_abs = big_int_abs(NULL, b);
+        do_sign_switch = 1;
     }
     else {
-        aa = a;
-        bb = b;
+        a_abs = a;
+        b_abs = b;
+        do_sign_switch = 0;
     }
 
-    // Assertion: aa->size >= bb->size
+    // Assertion: a_abs, b_abs >= 0
 
-    r = big_int_alloc(BIGINT_FIXED_SIZE);
+    // Simplify implementation by making sure we know the numerically larger BigInt.
+    // In the return statement, we account for whether we calculated a-b or b-a.
+    if (big_int_compare(a_abs, b_abs) < 0) {
+        aa_abs = b_abs;
+        bb_abs = a_abs;
+        do_sign_switch = !do_sign_switch;
+    }
+    else {
+        aa_abs = a_abs;
+        bb_abs = b_abs;
+    }
 
-    // TODO: finish this. Figure out what sign should be.
+    // Assertion: aa_abs >= bb_abs
 
-    // Return r or -r, depending on whether we computed a-b or b-a
-    return (aa == a) ? r : big_int_neg(r);
+    // NOTE: for arbitrary size BigInts, r has to be at least of size aa_abs->size
+    r = big_int_get_res(r, aa_abs);
+
+    // Note an underflow sets the 1 bit at position MSB+1 of the chunk:
+    // 0x0000000000000000 - 1 = 0xffffffff00000000
+    //  | extra | chunk |        | extra | chunk |
+    borrow = 0;
+    for (i = 0; i < bb_abs->size; ++i) {
+        diff = aa_abs->chunks[i] - bb_abs->chunks[i] - borrow;
+        r->chunks[i] = diff % BIGINT_RADIX;
+        borrow = (diff / BIGINT_RADIX) & 1;
+    }
+
+    for (; i < aa_abs->size; ++i) {
+        diff = aa_abs->chunks[i] - borrow;
+        r->chunks[i] = diff % BIGINT_RADIX;
+        borrow = (diff / BIGINT_RADIX) & 1;
+    }
+
+    // Assertion: borrow = 0, because aa_abs >= bb_abs
+    r->overflow = do_sign_switch;
+
+    if (a->sign == 1) {
+        big_int_destroy(a_abs);
+        big_int_destroy(b_abs);
+    }
+
+    return (do_sign_switch) ? big_int_neg(r, r) : r;
 }
 
 
@@ -358,22 +447,60 @@ BigInt *big_int_sub(BigInt *a, BigInt *b)
 //     BigInt r = {a.x % q.x};
 //     return r;
 // }
-//
-//
-// /**
-//  * \brief Calculate a == b.
-//  * \returns r, where a==b: r=0, a<b: r<0, a>b: r>0
-//  */
-// // TODO: change for 256 bits
-// uint64_t big_int_compare(BigInt a, BigInt b)
-// {
-//     if (a.x == b.x)
-//         return 0;
-//
-//     return (a.x < b.x) ? -1 : 1;
-// }
-//
-//
+
+
+/**
+ * \brief Returns true if the BigInt is zero
+ */
+int8_t big_int_is_zero(BigInt *a)
+{
+    return a->size == 1 && a->chunks[0] == 0;
+}
+
+
+/**
+ * \brief Calculate a == b.
+ * \returns r, where a==b: r=0, a<b: r<0, a>b: r>0
+ */
+int8_t big_int_compare(BigInt *a, BigInt *b)
+{
+    if (a->size == b->size) {
+        if (big_int_is_zero(b)) {
+            if (big_int_is_zero(a))
+                return 0;
+            return (a->sign == 1) ? -1 : 1;
+        }
+        else if (big_int_is_zero(a)) {
+            return (b->sign == 1) ? 1 : -1;
+        }
+        else if (a->sign != b->sign) {
+            return (a->sign == 1) ? -1 : 1;
+        }
+        else {
+            // Actually compare all the chunks, from the largest to the smallest
+            for (int64_t i = a->size - 1; i >= 0; --i) {
+                if (a->chunks[i] != b->chunks[i]) {
+                    if (a->sign == 1)
+                        return (a->chunks[i] > b->chunks[i]) ? -1 : 1;
+                    else
+                        return (a->chunks[i] > b->chunks[i]) ? 1 : -1;
+                }
+            }
+            return 0;
+        }
+    }
+    else {
+        if (a->sign != b->sign)
+            return (a->sign == 1) ? -1 : 1;
+
+        if (a->sign == 1)
+            return (a->size > b->size) ? -1 : 1;
+        else
+            return (a->size > b->size) ? 1 : -1;
+    }
+}
+
+
 // /**
 //  * \brief Calculate the greatest common divisor using the extended Euclidean
 //  *        algorithm.

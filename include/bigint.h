@@ -3,7 +3,16 @@
 #include <stdint.h>
 
 #define BIGINT_FIXED_SIZE 4
-#define BIGINT_CHUNK_HEX_SIZE (sizeof(uint64_t) * 2)
+#define BIGINT_CHUNK_HEX_SIZE (sizeof(chunk_size_t) * 2)
+
+// Change if larger chunks are used
+#define STR_TO_CHUNK strtol
+#define CHUNK_ABS llabs
+#define BIGINT_RADIX (((dbl_chunk_size_t) 1) << (sizeof(chunk_size_t) * 8))
+#define BIGINT_RADIX_SIGNED ((int64_t) BIGINT_RADIX)
+
+typedef uint32_t chunk_size_t;
+typedef uint64_t dbl_chunk_size_t;
 
 /**
  * \brief Internal data structure for BigInts.
@@ -19,7 +28,7 @@ typedef struct BigInts
     uint64_t overflow : 1;      // 1 if operation overflowed
     uint64_t size : 62;         // Number of chunks used in the BigInt
     uint64_t alloc_size : 62;   // Number of chunks allocated for the BigInt (>= size)
-    uint64_t *chunks;           // 64-bit chunks in reverse order
+    dbl_chunk_size_t *chunks;   // Chunks of size chunk_size_t in reverse order
 } BigInt;
 
 /**
@@ -31,19 +40,47 @@ typedef struct egcd_results {
     BigInt *x;
 } egcd_result;
 
+static dbl_chunk_size_t chunk_one = 1;
+
+// Special BigInts, never free those!
+static BigInt *big_int_zero = &((BigInt) {0});
+static BigInt *big_int_one = &((BigInt) {
+    .sign = 0,
+    .overflow = 0,
+    .size = 1,
+    .alloc_size = 0,
+    .chunks = &chunk_one,
+});
+static BigInt *big_int_min_one = &((BigInt) {
+    .sign = 0,
+    .overflow = 0,
+    .size = 1,
+    .alloc_size = 0,
+    .chunks = &chunk_one,
+});
+
 // Meta functions
-BigInt *big_int_create(int64_t x);
-BigInt *big_int_create_from_hex(char* s);
+BigInt *big_int_create(BigInt *r, int64_t x);
+BigInt *big_int_create_from_hex(BigInt *r, char* s);
 void big_int_destroy(BigInt *a);
 void big_int_copy(BigInt *a, BigInt *b);
 BigInt *big_int_duplicate(BigInt *a);
+void big_int_print(BigInt *a);
 
+/**
+ * All functions have as first argument the BigInt where they should store
+ * the result to. There are the following options:
+ *      if r = NULL:  allocate new BigInt, return pointer to new BigInt
+ *      otherwise:    use the given BigInt, return pointer to r. Note that if
+ *                    r = a, then this is an in-place modification.
+ */
 // Basic arithmetic operations
-BigInt *big_int_neg(BigInt *a);
-BigInt *big_int_add(BigInt *a, BigInt *b);
-BigInt *big_int_sub(BigInt *a, BigInt *b);
-BigInt *big_int_mul(BigInt *a, BigInt *b);
-BigInt *big_int_div(BigInt *a, BigInt *b);
+BigInt *big_int_neg(BigInt *r, BigInt *a);
+BigInt *big_int_abs(BigInt *r, BigInt *a);
+BigInt *big_int_add(BigInt *r, BigInt *a, BigInt *b);
+BigInt *big_int_sub(BigInt *r, BigInt *a, BigInt *b);
+BigInt *big_int_mul(BigInt *r, BigInt *a, BigInt *b);
+BigInt *big_int_div(BigInt *r, BigInt *a, BigInt *b);
 
 // Modular arithmetic
 BigInt *big_int_mod(BigInt *a, BigInt *q);
@@ -54,7 +91,8 @@ BigInt *big_int_mod(BigInt *a, BigInt *q);
 BigInt *big_int_inv(BigInt *a, BigInt *q);
 
 // Comparison operations
-uint64_t big_int_compare(BigInt *a, BigInt *b); // a==b: 0, a<b: -1, a>b: 1
+int8_t big_int_compare(BigInt *a, BigInt *b);
+int8_t big_int_is_zero(BigInt *a);
 
 // Advanced operations
 BigInt *big_int_pow(BigInt *base, BigInt *exponent, BigInt *q);

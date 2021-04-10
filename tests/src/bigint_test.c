@@ -16,28 +16,6 @@
 // Include header files
 #include "bigint.h"
 
-/**
-* \brief Test basic arithmetic operations
-*/
-// TODO: Test multi-chunk addition, maybe use Python as "golden model"
-// START_TEST(test_simple_add)
-// {
-//     BigInt *a, *b, *r;
-//
-//     a = big_int_create(13);
-//     b = big_int_create(37);
-//
-//     r = big_int_add(a, b);
-//
-//     ck_assert_uint_eq(r->chunks[0], 50);
-//     ck_assert_uint_eq(r->sign, 0);
-//
-//     big_int_destroy(a);
-//     big_int_destroy(b);
-//     big_int_destroy(r);
-// }
-// END_TEST
-
 
 /**
 * \brief Test creating a BigInt from an int64_t
@@ -49,16 +27,16 @@ START_TEST(test_create_from_int64)
 
     // Test positive integer
     t = 12390481;
-    a = big_int_create(t);
+    a = big_int_create(NULL, t);
     ck_assert_uint_eq(a->chunks[0], t);
     ck_assert_uint_eq(a->sign, 0);
-    big_int_destroy(a);
 
     // Test negative integer
     t = -3412123;
-    a = big_int_create(t);
+    big_int_create(a, t);
     ck_assert_uint_eq(a->chunks[0], llabs(t));
     ck_assert_uint_eq(a->sign, 1);
+
     big_int_destroy(a);
 }
 END_TEST
@@ -72,57 +50,100 @@ START_TEST(test_create_from_hex)
     BigInt *a;
 
     // Test positive integer
-    a = big_int_create_from_hex("DEADBEEF");
+    a = big_int_create_from_hex(NULL, "DEADBEEF");
     ck_assert_uint_eq(a->chunks[0], 3735928559);
     ck_assert_uint_eq(a->sign, 0);
-    big_int_destroy(a);
 
     // Test negative integer
-    a = big_int_create_from_hex("-C0FFEE");
+    big_int_create_from_hex(a, "-C0FFEE");
     ck_assert_uint_eq(a->chunks[0], 12648430);
     ck_assert_uint_eq(a->sign, 1);
-    big_int_destroy(a);
 
     // Test multi-chunk positive integer
-    a = big_int_create_from_hex("F050000000000000000f00d");
+    big_int_create_from_hex(a, "F050000000000000000F00D");
     ck_assert_uint_eq(a->chunks[0], 61453);
-    ck_assert_uint_eq(a->chunks[1], 251985920);
+    ck_assert_uint_eq(a->chunks[1], 0);
+    ck_assert_uint_eq(a->chunks[2], 251985920);
+    ck_assert_uint_eq(a->size, 3);
     ck_assert_uint_eq(a->sign, 0);
-    big_int_destroy(a);
 
     // Test multi-chunk negative integer
-    a = big_int_create_from_hex("-F050000000000000000f00d");
+    big_int_create_from_hex(a, "-F050000000000000000F00D");
     ck_assert_uint_eq(a->chunks[0], 61453);
-    ck_assert_uint_eq(a->chunks[1], 251985920);
+    ck_assert_uint_eq(a->chunks[1], 0);
+    ck_assert_uint_eq(a->chunks[2], 251985920);
+    ck_assert_uint_eq(a->size, 3);
     ck_assert_uint_eq(a->sign, 1);
+
     big_int_destroy(a);
 }
 END_TEST
 
 
 /**
-* \brief Test negating BigInt
+* \brief Test negating BigInt by flipping the sign twice, and checking that we
+* arrive at the same number again
 */
 START_TEST(test_negate)
 {
-    BigInt *a, *neg_a, *neg_neg_a;
+    BigInt *a, *a_neg;
 
-    // Flip the sign twice, check that we arrive at the same number again
-    a           = big_int_create(123);
-    neg_a       = big_int_neg(a);
-    neg_neg_a   = big_int_neg(neg_a);
+    a = big_int_create(NULL, 123);
 
+    // Flip 1
+    a_neg = big_int_neg(NULL, a);
     // TODO: change to big_int_compare once implemented
-    ck_assert_uint_eq(a->chunks[0], neg_a->chunks[0]);
-    ck_assert_uint_eq(a->chunks[0], neg_neg_a->chunks[0]);
-    ck_assert_uint_ne(a->sign, neg_a->sign);
-    ck_assert_uint_eq(a->sign, neg_neg_a->sign);
+    ck_assert_uint_eq(a->chunks[0], a_neg->chunks[0]);
+    ck_assert_uint_ne(a->sign, a_neg->sign);
+
+    // Flip 2
+    big_int_neg(a_neg, a_neg);
+    // TODO: change to big_int_compare once implemented
+    ck_assert_uint_eq(a->chunks[0], a_neg->chunks[0]);
+    ck_assert_uint_eq(a->sign, a_neg->sign);
 
     big_int_destroy(a);
-    big_int_destroy(neg_a);
-    big_int_destroy(neg_neg_a);
+    big_int_destroy(a_neg);
 }
 
+
+/**
+* \brief Test addition of BigInts
+*/
+START_TEST(test_addition)
+{
+    BigInt *a, *b, *r;
+
+    // normal addition of two positive integers
+    a = big_int_create(NULL, 123);
+    b = big_int_create(NULL, 123412);
+    r = big_int_create(NULL, 123535);
+
+    big_int_add(a, a, b); // a = a + b
+    ck_assert_int_eq(big_int_compare(a, r), 0);
+
+    // normal addition of a positive and a negative integers
+    big_int_create(a, 123);
+    big_int_create(b, -123412);
+    big_int_create(r, -123289);
+
+    big_int_add(a, a, b); // a = a + b
+    ck_assert_int_eq(big_int_compare(a, r), 0);
+
+    // TODO: normal addition of a negative and a positive integers
+    // TODO: normal addition of two negative integers
+    // TODO: multi-chunk addition of two positive integers
+    // TODO: multi-chunk addition of one positive integer and one negative integer
+    // TODO: multi-chunk addition of one negative integer and one positive integer
+    // TODO: multi-chunk addition of two negative integers
+
+    big_int_destroy(a);
+    big_int_destroy(b);
+    big_int_destroy(r);
+}
+
+// TODO: test subtraction
+// TODO: test comparison
 
 Suite *basic_arith_suite(void)
 {
@@ -133,10 +154,10 @@ Suite *basic_arith_suite(void)
 
     tc_basic_arith = tcase_create("Basic Arithmetic");
 
-    // tcase_add_test(tc_basic_arith, test_simple_add);
     tcase_add_test(tc_basic_arith, test_create_from_int64);
     tcase_add_test(tc_basic_arith, test_create_from_hex);
     tcase_add_test(tc_basic_arith, test_negate);
+    tcase_add_test(tc_basic_arith, test_addition);
 
     suite_add_tcase(s, tc_basic_arith);
 
