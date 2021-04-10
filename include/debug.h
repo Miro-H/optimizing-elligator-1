@@ -18,8 +18,9 @@
 // 1: fatal; only get fatal errors
 // 2: error; additionally, get non-fatal errors
 // 3: warnings; additionally, get warnings
-// 4: vebose; get general debug output
-#define LOG_LEVEL 4
+// 4: success; additionally, print successful statements
+// 5: vebose; get general debug output
+#define LOG_LEVEL 5
 
 // Terminal colored print statements
 #define ANSI_COLOR_RED     "\x1b[31m"
@@ -33,15 +34,15 @@
 #define PREFIX_FATAL "Fatal: "
 #define PREFIX_ERROR "Error: "
 #define PREFIX_WARNING "Warning: "
-#define PREFIX_DEBUG "Debug: "
 #define PREFIX_SUCCESS "Success: "
+#define PREFIX_DEBUG "Debug: "
 
 static const char *prefix[] = {
     ANSI_COLOR_RED PREFIX_FATAL,
     ANSI_COLOR_MAGENTA PREFIX_ERROR,
     ANSI_COLOR_YELLOW PREFIX_WARNING,
+    ANSI_COLOR_GREEN PREFIX_SUCCESS,
     ANSI_COLOR_BLUE PREFIX_DEBUG,
-    ANSI_COLOR_GREEN PREFIX_SUCCESS
 };
 
 #define LOG_PRINTF(lvl, fmt...)         \
@@ -56,7 +57,7 @@ static const char *prefix[] = {
 #define FATAL(fmt...) LOG_PRINTF(1, fmt)
 #define ERROR(fmt...) LOG_PRINTF(2, fmt)
 #define WARNING(fmt...) LOG_PRINTF(3, fmt)
-#define DEBUG(fmt...) LOG_PRINTF(4, fmt)
-#define SUCCESS(fmt...) LOG_PRINTF(5, fmt)
+#define SUCCESS(fmt...) LOG_PRINTF(4, fmt)
+#define DEBUG(fmt...) LOG_PRINTF(5, fmt)
 
 #endif // DEBUG_H_
