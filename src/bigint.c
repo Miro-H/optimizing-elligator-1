@@ -479,10 +479,10 @@ BigInt *big_int_mul(BigInt *r, BigInt *a, BigInt *b)
     // size and not throw an error.
     if (a->size + b->size > BIGINT_FIXED_SIZE)
         FATAL("Product requires %" PRIu64 " > %" PRIu64 " bytes to be stored!\n",
-            a->size + b->size, BIGINT_FIXED_SIZE);
+            (uint64_t) a->size + b->size, BIGINT_FIXED_SIZE);
     if (r && r->alloc_size < a->size + b->size)
         FATAL("Result array for product is too small, requires %" PRIu64 " > %" PRIu64 " bytes\n",
-            a->size + b->size, BIGINT_FIXED_SIZE);
+            (uint64_t) a->size + b->size, BIGINT_FIXED_SIZE);
 
     // For MUL, we we have aliasing and a separate BigInt for r is necessary
 
