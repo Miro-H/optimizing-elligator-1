@@ -7,7 +7,7 @@ TESTS_DIR 	= ../tests
 BIN_FILES   = $(filter-out $(wildcard $(BDIR)/.*), $(wildcard $(BDIR)/*))
 
 CC      = gcc
-CFLAGS  = -I$(IDIR)
+CFLAGS  = -I$(IDIR) -m64
 
 # Add additional compilation flags to improve code quality
 CFLAGS += -Wall -Werror
