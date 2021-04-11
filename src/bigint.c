@@ -12,9 +12,6 @@
  * Includes
  */
 #include <stdlib.h>
-#include <stdint.h>
-#include <inttypes.h>
-#include <string.h>
 
 // header files
 #include "bigint.h"
@@ -33,6 +30,8 @@ BigInt *big_int_calloc(uint64_t size);
 BigInt *big_int_get_res(BigInt *r, BigInt *a);
 BigInt *big_int_create_from_dbl_chunk(BigInt *r, dbl_chunk_size_t chunk,
     uint8_t sign);
+BigInt *big_int_prune_leading_zeros(BigInt *r, BigInt *a);
+
 
 /**
  * \brief Allocate a BigInt of the given size
@@ -48,7 +47,7 @@ BigInt *big_int_alloc(uint64_t size)
     a->chunks = (dbl_chunk_size_t *) malloc(size * sizeof(dbl_chunk_size_t));
     if (!a->chunks) {
         free(a);
-        FATAL("Failed to malloc %llu chunks for malloc.\n", size);
+        FATAL("Failed to malloc %" PRIu64 " chunks for malloc.\n", size);
     }
     a->alloc_size = size;
 
@@ -69,7 +68,7 @@ BigInt *big_int_calloc(uint64_t size)
     a->chunks = (dbl_chunk_size_t *) calloc(size, sizeof(dbl_chunk_size_t));
     if (!a->chunks) {
         free(a);
-        FATAL("Failed to calloc %llu chunks for malloc.\n", size);
+        FATAL("Failed to calloc %" PRIu64 " chunks for malloc.\n", size);
     }
     a->alloc_size = size;
 
@@ -82,8 +81,27 @@ BigInt *big_int_calloc(uint64_t size)
  *        otherwise:    use the given BigInt, return pointer to r. Note that if
  *                      r = a, then this is an in-place modification.
  */
-BigInt *big_int_get_res(BigInt *r, BigInt *a) {
+BigInt *big_int_get_res(BigInt *r, BigInt *a)
+{
     return (!r) ? big_int_duplicate(a) : r;
+}
+
+
+/**
+ * \brief Remove leading zeros and adjust size of a BigInt
+ */
+BigInt *big_int_prune_leading_zeros(BigInt *r, BigInt *a)
+{
+    r = big_int_get_res(r, a);
+
+    // Find actual size of r (at least 1)
+    for (int64_t i = r->size - 1; i > 0; --i) {
+        if (r->chunks[i])
+            break;
+        r->size--;
+    }
+
+    return r;
 }
 
 
@@ -94,7 +112,7 @@ BigInt *big_int_get_res(BigInt *r, BigInt *a) {
 BigInt *big_int_create(BigInt *r, int64_t x)
 {
     if (x > BIGINT_RADIX_SIGNED || x == INT64_MIN || x < -BIGINT_RADIX_SIGNED)
-        FATAL("Integer %lli does not fit into a single chunk of %lu bytes\n",
+        FATAL("Integer %" PRId64 " does not fit into a single chunk of %lu bytes\n",
             x, sizeof(chunk_size_t));
 
     // NOTE: Currently, all BigInts have size BIGINT_FIXED_SIZE
@@ -159,7 +177,7 @@ BigInt *big_int_create_from_hex(BigInt *r, char* s)
 
     // Check if the given string is too large for our BigInts
     if (chunk_size > BIGINT_FIXED_SIZE)
-        FATAL("Integer %s is larger than %llu bytes and currently not supported.",
+        FATAL("Integer %s is larger than %" PRIu64 " bytes and currently not supported.\n",
             s, BIGINT_FIXED_SIZE * sizeof(chunk_size_t));
 
     // NOTE: Currently, all BigInts have size BIGINT_FIXED_SIZE. For dynamic arbitrary
@@ -238,9 +256,9 @@ BigInt *big_int_duplicate(BigInt *a)
  */
 void big_int_print(BigInt *a)
 {
-    printf("%s0x%llx", (a->sign == 1) ? "-" : "", a->chunks[a->size-1]);
+    printf("%s0x%" PRIx64, (a->sign == 1) ? "-" : "", a->chunks[a->size-1]);
     for (int64_t i = a->size-2; i >= 0; --i) {
-        printf("%08llx", a->chunks[i]);
+        printf("%08" PRIu64, a->chunks[i]);
     }
 }
 
@@ -460,10 +478,10 @@ BigInt *big_int_mul(BigInt *r, BigInt *a, BigInt *b)
     // NOTE: for arbitrary sized BigInts, this would define the alloc/realloc
     // size and not throw an error.
     if (a->size + b->size > BIGINT_FIXED_SIZE)
-        FATAL("Product requires %llu > %llu bytes to be stored!\n",
+        FATAL("Product requires %" PRIu64 " > %" PRIu64 " bytes to be stored!\n",
             a->size + b->size, BIGINT_FIXED_SIZE);
     if (r && r->alloc_size < a->size + b->size)
-        FATAL("Result array for product is too small, requires %llu > %llu bytes\n",
+        FATAL("Result array for product is too small, requires %" PRIu64 " > %" PRIu64 " bytes\n",
             a->size + b->size, BIGINT_FIXED_SIZE);
 
     // For MUL, we we have aliasing and a separate BigInt for r is necessary
@@ -490,12 +508,7 @@ BigInt *big_int_mul(BigInt *r, BigInt *a, BigInt *b)
         }
     }
 
-    // Find actual size of r (at least 1)
-    for (i = r_loc->size - 1; i > 0; --i) {
-        if (r_loc->chunks[i])
-            break;
-        r_loc->size--;
-    }
+    big_int_prune_leading_zeros(r_loc, r_loc);
 
     if (r) {
         big_int_copy(r, r_loc);
@@ -513,8 +526,10 @@ BigInt *big_int_mul(BigInt *r, BigInt *a, BigInt *b)
  */
 BigInt *big_int_div_rem(BigInt *q, BigInt *r, BigInt *a, BigInt *b)
 {
-    dbl_chunk_size_t a_tmp, b_tmp;
-    BigInt *factor;
+    dbl_chunk_size_t a_tmp, b_tmp, tmp, q_c, r_c;
+    uint64_t factor;
+    int64_t q_idx, a_idx, i;
+    BigInt *a_loc, *b_loc, *a_part, *q_c_bigint, *qb, *radix_pow;
 
     // NOTE: for arbitrary sized BigInts, this size would be a->size - b->size + 1
     if (!q)
@@ -525,7 +540,7 @@ BigInt *big_int_div_rem(BigInt *q, BigInt *r, BigInt *a, BigInt *b)
         return big_int_create(r, 0);
 
     if (big_int_is_zero(b))
-        FATAL("Division by zero!");
+        FATAL("Division by zero!\n");
 
     q->sign = a->sign ^ b->sign;
 
@@ -541,15 +556,122 @@ BigInt *big_int_div_rem(BigInt *q, BigInt *r, BigInt *a, BigInt *b)
     }
 
     // Division for a->size > 2
-    // Normalize
-    // TODO: choose power of two here?
-    factor = big_int_create(NULL, BIGINT_RADIX / (b->chunks[b->size - 1] + 1));
-    big_int_mul(a, a, factor);
 
-    // TODO: finish this implementation
+    // Preserve values of a, b
+    a_loc = big_int_duplicate(a);
+    b_loc = big_int_duplicate(b);
+
+    // Normalize: find factor such that b->chunks[b->size - 1] >= BIGINT_RADIX/2
+    if (b->chunks[b->size - 1] < BIGINT_RADIX / 2) {
+        // NOTE: we maintain the invariant that the MSB chunk is never zero!
+        tmp = BIGINT_RADIX / (2 * b->chunks[b->size - 1]);
+
+        // set factor = 1 + floor(log_2(tmp))
+        factor = 1;
+        while (tmp) {
+            factor <<= 1;
+            tmp >>= 1;
+        }
+
+        big_int_sll_small(a_loc, a_loc, factor);
+        big_int_sll_small(b_loc, b_loc, factor);
+    }
+
+    if (b_loc->size == b->size) {
+        // Special case where we actually have a zero in the MSB, just to make
+        // subsequent ops easier
+        b_loc->chunks[b->size] = 0;
+        b_loc->size += 1;
+    }
+
+    // Prepare for intermediate BigInts
+    // NOTE: for arbitrary sized BigInts, this really only needs to be of size b->size
+    a_part = big_int_alloc(BIGINT_FIXED_SIZE);
+    // NOTE: for arbitrary sized BigInts, this really only needs to be of size 1
+    q_c_bigint = big_int_alloc(BIGINT_FIXED_SIZE);
+    // NOTE: for arbitrary sized BigInts, this really only needs to be of size b->size+1
+    qb = big_int_alloc(BIGINT_FIXED_SIZE);
+    // NOTE: for arbitrary sized BigInts, this really only needs to be of size b->size+1
+    radix_pow = big_int_calloc(BIGINT_FIXED_SIZE);
+    radix_pow->chunks[b_loc->size] = 1;
+    radix_pow->size = b_loc->size + 1;
+
+    // Calculate quotient digit by digit
+    for (q_idx = a_loc->size - b_loc->size; q_idx >= 0; --q_idx) {
+        // Calculate quotient and remainder of
+        // a->chunks[q_idx : q_idx + b->size] / b_loc
+
+        a_idx = q_idx + b_loc->size;
+        q_c = a_loc->chunks[a_idx] * BIGINT_RADIX + a_loc->chunks[a_idx - 1];
+        r_c = q_c % BIGINT_RADIX;
+        r_c /= factor;
+
+        while (r_c < BIGINT_RADIX) {
+            if (q_c >= BIGINT_RADIX
+                || q_c * b_loc->chunks[b_loc->size - 2] >
+                   BIGINT_RADIX * r_c + a_loc->chunks[a_idx - 2])
+            {
+                --q_c;
+                r_c += factor;
+            }
+        }
+
+        // Multiply and subtract
+        // TODO: this entire part can surely be done more efficiently
+        for (i = 0; i <= b_loc->size; ++i) {
+            if (q_idx + i >= a_loc->size)
+                break;
+            a_part->chunks[i] = a_loc->chunks[q_idx + i];
+        }
+        a_part->size = i;
+        a_part->sign = 0;
+
+        DEBUG("Create chunk for q_c = %" PRIu64 "\n", q_c);
+        big_int_create(q_c_bigint, q_c);
+        big_int_sub(qb, a_part, big_int_mul(qb, q_c_bigint, b_loc));
+
+        // TODO: test this case specifically, apparently this is a very unlikely
+        // case (cf. step D5 in D. Knuth's book section 4.3)
+        if (qb->sign == 1) {
+            big_int_add(a_part, a_part, radix_pow);
+
+            --q_c;
+            // NOTE: we intentionally ignore the overflow in a_part, it cancels
+            // out with the borrow that we ignored from the previous add.
+            big_int_add(a_part, a_part, b_loc);
+
+            for (i = 0; i <= b_loc->size; ++i) {
+                if (q_idx + i >= a_loc->size)
+                    break;
+                a_loc->chunks[q_idx + i] = a_part->chunks[i];
+            }
+        }
+        else {
+            for (i = 0; i <= b_loc->size; ++i)
+                a_loc->chunks[q_idx + i] = qb->chunks[i];
+        }
+
+        r->chunks[q_idx] = q_c;
+    }
+
+    // Unnormalize
+    if (r) {
+        a_loc->size = b_loc->size;
+        big_int_copy(r, a_loc);
+        big_int_srl_small(r, r, factor);
+    }
+
+    big_int_prune_leading_zeros(r, r);
+
+    // Cleanup intermediate BigInts
+    big_int_destroy(a_part);
+    big_int_destroy(a_loc);
+    big_int_destroy(b_loc);
+    big_int_destroy(q_c_bigint);
 
     return r;
 }
+
 
 /**
  * \brief Calculate r = a // b (integer division)
@@ -558,6 +680,97 @@ BigInt *big_int_div(BigInt *q, BigInt *a, BigInt *b)
 {
     return big_int_div_rem(q, NULL, a, b);
 }
+
+
+/**
+ * \brief Calculate r = a << shift for "small" shifts (not BigInt shifts)
+ */
+BigInt *big_int_sll_small(BigInt *r, BigInt *a, uint64_t shift)
+{
+    dbl_chunk_size_t carry;
+    uint64_t r_size;
+    int64_t i, r_idx;
+
+    r_size = a->size + shift / BIGINT_CHUNK_BIT_SIZE;
+    // NOTE: for arbitrary sized BigInts, this would cause define the new/realloc
+    // size for r!
+    if (r_size > BIGINT_FIXED_SIZE)
+        FATAL("Shift creates too large BigInt (%" PRIu64 " chunks)!\n",
+            a->size + shift / BIGINT_CHUNK_BIT_SIZE);
+
+    if (!r)
+        r = big_int_alloc(BIGINT_FIXED_SIZE);
+
+    // Set the lowest chunks to zero
+    for (r_idx = 0; r_idx < shift / BIGINT_CHUNK_BIT_SIZE; ++r_idx) {
+        r->chunks[r_idx] = 0;
+    }
+
+    // Shift the other chunks by the chunk internal shift
+    shift %= BIGINT_CHUNK_BIT_SIZE;
+    carry = 0;
+    for (i = 0; i < a->size; ++i) {
+        carry = (a->chunks[i] << shift) | carry;
+        r->chunks[r_idx] = carry % BIGINT_RADIX;
+        carry /= BIGINT_RADIX;
+
+        ++r_idx;
+    }
+
+    // Add the last block if there is a carry from the MSB block
+    if (carry) {
+        r->chunks[r_idx] = carry;
+        ++r_idx;
+    }
+
+    r->overflow = 0;
+    r->size = r_idx;
+    r->sign = a->sign;
+
+    return r;
+}
+
+
+/**
+ * \brief Calculate r = a >> shift for "small" shifts (not BigInt shifts)
+ */
+BigInt *big_int_srl_small(BigInt *r, BigInt *a, uint64_t shift)
+{
+    dbl_chunk_size_t carry;
+    int64_t i, a_idx;
+
+    // NOTE: for arbitrary sized BigInts, r would only need to be of size
+    // a->size - shift / BIGINT_CHUNK_BIT_SIZE
+    if (!r)
+        r = big_int_alloc(BIGINT_FIXED_SIZE);
+
+    // Special case where we shift away all bits
+    if (shift / BIGINT_CHUNK_BIT_SIZE >= a->size) {
+        big_int_create(r, 0);
+        return r;
+    }
+
+    // Start at the first a chunk that still has bits in r
+    a_idx = shift / BIGINT_CHUNK_BIT_SIZE;
+    r->size = a->size - a_idx;
+
+    // Shift the chunks internally starting from a_idx
+    shift %= BIGINT_CHUNK_BIT_SIZE;
+    carry = 0;
+    for (i = 0; i < r->size; ++i) {
+        carry = carry | (a->chunks[a_idx] >> shift);
+        r->chunks[i] = carry % BIGINT_RADIX;
+        carry = (carry << (BIGINT_CHUNK_BIT_SIZE - shift)) % BIGINT_RADIX;
+
+        ++a_idx;
+    }
+
+    r->overflow = 0;
+    r->sign = a->sign;
+
+    return r;
+}
+
 
 // /**
 //  * \brief Calculate base^exponent mod q for BigInts

@@ -1,11 +1,14 @@
 #ifndef BIGINT_H_    /* Include guard */
 #define BIGINT_H_
-#include <stdint.h>
 
-// one more chunk than needed for 256 bits, because division may require an
-// additional chunk for intermediate results.
-#define BIGINT_FIXED_SIZE ((uint64_t) 5)
+#include <inttypes.h>
+#include <string.h>
+
+// one more chunk than needed for 256 bits, because division may require
+// additional space for intermediate results.
+#define BIGINT_FIXED_SIZE ((uint64_t) 6)
 #define BIGINT_CHUNK_HEX_SIZE (sizeof(chunk_size_t) * 2)
+#define BIGINT_CHUNK_BIT_SIZE (sizeof(chunk_size_t) * 8)
 
 // Change if larger chunks are used
 #define STR_TO_CHUNK strtol
@@ -91,6 +94,11 @@ BigInt *big_int_sub(BigInt *r, BigInt *a, BigInt *b);
 BigInt *big_int_mul(BigInt *r, BigInt *a, BigInt *b);
 BigInt *big_int_div(BigInt *r, BigInt *a, BigInt *b);
 BigInt *big_int_div_rem(BigInt *q, BigInt *r, BigInt *a, BigInt *b);
+
+// Shifts
+// TODO: consider implementing general shifts
+BigInt *big_int_sll_small(BigInt *r, BigInt *a, uint64_t shift);
+BigInt *big_int_srl_small(BigInt *r, BigInt *a, uint64_t shift);
 
 // Modular arithmetic
 BigInt *big_int_mod(BigInt *a, BigInt *q);

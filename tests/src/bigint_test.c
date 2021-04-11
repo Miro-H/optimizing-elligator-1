@@ -278,6 +278,55 @@ START_TEST(test_multiplication)
     big_int_destroy(r);
 }
 
+START_TEST(test_division)
+{
+    BigInt *a, *b, *q, *r_exp, *q_exp, *r;
+
+    r = big_int_create(NULL, 0);
+    q = big_int_create(NULL, 0);
+
+    // single chunk division
+    a = big_int_create(NULL, 4184080774);
+    b = big_int_create(NULL, 9961738);
+    r_exp = big_int_create(NULL, 150814);
+    q_exp = big_int_create(NULL, 420);
+
+    big_int_div_rem(q, r, a, b);
+    ck_assert_int_eq(big_int_compare(q_exp, q), 0);
+    ck_assert_int_eq(big_int_compare(r_exp, r), 0);
+
+    // two chunk division
+    big_int_create_from_hex(a, "252314566A9CEBC1");
+    big_int_create_from_hex(b, "2487BCEAC2FA6");
+    big_int_create_from_hex(q_exp, "1044");
+    big_int_create_from_hex(r_exp, "1688C1E5E3A9");
+
+    big_int_div_rem(q, r, a, b);
+    ck_assert_int_eq(big_int_compare(q_exp, q), 0);
+    ck_assert_int_eq(big_int_compare(r_exp, r), 0);
+
+    // TODO: Debug multi-chunk division!
+    // // 4-chunk division
+    // big_int_create_from_hex(a, "285FB8062273B0CD7F86F076B10720D");
+    // big_int_create_from_hex(b, "20B3EAD995ED443F46535EA");
+    // big_int_create_from_hex(q_exp, "13C0CC929");
+    // big_int_create_from_hex(r_exp, "AFA55DFE42B1F6708E1593");
+    //
+    // big_int_div_rem(q, r, a, b);
+    // ck_assert_int_eq(big_int_compare(q_exp, q), 0);
+    // ck_assert_int_eq(big_int_compare(r_exp, r), 0);
+
+    big_int_destroy(a);
+    big_int_destroy(b);
+    big_int_destroy(q);
+    big_int_destroy(r);
+    big_int_destroy(r_exp);
+}
+
+// TODO: Test big_int_sll_small
+
+// TODO: Test big_int_srl_small
+
 Suite *basic_arith_suite(void)
 {
     Suite *s;
@@ -293,6 +342,7 @@ Suite *basic_arith_suite(void)
     tcase_add_test(tc_basic_arith, test_addition);
     tcase_add_test(tc_basic_arith, test_subtraction);
     tcase_add_test(tc_basic_arith, test_multiplication);
+    tcase_add_test(tc_basic_arith, test_division);
 
     suite_add_tcase(s, tc_basic_arith);
 
