@@ -840,7 +840,8 @@ BigInt *big_int_mod(BigInt *r, BigInt *a, BigInt *q)
 /**
  * \brief Calculate r := (a + b) mod q
  */
-BigInt *big_int_add_mod(BigInt *r, BigInt *a, BigInt *b, BigInt *q) {
+BigInt *big_int_add_mod(BigInt *r, BigInt *a, BigInt *b, BigInt *q)
+{
     return big_int_mod(r, big_int_add(r, a, b), q);
 }
 
@@ -848,7 +849,8 @@ BigInt *big_int_add_mod(BigInt *r, BigInt *a, BigInt *b, BigInt *q) {
 /**
  * \brief Calculate r := (a - b) mod q
  */
-BigInt *big_int_sub_mod(BigInt *r, BigInt *a, BigInt *b, BigInt *q) {
+BigInt *big_int_sub_mod(BigInt *r, BigInt *a, BigInt *b, BigInt *q)
+{
     return big_int_mod(r, big_int_sub(r, a, b), q);
 }
 
@@ -856,7 +858,8 @@ BigInt *big_int_sub_mod(BigInt *r, BigInt *a, BigInt *b, BigInt *q) {
 /**
  * \brief Calculate r := (a * b) mod q
  */
-BigInt *big_int_mul_mod(BigInt *r, BigInt *a, BigInt *b, BigInt *q) {
+BigInt *big_int_mul_mod(BigInt *r, BigInt *a, BigInt *b, BigInt *q)
+{
     return big_int_mod(r, big_int_mul(r, a, b), q);
 }
 
@@ -864,8 +867,47 @@ BigInt *big_int_mul_mod(BigInt *r, BigInt *a, BigInt *b, BigInt *q) {
 /**
  * \brief Calculate r := (a * b) mod q
  */
-BigInt *big_int_div_mod(BigInt *r, BigInt *a, BigInt *b, BigInt *q) {
+BigInt *big_int_div_mod(BigInt *r, BigInt *a, BigInt *b, BigInt *q)
+{
     return big_int_mod(r, big_int_div(r, a, b), q);
+}
+
+
+/**
+ * \brief Calculate r := a^-1 mod q (the inverse of a)
+ */
+BigInt *big_int_inv(BigInt *r, BigInt *a, BigInt *q)
+{
+    BigInt *a_neg;
+    EgcdResult res;
+
+    // Modular inversion computation
+    if (big_int_compare(a, big_int_zero) < 0) {
+        a_neg = big_int_neg(NULL, a);
+        big_int_inv(r, a_neg, q);
+        big_int_destroy(a_neg);
+        return big_int_sub(r, q, r);
+    }
+
+    if (!r)
+        r = big_int_alloc(BIGINT_FIXED_SIZE);
+
+    res = big_int_egcd(a, q);
+    if (big_int_compare(res.g, big_int_one) != 0) {
+        big_int_destroy(res.g);
+        big_int_destroy(res.x);
+        big_int_destroy(res.y);
+        FATAL("Non-invertible number given as argument to big_int_inv!");
+        return NULL;
+    }
+
+    big_int_copy(r, res.x);
+
+    big_int_destroy(res.g);
+    big_int_destroy(res.x);
+    big_int_destroy(res.y);
+
+    return big_int_mod(r, r, q);
 }
 
 
@@ -907,30 +949,6 @@ BigInt *big_int_pow(BigInt *r, BigInt *b, BigInt *e, BigInt *q)
         return r_loc;
     }
 }
-
-
-// /**
-//  * \brief Calculate the inverse of a, namely a^-1 mod q
-//  */
-// // TODO: change for 256 bits
-// BigInt big_int_inverse(BigInt a, BigInt q)
-// {
-//     // Modular inversion computation
-//     if (big_int_compare(a, create_big_int(0)) < 0)
-//     {
-//         BigInt r0 = big_int_negate(a);
-//         r0 = big_int_inverse(r0, q);
-//         return big_int_sub(q, r0);
-//     }
-//
-//     egcd_result res = egcd(a, q);
-//     if (big_int_compare(res.g, create_big_int(1)) != 0)
-//         assert(!"Non-invertible number given as argument to big_int_inverse.");
-//     else
-//         return big_int_mod(res.x, q);
-// }
-//
-//
 
 
 /**
@@ -989,13 +1007,13 @@ int8_t big_int_compare(BigInt *a, BigInt *b)
 /**
  * \brief Calculate the greatest common divisor using the extended Euclidean
  *        algorithm (iterative version).
- * \returns egcd_result (x, y, g), where x * a + y * b = g
+ * \returns EgcdResult (x, y, g), where x * a + y * b = g
  *          and g is the GCD.
  */
-egcd_result big_int_egcd(BigInt *a, BigInt *b)
+EgcdResult big_int_egcd(BigInt *a, BigInt *b)
 {
     BigInt *q, *a_loc, *b_loc, *x0, *x1, *y0, *y1, *tmp;
-    egcd_result res;
+    EgcdResult res;
 
     if (a->sign == 1 || b->sign == 1)
         FATAL("GCD implementation is currently only supporting positive numbers!\n");

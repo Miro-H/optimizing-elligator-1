@@ -39,11 +39,11 @@ typedef struct BigInts
 /**
  * Struct for the results of g := gcd(a, b) = xa + yb
  */
-typedef struct egcd_results {
+typedef struct EgcdResult {
     BigInt *g;
     BigInt *y;
     BigInt *x;
-} egcd_result;
+} EgcdResult;
 
 static dbl_chunk_size_t chunk_zero = 0;
 static dbl_chunk_size_t chunk_one = 1;
@@ -114,7 +114,7 @@ int8_t big_int_is_zero(BigInt *a);
 
 // Advanced operations
 BigInt *big_int_pow(BigInt *r, BigInt *b, BigInt *e, BigInt *q);
-egcd_result big_int_egcd(BigInt *a, BigInt *b);
+EgcdResult big_int_egcd(BigInt *a, BigInt *b);
 BigInt *chi(BigInt *t, BigInt q);
 
 #endif // BIGINT_H_
