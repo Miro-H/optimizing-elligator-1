@@ -116,5 +116,5 @@ DEBUG_BIGINT(a, "For i = %d, we have a = ", i);
 ```
 Prints the following (e.g., for `i = 42`, `a = 0x102CC2711CB04A42`):
 ```text
-For i = 42, we have a = 0x102CC2711CB04A42
+For i = 42, we have a = 0x102CC271 1CB04A42
 ```
