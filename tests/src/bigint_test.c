@@ -393,6 +393,11 @@ START_TEST(test_modulo_operation)
     big_int_destroy(r);
 }
 
+// TODO: quickly test big_int_add_mod
+// TODO: quickly test big_int_sub_mod
+// TODO: quickly test big_int_mul_mod
+// TODO: quickly test big_int_div_mod
+
 Suite *basic_arith_suite(void)
 {
     Suite *s;

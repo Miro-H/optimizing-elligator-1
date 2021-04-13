@@ -802,7 +802,46 @@ BigInt *big_int_mod(BigInt *r, BigInt *a, BigInt *q)
     tmp = big_int_div_rem(NULL, r, a, q);
     big_int_destroy(tmp);
 
+    // Ensure that 0 <= r < q
+    if (r->sign == 1)
+        big_int_add(r, r, q);
+
     return r;
+}
+
+// TODO: Evaluate if it's worth it to add specialialized implementations for all
+//       those *_mod operations
+
+
+/**
+ * \brief Calculate r := (a + b) mod q
+ */
+BigInt *big_int_add_mod(BigInt *r, BigInt *a, BigInt *b, BigInt *q) {
+    return big_int_mod(r, big_int_add(r, a, b), q);
+}
+
+
+/**
+ * \brief Calculate r := (a - b) mod q
+ */
+BigInt *big_int_sub_mod(BigInt *r, BigInt *a, BigInt *b, BigInt *q) {
+    return big_int_mod(r, big_int_sub(r, a, b), q);
+}
+
+
+/**
+ * \brief Calculate r := (a * b) mod q
+ */
+BigInt *big_int_mul_mod(BigInt *r, BigInt *a, BigInt *b, BigInt *q) {
+    return big_int_mod(r, big_int_mul(r, a, b), q);
+}
+
+
+/**
+ * \brief Calculate r := (a * b) mod q
+ */
+BigInt *big_int_div_mod(BigInt *r, BigInt *a, BigInt *b, BigInt *q) {
+    return big_int_mod(r, big_int_div(r, a, b), q);
 }
 
 

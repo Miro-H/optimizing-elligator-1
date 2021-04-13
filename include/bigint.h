@@ -102,11 +102,11 @@ BigInt *big_int_srl_small(BigInt *r, BigInt *a, uint64_t shift);
 
 // Modular arithmetic
 BigInt *big_int_mod(BigInt *r, BigInt *a, BigInt *q);
-// TODO: add: BigInt *big_int_add(BigInt *a, BigInt *b, BigInt *q);
-// TODO: add: BigInt *big_int_sub(BigInt *a, BigInt *b, BigInt *q);
-// TODO: add: BigInt *big_int_mul_mod(BigInt *a, BigInt *b, BigInt *q);
-// TODO: add: BigInt *big_int_div_mod(BigInt *a, BigInt *b, BigInt *q);
-BigInt *big_int_inv(BigInt *a, BigInt *q);
+BigInt *big_int_add_mod(BigInt *r, BigInt *a, BigInt *b, BigInt *q);
+BigInt *big_int_sub_mod(BigInt *r, BigInt *a, BigInt *b, BigInt *q);
+BigInt *big_int_mul_mod(BigInt *r, BigInt *a, BigInt *b, BigInt *q);
+BigInt *big_int_div_mod(BigInt *r, BigInt *a, BigInt *b, BigInt *q);
+BigInt *big_int_inv(BigInt *r, BigInt *a, BigInt *q);
 
 // Comparison operations
 int8_t big_int_compare(BigInt *a, BigInt *b);
