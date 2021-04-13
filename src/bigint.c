@@ -548,7 +548,7 @@ BigInt *big_int_div_rem(BigInt *q, BigInt *r, BigInt *a, BigInt *b)
     // divisor larger than dividend
     if (b->size > a->size) {
         if (r)
-            big_int_duplicate(a);
+            big_int_copy(r, a);
         return big_int_create(q, 0);
     }
     // zero dividend
@@ -566,7 +566,9 @@ BigInt *big_int_div_rem(BigInt *q, BigInt *r, BigInt *a, BigInt *b)
     // Since we do operations on double chunks, we can also do the shortcut for length 2
     else if (a->size == 2) {
         a_tmp = a->chunks[1] * BIGINT_RADIX + a->chunks[0];
-        b_tmp = b->chunks[1] * BIGINT_RADIX + b->chunks[0];
+        b_tmp = b->chunks[0];
+        if (b->size == 2)
+            b_tmp += b->chunks[1] * BIGINT_RADIX;
         q_sign = a->sign ^ b->sign;
 
         if (r)
@@ -984,32 +986,60 @@ int8_t big_int_compare(BigInt *a, BigInt *b)
 }
 
 
-// /**
-//  * \brief Calculate the greatest common divisor using the extended Euclidean
-//  *        algorithm.
-//  * \returns egcd_result (x, y, g), where x * a + y * b = g
-//  *          and g is the GCD.
-//  */
-// // TODO: change for 256 bits
-// // TODO: Change to iterative instead of recursive variant
-// egcd_result egcd(BigInt a, BigInt b) // Euclidean algorithm for gcd computation
-// {
-//     if (big_int_compare(a, create_big_int(0)) == 0)
-//     {
-//         egcd_result r = {b, create_big_int(0), create_big_int(1)};
-//         return r;
-//     }
-//     else
-//     {
-//         egcd_result res = egcd(big_int_mod(b, a), a);
-//         BigInt r0 = big_int_div(b, a);
-//         r0 = big_int_mul(r0, res.y);
-//         egcd_result r = {res.g, big_int_sub(res.x, r0), res.y};
-//         return r;
-//     }
-// }
-//
-//
+/**
+ * \brief Calculate the greatest common divisor using the extended Euclidean
+ *        algorithm (iterative version).
+ * \returns egcd_result (x, y, g), where x * a + y * b = g
+ *          and g is the GCD.
+ */
+egcd_result big_int_egcd(BigInt *a, BigInt *b)
+{
+    BigInt *q, *a_loc, *b_loc, *x0, *x1, *y0, *y1, *tmp;
+    egcd_result res;
+
+    if (a->sign == 1 || b->sign == 1)
+        FATAL("GCD implementation is currently only supporting positive numbers!\n");
+
+    q = big_int_alloc(BIGINT_FIXED_SIZE);
+    tmp = big_int_alloc(BIGINT_FIXED_SIZE);
+    a_loc = big_int_duplicate(a);
+    b_loc = big_int_duplicate(b);
+
+    x0 = big_int_create(NULL, 0);
+    x1 = big_int_create(NULL, 1);
+    y0 = big_int_create(NULL, 1);
+    y1 = big_int_create(NULL, 0);
+
+    while (big_int_compare(a_loc, big_int_zero) != 0)
+    {
+        big_int_div_rem(q, tmp, b_loc, a_loc);
+        big_int_copy(b_loc, a_loc);
+        big_int_copy(a_loc, tmp);
+
+        big_int_copy(tmp, y1);
+        big_int_sub(y1, y0, big_int_mul(y1, y1, q));
+        big_int_copy(y0, tmp);
+
+        big_int_copy(tmp, x1);
+        big_int_sub(x1, x0, big_int_mul(x1, x1, q));
+        big_int_copy(x0, tmp);
+
+    }
+
+    res.g = b_loc;
+    res.x = x0;
+    res.y = y0;
+
+    big_int_destroy(tmp);
+    big_int_destroy(q);
+    big_int_destroy(x1);
+    big_int_destroy(y1);
+    big_int_destroy(a_loc);
+
+    return res;
+}
+
+
 // /**
 //  * \brief Calculate the Chi function chi(t) = t**((q-1)/2)
 //  * \returns 0 if t = 0, 1 if t is a non-zero square, -1 otherwise (t is not a

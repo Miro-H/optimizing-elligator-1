@@ -423,28 +423,72 @@ START_TEST(test_power)
     // big_int_destroy(r);
 }
 
-Suite *basic_arith_suite(void)
+START_TEST(test_gcd)
+{
+    egcd_result res;
+    BigInt *a, *b, *g_exp, *x_exp, *y_exp;
+
+    // TODO: Test big_int_egcd with (many!) more cases
+
+    a = big_int_create_from_hex(NULL, "F18A8F06266D15799D7FD7C1B");
+    b = big_int_create_from_hex(NULL, "31A9B6D0509E9");
+    g_exp = big_int_create(NULL, 5);
+    x_exp = big_int_create_from_hex(NULL, "-2235AFC88A8C");
+    y_exp = big_int_create_from_hex(NULL, "A661FAF8D8580423D4219FE1");
+
+    res = big_int_egcd(a, b);
+    ck_assert_int_eq(big_int_compare(res.g, g_exp), 0);
+    ck_assert_int_eq(big_int_compare(res.x, x_exp), 0);
+    ck_assert_int_eq(big_int_compare(res.y, y_exp), 0);
+
+    big_int_destroy(res.g);
+    big_int_destroy(res.x);
+    big_int_destroy(res.y);
+
+    big_int_destroy(a);
+    big_int_destroy(b);
+    big_int_destroy(g_exp);
+    big_int_destroy(x_exp);
+    big_int_destroy(y_exp);
+}
+
+
+Suite *bigints_suite(void)
 {
     Suite *s;
-    TCase *tc_basic_arith;
+    TCase *tc_create, *tc_basic_arith, *tc_shifts, *tc_modular_arith,
+        *tc_advanced_ops;
 
     s = suite_create("BigInt Test Suite");
 
+    tc_create = tcase_create("Create BigInts");
     tc_basic_arith = tcase_create("Basic Arithmetic");
+    tc_shifts = tcase_create("Shifts");
+    tc_modular_arith = tcase_create("Modular Arithmetic");
+    tc_advanced_ops = tcase_create("Advanced Operations");
 
-    tcase_add_test(tc_basic_arith, test_create_from_int64);
-    tcase_add_test(tc_basic_arith, test_create_from_hex);
+    tcase_add_test(tc_create, test_create_from_int64);
+    tcase_add_test(tc_create, test_create_from_hex);
+
     tcase_add_test(tc_basic_arith, test_negate);
     tcase_add_test(tc_basic_arith, test_addition);
     tcase_add_test(tc_basic_arith, test_subtraction);
     tcase_add_test(tc_basic_arith, test_multiplication);
-    tcase_add_test(tc_basic_arith, test_sll_small);
-    tcase_add_test(tc_basic_arith, test_srl_small);
     tcase_add_test(tc_basic_arith, test_division);
-    tcase_add_test(tc_basic_arith, test_modulo_operation);
-    tcase_add_test(tc_basic_arith, test_power);
 
+    tcase_add_test(tc_shifts, test_sll_small);
+    tcase_add_test(tc_shifts, test_srl_small);
+
+    tcase_add_test(tc_modular_arith, test_modulo_operation);
+
+    tcase_add_test(tc_advanced_ops, test_power);
+    tcase_add_test(tc_advanced_ops, test_gcd);
+
+    suite_add_tcase(s, tc_create);
     suite_add_tcase(s, tc_basic_arith);
+    suite_add_tcase(s, tc_shifts);
+    suite_add_tcase(s, tc_modular_arith);
+    suite_add_tcase(s, tc_advanced_ops);
 
     return s;
 }
@@ -455,7 +499,7 @@ Suite *basic_arith_suite(void)
     Suite *s;
     SRunner *sr;
 
-    s = basic_arith_suite();
+    s = bigints_suite();
     sr = srunner_create(s);
 
     srunner_run_all(sr, CK_NORMAL);

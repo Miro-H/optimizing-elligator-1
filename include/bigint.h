@@ -114,7 +114,7 @@ int8_t big_int_is_zero(BigInt *a);
 
 // Advanced operations
 BigInt *big_int_pow(BigInt *r, BigInt *b, BigInt *e, BigInt *q);
-egcd_result egcd(BigInt *a, BigInt *b);
+egcd_result big_int_egcd(BigInt *a, BigInt *b);
 BigInt *chi(BigInt *t, BigInt q);
 
 #endif // BIGINT_H_
