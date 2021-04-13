@@ -101,7 +101,7 @@ BigInt *big_int_sll_small(BigInt *r, BigInt *a, uint64_t shift);
 BigInt *big_int_srl_small(BigInt *r, BigInt *a, uint64_t shift);
 
 // Modular arithmetic
-BigInt *big_int_mod(BigInt *a, BigInt *q);
+BigInt *big_int_mod(BigInt *r, BigInt *a, BigInt *q);
 // TODO: add: BigInt *big_int_add(BigInt *a, BigInt *b, BigInt *q);
 // TODO: add: BigInt *big_int_sub(BigInt *a, BigInt *b, BigInt *q);
 // TODO: add: BigInt *big_int_mul_mod(BigInt *a, BigInt *b, BigInt *q);

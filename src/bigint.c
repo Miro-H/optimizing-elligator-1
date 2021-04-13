@@ -538,6 +538,9 @@ BigInt *big_int_div_rem(BigInt *q, BigInt *r, BigInt *a, BigInt *b)
     if (big_int_is_zero(b))
         FATAL("Division by zero!\n");
 
+    // DEBUG_BIGINT(a, "div_rem; a = ");
+    // DEBUG_BIGINT(b, "div_rem; b = ")
+
     // Special cases that return zero: divisor larger than dividend, zero dividend
     if (b->size > a->size || big_int_is_zero(a))
         return big_int_create(r, 0);
@@ -572,17 +575,14 @@ BigInt *big_int_div_rem(BigInt *q, BigInt *r, BigInt *a, BigInt *b)
     b_loc = big_int_duplicate(b);
 
     // Normalize: find factor such that b->chunks[b->size - 1] >= BIGINT_RADIX/2
-    if (b->chunks[b->size - 1] < BIGINT_RADIX / 2) {
-        // NOTE: we maintain the invariant that the MSB chunk is never zero!
-        tmp = BIGINT_RADIX / (2 * b->chunks[b->size - 1]);
+    factor = 0;
+    tmp = b->chunks[b->size - 1];
+    while (2 * tmp < BIGINT_RADIX) {
+        ++factor;
+        tmp <<= 1;
+    }
 
-        // set factor = 1 + floor(log_2(tmp))
-        factor = 0;
-        do {
-            ++factor;
-            tmp >>= 1;
-        } while (tmp);
-
+    if (factor > 0) {
         big_int_sll_small(a_loc, a_loc, factor);
         big_int_sll_small(b_loc, b_loc, factor);
     }
@@ -789,6 +789,23 @@ BigInt *big_int_srl_small(BigInt *r, BigInt *a, uint64_t shift)
 }
 
 
+/**
+ * \brief Calculate r := a mod q
+ */
+BigInt *big_int_mod(BigInt *r, BigInt *a, BigInt *q)
+{
+    BigInt *tmp;
+
+    // TODO: this can be optimized for special cases. We need to check if
+    // q (for the mapping) is close to a power of two. In that case, we might
+    // be able to avoid using division here!
+    tmp = big_int_div_rem(NULL, r, a, q);
+    big_int_destroy(tmp);
+
+    return r;
+}
+
+
 // /**
 //  * \brief Calculate base^exponent mod q for BigInts
 //  */
@@ -843,15 +860,6 @@ BigInt *big_int_srl_small(BigInt *r, BigInt *a, uint64_t shift)
 // }
 //
 //
-// /**
-//  * \brief Calculate a mod q
-//  */
-// // TODO: change for 256 bits
-// BigInt big_int_mod(BigInt a, BigInt q)
-// {
-//     BigInt r = {a.x % q.x};
-//     return r;
-// }
 
 
 /**
