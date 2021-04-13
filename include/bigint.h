@@ -111,10 +111,11 @@ BigInt *big_int_inv(BigInt *r, BigInt *a, BigInt *q);
 // Comparison operations
 int8_t big_int_compare(BigInt *a, BigInt *b);
 int8_t big_int_is_zero(BigInt *a);
+int8_t big_int_is_odd(BigInt *a);
 
 // Advanced operations
 BigInt *big_int_pow(BigInt *r, BigInt *b, BigInt *e, BigInt *q);
 EgcdResult big_int_egcd(BigInt *a, BigInt *b);
-BigInt *chi(BigInt *t, BigInt q);
+BigInt *big_int_chi(BigInt *r, BigInt *t, BigInt *q);
 
 #endif // BIGINT_H_

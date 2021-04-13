@@ -916,20 +916,18 @@ BigInt *big_int_inv(BigInt *r, BigInt *a, BigInt *q)
  */
 BigInt *big_int_pow(BigInt *r, BigInt *b, BigInt *e, BigInt *q)
 {
-    BigInt *e_loc, *r_loc, *two, *parity;
+    BigInt *e_loc, *r_loc;
 
     // NOTE: for arbitrary sized BigInts, we'd need to figure out some good size
     //       to allocate for the first r. For now, this implicitly use the fixed size.
     r_loc = big_int_create(NULL, 1);
     e_loc = big_int_duplicate(e);
-    two = big_int_create(NULL, 2);
-    parity = big_int_alloc(BIGINT_FIXED_SIZE);
 
     while (big_int_compare(e_loc, big_int_zero) > 0) {
         // If power is odd
-        if (big_int_compare(big_int_mod(parity, e_loc, two), big_int_one) == 0) {
+        if (big_int_is_odd(e_loc))
             big_int_mul_mod(r_loc, r_loc, b, q);
-        }
+
         big_int_srl_small(e_loc, e_loc, 1);
         big_int_mul_mod(r_loc, r_loc, r_loc, q);
     }
@@ -937,8 +935,6 @@ BigInt *big_int_pow(BigInt *r, BigInt *b, BigInt *e, BigInt *q)
     DEBUG_BIGINT(r, "r = ");
 
     big_int_destroy(e_loc);
-    big_int_destroy(parity);
-    big_int_destroy(two);
 
     if (r) {
         big_int_copy(r, r_loc);
@@ -957,6 +953,15 @@ BigInt *big_int_pow(BigInt *r, BigInt *b, BigInt *e, BigInt *q)
 int8_t big_int_is_zero(BigInt *a)
 {
     return a->size == 1 && a->chunks[0] == 0;
+}
+
+
+/**
+ * \brief Returns true if the BigInt is an odd number
+ */
+int8_t big_int_is_odd(BigInt *a)
+{
+    return (a->size > 0) && (a->chunks[0] & 1);
 }
 
 
@@ -1058,16 +1063,31 @@ EgcdResult big_int_egcd(BigInt *a, BigInt *b)
 }
 
 
-// /**
-//  * \brief Calculate the Chi function chi(t) = t**((q-1)/2)
-//  * \returns 0 if t = 0, 1 if t is a non-zero square, -1 otherwise (t is not a
-//  *          square)
-//  */
-// BigInt chi(BigInt t, BigInt q)
-// {
-//     BigInt r0 = big_int_inverse(create_big_int(2), q);
-//     BigInt r1 = big_int_sub(q, create_big_int(1));
-//     r0 = big_int_mul(r1, r0);
-//     r0 = big_int_pow(t, r0, q);
-//     return r0;
-// }
+/**
+ * \brief Calculate the Chi function chi(t) = t**((q-1)/2) mod q
+ * \returns 0 if t = 0, 1 if t is a non-zero square, -1 otherwise
+ */
+BigInt *big_int_chi(BigInt *r, BigInt *t, BigInt *q)
+{
+    BigInt *e;
+
+    // Check assumption that q is odd (otherwise our chi function might need to
+    // be changed)
+    if (!big_int_is_odd(q))
+        FATAL("Chi function implementation only supports odd q (actually prime q)!");
+
+    if (!r)
+        r = big_int_alloc(BIGINT_FIXED_SIZE);
+
+    if (big_int_compare(t, big_int_zero) == 0)
+        return big_int_create(r, 0);
+
+    e = big_int_duplicate(q);
+    big_int_srl_small(e, big_int_sub(e, e, big_int_one), 1);
+
+    big_int_pow(r, t, e, q);
+
+    big_int_destroy(e);
+
+    return r;
+}
