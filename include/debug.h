@@ -12,6 +12,7 @@
 
 #include <stdio.h>
 #include <assert.h>
+#include "bigint.h"
 
 // Set the log level to receive more output. Available levels are:
 // 0: quiet; no output
@@ -37,7 +38,7 @@
 #define PREFIX_SUCCESS "Success: "
 #define PREFIX_DEBUG "Debug: "
 
-static const char *prefix[] = {
+__attribute__((unused)) static const char *prefix[] = {
     ANSI_COLOR_RED PREFIX_FATAL,
     ANSI_COLOR_MAGENTA PREFIX_ERROR,
     ANSI_COLOR_YELLOW PREFIX_WARNING,
@@ -45,13 +46,16 @@ static const char *prefix[] = {
     ANSI_COLOR_BLUE PREFIX_DEBUG,
 };
 
-#define LOG_PRINTF(lvl, fmt...)         \
-    if (lvl <= LOG_LEVEL) {             \
-        printf("%s", prefix[lvl-1]);    \
-        printf(fmt);                    \
-        printf(ANSI_COLOR_RESET);       \
-        if (lvl == 1)                   \
-            assert(0);                  \
+#define OUTFILE(lvl) (((lvl) <= 3) ? stderr : stdout)
+
+#define LOG_PRINTF(lvl, fmt...)                         \
+    if (lvl <= LOG_LEVEL) {                             \
+        fprintf(OUTFILE(lvl), "%s", prefix[lvl-1]);     \
+        fprintf(OUTFILE(lvl), fmt);                     \
+        fprintf(OUTFILE(lvl), ANSI_COLOR_RESET);        \
+        fflush(OUTFILE(lvl));                           \
+        if (lvl == 1)                                   \
+            assert(0);                                  \
     }
 
 #define FATAL(fmt...) LOG_PRINTF(1, fmt)
@@ -59,5 +63,15 @@ static const char *prefix[] = {
 #define WARNING(fmt...) LOG_PRINTF(3, fmt)
 #define SUCCESS(fmt...) LOG_PRINTF(4, fmt)
 #define DEBUG(fmt...) LOG_PRINTF(5, fmt)
+
+#define DEBUG_BIGINT(bigint, fmt...)            \
+    do {                                        \
+        printf(ANSI_COLOR_BLUE PREFIX_DEBUG);   \
+        printf(fmt);                            \
+        big_int_print((bigint));                \
+        printf("\n");                           \
+        printf(ANSI_COLOR_RESET);               \
+        fflush(stdout);                         \
+    } while(0);
 
 #endif // DEBUG_H_

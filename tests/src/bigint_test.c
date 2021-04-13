@@ -305,16 +305,21 @@ START_TEST(test_division)
     ck_assert_int_eq(big_int_compare(q_exp, q), 0);
     ck_assert_int_eq(big_int_compare(r_exp, r), 0);
 
-    // TODO: Debug multi-chunk division!
-    // // 4-chunk division
-    // big_int_create_from_hex(a, "285FB8062273B0CD7F86F076B10720D");
-    // big_int_create_from_hex(b, "20B3EAD995ED443F46535EA");
-    // big_int_create_from_hex(q_exp, "13C0CC929");
-    // big_int_create_from_hex(r_exp, "AFA55DFE42B1F6708E1593");
-    //
-    // big_int_div_rem(q, r, a, b);
-    // ck_assert_int_eq(big_int_compare(q_exp, q), 0);
-    // ck_assert_int_eq(big_int_compare(r_exp, r), 0);
+    // 4-chunk division
+    big_int_create_from_hex(a, "285FB8062273B0CD7F86F076B10720D");
+    big_int_create_from_hex(b, "20B3EAD995ED443F46535EA");
+    big_int_create_from_hex(q_exp, "13C0CC929");
+    big_int_create_from_hex(r_exp, "AFA55DFE42B1F6708E1593");
+
+    big_int_div_rem(q, r, a, b);
+    ck_assert_int_eq(big_int_compare(q_exp, q), 0);
+    ck_assert_int_eq(big_int_compare(r_exp, r), 0);
+
+    // TODO: Definitely test division more in-depth - I don't really trust the
+    //       code that much.
+
+    // TODO: test special case marked in big_int_div_rem in a TODO and mentioned
+    //       specifically in the book (last link in git issue).
 
     big_int_destroy(a);
     big_int_destroy(b);
@@ -323,9 +328,39 @@ START_TEST(test_division)
     big_int_destroy(r_exp);
 }
 
-// TODO: Test big_int_sll_small
+START_TEST(test_sll_small)
+{
+    BigInt *a, *r;
 
-// TODO: Test big_int_srl_small
+    // TODO: Test big_int_sll_small with more cases
+
+    // Shift over chunk border
+    a = big_int_create(NULL, 4184080774);
+    r = big_int_create_from_hex(NULL, "3e590061800");
+
+    big_int_sll_small(a, a, 10);
+    ck_assert_int_eq(big_int_compare(a, r), 0);
+
+    big_int_destroy(a);
+    big_int_destroy(r);
+}
+
+START_TEST(test_srl_small)
+{
+    BigInt *a, *r;
+
+    // TODO: Test big_int_srl_small with more cases
+
+    // Shift over chunk border
+    a = big_int_create_from_hex(NULL, "102CC2711CB04A427");
+    r = big_int_create_from_hex(NULL, "102CC2711CB04A42");
+
+    big_int_srl_small(a, a, 4);
+    ck_assert_int_eq(big_int_compare(a, r), 0);
+
+    big_int_destroy(a);
+    big_int_destroy(r);
+}
 
 Suite *basic_arith_suite(void)
 {
@@ -342,6 +377,8 @@ Suite *basic_arith_suite(void)
     tcase_add_test(tc_basic_arith, test_addition);
     tcase_add_test(tc_basic_arith, test_subtraction);
     tcase_add_test(tc_basic_arith, test_multiplication);
+    tcase_add_test(tc_basic_arith, test_sll_small);
+    tcase_add_test(tc_basic_arith, test_srl_small);
     tcase_add_test(tc_basic_arith, test_division);
 
     suite_add_tcase(s, tc_basic_arith);

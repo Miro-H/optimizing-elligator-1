@@ -244,7 +244,7 @@ BigInt *big_int_duplicate(BigInt *a)
 {
     BigInt *b;
 
-    b = big_int_alloc(a->size);
+    b = big_int_alloc(a->alloc_size);
     big_int_copy(b, a);
 
     return b;
@@ -256,9 +256,11 @@ BigInt *big_int_duplicate(BigInt *a)
  */
 void big_int_print(BigInt *a)
 {
-    printf("%s0x%" PRIx64, (a->sign == 1) ? "-" : "", a->chunks[a->size-1]);
-    for (int64_t i = a->size-2; i >= 0; --i) {
-        printf("%08" PRIu64, a->chunks[i]);
+    printf("%s0x%08" PRIx64, (a->sign == 1) ? "-" : "", a->chunks[a->size-1]);
+    if (a->size >= 2) {
+        for (int64_t i = a->size-2; i >= 0; --i) {
+            printf(" %08" PRIx64, a->chunks[i]);
+        }
     }
 }
 
@@ -521,41 +523,49 @@ BigInt *big_int_mul(BigInt *r, BigInt *a, BigInt *b)
 
 /**
  * \brief Calculate quotient q and remainder r, such that: a = q * b + r
+ *        We round numbers towards 0, e.g., -13/8 = (-1, -5)
  * \param r if r is not NULL, it will be set to the remainder.
  * \returns pointer to q
  */
 BigInt *big_int_div_rem(BigInt *q, BigInt *r, BigInt *a, BigInt *b)
 {
     dbl_chunk_size_t a_tmp, b_tmp, tmp, q_c, r_c;
+    uint8_t q_sign;
     uint64_t factor;
     int64_t q_idx, a_idx, i;
     BigInt *a_loc, *b_loc, *a_part, *q_c_bigint, *qb, *radix_pow;
+
+    if (big_int_is_zero(b))
+        FATAL("Division by zero!\n");
+
+    // Special cases that return zero: divisor larger than dividend, zero dividend
+    if (b->size > a->size || big_int_is_zero(a))
+        return big_int_create(r, 0);
+    // Simple case for small BigInts, just use normal C division
+    else if (a->size == 1) {
+        if (r)
+            big_int_create(r, a->chunks[0] % b->chunks[0]);
+        return big_int_create(q, a->chunks[0] / b->chunks[0]);
+    }
+    // Since we do operations on double chunks, we can also do the shortcut for length 2
+    else if (a->size == 2) {
+        a_tmp = a->chunks[1] * BIGINT_RADIX + a->chunks[0];
+        b_tmp = b->chunks[1] * BIGINT_RADIX + b->chunks[0];
+        q_sign = a->sign ^ b->sign;
+
+        if (r)
+            big_int_create_from_dbl_chunk(r, a_tmp % b_tmp, q_sign);
+        return big_int_create_from_dbl_chunk(q, a_tmp / b_tmp, q_sign);
+    }
+
+    // Below: Division for a->size > 2
 
     // NOTE: for arbitrary sized BigInts, this size would be a->size - b->size + 1
     if (!q)
         q = big_int_alloc(BIGINT_FIXED_SIZE);
 
-    // Special cases that return zero: divisor larger than dividend, zero dividend
-    if (b->size > a->size || big_int_is_zero(a))
-        return big_int_create(r, 0);
-
-    if (big_int_is_zero(b))
-        FATAL("Division by zero!\n");
-
     q->sign = a->sign ^ b->sign;
-
-    // Simple case for small BigInts, just use normal C division
-    if (a->size <= 2) {
-        a_tmp = a->chunks[1] * BIGINT_RADIX + a->chunks[0];
-        b_tmp = b->chunks[1] * BIGINT_RADIX + b->chunks[0];
-
-        big_int_create_from_dbl_chunk(q, a_tmp / b_tmp, q->sign);
-        if (r)
-            big_int_create_from_dbl_chunk(r, a_tmp % b_tmp, q->sign);
-        return q;
-    }
-
-    // Division for a->size > 2
+    q->size = a->size - b->size + 1;
 
     // Preserve values of a, b
     a_loc = big_int_duplicate(a);
@@ -567,21 +577,21 @@ BigInt *big_int_div_rem(BigInt *q, BigInt *r, BigInt *a, BigInt *b)
         tmp = BIGINT_RADIX / (2 * b->chunks[b->size - 1]);
 
         // set factor = 1 + floor(log_2(tmp))
-        factor = 1;
-        while (tmp) {
-            factor <<= 1;
+        factor = 0;
+        do {
+            ++factor;
             tmp >>= 1;
-        }
+        } while (tmp);
 
         big_int_sll_small(a_loc, a_loc, factor);
         big_int_sll_small(b_loc, b_loc, factor);
     }
 
-    if (b_loc->size == b->size) {
+    if (a_loc->size == a->size) {
         // Special case where we actually have a zero in the MSB, just to make
         // subsequent ops easier
-        b_loc->chunks[b->size] = 0;
-        b_loc->size += 1;
+        a_loc->chunks[a->size] = 0;
+        a_loc->size += 1;
     }
 
     // Prepare for intermediate BigInts
@@ -597,36 +607,39 @@ BigInt *big_int_div_rem(BigInt *q, BigInt *r, BigInt *a, BigInt *b)
     radix_pow->size = b_loc->size + 1;
 
     // Calculate quotient digit by digit
-    for (q_idx = a_loc->size - b_loc->size; q_idx >= 0; --q_idx) {
+    for (q_idx = q->size - 1; q_idx >= 0; --q_idx) {
         // Calculate quotient and remainder of
         // a->chunks[q_idx : q_idx + b->size] / b_loc
 
-        a_idx = q_idx + b_loc->size;
-        q_c = a_loc->chunks[a_idx] * BIGINT_RADIX + a_loc->chunks[a_idx - 1];
-        r_c = q_c % BIGINT_RADIX;
-        r_c /= factor;
+        a_idx = q_idx + b->size;
 
-        while (r_c < BIGINT_RADIX) {
+        q_c = a_loc->chunks[a_idx] * BIGINT_RADIX + a_loc->chunks[a_idx - 1];
+        r_c = q_c % b_loc->chunks[b->size - 1];
+        q_c /= b_loc->chunks[b->size - 1];
+
+        do {
             if (q_c >= BIGINT_RADIX
-                || q_c * b_loc->chunks[b_loc->size - 2] >
+                || q_c * b_loc->chunks[b->size - 2] >
                    BIGINT_RADIX * r_c + a_loc->chunks[a_idx - 2])
             {
                 --q_c;
-                r_c += factor;
+                r_c += a_loc->chunks[a->size - 1];
             }
-        }
+            else {
+                break;
+            }
+        } while (r_c < BIGINT_RADIX);
 
         // Multiply and subtract
         // TODO: this entire part can surely be done more efficiently
-        for (i = 0; i <= b_loc->size; ++i) {
-            if (q_idx + i >= a_loc->size)
+        for (i = 0; i <= b->size; ++i) {
+            if (q_idx + i >= a->size)
                 break;
             a_part->chunks[i] = a_loc->chunks[q_idx + i];
         }
         a_part->size = i;
         a_part->sign = 0;
 
-        DEBUG("Create chunk for q_c = %" PRIu64 "\n", q_c);
         big_int_create(q_c_bigint, q_c);
         big_int_sub(qb, a_part, big_int_mul(qb, q_c_bigint, b_loc));
 
@@ -640,28 +653,32 @@ BigInt *big_int_div_rem(BigInt *q, BigInt *r, BigInt *a, BigInt *b)
             // out with the borrow that we ignored from the previous add.
             big_int_add(a_part, a_part, b_loc);
 
-            for (i = 0; i <= b_loc->size; ++i) {
+            for (i = 0; i <= b->size; ++i) {
                 if (q_idx + i >= a_loc->size)
                     break;
                 a_loc->chunks[q_idx + i] = a_part->chunks[i];
             }
         }
         else {
-            for (i = 0; i <= b_loc->size; ++i)
+            for (i = 0; i <= b->size; ++i) {
+                if (q_idx + i >= a_loc->size)
+                    break;
                 a_loc->chunks[q_idx + i] = qb->chunks[i];
+            }
         }
 
-        r->chunks[q_idx] = q_c;
+        q->chunks[q_idx] = q_c;
     }
 
     // Unnormalize
     if (r) {
-        a_loc->size = b_loc->size;
+        a_loc->size = b->size;
         big_int_copy(r, a_loc);
         big_int_srl_small(r, r, factor);
+        big_int_prune_leading_zeros(r, r);
     }
 
-    big_int_prune_leading_zeros(r, r);
+    big_int_prune_leading_zeros(q, q);
 
     // Cleanup intermediate BigInts
     big_int_destroy(a_part);
@@ -669,7 +686,7 @@ BigInt *big_int_div_rem(BigInt *q, BigInt *r, BigInt *a, BigInt *b)
     big_int_destroy(b_loc);
     big_int_destroy(q_c_bigint);
 
-    return r;
+    return q;
 }
 
 
@@ -750,25 +767,25 @@ BigInt *big_int_srl_small(BigInt *r, BigInt *a, uint64_t shift)
         return r;
     }
 
-    // Start at the first a chunk that still has bits in r
-    a_idx = shift / BIGINT_CHUNK_BIT_SIZE;
-    r->size = a->size - a_idx;
+    r->size = a->size - shift / BIGINT_CHUNK_BIT_SIZE;
 
-    // Shift the chunks internally starting from a_idx
+    // Take the chunks of a that are not all completely shifted away
+    a_idx = (int64_t) (shift / BIGINT_CHUNK_BIT_SIZE);
     shift %= BIGINT_CHUNK_BIT_SIZE;
-    carry = 0;
-    for (i = 0; i < r->size; ++i) {
-        carry = carry | (a->chunks[a_idx] >> shift);
-        r->chunks[i] = carry % BIGINT_RADIX;
-        carry = (carry << (BIGINT_CHUNK_BIT_SIZE - shift)) % BIGINT_RADIX;
-
+    // Go upwards to avoid aliasing, since we always write r[i] and read
+    // a[a_idx+1], where i < a_idx + 1.
+    for (i = 0; i < r->size-1; ++i) {
+        carry = (a->chunks[a_idx + 1] << (BIGINT_CHUNK_BIT_SIZE - shift)) % BIGINT_RADIX;
+        r->chunks[i] = carry | (a->chunks[a_idx] >> shift);
         ++a_idx;
     }
+    // Write MSB entry
+    r->chunks[r->size - 1] = a->chunks[a_idx] >> shift;
 
     r->overflow = 0;
     r->sign = a->sign;
 
-    return r;
+    return big_int_prune_leading_zeros(r, r);
 }
 
 
