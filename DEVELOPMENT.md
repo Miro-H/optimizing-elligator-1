@@ -92,3 +92,29 @@ Use the following template to briefly describe your functions in the code. See a
 * @return describe the return value of the function.
 */
 ```
+
+## Debugging
+There are a bunch of helpful debug macros in `include/debug.h` for easier debug output, color coded macros, and support for log levels. There are the following log levels available:
+
+0. quiet; no output
+1. fatal; only get fatal errors
+2. error; additionally, get non-fatal errors
+3. warnings; additionally, get warnings
+4. success; additionally, print successful statements
+5. vebose; get general debug output
+
+Set the log level in `include/debug.h`. Only output from the set level and lower levels will be printed.
+
+To print to those levels, use the following functions: `FATAL`, `ERROR`, `WARNING`, `SUCCESS`, `DEBUG`. They all use normal `printf` syntax (format string followed by arguments).
+
+### Debugging BigInts
+The function `DEBUG_BIGINT` can be used to easily print BigInts for debugging. It takes as arguments a `bigint` followed by a format string. It can only print one bigint per call.
+
+Example:
+```C
+DEBUG_BIGINT(a, "For i = %d, we have a = ", i);
+```
+Prints the following (e.g., for `i = 42`, `a = 0x102CC2711CB04A42`):
+```text
+For i = 42, we have a = 0x102CC2711CB04A42
+```
