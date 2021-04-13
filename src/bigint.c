@@ -515,9 +515,12 @@ BigInt *big_int_mul(BigInt *r, BigInt *a, BigInt *b)
     if (r) {
         big_int_copy(r, r_loc);
         big_int_destroy(r_loc);
+        return r;
+    }
+    else {
+        return r_loc;
     }
 
-    return r;
 }
 
 
@@ -541,9 +544,19 @@ BigInt *big_int_div_rem(BigInt *q, BigInt *r, BigInt *a, BigInt *b)
     // DEBUG_BIGINT(a, "div_rem; a = ");
     // DEBUG_BIGINT(b, "div_rem; b = ")
 
-    // Special cases that return zero: divisor larger than dividend, zero dividend
-    if (b->size > a->size || big_int_is_zero(a))
-        return big_int_create(r, 0);
+    // Special cases
+    // divisor larger than dividend
+    if (b->size > a->size) {
+        if (r)
+            big_int_duplicate(a);
+        return big_int_create(q, 0);
+    }
+    // zero dividend
+    else if (big_int_is_zero(a)) {
+        if (r)
+            big_int_create(r, 0);
+        return big_int_create(q, 0);
+    }
     // Simple case for small BigInts, just use normal C division
     else if (a->size == 1) {
         if (r)
@@ -576,7 +589,7 @@ BigInt *big_int_div_rem(BigInt *q, BigInt *r, BigInt *a, BigInt *b)
 
     // Normalize: find factor such that b->chunks[b->size - 1] >= BIGINT_RADIX/2
     factor = 0;
-    tmp = b->chunks[b->size - 1];
+    tmp = b_loc->chunks[b->size - 1];
     while (2 * tmp < BIGINT_RADIX) {
         ++factor;
         tmp <<= 1;
@@ -603,8 +616,8 @@ BigInt *big_int_div_rem(BigInt *q, BigInt *r, BigInt *a, BigInt *b)
     qb = big_int_alloc(BIGINT_FIXED_SIZE);
     // NOTE: for arbitrary sized BigInts, this really only needs to be of size b->size+1
     radix_pow = big_int_calloc(BIGINT_FIXED_SIZE);
-    radix_pow->chunks[b_loc->size] = 1;
-    radix_pow->size = b_loc->size + 1;
+    radix_pow->chunks[b->size] = 1;
+    radix_pow->size = b->size + 1;
 
     // Calculate quotient digit by digit
     for (q_idx = q->size - 1; q_idx >= 0; --q_idx) {
@@ -640,6 +653,7 @@ BigInt *big_int_div_rem(BigInt *q, BigInt *r, BigInt *a, BigInt *b)
         a_part->size = i;
         a_part->sign = 0;
 
+        // DEBUG("q_c: %llu\n", q_c);
         big_int_create(q_c_bigint, q_c);
         big_int_sub(qb, a_part, big_int_mul(qb, q_c_bigint, b_loc));
 
@@ -712,14 +726,13 @@ BigInt *big_int_sll_small(BigInt *r, BigInt *a, uint64_t shift)
     // NOTE: for arbitrary sized BigInts, this would cause define the new/realloc
     // size for r!
     if (r_size > BIGINT_FIXED_SIZE)
-        FATAL("Shift creates too large BigInt (%" PRIu64 " chunks)!\n",
-            a->size + shift / BIGINT_CHUNK_BIT_SIZE);
+        FATAL("Shift creates too large BigInt (%" PRIu64 " chunks)!\n", r_size);
 
     if (!r)
         r = big_int_alloc(BIGINT_FIXED_SIZE);
 
     // Set the lowest chunks to zero
-    for (r_idx = 0; r_idx < shift / BIGINT_CHUNK_BIT_SIZE; ++r_idx) {
+    for (r_idx = 0; r_idx < (int64_t) (shift / BIGINT_CHUNK_BIT_SIZE); ++r_idx) {
         r->chunks[r_idx] = 0;
     }
 
@@ -734,15 +747,22 @@ BigInt *big_int_sll_small(BigInt *r, BigInt *a, uint64_t shift)
         ++r_idx;
     }
 
+    r->overflow = 0;
+    r->sign = a->sign;
+
     // Add the last block if there is a carry from the MSB block
     if (carry) {
-        r->chunks[r_idx] = carry;
-        ++r_idx;
+        if (r_idx < r->alloc_size) {
+            r->chunks[r_idx] = carry;
+            ++r_idx;
+        }
+        else {
+            WARNING("sll caused overflow!\n");
+            r->overflow = 1;
+        }
     }
 
-    r->overflow = 0;
     r->size = r_idx;
-    r->sign = a->sign;
 
     return r;
 }
@@ -809,9 +829,11 @@ BigInt *big_int_mod(BigInt *r, BigInt *a, BigInt *q)
     return r;
 }
 
-// TODO: Evaluate if it's worth it to add specialialized implementations for all
-//       those *_mod operations
-
+// TODO: Evaluate if it's worth it to add specialized implementations for all
+//       those *_mod operations.
+// TODO: Evaluate if it's worth it to take the arguments a, b mod q before
+//       doing the operation. (For now, probably not as this uses division,
+//       but might be interesting later, if we can make mod faster).
 
 /**
  * \brief Calculate r := (a + b) mod q
@@ -845,38 +867,46 @@ BigInt *big_int_div_mod(BigInt *r, BigInt *a, BigInt *b, BigInt *q) {
 }
 
 
-// /**
-//  * \brief Calculate base^exponent mod q for BigInts
-//  */
-// BigInt big_int_pow(BigInt base, BigInt exponent, BigInt q)
-// {
-//     BigInt result = create_big_int(1);
-//     BigInt p = exponent;
-//     BigInt b = base;
-//
-//     while (big_int_compare(p, create_big_int(0)) > 0)
-//     {
-//         // If power is odd
-//         if (big_int_compare(big_int_mod(p, create_big_int(2)), create_big_int(1)) == 0)
-//         {
-//             result = big_int_mod(big_int_mul(result, b), q);
-//         }
-//         p = big_int_div(p, create_big_int(2));
-//         p = big_int_mod(big_int_mul(b, b), q);
-//     }
-//     return result;
-// }
-//
-// /**
-//  * \brief Calculate (a // b) mod q (integer division mod q)
-//  */
-// // TODO: uncomment when big_int_mul_mod exists
-// // BigInt big_int_div_mod(BigInt a, BigInt b, BigInt q)
-// // {
-// //     return big_int_mul_mod(a, big_int_inverse(b, q), q);
-// // }
-//
-//
+/**
+ * \brief Calculate r := (b^e) mod q
+ */
+BigInt *big_int_pow(BigInt *r, BigInt *b, BigInt *e, BigInt *q)
+{
+    BigInt *e_loc, *r_loc, *two, *parity;
+
+    // NOTE: for arbitrary sized BigInts, we'd need to figure out some good size
+    //       to allocate for the first r. For now, this implicitly use the fixed size.
+    r_loc = big_int_create(NULL, 1);
+    e_loc = big_int_duplicate(e);
+    two = big_int_create(NULL, 2);
+    parity = big_int_alloc(BIGINT_FIXED_SIZE);
+
+    while (big_int_compare(e_loc, big_int_zero) > 0) {
+        // If power is odd
+        if (big_int_compare(big_int_mod(parity, e_loc, two), big_int_one) == 0) {
+            big_int_mul_mod(r_loc, r_loc, b, q);
+        }
+        big_int_srl_small(e_loc, e_loc, 1);
+        big_int_mul_mod(r_loc, r_loc, r_loc, q);
+    }
+
+    DEBUG_BIGINT(r, "r = ");
+
+    big_int_destroy(e_loc);
+    big_int_destroy(parity);
+    big_int_destroy(two);
+
+    if (r) {
+        big_int_copy(r, r_loc);
+        big_int_destroy(r_loc);
+        return r;
+    }
+    else {
+        return r_loc;
+    }
+}
+
+
 // /**
 //  * \brief Calculate the inverse of a, namely a^-1 mod q
 //  */

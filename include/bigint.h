@@ -4,9 +4,9 @@
 #include <inttypes.h>
 #include <string.h>
 
-// one more chunk than needed for 256 bits, because division may require
-// additional space for intermediate results.
-#define BIGINT_FIXED_SIZE ((uint64_t) 6)
+// We need more than 4 chunks, because intermediate results can be larger, e.g.,
+// for multiplication mod q if q is 256-bit.
+#define BIGINT_FIXED_SIZE ((uint64_t) 8)
 #define BIGINT_CHUNK_HEX_SIZE (sizeof(chunk_size_t) * 2)
 #define BIGINT_CHUNK_BIT_SIZE (sizeof(chunk_size_t) * 8)
 
@@ -48,7 +48,7 @@ typedef struct egcd_results {
 static dbl_chunk_size_t chunk_zero = 0;
 static dbl_chunk_size_t chunk_one = 1;
 
-// Special BigInts, never free those!
+// Special BigInts, never free those! They cannot be copied.
 __attribute__((unused)) static BigInt *big_int_zero = &((BigInt) {
     .sign = 0,
     .overflow = 0,
@@ -113,7 +113,7 @@ int8_t big_int_compare(BigInt *a, BigInt *b);
 int8_t big_int_is_zero(BigInt *a);
 
 // Advanced operations
-BigInt *big_int_pow(BigInt *base, BigInt *exponent, BigInt *q);
+BigInt *big_int_pow(BigInt *r, BigInt *b, BigInt *e, BigInt *q);
 egcd_result egcd(BigInt *a, BigInt *b);
 BigInt *chi(BigInt *t, BigInt q);
 
