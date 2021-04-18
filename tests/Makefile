@@ -36,7 +36,7 @@ else
 endif
 
 # Main target, building all tests
-all: compile-example-test
+all: compile-example-test compile-bigint-test
 
 .PHONY: all-tested
 all-tested:
@@ -65,6 +65,19 @@ OBJ_TESTED 	= $(patsubst %,$(ODIR_TESTED)/%,$(_OBJ_TESTED))
 compile-example-test: all-tested example-test
 
 example-test: $(OBJ_TESTED) $(OBJ)
+	$(CC) -o $(BDIR)/$@ $^ $(CFLAGS) $(LIBS)
+
+# Specify the object files constituting the test
+_OBJ	= bigint_test.o
+OBJ 	= $(patsubst %,$(ODIR)/%,$(_OBJ))
+# Specify the object files of the tested functions
+_OBJ_TESTED = bigint.o
+OBJ_TESTED 	= $(patsubst %,$(ODIR_TESTED)/%,$(_OBJ_TESTED))
+
+.PHONY: compile-bigint-test
+compile-bigint-test: all-tested bigint-test
+
+bigint-test: $(OBJ_TESTED) $(OBJ)
 	$(CC) -o $(BDIR)/$@ $^ $(CFLAGS) $(LIBS)
 
 .PHONY: clean
