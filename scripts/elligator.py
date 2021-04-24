@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 class BigInt:  # struct in c
     def __init__(self, x):
         self.x = x
@@ -114,9 +116,7 @@ def chi(t, curve):  # chi(a) = a**((q-1)/2)
     r0 = big_int_inverse(create_big_int(2), curve.q)
     r1 = big_int_sub(curve.q, create_big_int(1))
     r0 = big_int_mul(r1, r0)
-    r0 = big_int_pow(t, r0, curve.q)
-    r = big_int_mod(r0, curve.q)
-    return r
+    return big_int_pow(t, r0, curve.q)
 
 
 def elligator_1_string_to_point(t, curve):
@@ -188,11 +188,12 @@ def elligator_1_point_to_string(p, curve):
     eta = big_int_mod(eta0, curve.q)  # η = (y-1)/(2(y+1))
 
     eta_r = big_int_mul(eta, curve.r)
+    print("eta_r: ", eta_r.x)
     eta_r = big_int_add(create_big_int(1), eta_r)
     q_1 = big_int_add(curve.q, create_big_int(1))
     #fix = big_int_sub(curve.q, create_big_int(1))
-    X0 = big_int_inverse(create_big_int(4), curve.q)
-    q_1 = big_int_mul(q_1, X0)
+    # X0 = big_int_inverse(create_big_int(4), curve.q)
+    q_1 = big_int_div(q_1, create_big_int(4))
 
     X1 = big_int_mul(eta_r, eta_r)
     X1 = big_int_sub(X1, create_big_int(1))
@@ -244,9 +245,16 @@ if __name__ == "__main__":
     curve = Curve1174()
     s1 = create_big_int(7)
     s2 = create_big_int(3)
-    print(s1.x, s2.x)
-    print(big_int_negate(s1).x, big_int_add(s1, s2).x, big_int_sub(s1, s2).x, big_int_inverse(s2, s1).x)
-    print(big_int_mod(s2, s1).x, big_int_mul(s1, s2).x, big_int_pow(s1, s2, curve.q).x, big_int_div(s1, s2).x)
+
+    assert(s1.x == 7 and s2.x == 3)
+    assert(big_int_negate(s1).x == -7)
+    assert(big_int_add(s1, s2).x == 10)
+    assert(big_int_sub(s1, s2).x == 4)
+    assert(big_int_inverse(s2, s1).x == 5)
+    assert(big_int_mod(s2, s1).x == 3)
+    assert(big_int_mul(s1, s2).x == 21)
+    assert(big_int_pow(s1, s2, curve.q).x == 343)
+    assert(big_int_div(s1, s2).x == 2)
 
     p = elligator_1_string_to_point(s1, curve)
     print(p.x.x, p.y.x)
@@ -254,3 +262,5 @@ if __name__ == "__main__":
     print(t.x)
     #print(curve.q.x)
     #print(curve.s.x)
+
+    assert(s1.x == t.x)
