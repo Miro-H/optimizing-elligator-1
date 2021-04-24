@@ -634,11 +634,11 @@ BigInt *big_int_div_rem(BigInt *q, BigInt *r, BigInt *a, BigInt *b)
 
         do {
             if (q_c >= BIGINT_RADIX
-                || q_c * b_loc->chunks[b->size - 2] >
+                || q_c * b_loc->chunks[b_loc->size - 2] >
                    BIGINT_RADIX * r_c + a_loc->chunks[a_idx - 2])
             {
                 --q_c;
-                r_c += a_loc->chunks[a->size - 1];
+                r_c += b_loc->chunks[b_loc->size - 1];
             }
             else {
                 break;
@@ -915,23 +915,25 @@ BigInt *big_int_inv(BigInt *r, BigInt *a, BigInt *q)
  */
 BigInt *big_int_pow(BigInt *r, BigInt *b, BigInt *e, BigInt *q)
 {
-    BigInt *e_loc, *r_loc;
+    BigInt *b_loc, *e_loc, *r_loc;
 
     // NOTE: for arbitrary sized BigInts, we'd need to figure out some good size
     //       to allocate for the first r. For now, this implicitly use the fixed size.
     r_loc = big_int_create(NULL, 1);
     e_loc = big_int_duplicate(e);
+    b_loc = big_int_duplicate(b);
 
     while (big_int_compare(e_loc, big_int_zero) > 0) {
         // If power is odd
         if (big_int_is_odd(e_loc))
-            big_int_mul_mod(r_loc, r_loc, b, q);
+            big_int_mul_mod(r_loc, r_loc, b_loc, q);
 
         big_int_srl_small(e_loc, e_loc, 1);
-        big_int_mul_mod(r_loc, r_loc, r_loc, q);
+        big_int_mul_mod(b_loc, b_loc, b_loc, q);
     }
 
     big_int_destroy(e_loc);
+    big_int_destroy(b_loc);
 
     if (r) {
         big_int_copy(r, r_loc);

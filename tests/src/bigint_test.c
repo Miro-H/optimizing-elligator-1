@@ -321,7 +321,6 @@ START_TEST(test_division)
     // TODO: test special case marked in big_int_div_rem in a TODO and mentioned
     //       specifically in the book (last link in git issue).
 
-    // TODO: This test seems to trigger some bug related to D5
     big_int_create_from_hex(a, "5F9F737BB0C9873450C3A516A8B5F0F0");
     big_int_create_from_hex(b, "68A753D72F1F907F1BFAF91F0");
     big_int_create_from_hex(q_exp, "E9E8C50");
@@ -420,27 +419,24 @@ START_TEST(test_modulo_inverse)
 
 START_TEST(test_power)
 {
-    // TODO: Currently throws error in division, possibly related to the division
-    // bug. Main issue: q_c is larger than BIGINT_RADIX+2.
+    BigInt *b, *e, *q, *r;
 
-    // BigInt *b, *e, *q, *r;
-    //
-    // // TODO: Test big_int_pow with more cases
-    // // TODO: Test exponent 0
-    // // TODO: Test base 1
-    //
-    // b = big_int_create_from_hex(NULL, "4F2B8718");
-    // e = big_int_create(NULL, 23);
-    // q = big_int_create_from_hex(NULL, "31DECA5CA5BE11D8DF78F332F");
-    // r = big_int_create_from_hex(NULL, "F27EA91903E16641CB1465F4");
-    //
-    // big_int_pow(b, b, e, q);
-    // ck_assert_int_eq(big_int_compare(b, r), 0);
-    //
-    // big_int_destroy(b);
-    // big_int_destroy(e);
-    // big_int_destroy(q);
-    // big_int_destroy(r);
+    // TODO: Test big_int_pow with more cases
+    // TODO: Test exponent 0
+    // TODO: Test base 1
+
+    b = big_int_create_from_hex(NULL, "4F2B8718");
+    e = big_int_create(NULL, 23);
+    q = big_int_create_from_hex(NULL, "31DECA5CA5BE11D8DF78F332F");
+    r = big_int_create_from_hex(NULL, "F27EA91903E16641CB1465F4");
+
+    big_int_pow(b, b, e, q);
+    ck_assert_int_eq(big_int_compare(b, r), 0);
+
+    big_int_destroy(b);
+    big_int_destroy(e);
+    big_int_destroy(q);
+    big_int_destroy(r);
 }
 
 START_TEST(test_gcd)
