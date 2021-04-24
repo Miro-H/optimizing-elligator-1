@@ -542,7 +542,7 @@ BigInt *big_int_div_rem(BigInt *q, BigInt *r, BigInt *a, BigInt *b)
         FATAL("Division by zero!\n");
 
     // DEBUG_BIGINT(a, "div_rem; a = ");
-    // DEBUG_BIGINT(b, "div_rem; b = ")
+    // DEBUG_BIGINT(b, "div_rem; b = ");
 
     // Special cases
     // divisor larger than dividend
@@ -647,15 +647,14 @@ BigInt *big_int_div_rem(BigInt *q, BigInt *r, BigInt *a, BigInt *b)
 
         // Multiply and subtract
         // TODO: this entire part can surely be done more efficiently
-        for (i = 0; i <= b->size; ++i) {
-            if (q_idx + i >= a->size)
+        for (i = 0; i <= b_loc->size; ++i) {
+            if (q_idx + i >= a_loc->size)
                 break;
             a_part->chunks[i] = a_loc->chunks[q_idx + i];
         }
         a_part->size = i;
         a_part->sign = 0;
 
-        // DEBUG("q_c: %llu\n", q_c);
         big_int_create(q_c_bigint, q_c);
         big_int_sub(qb, a_part, big_int_mul(qb, q_c_bigint, b_loc));
 
@@ -931,8 +930,6 @@ BigInt *big_int_pow(BigInt *r, BigInt *b, BigInt *e, BigInt *q)
         big_int_srl_small(e_loc, e_loc, 1);
         big_int_mul_mod(r_loc, r_loc, r_loc, q);
     }
-
-    DEBUG_BIGINT(r, "r = ");
 
     big_int_destroy(e_loc);
 

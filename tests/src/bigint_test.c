@@ -322,16 +322,14 @@ START_TEST(test_division)
     //       specifically in the book (last link in git issue).
 
     // TODO: This test seems to trigger some bug related to D5
-    // big_int_create_from_hex(a, "5F9F737BB0C9873450C3A516A8B5F0F0");
-    // big_int_create_from_hex(b, "68A753D72F1F907F1BFAF91F0");
-    // big_int_create_from_hex(q_exp, "E9E8C50");
-    // big_int_create_from_hex(r_exp, "185E80D262E90C5F8BE915F0");
-    //
-    // big_int_div_rem(q, r, a, b);
-    // DEBUG_BIGINT(q, "Got q = ");
-    // DEBUG_BIGINT(r, "Got r = ");
-    // ck_assert_int_eq(big_int_compare(q_exp, q), 0);
-    // ck_assert_int_eq(big_int_compare(r_exp, r), 0);
+    big_int_create_from_hex(a, "5F9F737BB0C9873450C3A516A8B5F0F0");
+    big_int_create_from_hex(b, "68A753D72F1F907F1BFAF91F0");
+    big_int_create_from_hex(q_exp, "E9E8C50");
+    big_int_create_from_hex(r_exp, "185E80D262E90C5F8BE915F0");
+
+    big_int_div_rem(q, r, a, b);
+    ck_assert_int_eq(big_int_compare(q_exp, q), 0);
+    ck_assert_int_eq(big_int_compare(r_exp, r), 0);
 
     big_int_destroy(a);
     big_int_destroy(b);
