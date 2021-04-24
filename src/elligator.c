@@ -1,5 +1,67 @@
+/*
+ * This file is part of the ASL project "Censorship-avoiding high-speed EC
+ * (Elligator with Curve1174)"
+ * (https://gitlab.inf.ethz.ch/COURSE-ASL/asl21/team36).
+ *
+ * Short description of this file:
+ * This file implements the Elligator 1 mapping for Curve 1174 and its inverse.
+ */
+
+/*
+* Includes
+*/
+
 #include "elligator.h"
 #include "bigint.h"
+#include "debug.h"
+
+
+/**
+* \brief Initialized Curve1174
+*/
+void init_curve1174(Curve *curve)
+{
+    // q = 2^251 - 9
+    curve->q = big_int_create_from_hex(NULL,
+        "7FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF7");
+
+    curve->d = big_int_create(NULL, -1174);
+    curve->d = big_int_mod(curve->d, curve->d, curve->q);
+
+    curve->s = big_int_create_from_hex(NULL,
+        "3FE707F0D7004FD334EE813A5F1A74AB2449139C82C39D84A09AE74CC78C615");
+
+    // c = 2 / s^2
+    curve->c = big_int_mul_mod(NULL, curve->s, curve->s, curve->q);
+    big_int_div_mod(curve->c, big_int_two, curve->c, curve->q);
+
+    // r = c + 1/c
+    curve->r = big_int_inv(NULL, curve->c, curve->q);
+    big_int_add_mod(curve->r, curve->c, curve->r, curve->q);
+}
+
+
+/**
+* \brief Free elliptic curve
+*/
+void free_curve(Curve *curve)
+{
+    big_int_destroy(curve->q);
+    big_int_destroy(curve->d);
+    big_int_destroy(curve->s);
+    big_int_destroy(curve->c);
+    big_int_destroy(curve->r);
+}
+
+
+/**
+* \brief Free elliptic curve point
+*/
+void free_curve_point(CurvePoint *point)
+{
+    big_int_destroy(point->x);
+    big_int_destroy(point->y);
+}
 
 CurvePoint elligator_1_string_to_point(BigInt *t, Curve curve)
 {
@@ -26,16 +88,14 @@ CurvePoint elligator_1_string_to_point(BigInt *t, Curve curve)
 
     BigInt *Y0 = big_int_mul_mod(NULL, CHIV, v, curve.q);
     BigInt *Y1 = big_int_add(NULL, curve.q, big_int_one);
-    BigInt *Y2 = big_int_inv(NULL, big_int_four, curve.q);
-    Y1 = big_int_mul_mod(Y1, Y1, Y2, curve.q);
-    Y0 = big_int_pow(Y0, Y0, Y1, curve.q);
+    BigInt *Y2 = big_int_div(NULL, Y1, big_int_four);
+    Y0 = big_int_pow(Y0, Y0, Y2, curve.q);
     Y0 = big_int_mul_mod(Y0, Y0, CHIV, curve.q);
 
     BigInt *C2 = big_int_pow(NULL, curve.c, big_int_two, curve.q);
     C2 = big_int_inv(C2, C2, curve.q);
     BigInt *Y3 = big_int_pow(NULL, u, big_int_two, curve.q);
-    Y3 = big_int_add(Y3, Y3, C2);
-    Y3 = big_int_mod(Y3, Y3, curve.q);
+    Y3 = big_int_add_mod(Y3, Y3, C2, curve.q);
     Y3 = big_int_chi(Y3, Y3, curve.q);
 
     BigInt *Y = big_int_mul_mod(Y0, Y0, Y3, curve.q);  // Y = (χ(v)v)**((q + 1) / 4)χ(v)χ(u**2 + 1 / c**2)
@@ -48,7 +108,7 @@ CurvePoint elligator_1_string_to_point(BigInt *t, Curve curve)
     x0 = big_int_mul_mod(x0, x0, X, curve.q);
     x0 = big_int_mul_mod(x0, x0, X_plus_1, curve.q);
     BigInt *x1 = big_int_inv(NULL, Y, curve.q);
-    BigInt *x = big_int_mul(NULL, x0, x1); // x = (c − 1)*s*X*(1 + X) / Y
+    BigInt *x = big_int_mul_mod(NULL, x0, x1, curve.q); // x = (c − 1)*s*X*(1 + X) / Y
 
     BigInt *rX = big_int_mul_mod(NULL, curve.r, X, curve.q);
     BigInt *y0 = big_int_sub(NULL, rX, X_plus_1_squared);
