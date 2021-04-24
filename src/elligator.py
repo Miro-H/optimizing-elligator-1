@@ -190,6 +190,7 @@ def elligator_1_point_to_string(p, curve):
     eta_r = big_int_mul(eta, curve.r)
     eta_r = big_int_add(create_big_int(1), eta_r)
     q_1 = big_int_add(curve.q, create_big_int(1))
+    #fix = big_int_sub(curve.q, create_big_int(1))
     X0 = big_int_inverse(create_big_int(4), curve.q)
     q_1 = big_int_mul(q_1, X0)
 
@@ -199,6 +200,7 @@ def elligator_1_point_to_string(p, curve):
     X1 = big_int_sub(X1, eta_r)
     X = big_int_mod(X1, curve.q)  # X = −(1 + ηr) + ((1 + ηr)**2 − 1)**((q+1)/4)
 
+
     x0 = big_int_mul(create_big_int(2), curve.s)
     x1 = big_int_sub(curve.c, create_big_int(1))
     x0 = big_int_mul(x0, x1)
@@ -207,6 +209,10 @@ def elligator_1_point_to_string(p, curve):
     x3 = big_int_inverse(curve.r, curve.q)
     x0 = big_int_mul(x0, x3)
     x = big_int_mod(x0, curve.q)  # x = 2s(c − 1)χ(c)/r
+
+    print(x.x)
+    x = p.x
+    print(x.x)
 
     z0 = big_int_sub(curve.c, create_big_int(1))
     z0 = big_int_mul(z0, curve.s)
@@ -246,3 +252,5 @@ if __name__ == "__main__":
     print(p.x.x, p.y.x)
     t = elligator_1_point_to_string(p, curve)
     print(t.x)
+    #print(curve.q.x)
+    #print(curve.s.x)
