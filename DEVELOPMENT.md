@@ -118,3 +118,18 @@ Prints the following (e.g., for `i = 42`, `a = 0x102CC2711CB04A42`):
 ```text
 For i = 42, we have a = 0x102CC271 1CB04A42
 ```
+
+## Benchmarking
+The code for benchmarks is located in `timings/*`.
+
+Include the header file `benchmark_helpers.h` to get run benchmarks. It provides the following functionality:
+
+- `benchmark_runner`: This function takes a `BenchmarkClosure` (see below), a title, log file name, number of sets `num_sets`, and number of repetitions `num_reps`. It then prints a benchmark header (see `printf_bench_header`), does warmup instructions, and executes the benchmarked function in `num_sets` measurements, each taking the average time measurement over `num_reps` function calls.
+- `BenchmarkClosure` consists of three functions and their arguments:
+    - `bench_prep_fn`: Called for each set before the function that we want to benchmark. Use this to set up variables.
+    - `bench_fn`: Function to benchmark. Invocations of this function will be timed.
+    - `bench_cleanup_fn`: Called after each set. Use this to cleanup any data structures that were allocated for the test.
+    - `bench_prep_args`: A `void *` point as argument for `bench_prep_fn`. This should be casted to a pointer to whatever arguments `bench_prep_fn` needs.
+    - `bench_fn` and `bench_cleanup_fn` have no arguments yet, but this could be added similar to `bench_prep_args`.
+
+For an example, look at the Chi Function Benchmark in `timings/src/bigint_benchmark.c`.
