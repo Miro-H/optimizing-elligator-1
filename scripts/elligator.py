@@ -113,9 +113,8 @@ def fast_pow(b, p, m):
 
 
 def chi(t, curve):  # chi(a) = a**((q-1)/2)
-    r0 = big_int_inverse(create_big_int(2), curve.q)
     r1 = big_int_sub(curve.q, create_big_int(1))
-    r0 = big_int_mul(r1, r0)
+    r0 = big_int_div(r1, create_big_int(2))
     return big_int_pow(t, r0, curve.q)
 
 
@@ -142,9 +141,8 @@ def elligator_1_string_to_point(t, curve):
 
     Y0 = big_int_mul(CHIV, v)
     Y1 = big_int_add(curve.q, create_big_int(1))
-    Y2 = big_int_inverse(create_big_int(4), curve.q)
-    Y1 = big_int_mul(Y1, Y2)
-    Y0 = big_int_pow(Y0, Y1, curve.q)
+    Y2 = big_int_div(Y1, create_big_int(4))
+    Y0 = big_int_pow(Y0, Y2, curve.q)
     Y0 = big_int_mul(Y0, CHIV)
 
     C2 = big_int_mul(curve.c, curve.c)
@@ -188,11 +186,8 @@ def elligator_1_point_to_string(p, curve):
     eta = big_int_mod(eta0, curve.q)  # η = (y-1)/(2(y+1))
 
     eta_r = big_int_mul(eta, curve.r)
-    print("eta_r: ", eta_r.x)
     eta_r = big_int_add(create_big_int(1), eta_r)
     q_1 = big_int_add(curve.q, create_big_int(1))
-    #fix = big_int_sub(curve.q, create_big_int(1))
-    # X0 = big_int_inverse(create_big_int(4), curve.q)
     q_1 = big_int_div(q_1, create_big_int(4))
 
     X1 = big_int_mul(eta_r, eta_r)
@@ -211,9 +206,7 @@ def elligator_1_point_to_string(p, curve):
     x0 = big_int_mul(x0, x3)
     x = big_int_mod(x0, curve.q)  # x = 2s(c − 1)χ(c)/r
 
-    print(x.x)
     x = p.x
-    print(x.x)
 
     z0 = big_int_sub(curve.c, create_big_int(1))
     z0 = big_int_mul(z0, curve.s)
@@ -257,9 +250,9 @@ if __name__ == "__main__":
     assert(big_int_div(s1, s2).x == 2)
 
     p = elligator_1_string_to_point(s1, curve)
-    print(p.x.x, p.y.x)
+    print(f"x = {p.x.x}\ny = {p.y.x}")
     t = elligator_1_point_to_string(p, curve)
-    print(t.x)
+    print(f"t = {t.x}")
     #print(curve.q.x)
     #print(curve.s.x)
 
