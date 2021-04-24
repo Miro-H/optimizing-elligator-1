@@ -397,24 +397,20 @@ START_TEST(test_modulo_operation)
 
 START_TEST(test_modulo_inverse)
 {
-    // TODO: Fix eGCD bug, on the inputs below, the returned x, y values are
-    // incorrect, i.e., x*a + y*q =/= 1 = g
+    BigInt *a, *q, *ainv_exp;
 
-    // BigInt *a, *q, *ainv_exp;
-    //
-    // // TODO: Test big_int_inv in detail
-    //
-    // a = big_int_create_from_hex(NULL, "76101CAD986E75478DAAD160");
-    // q = big_int_create_from_hex(NULL, "C18A71D87958DF7154BABA57");
-    // ainv_exp = big_int_create_from_hex(NULL, "6F3BDAB18DB2D458A39A3BEE");
-    //
-    // big_int_inv(a, a, q);
-    // DEBUG_BIGINT(a, "GOT a = ");
-    // ck_assert_int_eq(big_int_compare(a, ainv_exp), 0);
-    //
-    // big_int_destroy(a);
-    // big_int_destroy(q);
-    // big_int_destroy(ainv_exp);
+    // TODO: Test big_int_inv in detail
+
+    a = big_int_create_from_hex(NULL, "76101CAD986E75478DAAD160");
+    q = big_int_create_from_hex(NULL, "C18A71D87958DF7154BABA57");
+    ainv_exp = big_int_create_from_hex(NULL, "6F3BDAB18DB2D458A39A3BEE");
+
+    big_int_inv(a, a, q);
+    ck_assert_int_eq(big_int_compare(a, ainv_exp), 0);
+
+    big_int_destroy(a);
+    big_int_destroy(q);
+    big_int_destroy(ainv_exp);
 }
 
 START_TEST(test_power)
