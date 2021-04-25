@@ -20,7 +20,7 @@
 #include "benchmark_helpers.h"
 
 #ifndef LOG_PATH
-    #define LOG_PATH "../logs/"
+    #define LOG_PATH "../logs"
 #endif
 
 /*
@@ -79,8 +79,8 @@ int main(void)
         .bench_cleanup_fn = bench_chi_cleanup,
     };
 
-    benchmark_runner(bench_chi_closure, "Benchmark Chi Function",
-        LOG_PATH "bench_chi.log", 50, 1000);
+    benchmark_runner(bench_chi_closure, "unopt.",
+        LOG_PATH "/bench_chi.log", 50, 1000);
 
     return EXIT_SUCCESS;
 }

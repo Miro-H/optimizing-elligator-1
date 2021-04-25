@@ -86,7 +86,8 @@ void benchmark_runner(BenchmarkClosure bench_closure, char *bench_name,
 
     assert(out_fp);
 
-    fprintf(out_fp, "Title: %s\n", bench_name);
+    fprintf(out_fp, "%s\n", bench_name);
+    fprintf(out_fp, "Measurement, Runtime [cycles]\n");
 
     num_reps_warmup = bench_warmup(bench_closure);
     if (!num_reps)
@@ -101,7 +102,7 @@ void benchmark_runner(BenchmarkClosure bench_closure, char *bench_name,
         }
         cycles = stop_tsc(start);
 
-        fprintf(out_fp, "%lf\n", (double) cycles / num_reps);
+        fprintf(out_fp, "%" PRId64 ", %.02lf\n", j, (double) cycles / num_reps);
         bench_closure.bench_cleanup_fn();
     }
 
