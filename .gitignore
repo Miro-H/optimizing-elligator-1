@@ -577,3 +577,6 @@ modules.order
 Module.symvers
 Mkfile.old
 dkms.conf
+
+# vscode file (from Freya)
+.vscode/settings.json

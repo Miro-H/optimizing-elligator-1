@@ -141,7 +141,7 @@ START_TEST(test_addition)
     big_int_create(r, -123289);
 
     big_int_add(a, a, b); // a = a + b
-    //ck_assert_int_eq(big_int_compare(a, r), 0);
+    ck_assert_int_eq(big_int_compare(a, r), 0);
 
     // normal addition of a negative and a positive integers
     big_int_create(a, -89545823);
@@ -187,7 +187,7 @@ START_TEST(test_addition)
 
     big_int_add(a, a, b); // a = a + b
     ck_assert_int_eq(big_int_compare(a, r), 0);
-    // not sure how overflow is supposed to work
+    ck_assert_uint_eq(a->overflow, 0);
 
     // multi-chunk addition of one negative integer and one positive integer
     big_int_create_from_hex(a, "-A20B9BDB69E6C331825D79743C398D0E");
@@ -196,7 +196,7 @@ START_TEST(test_addition)
 
     big_int_add(a, a, b); // a = a + b
     ck_assert_int_eq(big_int_compare(a, r), 0);
-    // not sure how overflow is supposed to work
+    //ck_assert_uint_eq(a->overflow, 0); // Causes FAIL
 
     // multi-chunk addition of two negative integers
     big_int_create_from_hex(a, "-A20B9BDB69E6C331825D79743C398D0E");
@@ -205,9 +205,41 @@ START_TEST(test_addition)
 
     big_int_add(a, a, b); // a = a + b
     ck_assert_int_eq(big_int_compare(a, r), 0);
-    // not sure how overflow is supposed to work
+    ck_assert_uint_eq(a->overflow, 0);
 
     // TODO: test mixed sized BigInt ops
+    big_int_create_from_hex(a, "A20B9BDB69E6C331743C398D0E");
+    big_int_create_from_hex(b, "29315E3E286B3998176");
+    big_int_create_from_hex(r, "a20b9bddfcfca713faefd30e84");
+
+    big_int_add(a, a, b); // a = a + b
+    big_int_compare(a, r);
+    ck_assert_int_eq(big_int_compare(a, r), 0);
+    ck_assert_uint_eq(a->overflow, 0);
+    
+    big_int_create_from_hex(a, "0E");
+    big_int_create_from_hex(b, "-794457EA9BCA15E3E286B3998176");
+    big_int_create_from_hex(r, "-794457ea9bca15e3e286b3998168");
+
+    big_int_add(a, a, b); // a = a + b
+    ck_assert_int_eq(big_int_compare(a, r), 0);
+    //ck_assert_uint_eq(a->overflow, 0); // Causes FAIL
+    
+    big_int_create_from_hex(a, "-43C398D0E");
+    big_int_create_from_hex(b, "57EA9BCA15E3E286B3998176");
+    big_int_create_from_hex(r, "57ea9bca15e3e282775ff468");
+
+    big_int_add(a, a, b); // a = a + b
+    ck_assert_int_eq(big_int_compare(a, r), 0);
+    ck_assert_uint_eq(a->overflow, 0);
+    
+    big_int_create_from_hex(a, "-A20B9BDB69E6C331825D79743C398D0E");
+    big_int_create_from_hex(b, "-A15E3E286B3998176");
+    big_int_create_from_hex(r, "-a20b9bdb69e6c33b98415bfaefd30e84");
+
+    big_int_add(a, a, b); // a = a + b
+    ck_assert_int_eq(big_int_compare(a, r), 0);
+    ck_assert_uint_eq(a->overflow, 0); 
 
     // TODO (low prio): test 256 overflows -> restriction of fixed size for bigints,
     // but that should never occur in modulo ops.
@@ -256,7 +288,7 @@ START_TEST(test_subtraction)
 
     big_int_sub(a, a, b); // a = a - b
     ck_assert_int_eq(big_int_compare(a, r), 0);
-    //ck_assert_uint_eq(a->overflow, 0); Not sure how overflow is supposed to work
+    //ck_assert_uint_eq(a->overflow, 0); // Causes FAIL
 
     // mixed signs (uses addition underneath, but test pos/neg and neg/pos)
     big_int_create_from_hex(a, "BA2980E4A996ED0AAEA5B0E3B65A7048");
@@ -265,7 +297,7 @@ START_TEST(test_subtraction)
 
     big_int_sub(a, a, b); // a = a - b
     ck_assert_int_eq(big_int_compare(a, r), 0);
-    //ck_assert_uint_eq(a->overflow, 0); Not sure how overflow is supposed to work
+    ck_assert_uint_eq(a->overflow, 0);
 
     big_int_create_from_hex(a, "-BA2980E4A996ED0AAEA5B0E3B65A7048");
     big_int_create_from_hex(b, "531FEC5ED503B8D3");
@@ -273,7 +305,7 @@ START_TEST(test_subtraction)
 
     big_int_sub(a, a, b); // a = a - b
     ck_assert_int_eq(big_int_compare(a, r), 0);
-    //ck_assert_uint_eq(a->overflow, 0); Not sure how overflow is supposed to work
+    ck_assert_uint_eq(a->overflow, 0);
 
     // TODO: test chunk overflow
     // TODO: test chunk underflow
