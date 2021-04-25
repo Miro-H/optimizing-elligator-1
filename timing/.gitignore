@@ -1,0 +1,12 @@
+# Ignore compiled tests
+bin/*
+!bin/.keep
+
+# Ignore generated log files from tests
+logs/*
+!logs/.keep
+
+# Ignore plots generated locally, move plots from plots/local to plots/ to upload
+# them.
+plots/local/*
+!plots/local/.keep
