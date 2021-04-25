@@ -81,17 +81,17 @@ CurvePoint elligator_1_string_to_point(BigInt *t, Curve curve)
     v0 = big_int_add(v0, v0, v1);
     v0 = big_int_add(v0, v0, u);
     BigInt *v = big_int_mod(NULL, v0, curve.q);  // v = u**5 + (r**2 − 2)*u**3 + u
-
     BigInt *CHIV = big_int_chi(NULL, v, curve.q);
 
     BigInt *X = big_int_mul_mod(NULL, CHIV, u, curve.q);  // X = χ(v)u
 
     BigInt *Y0 = big_int_mul_mod(NULL, CHIV, v, curve.q);
     BigInt *Y1 = big_int_add(NULL, curve.q, big_int_one);
+    SUCCESS("WORKS before\n");
     BigInt *Y2 = big_int_div(NULL, Y1, big_int_four);
+    SUCCESS("WORKS after\n");
     Y0 = big_int_pow(Y0, Y0, Y2, curve.q);
     Y0 = big_int_mul_mod(Y0, Y0, CHIV, curve.q);
-
     BigInt *C2 = big_int_pow(NULL, curve.c, big_int_two, curve.q);
     C2 = big_int_inv(C2, C2, curve.q);
     BigInt *Y3 = big_int_pow(NULL, u, big_int_two, curve.q);
