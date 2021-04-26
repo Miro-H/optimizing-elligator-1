@@ -170,7 +170,7 @@ START_TEST(test_addition)
     ck_assert_int_eq(big_int_compare(a, r), 0);
     ck_assert_uint_eq(a->overflow, 0);
 
-    // TODO: multi-chunk addition of two positive integers
+    // multi-chunk addition of two positive integers
     big_int_create_from_hex(a, "A20B9BDB69E6C331825D79743C398D0E");
     big_int_create_from_hex(b, "293D794457EA9BCA15E3E286B3998176");
     big_int_create_from_hex(r, "CB49151FC1D15EFB98415BFAEFD30E84");
@@ -183,7 +183,7 @@ START_TEST(test_addition)
     // multi-chunk addition of one positive integer and one negative integer
     big_int_create_from_hex(a, "A20B9BDB69E6C331825D79743C398D0E");
     big_int_create_from_hex(b, "-293D794457EA9BCA15E3E286B3998176");
-    big_int_create_from_hex(r, "78ce229711fc27676c7996ed88a00b98");
+    big_int_create_from_hex(r, "78CE229711FC27676C7996ED88A00B98");
 
     big_int_add(a, a, b); // a = a + b
     ck_assert_int_eq(big_int_compare(a, r), 0);
@@ -192,54 +192,54 @@ START_TEST(test_addition)
     // multi-chunk addition of one negative integer and one positive integer
     big_int_create_from_hex(a, "-A20B9BDB69E6C331825D79743C398D0E");
     big_int_create_from_hex(b, "293D794457EA9BCA15E3E286B3998176");
-    big_int_create_from_hex(r, "-78ce229711fc27676c7996ed88a00b98");
-
-    big_int_add(a, a, b); // a = a + b
-    ck_assert_int_eq(big_int_compare(a, r), 0);
-    //ck_assert_uint_eq(a->overflow, 0); // Causes FAIL
-
-    // multi-chunk addition of two negative integers
-    big_int_create_from_hex(a, "-A20B9BDB69E6C331825D79743C398D0E");
-    big_int_create_from_hex(b, "-293D794457EA9BCA15E3E286B3998176");
-    big_int_create_from_hex(r, "-cb49151fc1d15efb98415bfaefd30e84");
+    big_int_create_from_hex(r, "-78CE229711FC27676C7996ED88A00B98");
 
     big_int_add(a, a, b); // a = a + b
     ck_assert_int_eq(big_int_compare(a, r), 0);
     ck_assert_uint_eq(a->overflow, 0);
 
-    // TODO: test mixed sized BigInt ops
+    // multi-chunk addition of two negative integers
+    big_int_create_from_hex(a, "-A20B9BDB69E6C331825D79743C398D0E");
+    big_int_create_from_hex(b, "-293D794457EA9BCA15E3E286B3998176");
+    big_int_create_from_hex(r, "-CB49151FC1D15EFB98415BFAEFD30E84");
+
+    big_int_add(a, a, b); // a = a + b
+    ck_assert_int_eq(big_int_compare(a, r), 0);
+    ck_assert_uint_eq(a->overflow, 0);
+
+    // Test mixed sized BigInt ops
     big_int_create_from_hex(a, "A20B9BDB69E6C331743C398D0E");
     big_int_create_from_hex(b, "29315E3E286B3998176");
-    big_int_create_from_hex(r, "a20b9bddfcfca713faefd30e84");
+    big_int_create_from_hex(r, "A20B9BDDFCFCA713FAEFD30E84");
 
     big_int_add(a, a, b); // a = a + b
     big_int_compare(a, r);
     ck_assert_int_eq(big_int_compare(a, r), 0);
     ck_assert_uint_eq(a->overflow, 0);
-    
+
     big_int_create_from_hex(a, "0E");
     big_int_create_from_hex(b, "-794457EA9BCA15E3E286B3998176");
-    big_int_create_from_hex(r, "-794457ea9bca15e3e286b3998168");
-
-    big_int_add(a, a, b); // a = a + b
-    ck_assert_int_eq(big_int_compare(a, r), 0);
-    //ck_assert_uint_eq(a->overflow, 0); // Causes FAIL
-    
-    big_int_create_from_hex(a, "-43C398D0E");
-    big_int_create_from_hex(b, "57EA9BCA15E3E286B3998176");
-    big_int_create_from_hex(r, "57ea9bca15e3e282775ff468");
+    big_int_create_from_hex(r, "-794457EA9BCA15E3E286B3998168");
 
     big_int_add(a, a, b); // a = a + b
     ck_assert_int_eq(big_int_compare(a, r), 0);
     ck_assert_uint_eq(a->overflow, 0);
-    
-    big_int_create_from_hex(a, "-A20B9BDB69E6C331825D79743C398D0E");
-    big_int_create_from_hex(b, "-A15E3E286B3998176");
-    big_int_create_from_hex(r, "-a20b9bdb69e6c33b98415bfaefd30e84");
+
+    big_int_create_from_hex(a, "-43C398D0E");
+    big_int_create_from_hex(b, "57EA9BCA15E3E286B3998176");
+    big_int_create_from_hex(r, "57EA9BCA15E3E282775FF468");
 
     big_int_add(a, a, b); // a = a + b
     ck_assert_int_eq(big_int_compare(a, r), 0);
-    ck_assert_uint_eq(a->overflow, 0); 
+    ck_assert_uint_eq(a->overflow, 0);
+
+    big_int_create_from_hex(a, "-A20B9BDB69E6C331825D79743C398D0E");
+    big_int_create_from_hex(b, "-A15E3E286B3998176");
+    big_int_create_from_hex(r, "-A20B9BDB69E6C33B98415BFAEFD30E84");
+
+    big_int_add(a, a, b); // a = a + b
+    ck_assert_int_eq(big_int_compare(a, r), 0);
+    ck_assert_uint_eq(a->overflow, 0);
 
     // TODO (low prio): test 256 overflows -> restriction of fixed size for bigints,
     // but that should never occur in modulo ops.
@@ -431,7 +431,7 @@ START_TEST(test_sll_small)
 
     // Shift over chunk border
     a = big_int_create(NULL, 4184080774);
-    r = big_int_create_from_hex(NULL, "3e590061800");
+    r = big_int_create_from_hex(NULL, "3E590061800");
 
     big_int_sll_small(a, a, 10);
     ck_assert_int_eq(big_int_compare(a, r), 0);

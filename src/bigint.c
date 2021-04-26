@@ -454,7 +454,10 @@ BigInt *big_int_sub(BigInt *r, BigInt *a, BigInt *b)
     }
 
     // Assertion: borrow = 0, because aa_abs >= bb_abs
-    r->overflow = do_sign_switch;
+
+    // There is never an overflow, because we subtract two numbers with diff. signs
+    r->overflow = 0;
+
     // The sign is zero, because |a| >= |b| and we calculate |a| - |b|
     r->sign = 0;
     r->size = r_size + 1;
