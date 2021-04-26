@@ -28,6 +28,9 @@ LIBS =
 # Main target, building all benchmarks
 all: compile-bigint-benchmark
 
+.PHONY: run-all
+run-all: run-bigint-benchmark
+
 .PHONY: all-benched
 all-benched:
 	make -C $(SRC_BENCHED) all
@@ -55,6 +58,14 @@ run-bigint-benchmark: compile-bigint-benchmark
 
 bigint-benchmark: $(OBJ_BENCHED) $(OBJ)
 	$(CC) -o $(BDIR)/$@ $^ $(CFLAGS) $(LIBS)
+
+.PHONY: plots
+plots: run-all
+	${SCRIPTS_DIR}/make_all_plots.sh
+
+.PHONY: publish-plots
+publish-plots: run-all
+	PUBLISH=1 ${SCRIPTS_DIR}/make_all_plots.sh
 
 .PHONY: clean
 clean:
