@@ -30,7 +30,7 @@ typedef uint64_t dbl_chunk_size_t;
 typedef struct BigInts
 {
     uint64_t sign : 1;          // O: positive, 1: negative
-    uint64_t overflow : 1;      // 1 if operation overflowed
+    uint64_t overflow : 1;      // 1 if operation overflowed (only supported for add/sub)
     uint64_t size : 62;         // Number of chunks used in the BigInt
     uint64_t alloc_size : 62;   // Number of chunks allocated for the BigInt (>= size)
     dbl_chunk_size_t *chunks;   // Chunks of size chunk_size_t in reverse order
