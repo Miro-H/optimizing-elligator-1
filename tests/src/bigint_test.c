@@ -288,7 +288,7 @@ START_TEST(test_subtraction)
 
     big_int_sub(a, a, b); // a = a - b
     ck_assert_int_eq(big_int_compare(a, r), 0);
-    //ck_assert_uint_eq(a->overflow, 0); // Causes FAIL
+    ck_assert_uint_eq(a->overflow, 0);
 
     // mixed signs (uses addition underneath, but test pos/neg and neg/pos)
     big_int_create_from_hex(a, "BA2980E4A996ED0AAEA5B0E3B65A7048");
