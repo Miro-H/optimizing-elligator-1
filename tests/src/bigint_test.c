@@ -315,12 +315,80 @@ START_TEST(test_subtraction)
     big_int_destroy(r);
 }
 
-// TODO: test comparison
-// TODO: test +0 and -0 comparisons
-// TODO: test a < b
-// TODO: test a > b
-// TODO: test different cases (see bigint.c) for same/diff signs and same/diff sizes
+/**
+* \brief Test comparison of BigInts
+*/
+START_TEST(test_comparison)
+{
+    BigInt *a, *b;
 
+    // +0 and -0 comparisons
+    a = big_int_create(NULL, +0);
+    b = big_int_create(NULL, -0);
+    ck_assert_int_eq(big_int_compare(a, b), 0);
+
+    a = big_int_create(a, -0);
+    b = big_int_create(b, +0);
+    ck_assert_int_eq(big_int_compare(a, b), 0);
+
+    // a < b
+    a = big_int_create(a, 123);
+    b = big_int_create(b, 123456);
+    ck_assert_int_lt(big_int_compare(a, b), 0);
+
+    // a > b
+    a = big_int_create(a, 123456789);
+    b = big_int_create(b, 1234);
+    ck_assert_int_gt(big_int_compare(a, b), 0);
+
+    // same size
+    a = big_int_create_from_hex(a, "A20B9BDB69E6C33B98415BFAEFD30E84");
+    b = big_int_create_from_hex(b, "BA2980E4A996ED0AAEA5B0E3B65A7048");
+    ck_assert_int_lt(big_int_compare(a, b), 0);
+
+    a = big_int_create_from_hex(a, "F20B9BDB69E6C33B98415BFAEFD30E84");
+    b = big_int_create_from_hex(b, "BA2980E4A996ED0AAEA5B0E3B65A7048");
+    ck_assert_int_gt(big_int_compare(a, b), 0);
+
+    // different sizes
+    a = big_int_create_from_hex(a, "B98415BFAEFD30E84");
+    b = big_int_create_from_hex(b, "BA2980E4A996ED0AAEA5B0E3B65A7048");
+    ck_assert_int_lt(big_int_compare(a, b), 0);
+
+    a = big_int_create_from_hex(a, "A20B9BDB69E6C33B98415BFAEFD30E84");
+    b = big_int_create_from_hex(b, "D0AAEA5B0E3B65A7048");
+    ck_assert_int_gt(big_int_compare(a, b), 0);
+
+    // mixed signs
+    a = big_int_create_from_hex(a, "-A20B9BDB69E6C33B98415BFAEFD30E84");
+    b = big_int_create_from_hex(b, "D0AAEA5B0E3B65A7048");
+    ck_assert_int_lt(big_int_compare(a, b), 0);
+
+    a = big_int_create_from_hex(a, "A20B9BDB69E6C33B98415BFAEFD30E84");
+    b = big_int_create_from_hex(b, "-BA2980E4A996ED0AAEA5B0E3B65A7048");
+    ck_assert_int_gt(big_int_compare(a, b), 0);
+
+    // both negative
+    a = big_int_create_from_hex(a, "-F20B9BDB69E6C33B98415BFAEFD30E84");
+    b = big_int_create_from_hex(b, "-BA2980E4A996ED0AAEA5B0E3B65A7048");
+    ck_assert_int_lt(big_int_compare(a, b), 0);
+
+    // very small difference
+    a = big_int_create_from_hex(a, "F20B9BDB69E6C33B98415BFAEFD30E84");
+    b = big_int_create_from_hex(b, "F20B9BDB69E6C33B98415BFAEFD30E85");
+    ck_assert_int_lt(big_int_compare(a, b), 0);
+
+    a = big_int_create_from_hex(a, "F20B9BDB69E6C33B98415BFAEFD30E86");
+    b = big_int_create_from_hex(b, "F20B9BDB69E6C33B98415BFAEFD30E85");
+    ck_assert_int_gt(big_int_compare(a, b), 0);
+
+    big_int_destroy(a);
+    big_int_destroy(b);
+}
+
+/**
+* \brief Test multiplication of BigInts
+*/
 START_TEST(test_multiplication)
 {
     BigInt *a, *b, *r;
@@ -584,6 +652,8 @@ Suite *bigints_suite(void)
 
     tcase_add_test(tc_advanced_ops, test_power);
     tcase_add_test(tc_advanced_ops, test_gcd);
+
+    tcase_add_test(tc_basic_arith, test_comparison);
 
     suite_add_tcase(s, tc_create);
     suite_add_tcase(s, tc_basic_arith);
