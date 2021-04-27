@@ -562,13 +562,44 @@ START_TEST(test_division)
     ck_assert_int_eq(big_int_compare(q_exp, q), 0);
     ck_assert_int_eq(big_int_compare(r_exp, r), 0); */
 
-
     // TODO: Definitely test division more in-depth - I don't really trust the
     //       code that much.
 
     // TODO: test special case marked in big_int_div_rem in a TODO and mentioned
     //       specifically in the book (last link in git issue).
 
+    // Divisor larger than dividend
+    big_int_create_from_hex(a, "3B0CD7F86F07");
+    big_int_create_from_hex(b, "20B3EAD995ED443F46535EA");
+    big_int_create(q_exp, 0);
+    big_int_create_from_hex(r_exp, "3b0cd7f86f07");
+
+    // Zero dividend
+    big_int_create(a, 0);
+    big_int_create_from_hex(b, "20B3EAD995ED443F46535EA");
+    big_int_create(q_exp, 0);
+    big_int_create(r_exp, 0);
+
+    big_int_div_rem(q, r, a, b);
+    ck_assert_int_eq(big_int_compare(q_exp, q), 0);
+    ck_assert_int_eq(big_int_compare(r_exp, r), 0);
+
+    // Test 0 in MSB
+
+    // TODO: Test step D6
+    // This test passes, but I don't think step D6 is actually being triggered.
+    // These are test values for radix 2^16 from the book but I think we are using
+    // 2^32, I am not sure how to find my own values :(
+    big_int_create_from_hex(a, "7fff800100000000");
+    big_int_create_from_hex(b, "800080020005");
+    big_int_create_from_hex(q_exp, "fffd");
+    big_int_create_from_hex(r_exp, "80008001000f");
+
+    big_int_div_rem(q, r, a, b);
+    ck_assert_int_eq(big_int_compare(q_exp, q), 0);
+    ck_assert_int_eq(big_int_compare(r_exp, r), 0);
+
+    // Not sure what this test case is for.
     big_int_create_from_hex(a, "5F9F737BB0C9873450C3A516A8B5F0F0");
     big_int_create_from_hex(b, "68A753D72F1F907F1BFAF91F0");
     big_int_create_from_hex(q_exp, "E9E8C50");
