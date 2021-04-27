@@ -16,6 +16,10 @@ CFLAGS  	= -I$(IDIR_TESTED) -I$(IDIR)
 # Add additional compilation flags to improve code quality
 CFLAGS += -Wall -Werror
 
+ifneq ($(DEBUG),)
+	CFLAGS += -Wno-unused-variable
+endif
+
 # Assume that the executable depends on all header files.
 DEPS = $(wildcard $(IDIR)/*.h)
 
