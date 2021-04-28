@@ -584,7 +584,7 @@ START_TEST(test_division)
     ck_assert_int_eq(big_int_compare(q_exp, q), 0);
     ck_assert_int_eq(big_int_compare(r_exp, r), 0);
 
-    // Test 0 in MSB
+    // TODO: Test 0 in MSB
 
     // TODO: Test step D6
     // This test passes, but I don't think step D6 is actually being triggered.
@@ -621,11 +621,30 @@ START_TEST(test_sll_small)
 {
     BigInt *a, *r;
 
-    // TODO: Test big_int_sll_small with more cases
-
     // Shift over chunk border
     a = big_int_create(NULL, 4184080774);
     r = big_int_create_from_hex(NULL, "3E590061800");
+
+    big_int_sll_small(a, a, 10);
+    ck_assert_int_eq(big_int_compare(a, r), 0);
+
+    // Shift by 0 
+    a = big_int_create(a, 4184080774);
+    r = big_int_create(r, 4184080774);
+
+    big_int_sll_small(a, a, 0);
+    ck_assert_int_eq(big_int_compare(a, r), 0);
+
+    // Apply shift to 0
+    a = big_int_create(a, 0);
+    r = big_int_create(r, 0);
+
+    big_int_sll_small(a, a, 10);
+    ck_assert_int_eq(big_int_compare(a, r), 0);
+
+    // Apply shift to negative integer
+    a = big_int_create(a, -4184080774);
+    r = big_int_create_from_hex(r, "-3e590061800");
 
     big_int_sll_small(a, a, 10);
     ck_assert_int_eq(big_int_compare(a, r), 0);
@@ -638,13 +657,68 @@ START_TEST(test_srl_small)
 {
     BigInt *a, *r;
 
-    // TODO: Test big_int_srl_small with more cases
-
     // Shift over chunk border
     a = big_int_create_from_hex(NULL, "102CC2711CB04A427");
     r = big_int_create_from_hex(NULL, "102CC2711CB04A42");
 
     big_int_srl_small(a, a, 4);
+    ck_assert_int_eq(big_int_compare(a, r), 0);
+
+    // Shift by 0 
+    a = big_int_create(a, 4184080774);
+    r = big_int_create(r, 4184080774);
+
+    big_int_srl_small(a, a, 0);
+    ck_assert_int_eq(big_int_compare(a, r), 0);
+
+    // Apply shift to 0
+    a = big_int_create(a, 0);
+    r = big_int_create(r, 0);
+
+    big_int_srl_small(a, a, 10);
+    ck_assert_int_eq(big_int_compare(a, r), 0);
+
+    // Apply shift to negative integer
+    a = big_int_create(a, -1000);
+    r = big_int_create(r, -250);
+
+    big_int_srl_small(a, a, 2);
+    ck_assert_int_eq(big_int_compare(a, r), 0);
+
+    // Test whether failure below is due to hex representation
+    a = big_int_create_from_hex(a, "-3e8");
+    r = big_int_create_from_hex(r, "-fa");
+
+    big_int_srl_small(a, a, 2);
+    ck_assert_int_eq(big_int_compare(a, r), 0);
+
+    // Test whether failure occurs with largest possible 1-chunk integer
+    a = big_int_create(a, -4294967296);
+    r = big_int_create(r, -2147483648);
+
+    big_int_srl_small(a, a, 1);
+    ck_assert_int_eq(big_int_compare(a, r), 0);
+
+    /* TODO: Fix shifts for large negative numbers
+     * The issue occurs as soon as the negative integer is > 1 chunk.
+     * a = big_int_create_from_hex(a, "-100000001");
+     * r = big_int_create_from_hex(r, "-80000001");
+     * 
+     * big_int_srl_small(a, a, 1);
+     * ck_assert_int_eq(big_int_compare(a, r), 0);
+     * 
+     * a = big_int_create_from_hex(a, "-102CC2711CB04A427");
+     * r = big_int_create_from_hex(r, "-81661388e5825214");
+     *
+     * big_int_srl_small(a, a, 1);
+     * ck_assert_int_eq(big_int_compare(a, r), 0);
+     */
+
+    // Shift away all bits
+    a = big_int_create_from_hex(a, "102CC2711CB04A427");
+    r = big_int_create(r, 0);
+
+    big_int_srl_small(a, a, 65);
     ck_assert_int_eq(big_int_compare(a, r), 0);
 
     big_int_destroy(a);
