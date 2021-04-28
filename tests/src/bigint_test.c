@@ -440,7 +440,7 @@ START_TEST(test_multiplication)
     a = big_int_create_from_hex(a, "-98415BFAEFD30E84");
     b = big_int_create_from_hex(b, "D0AAEA");
     r = big_int_create_from_hex(r, "-7c1ac14eb5921d29ceeca8");
-    
+
     big_int_mul(a, a, b);
     ck_assert_int_eq(big_int_compare(a, r), 0);
     ck_assert_uint_eq(a->overflow, 0);
@@ -448,7 +448,7 @@ START_TEST(test_multiplication)
     a = big_int_create_from_hex(a, "98415BFAEFD30E84");
     b = big_int_create_from_hex(b, "-D0AAEA");
     r = big_int_create_from_hex(r, "-7c1ac14eb5921d29ceeca8");
-    
+
     big_int_mul(a, a, b);
     ck_assert_int_eq(big_int_compare(a, r), 0);
     ck_assert_uint_eq(a->overflow, 0);
@@ -457,7 +457,7 @@ START_TEST(test_multiplication)
     a = big_int_create_from_hex(a, "-98415BFAEFD30E84");
     b = big_int_create_from_hex(b, "-D0AAEA");
     r = big_int_create_from_hex(r, "7c1ac14eb5921d29ceeca8");
-    
+
     big_int_mul(a, a, b);
     ck_assert_int_eq(big_int_compare(a, r), 0);
     ck_assert_uint_eq(a->overflow, 0);
@@ -524,7 +524,7 @@ START_TEST(test_division)
     big_int_div_rem(q, r, a, b);
     ck_assert_int_eq(big_int_compare(q_exp, q), 0);
     ck_assert_int_eq(big_int_compare(r_exp, r), 0);
-    
+
     big_int_create_from_hex(a, "-285FB8062273B0CD7F86F076B10720D");
     big_int_create_from_hex(b, "20B3EAD995ED443F46535EA");
     big_int_create_from_hex(q_exp, "-13C0CC929A");
@@ -532,7 +532,7 @@ START_TEST(test_division)
 
     big_int_div_rem(q, r, a, b);
     ck_assert_int_eq(big_int_compare(q_exp, q), 0);
-    ck_assert_int_eq(big_int_compare(r_exp, r), 0); 
+    ck_assert_int_eq(big_int_compare(r_exp, r), 0);
 
     big_int_create_from_hex(a, "285FB8062273B0CD7F86F076B10720D");
     big_int_create_from_hex(b, "-20B3EAD995ED443F46535EA");
@@ -541,18 +541,18 @@ START_TEST(test_division)
 
     big_int_div_rem(q, r, a, b);
     ck_assert_int_eq(big_int_compare(q_exp, q), 0);
-    ck_assert_int_eq(big_int_compare(r_exp, r), 0); 
+    ck_assert_int_eq(big_int_compare(r_exp, r), 0);
 
     // Test division of two negative numbers
     big_int_create(a, -33);
     big_int_create(b, -4);
     big_int_create(q_exp, 8);
     big_int_create(r_exp, -1);
-    
+
     big_int_div_rem(q, r, a, b);
     ck_assert_int_eq(big_int_compare(q_exp, q), 0);
     ck_assert_int_eq(big_int_compare(r_exp, r), 0);
-    
+
     big_int_create_from_hex(a, "-285FB8062273B0CD7F86F076B10720D");
     big_int_create_from_hex(b, "-20B3EAD995ED443F46535EA");
     big_int_create_from_hex(q_exp, "13c0cc929");
@@ -628,7 +628,7 @@ START_TEST(test_sll_small)
     big_int_sll_small(a, a, 10);
     ck_assert_int_eq(big_int_compare(a, r), 0);
 
-    // Shift by 0 
+    // Shift by 0
     a = big_int_create(a, 4184080774);
     r = big_int_create(r, 4184080774);
 
@@ -664,7 +664,7 @@ START_TEST(test_srl_small)
     big_int_srl_small(a, a, 4);
     ck_assert_int_eq(big_int_compare(a, r), 0);
 
-    // Shift by 0 
+    // Shift by 0
     a = big_int_create(a, 4184080774);
     r = big_int_create(r, 4184080774);
 
@@ -699,20 +699,24 @@ START_TEST(test_srl_small)
     big_int_srl_small(a, a, 1);
     ck_assert_int_eq(big_int_compare(a, r), 0);
 
-    /* TODO: Fix shifts for large negative numbers
-     * The issue occurs as soon as the negative integer is > 1 chunk.
-     * a = big_int_create_from_hex(a, "-100000001");
-     * r = big_int_create_from_hex(r, "-80000001");
-     * 
-     * big_int_srl_small(a, a, 1);
-     * ck_assert_int_eq(big_int_compare(a, r), 0);
-     * 
-     * a = big_int_create_from_hex(a, "-102CC2711CB04A427");
-     * r = big_int_create_from_hex(r, "-81661388e5825214");
-     *
-     * big_int_srl_small(a, a, 1);
-     * ck_assert_int_eq(big_int_compare(a, r), 0);
-     */
+    // Test shifting negative numbers (round towards -inf)
+    a = big_int_create_from_hex(a, "-80000000");
+    r = big_int_create_from_hex(r, "-1");
+
+    big_int_srl_small(a, a, 32);
+    ck_assert_int_eq(big_int_compare(a, r), 0);
+
+    a = big_int_create_from_hex(a, "-100000001");
+    r = big_int_create_from_hex(r, "-80000001");
+
+    big_int_srl_small(a, a, 1);
+    ck_assert_int_eq(big_int_compare(a, r), 0);
+
+    a = big_int_create_from_hex(a, "-102CC2711CB04A427");
+    r = big_int_create_from_hex(r, "-81661388e5825214");
+
+    big_int_srl_small(a, a, 1);
+    ck_assert_int_eq(big_int_compare(a, r), 0);
 
     // Shift away all bits
     a = big_int_create_from_hex(a, "102CC2711CB04A427");
@@ -813,15 +817,15 @@ START_TEST(test_add_mod)
     ck_assert_int_eq(big_int_compare(a, r), 0);
 
     /* TODO: Fix case where a + b > 2^256 but r is not
-     * Instead of calculating 
+     * Instead of calculating
      *     big_int_mod(r, big_int_add(r, a, b), q)
      * we should calculate
-     *     big_int_mod(r, big_int_add(r, a % q, b % q, q)) in this case. 
+     *     big_int_mod(r, big_int_add(r, a % q, b % q, q)) in this case.
      * a = big_int_create_from_hex(a, "ABCD4569096134AB3096134DAD469B3096134690964DDABCD4569AB3096134DD");
      * b = big_int_create_from_hex(b, "ABCD4569096134AB3096134DAD469B3096134690964DDABCD4569AB3096134DD");
      * q = big_int_create_from_hex(q, "3450AEE678");
      * r = big_int_create_from_hex(r, "c71a61b2a");
-     * 
+     *
      * big_int_add_mod(a, a, b, q);
      * ck_assert_int_eq(big_int_compare(a, r), 0);
      */
@@ -871,10 +875,10 @@ START_TEST(test_sub_mod)
     ck_assert_int_eq(big_int_compare(a, r), 0);
 
     /* TODO: Fix case where a - b > 2^256 but r is not
-     * Instead of calculating 
+     * Instead of calculating
      *     big_int_mod(r, big_int_sub(r, a, b), q)
      * we should calculate
-     *     big_int_mod(r, big_int_sub(r, a % q, b % q, q)) in this case. 
+     *     big_int_mod(r, big_int_sub(r, a % q, b % q, q)) in this case.
      * a = big_int_create_from_hex(a, "ABCD4569AB3096134DDABCD4569AB3096134DDABCD4569AB3096134DD");
      * b = big_int_create_from_hex(b, "ABCD4569AB3096134DDABCD4569AB3096134DD");
      * q = big_int_create_from_hex(q, "3450AEE678");
@@ -904,7 +908,7 @@ START_TEST(test_mul_mod)
     ck_assert_int_eq(big_int_compare(a, r), 0);
 
     /* TODO: Fix case where a * b > 2^256 but r is not
-     * Instead of calculating 
+     * Instead of calculating
      *     big_int_mod(r, big_int_mul(r, a, b), q)
      * we should calculate
      *     big_int_mod(r, big_int_mul(r, a % q, b % q, q)) in this case.
@@ -972,7 +976,7 @@ START_TEST(test_div_mod)
     big_int_mod(a_div_b_mod_q, a_div_b, q);
     ck_assert_int_eq(big_int_compare(a_div_b_mod_q_exp, a_div_b_mod_q), 0);
 
-    // It works when I save the result in a new pointer, but not if I try to 
+    // It works when I save the result in a new pointer, but not if I try to
     // save the result back in a. That causes a failed test, or a weird error (see below)
     r = big_int_create_from_hex(NULL, "1fb7d982c0");
     spare = big_int_create(NULL, 0);
@@ -980,7 +984,7 @@ START_TEST(test_div_mod)
     //ck_assert_int_eq(big_int_compare(spare, r), 0);
 
     // With this I get the error:
-    // Fatal: Integer 4336073602 does not fit into a single chunk of 4 bytes 
+    // Fatal: Integer 4336073602 does not fit into a single chunk of 4 bytes
     // but if I make the call BEFORE the previous assert (i.e. change line 973 to (a, a, b, q))
     // it doesn't gives an error but the test fails... ??????
     //big_int_div_mod(a, a, b, q);

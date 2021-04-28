@@ -777,7 +777,8 @@ BigInt *big_int_sll_small(BigInt *r, BigInt *a, uint64_t shift)
  */
 BigInt *big_int_srl_small(BigInt *r, BigInt *a, uint64_t shift)
 {
-    dbl_chunk_size_t carry;
+    BigInt *last_bit_bigint;
+    dbl_chunk_size_t carry, last_bit;
     int64_t i, a_idx;
 
     // NOTE: for arbitrary sized BigInts, r would only need to be of size
@@ -787,7 +788,14 @@ BigInt *big_int_srl_small(BigInt *r, BigInt *a, uint64_t shift)
 
     // Special case where we shift away all bits
     if (shift / BIGINT_CHUNK_BIT_SIZE >= a->size) {
-        big_int_create(r, 0);
+        // Special case for rounding towards -inf
+        if (a->sign && (shift - 1) / BIGINT_CHUNK_BIT_SIZE < a->size) {
+            big_int_create(r, a->chunks[a->size - 1] >> (((shift - 1) % BIGINT_CHUNK_BIT_SIZE)));
+            r->sign = 1;
+        }
+        else {
+            big_int_create(r, 0);
+        }
         return r;
     }
 
@@ -796,6 +804,10 @@ BigInt *big_int_srl_small(BigInt *r, BigInt *a, uint64_t shift)
     // Take the chunks of a that are not all completely shifted away
     a_idx = (int64_t) (shift / BIGINT_CHUNK_BIT_SIZE);
     shift %= BIGINT_CHUNK_BIT_SIZE;
+
+    // Store the last bit that is shifted away to implement rounding towards -inf
+    last_bit = (a->chunks[a_idx] >> (shift - 1)) & 1;
+
     // Go upwards to avoid aliasing, since we always write r[i] and read
     // a[a_idx+1], where i < a_idx + 1.
     for (i = 0; i < r->size-1; ++i) {
@@ -805,6 +817,13 @@ BigInt *big_int_srl_small(BigInt *r, BigInt *a, uint64_t shift)
     }
     // Write MSB entry
     r->chunks[r->size - 1] = a->chunks[a_idx] >> shift;
+
+    // Add last bit (round towards -inf)
+    if (a->sign && last_bit) {
+        last_bit_bigint = big_int_create(NULL, last_bit);
+        big_int_sub(r, r, last_bit_bigint);
+        big_int_destroy(last_bit_bigint);
+    }
 
     r->overflow = 0;
     r->sign = a->sign;
