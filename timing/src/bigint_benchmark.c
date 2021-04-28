@@ -23,11 +23,15 @@
     #define LOG_PATH "../logs"
 #endif
 
+#ifndef ARRAY_SIZE
+    #define ARRAY_SIZE 4096
+#endif
+
 /*
  * Global BigInt variables
  */
 BigInt *i1, *i2, *i3;
-
+BigInt *big_int_array[ARRAY_SIZE];
 
 /**
  * \brief Benchmark the chi function
@@ -58,6 +62,87 @@ void bench_chi_cleanup(void)
     big_int_destroy(i2);
     big_int_destroy(i3);
 }
+
+
+
+//--- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
+void bench_big_int_alloc_prep(void *argptr)
+{
+    
+}
+
+// Benchmark itself
+void bench_big_int_alloc_fn(void)
+{
+    for(uint64_t i = 0; i < ARRAY_SIZE; i++)
+    {
+        big_int_array[i] = big_int_alloc(i);
+    }
+    
+}
+
+// Run after benchmark
+void bench_big_int_alloc_cleanup(void)
+{
+    for(uint64_t i = 0; i < ARRAY_SIZE; i++)
+    {
+       big_int_destroy(big_int_array[i]);
+    }
+}
+
+//--- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
+void bench_big_int_calloc_prep(void *argptr)
+{
+    
+}
+
+// Benchmark itself
+void bench_big_int_calloc_fn(void)
+{
+    for(uint64_t i = 0; i < ARRAY_SIZE; i++)
+    {
+        big_int_array[i] = big_int_calloc(i);
+    }
+    
+}
+
+// Run after benchmark
+void bench_big_int_calloc_cleanup(void)
+{
+    for(uint64_t i = 0; i < ARRAY_SIZE; i++)
+    {
+       big_int_destroy(big_int_array[i]);
+    }
+}
+
+//--- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
+void bench_big_int_destroy_prep(void *argptr)
+{
+    for(uint64_t i = 0; i < ARRAY_SIZE; i++)
+    {
+        big_int_array[i] = big_int_calloc(i);
+    }
+}
+
+// Benchmark itself
+void bench_big_int_destroy_fn(void)
+{
+    for(uint64_t i = 0; i < ARRAY_SIZE; i++)
+    {
+       big_int_destroy(big_int_array[i]);
+    }
+}
+
+// Run after benchmark
+void bench_big_int_destroy_cleanup(void)
+{
+    
+}
+
+
+
+
+
 
 int main(void)
 {
