@@ -760,6 +760,14 @@ START_TEST(test_modulo_operation)
     big_int_mod(a, a, q);
     ck_assert_int_eq(big_int_compare(a, r), 0);
 
+    // a < q; negative a
+    a = big_int_create_from_hex(a, "-1034053B0A");
+    q = big_int_create_from_hex(q, "1034053B0A567");
+    r = big_int_create_from_hex(r, "103301FAB6A5D");
+
+    big_int_mod(a, a, q);
+    ck_assert_int_eq(big_int_compare(a, r), 0);
+
     // q | a
     a = big_int_create_from_hex(a, "144229c9ccec0c"); // a = 20 * q
     q = big_int_create_from_hex(q, "1034EE3B0A567");
@@ -949,54 +957,50 @@ START_TEST(test_mul_mod)
 
 START_TEST(test_div_mod)
 {
-    // BigInt *a, *b, *q, *r, *x;
+    BigInt *a, *b, *q, *r, *x;
 
-    // TODO: Fix pointer-reuse issue.
-    // TODO: Fix inversion in general
+    // No pointer reuse
+    a = big_int_create_from_hex(NULL, "ABCD4569AB3096134DD");
+    b = big_int_create_from_hex(NULL, "56AA098765");
+    q = big_int_create_from_hex(NULL, "3450AEE678");
+    r = big_int_create_from_hex(NULL, "2DD358AAC1");
+    x = big_int_create(NULL, 0);
 
-    // // No pointer reuse
-    // a = big_int_create_from_hex(NULL, "ABCD4569AB3096134DD");
-    // b = big_int_create_from_hex(NULL, "56AA098765");
-    // q = big_int_create_from_hex(NULL, "3450AEE678");
-    // r = big_int_create_from_hex(NULL, "2dd358aac1");
-    // x = big_int_create(NULL, 0);
-    //
-    // big_int_div_mod(x, a, b, q);
-    // DEBUG_BIGINT(x, "GOT x = ");
-    // ck_assert_int_eq(big_int_compare(x, r), 0);
-    //
-    // // Reuse a
-    // a = big_int_create_from_hex(a, "ABCD4569AB3096134DD");
-    // b = big_int_create_from_hex(b, "56AA098765");
-    // q = big_int_create_from_hex(q, "3450AEE678");
-    // r = big_int_create_from_hex(r, "2dd358aac1");
-    //
-    // big_int_div_mod(a, a, b, q);
-    // //ck_assert_int_eq(big_int_compare(a, r), 0); // fail, wrong answer
-    //
-    // // Reuse b
-    // a = big_int_create_from_hex(a, "ABCD4569AB3096134DD");
-    // b = big_int_create_from_hex(b, "56AA098765");
-    // q = big_int_create_from_hex(q, "3450AEE678");
-    // r = big_int_create_from_hex(r, "2dd358aac1");
-    //
-    // big_int_div_mod(b, a, b, q);
-    // ck_assert_int_eq(big_int_compare(b, r), 0);
-    //
-    // // Reuse q
-    // a = big_int_create_from_hex(a, "ABCD4569AB3096134DD");
-    // b = big_int_create_from_hex(b, "56AA098765");
-    // q = big_int_create_from_hex(q, "3450AEE678");
-    // r = big_int_create_from_hex(r, "2dd358aac1");
-    //
-    // // big_int_div_mod(q, a, b, q); // fail; division by zero
-    // // ck_assert_int_eq(big_int_compare(q, r), 0);
-    //
-    // big_int_destroy(a);
-    // big_int_destroy(b);
-    // big_int_destroy(q);
-    // big_int_destroy(r);
-    // big_int_destroy(x);
+    big_int_div_mod(x, a, b, q);
+    ck_assert_int_eq(big_int_compare(x, r), 0);
+
+    // Reuse a
+    a = big_int_create_from_hex(a, "ABCD4569AB3096134DD");
+    b = big_int_create_from_hex(b, "56AA098765");
+    q = big_int_create_from_hex(q, "3450AEE678");
+    r = big_int_create_from_hex(r, "2DD358AAC1");
+
+    big_int_div_mod(a, a, b, q);
+    ck_assert_int_eq(big_int_compare(a, r), 0);
+
+    // Reuse b
+    a = big_int_create_from_hex(a, "ABCD4569AB3096134DD");
+    b = big_int_create_from_hex(b, "56AA098765");
+    q = big_int_create_from_hex(q, "3450AEE678");
+    r = big_int_create_from_hex(r, "2DD358AAC1");
+
+    big_int_div_mod(b, a, b, q);
+    ck_assert_int_eq(big_int_compare(b, r), 0);
+
+    // Reuse q
+    a = big_int_create_from_hex(a, "ABCD4569AB3096134DD");
+    b = big_int_create_from_hex(b, "56AA098765");
+    q = big_int_create_from_hex(q, "3450AEE678");
+    r = big_int_create_from_hex(r, "2DD358AAC1");
+
+    big_int_div_mod(q, a, b, q);
+    ck_assert_int_eq(big_int_compare(q, r), 0);
+
+    big_int_destroy(a);
+    big_int_destroy(b);
+    big_int_destroy(q);
+    big_int_destroy(r);
+    big_int_destroy(x);
 }
 
 START_TEST(test_modulo_inverse)
