@@ -949,7 +949,7 @@ START_TEST(test_mul_mod)
 
 START_TEST(test_div_mod)
 {
-    BigInt *a, *b, *q, *r, *x;
+    // BigInt *a, *b, *q, *r, *x;
 
     // TODO: Fix pointer-reuse issue.
     // TODO: Fix inversion in general
