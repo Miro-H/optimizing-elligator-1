@@ -504,18 +504,7 @@ START_TEST(test_division)
     ck_assert_int_eq(big_int_compare(q_exp, q), 0);
     ck_assert_int_eq(big_int_compare(r_exp, r), 0);
 
-    // TODO: Fix division with negative numbers
     // Mixed sign division
-    /*
-    big_int_create(a, 33);
-    big_int_create(b, -4);
-    big_int_create(q_exp, -9);
-    big_int_create(r_exp, -3);
-
-    big_int_div_rem(q, r, a, b);
-    ck_assert_int_eq(big_int_compare(q_exp, q), 0);
-    ck_assert_int_eq(big_int_compare(r_exp, r), 0);
-
     big_int_create(a, -33);
     big_int_create(b, 4);
     big_int_create(q_exp, -9);
@@ -525,10 +514,19 @@ START_TEST(test_division)
     ck_assert_int_eq(big_int_compare(q_exp, q), 0);
     ck_assert_int_eq(big_int_compare(r_exp, r), 0);
 
+    big_int_create(a, 33);
+    big_int_create(b, -4);
+    big_int_create(q_exp, -9);
+    big_int_create(r_exp, -3);
+
+    big_int_div_rem(q, r, a, b);
+    ck_assert_int_eq(big_int_compare(q_exp, q), 0);
+    ck_assert_int_eq(big_int_compare(r_exp, r), 0);
+
     big_int_create_from_hex(a, "-285FB8062273B0CD7F86F076B10720D");
     big_int_create_from_hex(b, "20B3EAD995ED443F46535EA");
-    big_int_create_from_hex(q_exp, "-13C0CC929A");
-    big_int_create_from_hex(r_exp, "15b994f9b1c224d83d72057");
+    big_int_create_from_hex(q_exp, "-13C0CC92A");
+    big_int_create_from_hex(r_exp, "15B994F9B1C224D83D72057");
 
     big_int_div_rem(q, r, a, b);
     ck_assert_int_eq(big_int_compare(q_exp, q), 0);
@@ -536,8 +534,8 @@ START_TEST(test_division)
 
     big_int_create_from_hex(a, "285FB8062273B0CD7F86F076B10720D");
     big_int_create_from_hex(b, "-20B3EAD995ED443F46535EA");
-    big_int_create_from_hex(q_exp, "-13C0CC92a");
-    big_int_create_from_hex(r_exp, "-15b994f9b1c224d83d72057");
+    big_int_create_from_hex(q_exp, "-13C0CC92A");
+    big_int_create_from_hex(r_exp, "-15B994F9B1C224D83D72057");
 
     big_int_div_rem(q, r, a, b);
     ck_assert_int_eq(big_int_compare(q_exp, q), 0);
@@ -560,10 +558,7 @@ START_TEST(test_division)
 
     big_int_div_rem(q, r, a, b);
     ck_assert_int_eq(big_int_compare(q_exp, q), 0);
-    ck_assert_int_eq(big_int_compare(r_exp, r), 0); */
-
-    // TODO: Definitely test division more in-depth - I don't really trust the
-    //       code that much.
+    ck_assert_int_eq(big_int_compare(r_exp, r), 0);
 
     // TODO: test special case marked in big_int_div_rem in a TODO and mentioned
     //       specifically in the book (last link in git issue).
