@@ -820,6 +820,10 @@ BigInt *big_int_mod(BigInt *r, BigInt *a, BigInt *q)
 {
     BigInt *tmp;
 
+    // NOTE: for arbitrary sized BigInts, r would only need to be of size q->size
+    if (!r)
+        r = big_int_alloc(BIGINT_FIXED_SIZE);
+
     // TODO: this can be optimized for special cases. We need to check if
     // q (for the mapping) is close to a power of two. In that case, we might
     // be able to avoid using division here!
@@ -844,7 +848,8 @@ BigInt *big_int_mod(BigInt *r, BigInt *a, BigInt *q)
  */
 BigInt *big_int_add_mod(BigInt *r, BigInt *a, BigInt *b, BigInt *q)
 {
-    return big_int_mod(r, big_int_add(r, a, b), q);
+    r = big_int_add(r, a, b);
+    return big_int_mod(r, r, q);
 }
 
 
@@ -853,7 +858,8 @@ BigInt *big_int_add_mod(BigInt *r, BigInt *a, BigInt *b, BigInt *q)
  */
 BigInt *big_int_sub_mod(BigInt *r, BigInt *a, BigInt *b, BigInt *q)
 {
-    return big_int_mod(r, big_int_sub(r, a, b), q);
+    r = big_int_sub(r, a, b);
+    return big_int_mod(r, r, q);
 }
 
 
@@ -862,16 +868,18 @@ BigInt *big_int_sub_mod(BigInt *r, BigInt *a, BigInt *b, BigInt *q)
  */
 BigInt *big_int_mul_mod(BigInt *r, BigInt *a, BigInt *b, BigInt *q)
 {
-    return big_int_mod(r, big_int_mul(r, a, b), q);
+    r = big_int_mul(r, a, b);
+    return big_int_mod(r, r, q);
 }
 
 
 /**
- * \brief Calculate r := (a * b) mod q
+ * \brief Calculate r := (a * b^-1) mod q
  */
 BigInt *big_int_div_mod(BigInt *r, BigInt *a, BigInt *b, BigInt *q)
 {
-    return big_int_mod(r, big_int_div(r, a, b), q);
+    r = big_int_inv(r, b, q);
+    return big_int_mul_mod(r, a, r, q);
 }
 
 
