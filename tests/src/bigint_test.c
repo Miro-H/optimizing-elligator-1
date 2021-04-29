@@ -1013,14 +1013,11 @@ START_TEST(test_modulo_inverse)
     // Negative a
     a = big_int_create_from_hex(a, "-76101CAD986E75478DAAD160");
     q = big_int_create_from_hex(q, "C18A71D87958DF7154BABA57");
-    ainv_exp = big_int_create_from_hex(ainv_exp, "524e9726eba60b18b1207e69");
+    ainv_exp = big_int_create_from_hex(ainv_exp, "524E9726EBA60B18B1207E69");
 
     big_int_inv(a, a, q);
     ck_assert_int_eq(big_int_compare(a, ainv_exp), 0);
 
-    /* TODO: Fix big_int_inv so that it gives the correct result in ALL cases.
-     *       Sometimes it gives the incorrect result, as shown here with very basic inputs.
-     */
     // Very simple cases
     // a = 7
     a = big_int_create(a, 7);
@@ -1028,7 +1025,7 @@ START_TEST(test_modulo_inverse)
     ainv_exp = big_int_create(ainv_exp, 3);
 
     big_int_inv(a, a, q);
-    // ck_assert_int_eq(big_int_compare(a, ainv_exp), 0); // fail; outputs 2
+    ck_assert_int_eq(big_int_compare(a, ainv_exp), 0);
 
     // a = 6
     a = big_int_create(a, 6);
@@ -1044,7 +1041,7 @@ START_TEST(test_modulo_inverse)
     ainv_exp = big_int_create(ainv_exp, 4);
 
     big_int_inv(a, a, q);
-    //ck_assert_int_eq(big_int_compare(a, ainv_exp), 0); // fail; outputs 1
+    ck_assert_int_eq(big_int_compare(a, ainv_exp), 0);
 
     // a = 3
     a = big_int_create(a, 3);
@@ -1060,7 +1057,7 @@ START_TEST(test_modulo_inverse)
     ainv_exp = big_int_create(ainv_exp, 3);
 
     big_int_inv(a, a, q);
-    //ck_assert_int_eq(big_int_compare(a, ainv_exp), 0); // fail; outputs 2
+    ck_assert_int_eq(big_int_compare(a, ainv_exp), 0);
 
     big_int_destroy(a);
     big_int_destroy(q);
