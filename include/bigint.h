@@ -4,9 +4,11 @@
 #include <inttypes.h>
 #include <string.h>
 
-// We need more than 4 chunks, because intermediate results can be larger, e.g.,
+// We need more than 8 chunks, because intermediate results can be larger, e.g.,
 // for multiplication mod q if q is 256-bit.
-#define BIGINT_FIXED_SIZE ((uint64_t) 8)
+// TODO: verify if we really need double space for 1024-bit BigInts when we
+// operate on maximally 256-bit BigInts.
+#define BIGINT_FIXED_SIZE ((uint64_t) 32)
 #define BIGINT_CHUNK_HEX_SIZE (sizeof(chunk_size_t) * 2)
 #define BIGINT_CHUNK_BIT_SIZE (sizeof(chunk_size_t) * 8)
 
@@ -53,21 +55,21 @@ __attribute__((unused)) static BigInt *big_int_zero = &((BigInt) {
     .sign = 0,
     .overflow = 0,
     .size = 1,
-    .alloc_size = 0,
+    .alloc_size = BIGINT_FIXED_SIZE,
     .chunks = &chunk_zero,
 });
 __attribute__((unused)) static BigInt *big_int_one = &((BigInt) {
     .sign = 0,
     .overflow = 0,
     .size = 1,
-    .alloc_size = 0,
+    .alloc_size = BIGINT_FIXED_SIZE,
     .chunks = &chunk_one,
 });
 __attribute__((unused)) static BigInt *big_int_min_one = &((BigInt) {
     .sign = 0,
     .overflow = 0,
     .size = 1,
-    .alloc_size = 0,
+    .alloc_size = BIGINT_FIXED_SIZE,
     .chunks = &chunk_one,
 });
 
