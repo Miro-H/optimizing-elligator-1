@@ -811,19 +811,14 @@ START_TEST(test_add_mod)
     big_int_add_mod(a, a, b, q);
     ck_assert_int_eq(big_int_compare(a, r), 0);
 
-    /* TODO: Fix case where a + b > 2^256 but r is not
-     * Instead of calculating
-     *     big_int_mod(r, big_int_add(r, a, b), q)
-     * we should calculate
-     *     big_int_mod(r, big_int_add(r, a % q, b % q, q)) in this case.
-     * a = big_int_create_from_hex(a, "ABCD4569096134AB3096134DAD469B3096134690964DDABCD4569AB3096134DD");
-     * b = big_int_create_from_hex(b, "ABCD4569096134AB3096134DAD469B3096134690964DDABCD4569AB3096134DD");
-     * q = big_int_create_from_hex(q, "3450AEE678");
-     * r = big_int_create_from_hex(r, "c71a61b2a");
-     *
-     * big_int_add_mod(a, a, b, q);
-     * ck_assert_int_eq(big_int_compare(a, r), 0);
-     */
+    // Test mod operation with intermediate result that is larger than 256 bits
+    a = big_int_create_from_hex(a, "ABCD4569096134AB3096134DAD469B3096134690964DDABCD4569AB3096134DD");
+    b = big_int_create_from_hex(b, "ABCD4569096134AB3096134DAD469B3096134690964DDABCD4569AB3096134DD");
+    q = big_int_create_from_hex(q, "3450AEE678");
+    r = big_int_create_from_hex(r, "c71a61b2a");
+
+    big_int_add_mod(a, a, b, q);
+    ck_assert_int_eq(big_int_compare(a, r), 0);
 
     big_int_destroy(a);
     big_int_destroy(b);
@@ -869,19 +864,14 @@ START_TEST(test_sub_mod)
     big_int_sub_mod(a, a, b, q);
     ck_assert_int_eq(big_int_compare(a, r), 0);
 
-    /* TODO: Fix case where a - b > 2^256 but r is not
-     * Instead of calculating
-     *     big_int_mod(r, big_int_sub(r, a, b), q)
-     * we should calculate
-     *     big_int_mod(r, big_int_sub(r, a % q, b % q, q)) in this case.
-     * a = big_int_create_from_hex(a, "ABCD4569AB3096134DDABCD4569AB3096134DDABCD4569AB3096134DD");
-     * b = big_int_create_from_hex(b, "ABCD4569AB3096134DDABCD4569AB3096134DD");
-     * q = big_int_create_from_hex(q, "3450AEE678");
-     * r = big_int_create_from_hex(r, "1f7046da41");
-     *
-     * big_int_sub_mod(a, a, b, q);
-     * ck_assert_int_eq(big_int_compare(a, r), 0);
-     */
+    // Test mod operation with intermediate result that is larger than 256 bits
+    a = big_int_create_from_hex(a, "ABCD4569AB3096134DDABCD4569AB3096134DDABCD4569AB3096134DD");
+    b = big_int_create_from_hex(b, "ABCD4569AB3096134DDABCD4569AB3096134DD");
+    q = big_int_create_from_hex(q, "3450AEE678");
+    r = big_int_create_from_hex(r, "256A7CCB10");
+
+    big_int_sub_mod(a, a, b, q);
+    ck_assert_int_eq(big_int_compare(a, r), 0);
 
     big_int_destroy(a);
     big_int_destroy(b);
@@ -902,19 +892,14 @@ START_TEST(test_mul_mod)
     big_int_mul_mod(a, a, b, q);
     ck_assert_int_eq(big_int_compare(a, r), 0);
 
-    /* TODO: Fix case where a * b > 2^256 but r is not
-     * Instead of calculating
-     *     big_int_mod(r, big_int_mul(r, a, b), q)
-     * we should calculate
-     *     big_int_mod(r, big_int_mul(r, a % q, b % q, q)) in this case.
-     * a = big_int_create_from_hex(a, "ABCD4569AB3096134DDABCD4569AB3096134DDABCD4569AB3096134DD");
-     * b = big_int_create_from_hex(b, "ABCD4569AB3096134DDABCD4569AB3096134DD");
-     * q = big_int_create_from_hex(q, "3450AEE678");
-     * r = big_int_create_from_hex(r, "1f7046da41");
-     *
-     * big_int_mul_mod(a, a, b, q);
-     * ck_assert_int_eq(big_int_compare(a, r), 0);
-     */
+    // Test mod operation with intermediate result that is larger than 256 bits
+    a = big_int_create_from_hex(a, "ABCD4569AB3096134DDABCD4569AB3096134DDABCD4569AB3096134DD");
+    b = big_int_create_from_hex(b, "ABCD4569AB3096134DDABCD4569AB3096134DD");
+    q = big_int_create_from_hex(q, "3450AEE678");
+    r = big_int_create_from_hex(r, "1f7046da41");
+
+    big_int_mul_mod(a, a, b, q);
+    ck_assert_int_eq(big_int_compare(a, r), 0);
 
     // Mixed signs
     a = big_int_create_from_hex(a, "-ABCD4569ABEF");
