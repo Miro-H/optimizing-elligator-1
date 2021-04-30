@@ -64,10 +64,6 @@ START_TEST(test_e2e)
             "49C01F8D8C86ECB362B3952FA93ABD8CF512B09225BCEE9E76BC5E0C9A6E17E");
 
     curve_point = elligator_1_string_to_point(t, curve);
-
-    DEBUG_BIGINT(curve_point.x, "x = ");
-    DEBUG_BIGINT(curve_point.y, "y = ");
-
     ck_assert_int_eq(big_int_compare(curve_point.x, x), 0);
     ck_assert_int_eq(big_int_compare(curve_point.y, y), 0);
 
