@@ -548,7 +548,8 @@ BigInt *big_int_div_rem(BigInt *q, BigInt *r, BigInt *a, BigInt *b)
     uint8_t q_sign;
     uint64_t factor;
     int64_t q_idx, a_idx, i;
-    BigInt *a_loc, *b_loc, *a_part, *q_c_bigint, *qb, *radix_pow;
+    BigInt *a_abs, *b_abs, *a_loc, *b_loc, *a_part,
+           *q_c_bigint, *qb, *radix_pow;
     BigInt *r_loc = NULL;
 
     if (big_int_is_zero(b))
@@ -560,6 +561,8 @@ BigInt *big_int_div_rem(BigInt *q, BigInt *r, BigInt *a, BigInt *b)
     /*
      * Special cases
      */
+    a_abs = big_int_abs(NULL, a);
+    b_abs = big_int_abs(NULL, b);
 
     // zero dividend
     if (big_int_is_zero(a)) {
@@ -567,7 +570,7 @@ BigInt *big_int_div_rem(BigInt *q, BigInt *r, BigInt *a, BigInt *b)
         r_loc = big_int_create(NULL, 0);
     }
     // divisor larger than dividend
-    else if (b->size > a->size) {
+    else if (big_int_compare(b_abs, a_abs) == 1) {
         q = big_int_create(q, 0);
 
         // Save unsigned rest, account for signs later
@@ -739,6 +742,8 @@ BigInt *big_int_div_rem(BigInt *q, BigInt *r, BigInt *a, BigInt *b)
         big_int_copy(r, r_loc);
 
     // Cleanup intermediate BigInts
+    big_int_destroy(a_abs);
+    big_int_destroy(b_abs);
     big_int_destroy(r_loc);
 
     return q;
