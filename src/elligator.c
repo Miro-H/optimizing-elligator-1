@@ -65,82 +65,99 @@ void free_curve_point(CurvePoint *point)
 
 CurvePoint elligator_1_string_to_point(BigInt *t, Curve curve)
 {
-    // TODO: assert t =/= +1, -1
-    BigInt *u0 = big_int_sub(NULL, big_int_one, t);
-    BigInt *u1 = big_int_add(NULL, big_int_one, t);
-    u1 = big_int_inv(u1, u1, curve.q);
-    BigInt *u = big_int_mul_mod(NULL, u0, u1, curve.q); // u = (1 − t) / (1 + t)
+    BigInt *u, *u0, *u1,
+           *v, *v0, *v1, *v2,
+           *CHIV,
+           *X, *X_plus_1, *X_plus_1_squared,
+           *Y, *Y0, *Y1, *Y2, *Y3, *C2,
+           *x, *x0, *x1, *rX,
+           *y, *y0, *y1;
 
-    // TODO: Optimization potential; reuse partial results for powers, instead
-    // of doing it from scratch each time
-    BigInt *v0 = big_int_pow(NULL, u, big_int_five, curve.q);
-    BigInt *v1 = big_int_pow(NULL, curve.r, big_int_two, curve.q);
-    v1 = big_int_sub(v1, v1, big_int_two);
-    BigInt *v2 = big_int_pow(NULL, u, big_int_three, curve.q);
-    v1 = big_int_mul_mod(v1, v1, v2, curve.q);
-    v0 = big_int_add(v0, v0, v1);
-    v0 = big_int_add(v0, v0, u);
-    BigInt *v = big_int_mod(NULL, v0, curve.q);  // v = u**5 + (r**2 − 2)*u**3 + u
+    if (big_int_compare(t, big_int_one) == 0
+        || big_int_compare(t, big_int_min_one) == 0)
+    {
+        x = big_int_create(NULL, 0);
+        y = big_int_create(NULL, 1);
+    }
+    else {
+        u0 = big_int_sub(NULL, big_int_one, t);
+        u1 = big_int_add(NULL, big_int_one, t);
+        u1 = big_int_inv(u1, u1, curve.q);
+        u = big_int_mul_mod(NULL, u0, u1, curve.q); // u = (1 − t) / (1 + t)
 
-    BigInt *CHIV = big_int_chi(NULL, v, curve.q);
+        // TODO: Optimization potential; reuse partial results for powers, instead
+        // of doing it from scratch each time
+        v0 = big_int_pow(NULL, u, big_int_five, curve.q);
+        v1 = big_int_pow(NULL, curve.r, big_int_two, curve.q);
+        v1 = big_int_sub(v1, v1, big_int_two);
+        v2 = big_int_pow(NULL, u, big_int_three, curve.q);
+        v1 = big_int_mul_mod(v1, v1, v2, curve.q);
+        v0 = big_int_add(v0, v0, v1);
+        v0 = big_int_add(v0, v0, u);
+        v = big_int_mod(NULL, v0, curve.q);  // v = u**5 + (r**2 − 2)*u**3 + u
 
-    BigInt *X = big_int_mul_mod(NULL, CHIV, u, curve.q);  // X = χ(v)u
+        CHIV = big_int_chi(NULL, v, curve.q);
 
-    BigInt *Y0 = big_int_mul_mod(NULL, CHIV, v, curve.q);
-    BigInt *Y1 = big_int_add(NULL, curve.q, big_int_one);
-    BigInt *Y2 = big_int_div(NULL, Y1, big_int_four);
-    Y0 = big_int_pow(Y0, Y0, Y2, curve.q);
-    Y0 = big_int_mul_mod(Y0, Y0, CHIV, curve.q);
-    BigInt *C2 = big_int_pow(NULL, curve.c, big_int_two, curve.q);
-    C2 = big_int_inv(C2, C2, curve.q);
-    BigInt *Y3 = big_int_pow(NULL, u, big_int_two, curve.q);
-    Y3 = big_int_add_mod(Y3, Y3, C2, curve.q);
-    Y3 = big_int_chi(Y3, Y3, curve.q);
-    BigInt *Y = big_int_mul_mod(Y0, Y0, Y3, curve.q);  // Y = (χ(v)v)**((q + 1) / 4)χ(v)χ(u**2 + 1 / c**2)
+        X = big_int_mul_mod(NULL, CHIV, u, curve.q);  // X = χ(v)u
 
-    BigInt *X_plus_1 = big_int_add(NULL, big_int_one, X);
-    BigInt *X_plus_1_squared = big_int_pow(NULL, X_plus_1, big_int_two, curve.q);
+        Y0 = big_int_mul_mod(NULL, CHIV, v, curve.q);
+        Y1 = big_int_add(NULL, curve.q, big_int_one);
+        Y2 = big_int_div(NULL, Y1, big_int_four);
+        Y0 = big_int_pow(Y0, Y0, Y2, curve.q);
+        Y0 = big_int_mul_mod(Y0, Y0, CHIV, curve.q);
 
-    BigInt *x0 = big_int_sub(NULL, curve.c, big_int_one);
-    x0 = big_int_mul_mod(x0, x0, curve.s, curve.q);
-    x0 = big_int_mul_mod(x0, x0, X, curve.q);
-    x0 = big_int_mul_mod(x0, x0, X_plus_1, curve.q);
-    BigInt *x1 = big_int_inv(NULL, Y, curve.q);
-    BigInt *x = big_int_mul_mod(NULL, x0, x1, curve.q); // x = (c − 1)*s*X*(1 + X) / Y
+        C2 = big_int_pow(NULL, curve.c, big_int_two, curve.q);
+        C2 = big_int_inv(C2, C2, curve.q);
 
-    BigInt *rX = big_int_mul_mod(NULL, curve.r, X, curve.q);
-    BigInt *y0 = big_int_sub(NULL, rX, X_plus_1_squared);
+        Y3 = big_int_pow(NULL, u, big_int_two, curve.q);
+        Y3 = big_int_add_mod(Y3, Y3, C2, curve.q);
+        Y3 = big_int_chi(Y3, Y3, curve.q);
+        Y = big_int_mul_mod(Y0, Y0, Y3, curve.q);  // Y = (χ(v)v)**((q + 1) / 4)χ(v)χ(u**2 + 1 / c**2)
 
-    BigInt *y1 = big_int_add(NULL, rX, X_plus_1_squared);
-    y1 = big_int_inv(y1, y1, curve.q);
+        X_plus_1 = big_int_add(NULL, big_int_one, X);
+        X_plus_1_squared = big_int_pow(NULL, X_plus_1, big_int_two, curve.q);
 
-    BigInt *y = big_int_mul_mod(NULL, y0, y1, curve.q); //  y = (rX − (1 + X)**2) / (rX + (1 + X)**2)
+        x0 = big_int_sub(NULL, curve.c, big_int_one);
+        x0 = big_int_mul_mod(x0, x0, curve.s, curve.q);
+        x0 = big_int_mul_mod(x0, x0, X, curve.q);
+        x0 = big_int_mul_mod(x0, x0, X_plus_1, curve.q);
+        x1 = big_int_inv(NULL, Y, curve.q);
+        x = big_int_mul_mod(NULL, x0, x1, curve.q); // x = (c − 1)*s*X*(1 + X) / Y
 
-    big_int_destroy(u0);
-    big_int_destroy(u1);
-    big_int_destroy(u);
+        rX = big_int_mul_mod(NULL, curve.r, X, curve.q);
+        y0 = big_int_sub(NULL, rX, X_plus_1_squared);
 
-    big_int_destroy(CHIV);
+        y1 = big_int_add(NULL, rX, X_plus_1_squared);
+        y1 = big_int_inv(y1, y1, curve.q);
 
-    big_int_destroy(X);
+        y = big_int_mul_mod(NULL, y0, y1, curve.q); //  y = (rX − (1 + X)**2) / (rX + (1 + X)**2)
 
-    big_int_destroy(Y0);
-    big_int_destroy(Y1);
-    big_int_destroy(Y2);
-    big_int_destroy(Y3);
+        big_int_destroy(u0);
+        big_int_destroy(u1);
+        big_int_destroy(u);
 
-    big_int_destroy(C2);
+        big_int_destroy(CHIV);
 
-    big_int_destroy(X_plus_1);
-    big_int_destroy(X_plus_1_squared);
+        big_int_destroy(X);
 
-    big_int_destroy(x0);
-    big_int_destroy(x1);
+        big_int_destroy(Y0);
+        big_int_destroy(Y1);
+        big_int_destroy(Y2);
+        big_int_destroy(Y3);
 
-    big_int_destroy(rX);
+        big_int_destroy(C2);
 
-    big_int_destroy(y0);
-    big_int_destroy(y1);
+        big_int_destroy(X_plus_1);
+        big_int_destroy(X_plus_1_squared);
+
+        big_int_destroy(x0);
+        big_int_destroy(x1);
+
+        big_int_destroy(rX);
+
+        big_int_destroy(y0);
+        big_int_destroy(y1);
+    }
 
     CurvePoint r = {x, y};
     return r;
