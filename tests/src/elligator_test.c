@@ -54,7 +54,7 @@ START_TEST(test_e2e)
 {
     Curve curve;
     CurvePoint curve_point;
-    BigInt *t, *x, *y;
+    BigInt *r, *t, *x, *y;
 
     init_curve1174(&curve);
     t = big_int_create(NULL, 7);
@@ -63,18 +63,34 @@ START_TEST(test_e2e)
     y = big_int_create_from_hex(NULL,
             "49C01F8D8C86ECB362B3952FA93ABD8CF512B09225BCEE9E76BC5E0C9A6E17E");
 
+    // Map BigInt to curve point
     curve_point = elligator_1_string_to_point(t, curve);
     ck_assert_int_eq(big_int_compare(curve_point.x, x), 0);
     ck_assert_int_eq(big_int_compare(curve_point.y, y), 0);
 
+    // Map curve point back to BigInt
+    r = elligator_1_point_to_string(curve_point, curve);
+    ck_assert_int_eq(big_int_compare(r, t), 0);
+
+    // TODO: Do the same with more complex inputs
+
     big_int_destroy(t);
     big_int_destroy(x);
     big_int_destroy(y);
+    big_int_destroy(r);
 
     free_curve_point(&curve_point);
     free_curve(&curve);
 }
 END_TEST
+
+// TODO: Check mapping edge cases, e.g. t = 1, -1 (cf. paper)
+
+// TODO: Check statements in paper, most of them are included in elligator.sage
+//       as assertions. Not sure we want to do this for intermediate results too
+//       (that would require copy-pasting part of the implementation into the
+//       test case) but we can for sure test e2e properties. E.g., that points
+//       are actually on the curve or that curve params satisfy those equations.
 
 
 Suite *elligator_suite(void)
