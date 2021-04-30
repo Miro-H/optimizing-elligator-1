@@ -317,6 +317,9 @@ BigInt *big_int_add(BigInt *r, BigInt *a, BigInt *b)
         return r;
     }
 
+    // Note aliasing is not an issue, since we only read potential shared
+    // values _before_ we overwrite them.
+
     // Assertion: a->sign == b->sign
 
     // Simplify implementation by making sure we know the larger BigInt (in
@@ -411,6 +414,9 @@ BigInt *big_int_sub(BigInt *r, BigInt *a, BigInt *b)
         do_sign_switch = 0;
     }
 
+    // Note aliasing is not an issue, since we only read potential shared
+    // values _before_ we overwrite them.
+
     // Assertion: a_abs, b_abs >= 0
 
     // Simplify implementation by making sure we know the numerically larger BigInt.
@@ -454,7 +460,10 @@ BigInt *big_int_sub(BigInt *r, BigInt *a, BigInt *b)
     }
 
     // Assertion: borrow = 0, because aa_abs >= bb_abs
-    r->overflow = do_sign_switch;
+
+    // There is never an overflow, because we subtract two numbers with diff. signs
+    r->overflow = 0;
+
     // The sign is zero, because |a| >= |b| and we calculate |a| - |b|
     r->sign = 0;
     r->size = r_size + 1;
@@ -517,10 +526,8 @@ BigInt *big_int_mul(BigInt *r, BigInt *a, BigInt *b)
         big_int_destroy(r_loc);
         return r;
     }
-    else {
-        return r_loc;
-    }
 
+    return r_loc;
 }
 
 
@@ -537,6 +544,7 @@ BigInt *big_int_div_rem(BigInt *q, BigInt *r, BigInt *a, BigInt *b)
     uint64_t factor;
     int64_t q_idx, a_idx, i;
     BigInt *a_loc, *b_loc, *a_part, *q_c_bigint, *qb, *radix_pow;
+    BigInt *r_loc = NULL;
 
     if (big_int_is_zero(b))
         FATAL("Division by zero!\n");
@@ -544,24 +552,26 @@ BigInt *big_int_div_rem(BigInt *q, BigInt *r, BigInt *a, BigInt *b)
     // DEBUG_BIGINT(a, "div_rem; a = ");
     // DEBUG_BIGINT(b, "div_rem; b = ");
 
-    // Special cases
-    // divisor larger than dividend
-    if (b->size > a->size) {
-        if (r)
-            big_int_copy(r, a);
-        return big_int_create(q, 0);
-    }
+    /*
+     * Special cases
+     */
+
     // zero dividend
-    else if (big_int_is_zero(a)) {
-        if (r)
-            big_int_create(r, 0);
-        return big_int_create(q, 0);
+    if (big_int_is_zero(a)) {
+        q = big_int_create(q, 0);
+        r_loc = big_int_create(NULL, 0);
     }
-    // Simple case for small BigInts, just use normal C division
+    // divisor larger than dividend
+    else if (b->size > a->size) {
+        q = big_int_create(q, 0);
+        r_loc = big_int_duplicate(a);
+    }
+    // Simple case for small BigInts, just use normal C division (but round
+    // towards -inf at the end)
     else if (a->size == 1) {
-        if (r)
-            big_int_create(r, a->chunks[0] % b->chunks[0]);
-        return big_int_create(q, a->chunks[0] / b->chunks[0]);
+        q = big_int_create(q, a->chunks[0] / b->chunks[0]);
+        q->sign = a->sign ^ b->sign;
+        r_loc = big_int_create(r_loc, a->chunks[0] % b->chunks[0]);
     }
     // Since we do operations on double chunks, we can also do the shortcut for length 2
     else if (a->size == 2) {
@@ -571,135 +581,156 @@ BigInt *big_int_div_rem(BigInt *q, BigInt *r, BigInt *a, BigInt *b)
             b_tmp += b->chunks[1] * BIGINT_RADIX;
         q_sign = a->sign ^ b->sign;
 
-        if (r)
-            big_int_create_from_dbl_chunk(r, a_tmp % b_tmp, q_sign);
-        return big_int_create_from_dbl_chunk(q, a_tmp / b_tmp, q_sign);
+        q = big_int_create_from_dbl_chunk(q, a_tmp / b_tmp, q_sign);
+        r_loc = big_int_create_from_dbl_chunk(r_loc, a_tmp % b_tmp, 0);
     }
+    else {
+        // Below: Division for a->size > 2
 
-    // Below: Division for a->size > 2
+        // NOTE: for arbitrary sized BigInts, this size would be a->size - b->size + 1
+        if (!q)
+            q = big_int_alloc(BIGINT_FIXED_SIZE);
 
-    // NOTE: for arbitrary sized BigInts, this size would be a->size - b->size + 1
-    if (!q)
-        q = big_int_alloc(BIGINT_FIXED_SIZE);
+        q->sign = a->sign ^ b->sign;
+        q->size = a->size - b->size + 1;
 
-    q->sign = a->sign ^ b->sign;
-    q->size = a->size - b->size + 1;
+        // Preserve values of a, b
+        a_loc = big_int_duplicate(a);
+        b_loc = big_int_duplicate(b);
 
-    // Preserve values of a, b
-    a_loc = big_int_duplicate(a);
-    b_loc = big_int_duplicate(b);
+        // Operate on absolute values, account for signs at the end
+        big_int_abs(a_loc, a_loc);
+        big_int_abs(b_loc, b_loc);
 
-    // Normalize: find factor such that b->chunks[b->size - 1] >= BIGINT_RADIX/2
-    factor = 0;
-    tmp = b_loc->chunks[b->size - 1];
-    while (2 * tmp < BIGINT_RADIX) {
-        ++factor;
-        tmp <<= 1;
-    }
+        // Normalize: find factor such that b->chunks[b->size - 1] >= BIGINT_RADIX/2
+        factor = 0;
+        tmp = b_loc->chunks[b->size - 1];
+        while (2 * tmp < BIGINT_RADIX) {
+            ++factor;
+            tmp <<= 1;
+        }
 
-    if (factor > 0) {
-        big_int_sll_small(a_loc, a_loc, factor);
-        big_int_sll_small(b_loc, b_loc, factor);
-    }
+        if (factor > 0) {
+            big_int_sll_small(a_loc, a_loc, factor);
+            big_int_sll_small(b_loc, b_loc, factor);
+        }
 
-    if (a_loc->size == a->size) {
-        // Special case where we actually have a zero in the MSB, just to make
-        // subsequent ops easier
-        a_loc->chunks[a->size] = 0;
-        a_loc->size += 1;
-    }
+        if (a_loc->size == a->size) {
+            // Special case where we actually have a zero in the MSB, just to make
+            // subsequent ops easier
+            a_loc->chunks[a->size] = 0;
+            a_loc->size += 1;
+        }
 
-    // Prepare for intermediate BigInts
-    // NOTE: for arbitrary sized BigInts, this really only needs to be of size b->size
-    a_part = big_int_alloc(BIGINT_FIXED_SIZE);
-    // NOTE: for arbitrary sized BigInts, this really only needs to be of size 1
-    q_c_bigint = big_int_alloc(BIGINT_FIXED_SIZE);
-    // NOTE: for arbitrary sized BigInts, this really only needs to be of size b->size+1
-    qb = big_int_alloc(BIGINT_FIXED_SIZE);
-    // NOTE: for arbitrary sized BigInts, this really only needs to be of size b->size+1
-    radix_pow = big_int_calloc(BIGINT_FIXED_SIZE);
-    radix_pow->chunks[b->size] = 1;
-    radix_pow->size = b->size + 1;
+        // Prepare for intermediate BigInts
+        // NOTE: for arbitrary sized BigInts, this really only needs to be of size b->size
+        a_part = big_int_alloc(BIGINT_FIXED_SIZE);
+        // NOTE: for arbitrary sized BigInts, this really only needs to be of size 1
+        q_c_bigint = big_int_alloc(BIGINT_FIXED_SIZE);
+        // NOTE: for arbitrary sized BigInts, this really only needs to be of size b->size+1
+        qb = big_int_alloc(BIGINT_FIXED_SIZE);
+        // NOTE: for arbitrary sized BigInts, this really only needs to be of size b->size+1
+        radix_pow = big_int_calloc(BIGINT_FIXED_SIZE);
+        radix_pow->chunks[b->size] = 1;
+        radix_pow->size = b->size + 1;
 
-    // Calculate quotient digit by digit
-    for (q_idx = q->size - 1; q_idx >= 0; --q_idx) {
-        // Calculate quotient and remainder of
-        // a->chunks[q_idx : q_idx + b->size] / b_loc
+        // Calculate quotient digit by digit
+        for (q_idx = q->size - 1; q_idx >= 0; --q_idx) {
+            // Calculate quotient and remainder of
+            // a->chunks[q_idx : q_idx + b->size] / b_loc
 
-        a_idx = q_idx + b->size;
+            a_idx = q_idx + b->size;
 
-        q_c = a_loc->chunks[a_idx] * BIGINT_RADIX + a_loc->chunks[a_idx - 1];
-        r_c = q_c % b_loc->chunks[b->size - 1];
-        q_c /= b_loc->chunks[b->size - 1];
+            q_c = a_loc->chunks[a_idx] * BIGINT_RADIX + a_loc->chunks[a_idx - 1];
+            r_c = q_c % b_loc->chunks[b->size - 1];
+            q_c /= b_loc->chunks[b->size - 1];
 
-        do {
-            if (q_c >= BIGINT_RADIX
-                || q_c * b_loc->chunks[b_loc->size - 2] >
-                   BIGINT_RADIX * r_c + a_loc->chunks[a_idx - 2])
-            {
+            do {
+                if (q_c >= BIGINT_RADIX
+                    || q_c * b_loc->chunks[b_loc->size - 2] >
+                       BIGINT_RADIX * r_c + a_loc->chunks[a_idx - 2])
+                {
+                    --q_c;
+                    r_c += b_loc->chunks[b_loc->size - 1];
+                }
+                else {
+                    break;
+                }
+            } while (r_c < BIGINT_RADIX);
+
+            // Multiply and subtract
+            // TODO: this entire part can surely be done more efficiently
+            for (i = 0; i <= b_loc->size; ++i) {
+                if (q_idx + i >= a_loc->size)
+                    break;
+                a_part->chunks[i] = a_loc->chunks[q_idx + i];
+            }
+            a_part->size = i;
+            a_part->sign = 0;
+
+            big_int_create(q_c_bigint, q_c);
+            big_int_sub(qb, a_part, big_int_mul(qb, q_c_bigint, b_loc));
+
+            // TODO: test this case specifically, apparently this is a very unlikely
+            // case (cf. step D5 in D. Knuth's book section 4.3)
+            if (qb->sign == 1) {
+                big_int_add(a_part, a_part, radix_pow);
+
                 --q_c;
-                r_c += b_loc->chunks[b_loc->size - 1];
+                // NOTE: we intentionally ignore the overflow in a_part, it cancels
+                // out with the borrow that we ignored from the previous add.
+                big_int_add(a_part, a_part, b_loc);
+
+                for (i = 0; i <= b->size; ++i) {
+                    if (q_idx + i >= a_loc->size)
+                        break;
+                    a_loc->chunks[q_idx + i] = a_part->chunks[i];
+                }
             }
             else {
-                break;
+                for (i = 0; i <= b->size; ++i) {
+                    if (q_idx + i >= a_loc->size)
+                        break;
+                    a_loc->chunks[q_idx + i] = qb->chunks[i];
+                }
             }
-        } while (r_c < BIGINT_RADIX);
 
-        // Multiply and subtract
-        // TODO: this entire part can surely be done more efficiently
-        for (i = 0; i <= b_loc->size; ++i) {
-            if (q_idx + i >= a_loc->size)
-                break;
-            a_part->chunks[i] = a_loc->chunks[q_idx + i];
-        }
-        a_part->size = i;
-        a_part->sign = 0;
-
-        big_int_create(q_c_bigint, q_c);
-        big_int_sub(qb, a_part, big_int_mul(qb, q_c_bigint, b_loc));
-
-        // TODO: test this case specifically, apparently this is a very unlikely
-        // case (cf. step D5 in D. Knuth's book section 4.3)
-        if (qb->sign == 1) {
-            big_int_add(a_part, a_part, radix_pow);
-
-            --q_c;
-            // NOTE: we intentionally ignore the overflow in a_part, it cancels
-            // out with the borrow that we ignored from the previous add.
-            big_int_add(a_part, a_part, b_loc);
-
-            for (i = 0; i <= b->size; ++i) {
-                if (q_idx + i >= a_loc->size)
-                    break;
-                a_loc->chunks[q_idx + i] = a_part->chunks[i];
-            }
-        }
-        else {
-            for (i = 0; i <= b->size; ++i) {
-                if (q_idx + i >= a_loc->size)
-                    break;
-                a_loc->chunks[q_idx + i] = qb->chunks[i];
-            }
+            q->chunks[q_idx] = q_c;
         }
 
-        q->chunks[q_idx] = q_c;
-    }
-
-    // Unnormalize
-    if (r) {
+        // Unnormalize
         a_loc->size = b->size;
-        big_int_copy(r, a_loc);
-        big_int_srl_small(r, r, factor);
-        big_int_prune_leading_zeros(r, r);
+        r_loc = big_int_duplicate(a_loc);
+        big_int_srl_small(r_loc, r_loc, factor);
+        big_int_prune_leading_zeros(r_loc, r_loc);
+
+        big_int_prune_leading_zeros(q, q);
+
+        // Cleanup intermediate BigInts specific to this case
+        big_int_destroy(a_part);
+        big_int_destroy(a_loc);
+        big_int_destroy(b_loc);
+        big_int_destroy(q_c_bigint);
     }
 
-    big_int_prune_leading_zeros(q, q);
+    // Round towards -inf if either operand is negative
+    if (a->sign ^ b->sign && !big_int_is_zero(r_loc)) {
+        big_int_sub(q, q, big_int_one);
+
+        b_loc = big_int_abs(NULL, b);
+        big_int_sub(r_loc, b_loc, r_loc);
+        big_int_destroy(b_loc);
+    }
+    // If b is negative, flip the sign of the remainder to maintain the
+    // invariant q * b + r = a
+    if (b->sign)
+        big_int_neg(r_loc, r_loc);
+
+    if (r)
+        big_int_copy(r, r_loc);
 
     // Cleanup intermediate BigInts
-    big_int_destroy(a_part);
-    big_int_destroy(a_loc);
-    big_int_destroy(b_loc);
-    big_int_destroy(q_c_bigint);
+    big_int_destroy(r_loc);
 
     return q;
 }
@@ -719,6 +750,8 @@ BigInt *big_int_div(BigInt *q, BigInt *a, BigInt *b)
  */
 BigInt *big_int_sll_small(BigInt *r, BigInt *a, uint64_t shift)
 {
+    BigInt *r_loc;
+
     dbl_chunk_size_t carry;
     uint64_t r_size;
     int64_t i, r_idx;
@@ -729,12 +762,11 @@ BigInt *big_int_sll_small(BigInt *r, BigInt *a, uint64_t shift)
     if (r_size > BIGINT_FIXED_SIZE)
         FATAL("Shift creates too large BigInt (%" PRIu64 " chunks)!\n", r_size);
 
-    if (!r)
-        r = big_int_alloc(BIGINT_FIXED_SIZE);
+    r_loc = big_int_alloc(BIGINT_FIXED_SIZE);
 
     // Set the lowest chunks to zero
     for (r_idx = 0; r_idx < (int64_t) (shift / BIGINT_CHUNK_BIT_SIZE); ++r_idx) {
-        r->chunks[r_idx] = 0;
+        r_loc->chunks[r_idx] = 0;
     }
 
     // Shift the other chunks by the chunk internal shift
@@ -742,30 +774,36 @@ BigInt *big_int_sll_small(BigInt *r, BigInt *a, uint64_t shift)
     carry = 0;
     for (i = 0; i < a->size; ++i) {
         carry = (a->chunks[i] << shift) | carry;
-        r->chunks[r_idx] = carry % BIGINT_RADIX;
+        r_loc->chunks[r_idx] = carry % BIGINT_RADIX;
         carry /= BIGINT_RADIX;
 
         ++r_idx;
     }
 
-    r->overflow = 0;
-    r->sign = a->sign;
+    r_loc->overflow = 0;
+    r_loc->sign = a->sign;
 
     // Add the last block if there is a carry from the MSB block
     if (carry) {
         if (r_idx < r->alloc_size) {
-            r->chunks[r_idx] = carry;
+            r_loc->chunks[r_idx] = carry;
             ++r_idx;
         }
         else {
             WARNING("sll caused overflow!\n");
-            r->overflow = 1;
+            r_loc->overflow = 1;
         }
     }
 
-    r->size = r_idx;
+    r_loc->size = r_idx;
 
-    return r;
+    if (r) {
+        big_int_copy(r, r_loc);
+        big_int_destroy(r_loc);
+        return r;
+    }
+
+    return r_loc;
 }
 
 
@@ -774,7 +812,8 @@ BigInt *big_int_sll_small(BigInt *r, BigInt *a, uint64_t shift)
  */
 BigInt *big_int_srl_small(BigInt *r, BigInt *a, uint64_t shift)
 {
-    dbl_chunk_size_t carry;
+    BigInt *last_bit_bigint;
+    dbl_chunk_size_t carry, last_bit;
     int64_t i, a_idx;
 
     // NOTE: for arbitrary sized BigInts, r would only need to be of size
@@ -784,7 +823,14 @@ BigInt *big_int_srl_small(BigInt *r, BigInt *a, uint64_t shift)
 
     // Special case where we shift away all bits
     if (shift / BIGINT_CHUNK_BIT_SIZE >= a->size) {
-        big_int_create(r, 0);
+        // Special case for rounding towards -inf
+        if (a->sign && (shift - 1) / BIGINT_CHUNK_BIT_SIZE < a->size) {
+            big_int_create(r, a->chunks[a->size - 1] >> (((shift - 1) % BIGINT_CHUNK_BIT_SIZE)));
+            r->sign = 1;
+        }
+        else {
+            big_int_create(r, 0);
+        }
         return r;
     }
 
@@ -793,6 +839,10 @@ BigInt *big_int_srl_small(BigInt *r, BigInt *a, uint64_t shift)
     // Take the chunks of a that are not all completely shifted away
     a_idx = (int64_t) (shift / BIGINT_CHUNK_BIT_SIZE);
     shift %= BIGINT_CHUNK_BIT_SIZE;
+
+    // Store the last bit that is shifted away to implement rounding towards -inf
+    last_bit = (a->chunks[a_idx] >> (shift - 1)) & 1;
+
     // Go upwards to avoid aliasing, since we always write r[i] and read
     // a[a_idx+1], where i < a_idx + 1.
     for (i = 0; i < r->size-1; ++i) {
@@ -802,6 +852,13 @@ BigInt *big_int_srl_small(BigInt *r, BigInt *a, uint64_t shift)
     }
     // Write MSB entry
     r->chunks[r->size - 1] = a->chunks[a_idx] >> shift;
+
+    // Add last bit (round towards -inf)
+    if (a->sign && last_bit) {
+        last_bit_bigint = big_int_create(NULL, last_bit);
+        big_int_sub(r, r, last_bit_bigint);
+        big_int_destroy(last_bit_bigint);
+    }
 
     r->overflow = 0;
     r->sign = a->sign;
@@ -825,11 +882,8 @@ BigInt *big_int_mod(BigInt *r, BigInt *a, BigInt *q)
     // q (for the mapping) is close to a power of two. In that case, we might
     // be able to avoid using division here!
     tmp = big_int_div_rem(NULL, r, a, q);
-    big_int_destroy(tmp);
 
-    // Ensure that 0 <= r < q
-    if (r->sign == 1)
-        big_int_add(r, r, q);
+    big_int_destroy(tmp);
 
     return r;
 }
@@ -845,8 +899,14 @@ BigInt *big_int_mod(BigInt *r, BigInt *a, BigInt *q)
  */
 BigInt *big_int_add_mod(BigInt *r, BigInt *a, BigInt *b, BigInt *q)
 {
-    r = big_int_add(r, a, b);
-    return big_int_mod(r, r, q);
+    BigInt *r_loc;
+
+    r_loc = big_int_add(NULL, a, b);
+    r = big_int_mod(r, r_loc, q);
+
+    big_int_destroy(r_loc);
+
+    return r;
 }
 
 
@@ -855,8 +915,14 @@ BigInt *big_int_add_mod(BigInt *r, BigInt *a, BigInt *b, BigInt *q)
  */
 BigInt *big_int_sub_mod(BigInt *r, BigInt *a, BigInt *b, BigInt *q)
 {
-    r = big_int_sub(r, a, b);
-    return big_int_mod(r, r, q);
+    BigInt *r_loc;
+
+    r_loc = big_int_sub(NULL, a, b);
+    big_int_mod(r, r_loc, q);
+
+    big_int_destroy(r_loc);
+
+    return r;
 }
 
 
@@ -865,8 +931,14 @@ BigInt *big_int_sub_mod(BigInt *r, BigInt *a, BigInt *b, BigInt *q)
  */
 BigInt *big_int_mul_mod(BigInt *r, BigInt *a, BigInt *b, BigInt *q)
 {
-    r = big_int_mul(r, a, b);
-    return big_int_mod(r, r, q);
+    BigInt *r_loc;
+
+    r_loc = big_int_mul(NULL, a, b);
+    r = big_int_mod(r, r_loc, q);
+
+    big_int_destroy(r_loc);
+
+    return r;
 }
 
 
@@ -875,8 +947,15 @@ BigInt *big_int_mul_mod(BigInt *r, BigInt *a, BigInt *b, BigInt *q)
  */
 BigInt *big_int_div_mod(BigInt *r, BigInt *a, BigInt *b, BigInt *q)
 {
-    r = big_int_inv(r, b, q);
-    return big_int_mul_mod(r, a, r, q);
+    BigInt *r_loc;
+
+    // Write to local copy to be save against pointer reuse
+    r_loc = big_int_inv(NULL, b, q);
+    r = big_int_mul_mod(r, a, r_loc, q);
+
+    big_int_destroy(r_loc);
+
+    return r;
 }
 
 
@@ -885,16 +964,7 @@ BigInt *big_int_div_mod(BigInt *r, BigInt *a, BigInt *b, BigInt *q)
  */
 BigInt *big_int_inv(BigInt *r, BigInt *a, BigInt *q)
 {
-    BigInt *a_neg;
     EgcdResult res;
-
-    // Modular inversion computation
-    if (big_int_compare(a, big_int_zero) < 0) {
-        a_neg = big_int_neg(NULL, a);
-        big_int_inv(r, a_neg, q);
-        big_int_destroy(a_neg);
-        return big_int_sub(r, q, r);
-    }
 
     if (!r)
         r = big_int_alloc(BIGINT_FIXED_SIZE);
@@ -908,13 +978,14 @@ BigInt *big_int_inv(BigInt *r, BigInt *a, BigInt *q)
         return NULL;
     }
 
-    big_int_copy(r, res.x);
+    // set r = x mod q
+    big_int_mod(r, res.x, q);
 
     big_int_destroy(res.g);
     big_int_destroy(res.x);
     big_int_destroy(res.y);
 
-    return big_int_mod(r, r, q);
+    return r;
 }
 
 
@@ -1027,13 +1098,14 @@ EgcdResult big_int_egcd(BigInt *a, BigInt *b)
     BigInt *q, *a_loc, *b_loc, *x0, *x1, *y0, *y1, *tmp;
     EgcdResult res;
 
-    if (a->sign == 1 || b->sign == 1)
-        FATAL("GCD implementation is currently only supporting positive numbers!\n");
-
     q = big_int_alloc(BIGINT_FIXED_SIZE);
     tmp = big_int_alloc(BIGINT_FIXED_SIZE);
     a_loc = big_int_duplicate(a);
     b_loc = big_int_duplicate(b);
+
+    // Take the GCD of positive numbers, then just flig the signs of x, y at the end
+    big_int_abs(a_loc, a_loc);
+    big_int_abs(b_loc, b_loc);
 
     x0 = big_int_create(NULL, 0);
     x1 = big_int_create(NULL, 1);
@@ -1055,6 +1127,10 @@ EgcdResult big_int_egcd(BigInt *a, BigInt *b)
         big_int_copy(x0, tmp);
 
     }
+
+    // Account for signs of a and b
+    x0->sign ^= a->sign;
+    y0->sign ^= b->sign;
 
     res.g = b_loc;
     res.x = x0;
