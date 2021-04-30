@@ -909,6 +909,19 @@ START_TEST(test_mul_mod)
     big_int_mul_mod(a, a, b, q);
     ck_assert_int_eq(big_int_compare(a, r), 0);
 
+    // Trigger the rare case (D6 in Knuth's Book)
+    a = big_int_create_from_hex(a,
+            "3FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF7");
+    b = big_int_create_from_hex(b,
+            "3FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF7");
+    q = big_int_create_from_hex(q,
+            "7FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF7");
+    r = big_int_create_from_hex(r,
+            "200000000000000000000000000000000000000000000000000000000000012");
+
+    big_int_mul_mod(a, a, b, q);
+    ck_assert_int_eq(big_int_compare(a, r), 0);
+
     // Mixed signs
     a = big_int_create_from_hex(a, "-ABCD4569ABEF");
     b = big_int_create_from_hex(b, "ee543abc7856AA095");
@@ -1065,6 +1078,18 @@ START_TEST(test_power)
     e = big_int_create(NULL, 23);
     q = big_int_create_from_hex(NULL, "31DECA5CA5BE11D8DF78F332F");
     r = big_int_create_from_hex(NULL, "F27EA91903E16641CB1465F4");
+
+    big_int_pow(b, b, e, q);
+    ck_assert_int_eq(big_int_compare(b, r), 0);
+
+    // Base close to max size & trigger rare case in div_rem
+    b = big_int_create_from_hex(NULL,
+            "1FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFD");
+    e = big_int_create(NULL, 5);
+    q = big_int_create_from_hex(NULL,
+            "7FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF7");
+    r = big_int_create_from_hex(NULL,
+            "7C9FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF7");
 
     big_int_pow(b, b, e, q);
     ck_assert_int_eq(big_int_compare(b, r), 0);

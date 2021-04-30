@@ -77,7 +77,7 @@ __attribute__((unused)) static BigInt *big_int_min_one = &((BigInt) {
 BigInt *big_int_create(BigInt *r, int64_t x);
 BigInt *big_int_create_from_hex(BigInt *r, char* s);
 void big_int_destroy(BigInt *a);
-void big_int_copy(BigInt *a, BigInt *b);
+BigInt *big_int_copy(BigInt *a, BigInt *b);
 BigInt *big_int_duplicate(BigInt *a);
 void big_int_print(BigInt *a);
 
