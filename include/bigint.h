@@ -72,6 +72,12 @@ __attribute__((unused)) static BigInt *big_int_min_one = &((BigInt) {
     .chunks = &chunk_one,
 });
 
+
+//Functions only exposed for Benchmarks
+BigInt *big_int_alloc(uint64_t size);
+BigInt *big_int_calloc(uint64_t size);
+
+
 // Meta functions
 BigInt *big_int_create(BigInt *r, int64_t x);
 BigInt *big_int_create_from_hex(BigInt *r, char* s);

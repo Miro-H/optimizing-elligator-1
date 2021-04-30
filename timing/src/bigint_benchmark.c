@@ -23,15 +23,16 @@
     #define LOG_PATH "../logs"
 #endif
 
-#ifndef ARRAY_SIZE
-    #define ARRAY_SIZE 4096
-#endif
 
 /*
  * Global BigInt variables
  */
 BigInt *i1, *i2, *i3;
-BigInt *big_int_array[ARRAY_SIZE];
+BigInt **big_int_array;
+BigInt **big_int_array_2;
+
+int big_int_size_;
+int big_int_array_size_;
 
 /**
  * \brief Benchmark the chi function
@@ -68,15 +69,17 @@ void bench_chi_cleanup(void)
 //--- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
 void bench_big_int_alloc_prep(void *argptr)
 {
-    
+    big_int_size_ = ((int *) argptr)[0];
+    big_int_array_size_ = ((int *) argptr)[1];
+    big_int_array = (BigInt**) malloc(big_int_array_size_ * sizeof(BigInt*));
 }
 
 // Benchmark itself
 void bench_big_int_alloc_fn(void)
 {
-    for(uint64_t i = 0; i < ARRAY_SIZE; i++)
+    for(uint64_t i = 0; i < big_int_array_size_; i++)
     {
-        big_int_array[i] = big_int_alloc(i);
+        big_int_array[i] = big_int_alloc(big_int_size_);
     }
     
 }
@@ -84,24 +87,27 @@ void bench_big_int_alloc_fn(void)
 // Run after benchmark
 void bench_big_int_alloc_cleanup(void)
 {
-    for(uint64_t i = 0; i < ARRAY_SIZE; i++)
+    for(uint64_t i = 0; i < big_int_array_size_; i++)
     {
        big_int_destroy(big_int_array[i]);
     }
+    free(big_int_array);
 }
 
 //--- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
 void bench_big_int_calloc_prep(void *argptr)
 {
-    
+    big_int_size_ = ((int *) argptr)[0];
+    big_int_array_size_ = ((int *) argptr)[1];
+    big_int_array = (BigInt**) malloc(big_int_array_size_ * sizeof(BigInt*));
 }
 
 // Benchmark itself
 void bench_big_int_calloc_fn(void)
 {
-    for(uint64_t i = 0; i < ARRAY_SIZE; i++)
+    for(uint64_t i = 0; i < big_int_array_size_; i++)
     {
-        big_int_array[i] = big_int_calloc(i);
+        big_int_array[i] = big_int_calloc(big_int_size_);
     }
     
 }
@@ -109,25 +115,31 @@ void bench_big_int_calloc_fn(void)
 // Run after benchmark
 void bench_big_int_calloc_cleanup(void)
 {
-    for(uint64_t i = 0; i < ARRAY_SIZE; i++)
+    for(uint64_t i = 0; i < big_int_array_size_; i++)
     {
        big_int_destroy(big_int_array[i]);
     }
+    free(big_int_array);
 }
 
 //--- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
 void bench_big_int_destroy_prep(void *argptr)
 {
-    for(uint64_t i = 0; i < ARRAY_SIZE; i++)
-    {
-        big_int_array[i] = big_int_calloc(i);
-    }
+    big_int_size_ = ((int *) argptr)[0];
+    big_int_array_size_ = ((int *) argptr)[1];
+    big_int_array = (BigInt**) malloc(big_int_array_size_ * sizeof(BigInt*));
+    
+    
 }
 
 // Benchmark itself
 void bench_big_int_destroy_fn(void)
 {
-    for(uint64_t i = 0; i < ARRAY_SIZE; i++)
+    for(uint64_t i = 0; i < big_int_array_size_; i++)
+    {
+        big_int_array[i] = big_int_alloc(big_int_size_);
+    }
+    for(uint64_t i = 0; i < big_int_array_size_; i++)
     {
        big_int_destroy(big_int_array[i]);
     }
@@ -136,10 +148,44 @@ void bench_big_int_destroy_fn(void)
 // Run after benchmark
 void bench_big_int_destroy_cleanup(void)
 {
+    free(big_int_array);
+}
+
+void bench_big_int_copy_prep(void *argptr)
+{
+    big_int_size_ = ((int *) argptr)[0];
+    big_int_array_size_ = ((int *) argptr)[1];
+    big_int_array = (BigInt**) malloc(big_int_array_size_ * sizeof(BigInt*));
+    big_int_array_2 = (BigInt**) malloc(big_int_array_size_ * sizeof(BigInt*));
     
+    for(uint64_t i = 0; i < big_int_array_size_; i++)
+    {
+        big_int_array[i] = big_int_alloc(big_int_size_);
+        big_int_array_2[i] = big_int_alloc(big_int_size_);
+    }
 }
 
 
+// Benchmark itself
+void bench_big_int_copy_fn(void)
+{
+    for(uint64_t i = 0; i < big_int_array_size_; i++)
+    {
+        //big_int_copy(big_int_array[i], big_int_array_2[i]); //will throw error right now since we only support fixed size int
+    }
+    
+}
+
+// Run after benchmark
+void bench_big_int_copy_cleanup(void)
+{
+    for(uint64_t i = 0; i < big_int_array_size_; i++)
+    {
+       big_int_destroy(big_int_array[i]);
+       big_int_destroy(big_int_array_2[i]);
+    }
+    free(big_int_array);
+}
 
 
 
@@ -166,6 +212,235 @@ int main(void)
 
     benchmark_runner(bench_chi_closure, "unopt.",
         LOG_PATH "/bench_chi.log", 50, 1000);
+
+    //--- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
+
+    int bench_big_int_size_4_args[] = {4, 1048576};
+    int bench_big_int_size_16_args[] = {16, 1048576};
+    int bench_big_int_size_64_args[] = {64, 1048576};
+    int bench_big_int_size_256_args[] = {256, 1048576};
+    int bench_big_int_size_1024_args[] = {1024, 1048576};
+
+
+    //--- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
+
+
+    BenchmarkClosure bench_big_int_alloc_prep_4 = {
+        .bench_prep_args = (void *) bench_big_int_size_4_args,
+        .bench_prep_fn = bench_big_int_alloc_prep,
+        .bench_fn = bench_big_int_alloc_fn,
+        .bench_cleanup_fn = bench_big_int_alloc_cleanup,
+    };
+
+    BenchmarkClosure bench_big_int_alloc_prep_16 = {
+        .bench_prep_args = (void *) bench_big_int_size_16_args,
+        .bench_prep_fn = bench_big_int_alloc_prep,
+        .bench_fn = bench_big_int_alloc_fn,
+        .bench_cleanup_fn = bench_big_int_alloc_cleanup,
+    };
+
+    BenchmarkClosure bench_big_int_alloc_prep_64 = {
+        .bench_prep_args = (void *) bench_big_int_size_64_args,
+        .bench_prep_fn = bench_big_int_alloc_prep,
+        .bench_fn = bench_big_int_alloc_fn,
+        .bench_cleanup_fn = bench_big_int_alloc_cleanup,
+    };
+
+    BenchmarkClosure bench_big_int_alloc_prep_256 = {
+        .bench_prep_args = (void *) bench_big_int_size_256_args,
+        .bench_prep_fn = bench_big_int_alloc_prep,
+        .bench_fn = bench_big_int_alloc_fn,
+        .bench_cleanup_fn = bench_big_int_alloc_cleanup,
+    };
+
+    BenchmarkClosure bench_big_int_alloc_prep_1024 = {
+        .bench_prep_args = (void *) bench_big_int_size_1024_args,
+        .bench_prep_fn = bench_big_int_alloc_prep,
+        .bench_fn = bench_big_int_alloc_fn,
+        .bench_cleanup_fn = bench_big_int_alloc_cleanup,
+    };
+
+    benchmark_runner(bench_big_int_alloc_prep_4, "unopt.",
+        LOG_PATH "/bench_big_int_alloc_prep_4.log", 1, 1);
+
+    benchmark_runner(bench_big_int_alloc_prep_16, "unopt.",
+        LOG_PATH "/bench_big_int_alloc_prep_16.log", 1, 1);
+    
+    benchmark_runner(bench_big_int_alloc_prep_64, "unopt.",
+        LOG_PATH "/bench_big_int_alloc_prep_64.log", 1, 1);
+    
+    benchmark_runner(bench_big_int_alloc_prep_256, "unopt.",
+        LOG_PATH "/bench_big_int_alloc_prep_256.log", 1, 1);
+    
+    benchmark_runner(bench_big_int_alloc_prep_1024, "unopt.",
+        LOG_PATH "/bench_big_int_alloc_prep_1024.log", 1, 1);
+
+    
+    //--- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
+
+
+    BenchmarkClosure bench_big_int_calloc_prep_4 = {
+        .bench_prep_args = (void *) bench_big_int_size_4_args,
+        .bench_prep_fn = bench_big_int_calloc_prep,
+        .bench_fn = bench_big_int_calloc_fn,
+        .bench_cleanup_fn = bench_big_int_calloc_cleanup,
+    };
+
+    BenchmarkClosure bench_big_int_calloc_prep_16 = {
+        .bench_prep_args = (void *) bench_big_int_size_16_args,
+        .bench_prep_fn = bench_big_int_calloc_prep,
+        .bench_fn = bench_big_int_calloc_fn,
+        .bench_cleanup_fn = bench_big_int_calloc_cleanup,
+    };
+
+    BenchmarkClosure bench_big_int_calloc_prep_64 = {
+        .bench_prep_args = (void *) bench_big_int_size_64_args,
+        .bench_prep_fn = bench_big_int_calloc_prep,
+        .bench_fn = bench_big_int_calloc_fn,
+        .bench_cleanup_fn = bench_big_int_calloc_cleanup,
+    };
+
+    BenchmarkClosure bench_big_int_calloc_prep_256 = {
+        .bench_prep_args = (void *) bench_big_int_size_256_args,
+        .bench_prep_fn = bench_big_int_calloc_prep,
+        .bench_fn = bench_big_int_calloc_fn,
+        .bench_cleanup_fn = bench_big_int_calloc_cleanup,
+    };
+    
+    BenchmarkClosure bench_big_int_calloc_prep_1024 = {
+        .bench_prep_args = (void *) bench_big_int_size_1024_args,
+        .bench_prep_fn = bench_big_int_calloc_prep,
+        .bench_fn = bench_big_int_calloc_fn,
+        .bench_cleanup_fn = bench_big_int_calloc_cleanup,
+    };
+    
+    benchmark_runner(bench_big_int_calloc_prep_4, "unopt.",
+        LOG_PATH "/bench_big_int_calloc_prep_4.log", 1, 1);
+
+    benchmark_runner(bench_big_int_calloc_prep_16, "unopt.",
+        LOG_PATH "/bench_big_int_calloc_prep_16.log", 1, 1);
+    
+    benchmark_runner(bench_big_int_calloc_prep_64, "unopt.",
+        LOG_PATH "/bench_big_int_calloc_prep_64.log", 1, 1);
+    
+    benchmark_runner(bench_big_int_calloc_prep_256, "unopt.",
+        LOG_PATH "/bench_big_int_calloc_prep_256.log", 1, 1);
+    
+    
+    benchmark_runner(bench_big_int_calloc_prep_1024, "unopt.",
+        LOG_PATH "/bench_big_int_calloc_prep_1024.log", 1, 1);
+    
+
+    //--- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
+
+    BenchmarkClosure bench_big_int_destroy_prep_4 = {
+        .bench_prep_args = (void *) bench_big_int_size_4_args,
+        .bench_prep_fn = bench_big_int_destroy_prep,
+        .bench_fn = bench_big_int_destroy_fn,
+        .bench_cleanup_fn = bench_big_int_destroy_cleanup,
+    };
+
+    BenchmarkClosure bench_big_int_destroy_prep_16 = {
+        .bench_prep_args = (void *) bench_big_int_size_16_args,
+        .bench_prep_fn = bench_big_int_destroy_prep,
+        .bench_fn = bench_big_int_destroy_fn,
+        .bench_cleanup_fn = bench_big_int_destroy_cleanup,
+    };
+
+    BenchmarkClosure bench_big_int_destroy_prep_64 = {
+        .bench_prep_args = (void *) bench_big_int_size_64_args,
+        .bench_prep_fn = bench_big_int_destroy_prep,
+        .bench_fn = bench_big_int_destroy_fn,
+        .bench_cleanup_fn = bench_big_int_destroy_cleanup,
+    };
+
+    BenchmarkClosure bench_big_int_destroy_prep_256 = {
+        .bench_prep_args = (void *) bench_big_int_size_256_args,
+        .bench_prep_fn = bench_big_int_destroy_prep,
+        .bench_fn = bench_big_int_destroy_fn,
+        .bench_cleanup_fn = bench_big_int_destroy_cleanup,
+    };
+
+    BenchmarkClosure bench_big_int_destroy_prep_1024 = {
+        .bench_prep_args = (void *) bench_big_int_size_1024_args,
+        .bench_prep_fn = bench_big_int_destroy_prep,
+        .bench_fn = bench_big_int_destroy_fn,
+        .bench_cleanup_fn = bench_big_int_destroy_cleanup,
+    };
+
+    benchmark_runner(bench_big_int_destroy_prep_4, "unopt.",
+        LOG_PATH "/bench_big_int_destroy_prep_4.log", 1, 1);
+
+    benchmark_runner(bench_big_int_destroy_prep_16, "unopt.",
+        LOG_PATH "/bench_big_int_destroy_prep_16.log", 1, 1);
+    
+    benchmark_runner(bench_big_int_destroy_prep_64, "unopt.",
+        LOG_PATH "/bench_big_int_destroy_prep_64.log", 1, 1);
+    
+    benchmark_runner(bench_big_int_destroy_prep_256, "unopt.",
+        LOG_PATH "/bench_big_int_destroy_prep_256.log", 1, 1);
+    
+    benchmark_runner(bench_big_int_destroy_prep_1024, "unopt.",
+        LOG_PATH "/bench_big_int_destroy_prep_1024.log", 1, 1);
+
+
+    //--- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
+
+
+    BenchmarkClosure bench_big_int_copy_prep_4 = {
+        .bench_prep_args = (void *) bench_big_int_size_4_args,
+        .bench_prep_fn = bench_big_int_copy_prep,
+        .bench_fn = bench_big_int_copy_fn,
+        .bench_cleanup_fn = bench_big_int_copy_cleanup,
+    };
+
+    BenchmarkClosure bench_big_int_copy_prep_16 = {
+        .bench_prep_args = (void *) bench_big_int_size_16_args,
+        .bench_prep_fn = bench_big_int_copy_prep,
+        .bench_fn = bench_big_int_copy_fn,
+        .bench_cleanup_fn = bench_big_int_copy_cleanup,
+    };
+
+    BenchmarkClosure bench_big_int_copy_prep_64 = {
+        .bench_prep_args = (void *) bench_big_int_size_64_args,
+        .bench_prep_fn = bench_big_int_copy_prep,
+        .bench_fn = bench_big_int_copy_fn,
+        .bench_cleanup_fn = bench_big_int_copy_cleanup,
+    };
+
+    BenchmarkClosure bench_big_int_copy_prep_256 = {
+        .bench_prep_args = (void *) bench_big_int_size_256_args,
+        .bench_prep_fn = bench_big_int_copy_prep,
+        .bench_fn = bench_big_int_copy_fn,
+        .bench_cleanup_fn = bench_big_int_copy_cleanup,
+    };
+
+    BenchmarkClosure bench_big_int_copy_prep_1024 = {
+        .bench_prep_args = (void *) bench_big_int_size_1024_args,
+        .bench_prep_fn = bench_big_int_copy_prep,
+        .bench_fn = bench_big_int_copy_fn,
+        .bench_cleanup_fn = bench_big_int_copy_cleanup,
+    };
+
+    benchmark_runner(bench_big_int_copy_prep_4, "unopt.",
+        LOG_PATH "/bench_big_int_copy_prep_4.log", 1, 1);
+
+    benchmark_runner(bench_big_int_copy_prep_16, "unopt.",
+        LOG_PATH "/bench_big_int_copy_prep_16.log", 1, 1);
+    
+    benchmark_runner(bench_big_int_copy_prep_64, "unopt.",
+        LOG_PATH "/bench_big_int_copy_prep_64.log", 1, 1);
+    
+    benchmark_runner(bench_big_int_copy_prep_256, "unopt.",
+        LOG_PATH "/bench_big_int_copy_prep_256.log", 1, 1);
+    
+    benchmark_runner(bench_big_int_copy_prep_1024, "unopt.",
+        LOG_PATH "/bench_big_int_copy_prep_1024.log", 1, 1);
+
+
+
+
+
 
     return EXIT_SUCCESS;
 }

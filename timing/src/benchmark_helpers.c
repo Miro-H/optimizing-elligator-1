@@ -14,6 +14,7 @@
 #include <stdio.h>
 #include <assert.h>
 #include <stdarg.h>
+#include <stdint.h>
 
 // Include header files
 #include "benchmark_helpers.h"
