@@ -40,7 +40,7 @@ else
 endif
 
 # Main target, building all tests
-all: compile-example-test compile-bigint-test
+all: compile-example-test compile-bigint-test compile-elligator-test
 
 .PHONY: all-tested
 all-tested:
@@ -82,6 +82,19 @@ OBJ_TESTED 	= $(patsubst %,$(ODIR_TESTED)/%,$(_OBJ_TESTED))
 compile-bigint-test: all-tested bigint-test
 
 bigint-test: $(OBJ_TESTED) $(OBJ)
+	$(CC) -o $(BDIR)/$@ $^ $(CFLAGS) $(LIBS)
+
+# Specify the object files constituting the test
+_OBJ	= elligator_test.o
+OBJ 	= $(patsubst %,$(ODIR)/%,$(_OBJ))
+# Specify the object files of the tested functions
+_OBJ_TESTED = bigint.o elligator.o
+OBJ_TESTED 	= $(patsubst %,$(ODIR_TESTED)/%,$(_OBJ_TESTED))
+
+.PHONY: compile-elligator-test
+compile-elligator-test: all-tested elligator-test
+
+elligator-test: $(OBJ_TESTED) $(OBJ)
 	$(CC) -o $(BDIR)/$@ $^ $(CFLAGS) $(LIBS)
 
 .PHONY: clean

@@ -4,13 +4,13 @@
 #include <stdint.h>
 #include "bigint.h"
 
-typedef struct CurvePoints
+typedef struct CurvePoint
 {
     BigInt *x;
     BigInt *y;
 } CurvePoint;
 
-typedef struct Curves // edward curve
+typedef struct Curve // edward curve
 {
     BigInt *q; // prime field
     BigInt *d; // d of curve
@@ -31,34 +31,36 @@ __attribute__((unused)) static BigInt *big_int_two = &((BigInt) {
     .sign = 0,
     .overflow = 0,
     .size = 1,
-    .alloc_size = 0,
+    .alloc_size = BIGINT_FIXED_SIZE,
     .chunks = &chunk_two,
 });
 __attribute__((unused)) static BigInt *big_int_three = &((BigInt) {
     .sign = 0,
     .overflow = 0,
     .size = 1,
-    .alloc_size = 0,
+    .alloc_size = BIGINT_FIXED_SIZE,
     .chunks = &chunk_three,
 });
 __attribute__((unused)) static BigInt *big_int_four = &((BigInt) {
     .sign = 0,
     .overflow = 0,
     .size = 1,
-    .alloc_size = 0,
+    .alloc_size = BIGINT_FIXED_SIZE,
     .chunks = &chunk_four,
 });
 __attribute__((unused)) static BigInt *big_int_five = &((BigInt) {
     .sign = 0,
     .overflow = 0,
     .size = 1,
-    .alloc_size = 0,
+    .alloc_size = BIGINT_FIXED_SIZE,
     .chunks = &chunk_five,
 });
 
+void init_curve1174(Curve *curve);
+void free_curve(Curve *curve);
+void free_curve_point(CurvePoint *point);
 
 CurvePoint elligator_1_string_to_point(BigInt *t, Curve curve);
-
 BigInt* elligator_1_point_to_string(CurvePoint p, Curve curve);
 
 
