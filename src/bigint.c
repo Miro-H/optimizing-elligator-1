@@ -317,6 +317,9 @@ BigInt *big_int_add(BigInt *r, BigInt *a, BigInt *b)
         return r;
     }
 
+    // Note aliasing is not an issue, since we only read potential shared
+    // values _before_ we overwrite them.
+
     // Assertion: a->sign == b->sign
 
     // Simplify implementation by making sure we know the larger BigInt (in
@@ -410,6 +413,9 @@ BigInt *big_int_sub(BigInt *r, BigInt *a, BigInt *b)
         b_abs = b;
         do_sign_switch = 0;
     }
+
+    // Note aliasing is not an issue, since we only read potential shared
+    // values _before_ we overwrite them.
 
     // Assertion: a_abs, b_abs >= 0
 
@@ -520,10 +526,8 @@ BigInt *big_int_mul(BigInt *r, BigInt *a, BigInt *b)
         big_int_destroy(r_loc);
         return r;
     }
-    else {
-        return r_loc;
-    }
 
+    return r_loc;
 }
 
 
@@ -578,7 +582,7 @@ BigInt *big_int_div_rem(BigInt *q, BigInt *r, BigInt *a, BigInt *b)
         q_sign = a->sign ^ b->sign;
 
         q = big_int_create_from_dbl_chunk(q, a_tmp / b_tmp, q_sign);
-        r_loc = big_int_create_from_dbl_chunk(r_loc, a_tmp % b_tmp, q_sign);
+        r_loc = big_int_create_from_dbl_chunk(r_loc, a_tmp % b_tmp, 0);
     }
     else {
         // Below: Division for a->size > 2
@@ -746,6 +750,8 @@ BigInt *big_int_div(BigInt *q, BigInt *a, BigInt *b)
  */
 BigInt *big_int_sll_small(BigInt *r, BigInt *a, uint64_t shift)
 {
+    BigInt *r_loc;
+
     dbl_chunk_size_t carry;
     uint64_t r_size;
     int64_t i, r_idx;
@@ -756,12 +762,11 @@ BigInt *big_int_sll_small(BigInt *r, BigInt *a, uint64_t shift)
     if (r_size > BIGINT_FIXED_SIZE)
         FATAL("Shift creates too large BigInt (%" PRIu64 " chunks)!\n", r_size);
 
-    if (!r)
-        r = big_int_alloc(BIGINT_FIXED_SIZE);
+    r_loc = big_int_alloc(BIGINT_FIXED_SIZE);
 
     // Set the lowest chunks to zero
     for (r_idx = 0; r_idx < (int64_t) (shift / BIGINT_CHUNK_BIT_SIZE); ++r_idx) {
-        r->chunks[r_idx] = 0;
+        r_loc->chunks[r_idx] = 0;
     }
 
     // Shift the other chunks by the chunk internal shift
@@ -769,30 +774,36 @@ BigInt *big_int_sll_small(BigInt *r, BigInt *a, uint64_t shift)
     carry = 0;
     for (i = 0; i < a->size; ++i) {
         carry = (a->chunks[i] << shift) | carry;
-        r->chunks[r_idx] = carry % BIGINT_RADIX;
+        r_loc->chunks[r_idx] = carry % BIGINT_RADIX;
         carry /= BIGINT_RADIX;
 
         ++r_idx;
     }
 
-    r->overflow = 0;
-    r->sign = a->sign;
+    r_loc->overflow = 0;
+    r_loc->sign = a->sign;
 
     // Add the last block if there is a carry from the MSB block
     if (carry) {
         if (r_idx < r->alloc_size) {
-            r->chunks[r_idx] = carry;
+            r_loc->chunks[r_idx] = carry;
             ++r_idx;
         }
         else {
             WARNING("sll caused overflow!\n");
-            r->overflow = 1;
+            r_loc->overflow = 1;
         }
     }
 
-    r->size = r_idx;
+    r_loc->size = r_idx;
 
-    return r;
+    if (r) {
+        big_int_copy(r, r_loc);
+        big_int_destroy(r_loc);
+        return r;
+    }
+
+    return r_loc;
 }
 
 
@@ -871,11 +882,8 @@ BigInt *big_int_mod(BigInt *r, BigInt *a, BigInt *q)
     // q (for the mapping) is close to a power of two. In that case, we might
     // be able to avoid using division here!
     tmp = big_int_div_rem(NULL, r, a, q);
-    big_int_destroy(tmp);
 
-    // Ensure that 0 <= r < q
-    if (r->sign == 1)
-        big_int_add(r, r, q);
+    big_int_destroy(tmp);
 
     return r;
 }
@@ -891,8 +899,14 @@ BigInt *big_int_mod(BigInt *r, BigInt *a, BigInt *q)
  */
 BigInt *big_int_add_mod(BigInt *r, BigInt *a, BigInt *b, BigInt *q)
 {
-    r = big_int_add(r, a, b);
-    return big_int_mod(r, r, q);
+    BigInt *r_loc;
+
+    r_loc = big_int_add(NULL, a, b);
+    r = big_int_mod(r, r_loc, q);
+
+    big_int_destroy(r_loc);
+
+    return r;
 }
 
 
@@ -901,8 +915,14 @@ BigInt *big_int_add_mod(BigInt *r, BigInt *a, BigInt *b, BigInt *q)
  */
 BigInt *big_int_sub_mod(BigInt *r, BigInt *a, BigInt *b, BigInt *q)
 {
-    r = big_int_sub(r, a, b);
-    return big_int_mod(r, r, q);
+    BigInt *r_loc;
+
+    r_loc = big_int_sub(NULL, a, b);
+    big_int_mod(r, r_loc, q);
+
+    big_int_destroy(r_loc);
+
+    return r;
 }
 
 
@@ -911,8 +931,14 @@ BigInt *big_int_sub_mod(BigInt *r, BigInt *a, BigInt *b, BigInt *q)
  */
 BigInt *big_int_mul_mod(BigInt *r, BigInt *a, BigInt *b, BigInt *q)
 {
-    r = big_int_mul(r, a, b);
-    return big_int_mod(r, r, q);
+    BigInt *r_loc;
+
+    r_loc = big_int_mul(NULL, a, b);
+    r = big_int_mod(r, r_loc, q);
+
+    big_int_destroy(r_loc);
+
+    return r;
 }
 
 
@@ -921,8 +947,15 @@ BigInt *big_int_mul_mod(BigInt *r, BigInt *a, BigInt *b, BigInt *q)
  */
 BigInt *big_int_div_mod(BigInt *r, BigInt *a, BigInt *b, BigInt *q)
 {
-    r = big_int_inv(r, b, q);
-    return big_int_mul_mod(r, a, r, q);
+    BigInt *r_loc;
+
+    // Write to local copy to be save against pointer reuse
+    r_loc = big_int_inv(NULL, b, q);
+    r = big_int_mul_mod(r, a, r_loc, q);
+
+    big_int_destroy(r_loc);
+
+    return r;
 }
 
 
@@ -931,16 +964,7 @@ BigInt *big_int_div_mod(BigInt *r, BigInt *a, BigInt *b, BigInt *q)
  */
 BigInt *big_int_inv(BigInt *r, BigInt *a, BigInt *q)
 {
-    BigInt *a_neg;
     EgcdResult res;
-
-    // Modular inversion computation
-    if (big_int_compare(a, big_int_zero) < 0) {
-        a_neg = big_int_neg(NULL, a);
-        big_int_inv(r, a_neg, q);
-        big_int_destroy(a_neg);
-        return big_int_sub(r, q, r);
-    }
 
     if (!r)
         r = big_int_alloc(BIGINT_FIXED_SIZE);
@@ -954,13 +978,14 @@ BigInt *big_int_inv(BigInt *r, BigInt *a, BigInt *q)
         return NULL;
     }
 
-    big_int_copy(r, res.x);
+    // set r = x mod q
+    big_int_mod(r, res.x, q);
 
     big_int_destroy(res.g);
     big_int_destroy(res.x);
     big_int_destroy(res.y);
 
-    return big_int_mod(r, r, q);
+    return r;
 }
 
 
@@ -1073,13 +1098,14 @@ EgcdResult big_int_egcd(BigInt *a, BigInt *b)
     BigInt *q, *a_loc, *b_loc, *x0, *x1, *y0, *y1, *tmp;
     EgcdResult res;
 
-    if (a->sign == 1 || b->sign == 1)
-        FATAL("GCD implementation is currently only supporting positive numbers!\n");
-
     q = big_int_alloc(BIGINT_FIXED_SIZE);
     tmp = big_int_alloc(BIGINT_FIXED_SIZE);
     a_loc = big_int_duplicate(a);
     b_loc = big_int_duplicate(b);
+
+    // Take the GCD of positive numbers, then just flig the signs of x, y at the end
+    big_int_abs(a_loc, a_loc);
+    big_int_abs(b_loc, b_loc);
 
     x0 = big_int_create(NULL, 0);
     x1 = big_int_create(NULL, 1);
@@ -1101,6 +1127,10 @@ EgcdResult big_int_egcd(BigInt *a, BigInt *b)
         big_int_copy(x0, tmp);
 
     }
+
+    // Account for signs of a and b
+    x0->sign ^= a->sign;
+    y0->sign ^= b->sign;
 
     res.g = b_loc;
     res.x = x0;
