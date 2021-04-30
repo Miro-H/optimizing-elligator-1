@@ -564,7 +564,10 @@ BigInt *big_int_div_rem(BigInt *q, BigInt *r, BigInt *a, BigInt *b)
     // divisor larger than dividend
     else if (b->size > a->size) {
         q = big_int_create(q, 0);
+
+        // Save unsigned rest, account for signs later
         r_loc = big_int_duplicate(a);
+        big_int_abs(r_loc, r_loc);
     }
     // Simple case for small BigInts, just use normal C division (but round
     // towards -inf at the end)
