@@ -119,6 +119,9 @@ def chi(t, curve):  # chi(a) = a**((q-1)/2)
 
 
 def elligator_1_string_to_point(t, curve):
+    if t in [-1, 1]:
+        return CurvePoint(0, 1)
+
     u0 = big_int_sub(create_big_int(1), t)
     u1 = big_int_add(create_big_int(1), t)
     u1 = big_int_inverse(u1, curve.q)
@@ -186,7 +189,7 @@ def elligator_1_point_to_string(p, curve):
     eta = big_int_mod(eta0, curve.q)  # η = (y-1)/(2(y+1))
 
     eta_r = big_int_mul(eta, curve.r)
-    eta_r = big_int_add(create_big_int(1), eta_r)
+    eta_r = big_int_mod(big_int_add(create_big_int(1), eta_r), curve.q)
     q_1 = big_int_add(curve.q, create_big_int(1))
     q_1 = big_int_div(q_1, create_big_int(4))
 
@@ -196,15 +199,17 @@ def elligator_1_point_to_string(p, curve):
     X1 = big_int_sub(X1, eta_r)
     X = big_int_mod(X1, curve.q)  # X = −(1 + ηr) + ((1 + ηr)**2 − 1)**((q+1)/4)
 
+    # The following is true only if ηr == -2
+    # As of now, we don't store points in compressed form, so this doesn't matter.
 
-    x0 = big_int_mul(create_big_int(2), curve.s)
-    x1 = big_int_sub(curve.c, create_big_int(1))
-    x0 = big_int_mul(x0, x1)
-    x2 = chi(curve.c, curve)
-    x0 = big_int_mul(x0, x2)
-    x3 = big_int_inverse(curve.r, curve.q)
-    x0 = big_int_mul(x0, x3)
-    x = big_int_mod(x0, curve.q)  # x = 2s(c − 1)χ(c)/r
+    # x0 = big_int_mul(create_big_int(2), curve.s)
+    # x1 = big_int_sub(curve.c, create_big_int(1))
+    # x0 = big_int_mul(x0, x1)
+    # x2 = chi(curve.c, curve)
+    # x0 = big_int_mul(x0, x2)
+    # x3 = big_int_inverse(curve.r, curve.q)
+    # x0 = big_int_mul(x0, x3)
+    # x = big_int_mod(x0, curve.q)  # x = 2s(c − 1)χ(c)/r
 
     x = p.x
 
@@ -230,6 +235,12 @@ def elligator_1_point_to_string(p, curve):
     t1 = big_int_inverse(t1, curve.q)
     t0 = big_int_mul(t0, t1)
     t = big_int_mod(t0, curve.q)  # t = (1 − u)/(1 + u)
+
+    q_half = big_int_sub(curve.q, create_big_int(1))
+    q_half = big_int_div(curve.q, create_big_int(2))
+    if big_int_compare(t, q_half) == 1:
+        t_neg = big_int_negate(t)
+        return big_int_mod(t, curve.q)
 
     return t
 
