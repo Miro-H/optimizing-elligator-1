@@ -242,9 +242,8 @@ BigInt *big_int_create_random(BigInt *r, int64_t number_of_chunks, int64_t numbe
     }
     number_of_non_zero_bits_in_last_chunk = number_of_non_zero_bits_in_last_chunk % 65;
     random_chunk = ((((int64_t) rand()) << 60) + (((int64_t) rand()) << 45) + (rand() << 30) + (rand() << 15) + (rand() << 0));
-    random_chunk = random_chunk & ((~0) >> (64-number_of_non_zero_bits_in_last_chunk));
+    random_chunk = random_chunk & (((uint64_t) ~0) >> (64-number_of_non_zero_bits_in_last_chunk));
     r->chunks[i] = random_chunk % BIGINT_RADIX;
-
     return r;
 }
 
