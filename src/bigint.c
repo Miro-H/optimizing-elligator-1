@@ -658,8 +658,9 @@ BigInt *big_int_div_rem(BigInt *q, BigInt *r, BigInt *a, BigInt *b)
 
             do {
                 if (q_c >= BIGINT_RADIX
-                    || q_c * b_loc->chunks[b_loc->size - 2] >
-                       BIGINT_RADIX * r_c + a_loc->chunks[a_idx - 2])
+                    || (b->size > 1
+                        && q_c * b_loc->chunks[b->size - 2] >
+                           BIGINT_RADIX * r_c + a_loc->chunks[a_idx - 2]))
                 {
                     --q_c;
                     r_c += b_loc->chunks[b_loc->size - 1];
