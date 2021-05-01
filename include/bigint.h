@@ -76,7 +76,8 @@ __attribute__((unused)) static BigInt *big_int_min_one = &((BigInt) {
 //Functions only exposed for Benchmarks
 BigInt *big_int_alloc(uint64_t size);
 BigInt *big_int_calloc(uint64_t size);
-
+BigInt *big_int_prune_leading_zeros(BigInt *r, BigInt *a);
+BigInt *big_int_create_from_dbl_chunk(BigInt *r, dbl_chunk_size_t chunk, uint8_t sign);
 
 // Meta functions
 BigInt *big_int_create(BigInt *r, int64_t x);
