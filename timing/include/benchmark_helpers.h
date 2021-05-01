@@ -13,6 +13,10 @@ typedef struct BenchmarkClosure {
 void benchmark_runner(BenchmarkClosure bench_closure, char *bench_name,
     char *log_fname, uint64_t num_sets, uint64_t num_reps);
 
+
+void benchmark_runner_always_set_up_and_clean(BenchmarkClosure bench_closure, char *bench_name,
+    char *log_fname, uint64_t num_sets, uint64_t num_reps);
+
 void printf_bench_header(const char *fmt, ...);
 
 #endif // BENCHMARK_H_

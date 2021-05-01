@@ -33,7 +33,7 @@
  * Local function prototypes
  */
 uint64_t bench_warmup(BenchmarkClosure bench_closure);
-
+uint64_t bench_warmup_with_set_up_clean(BenchmarkClosure bench_closure);
 
 /**
 * \brief Make warmup runs for a benchmark of at least WARMUP_CYCLES cycles.
@@ -47,16 +47,47 @@ uint64_t bench_warmup(BenchmarkClosure bench_closure)
     cycles = 0;
 
     bench_closure.bench_prep_fn(bench_closure.bench_prep_args);
-    do {
+    do
+    {
         num_reps <<= 1;
         start = start_tsc();
-        for (i = 0; i < num_reps; ++i) {
+        for (i = 0; i < num_reps; ++i)
+        {
             bench_closure.bench_fn();
         }
         cycles = stop_tsc(start);
-    } while(cycles < WARMUP_CYCLES);
+    } while (cycles < WARMUP_CYCLES);
 
     bench_closure.bench_cleanup_fn();
+
+    return num_reps;
+}
+
+/**
+* \brief Make warmup runs for a benchmark of at least WARMUP_CYCLES cycles.
+*/
+uint64_t bench_warmup_with_set_up_clean(BenchmarkClosure bench_closure)
+{
+    uint64_t num_reps, cycles, start;
+    int i;
+
+    num_reps = 1;
+    cycles = 0;
+
+    do
+    {
+        num_reps <<= 1;
+
+        for (i = 0; i < num_reps; ++i)
+        {
+            bench_closure.bench_prep_fn(bench_closure.bench_prep_args);
+            start = start_tsc();
+            bench_closure.bench_fn();
+            cycles += stop_tsc(start);
+            bench_closure.bench_cleanup_fn();
+        }
+
+    } while (cycles < WARMUP_CYCLES);
 
     return num_reps;
 }
@@ -70,7 +101,7 @@ uint64_t bench_warmup(BenchmarkClosure bench_closure)
  *        total runtime.
 */
 void benchmark_runner(BenchmarkClosure bench_closure, char *bench_name,
-    char *log_fname, uint64_t num_sets, uint64_t num_reps)
+                      char *log_fname, uint64_t num_sets, uint64_t num_reps)
 {
     FILE *out_fp;
     uint64_t num_reps_warmup, cycles, start;
@@ -94,16 +125,18 @@ void benchmark_runner(BenchmarkClosure bench_closure, char *bench_name,
     if (!num_reps)
         num_reps = num_reps_warmup;
 
-    for (j = 0; j < num_sets; ++j) {
+    for (j = 0; j < num_sets; ++j)
+    {
         bench_closure.bench_prep_fn(bench_closure.bench_prep_args);
 
         start = start_tsc();
-        for (i = 0; i < num_reps; ++i) {
+        for (i = 0; i < num_reps; ++i)
+        {
             bench_closure.bench_fn();
         }
         cycles = stop_tsc(start);
 
-        fprintf(out_fp, "%" PRId64 ", %.02lf\n", j, (double) cycles / num_reps);
+        fprintf(out_fp, "%" PRId64 ", %.02lf\n", j, (double)cycles / num_reps);
         bench_closure.bench_cleanup_fn();
     }
 
@@ -111,6 +144,57 @@ void benchmark_runner(BenchmarkClosure bench_closure, char *bench_name,
         printf("Wrote benchmark results to log file: '%s'\n", log_fname);
 }
 
+/**
+ * \brief Run a benchmark
+ *
+ * \param num_sets Number of times the entire measurement is repeated.
+ * \param num_reps Number of calls to the benchmarked function for every set.
+ *        If 0, set to the number of reps required to achieve WARMUP_CYCLES
+ *        total runtime.
+*/
+void benchmark_runner_always_set_up_and_clean(BenchmarkClosure bench_closure, char *bench_name,
+                                              char *log_fname, uint64_t num_sets, uint64_t num_reps)
+{
+    FILE *out_fp;
+    uint64_t num_reps_warmup, cycles, start;
+    uint8_t do_write_to_stdout;
+    int64_t i, j;
+
+    printf_bench_header(bench_name);
+
+    do_write_to_stdout = !log_fname;
+    if (do_write_to_stdout)
+        out_fp = stdout;
+    else
+        out_fp = fopen(log_fname, "w+");
+
+    assert(out_fp);
+
+    fprintf(out_fp, "%s\n", bench_name);
+    fprintf(out_fp, "Measurement, Runtime [cycles]\n");
+
+    num_reps_warmup = bench_warmup_with_set_up_clean(bench_closure);
+    if (!num_reps)
+        num_reps = num_reps_warmup;
+
+    for (j = 0; j < num_sets; ++j)
+    {
+
+        for (i = 0; i < num_reps; ++i)
+        {
+            bench_closure.bench_prep_fn(bench_closure.bench_prep_args);
+            start = start_tsc();
+            bench_closure.bench_fn();
+            cycles += stop_tsc(start);
+            bench_closure.bench_cleanup_fn();
+        }
+
+        fprintf(out_fp, "%" PRId64 ", %.02lf\n", j, (double)cycles / num_reps);
+    }
+
+    if (!do_write_to_stdout)
+        printf("Wrote benchmark results to log file: '%s'\n", log_fname);
+}
 
 /*
  * Fancy benchmark printing
@@ -130,10 +214,12 @@ void printf_bench_header(const char *fmt, ...)
 
     left_pad = right_pad = 0;
 
-    for (size_t i = 0; i < len; i += HEADER_LINE_CHAR_LEN) {
-        if (len - i < HEADER_LINE_CHAR_LEN) {
+    for (size_t i = 0; i < len; i += HEADER_LINE_CHAR_LEN)
+    {
+        if (len - i < HEADER_LINE_CHAR_LEN)
+        {
             pad_len = HEADER_LINE_CHAR_LEN - (len - i);
-            left_pad = pad_len/2;
+            left_pad = pad_len / 2;
             right_pad = pad_len - left_pad;
         }
 

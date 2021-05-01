@@ -12,6 +12,7 @@
  * Includes
  */
 #include <stdlib.h>
+#include <time.h> // for random BigInt
 
 // header files
 #include "bigint.h"
@@ -212,6 +213,41 @@ BigInt *big_int_create_from_hex(BigInt *r, char* s)
     r->chunks[i] = (dbl_chunk_size_t) (CHUNK_ABS(parsed_int) % BIGINT_RADIX);
     return r;
 }
+
+
+/**
+ * \brief Create a random BigInt
+ * 
+ * \param r BigInt pointer should be NULL
+ * \param number_of_chunks Number of chunks in the created BigInt
+ * \param number_of_non_zero_chunks Number of chunks in the created BigInt that are non zero
+ * \param number_of_non_zero_bits_in_last_chunk Number of non zero bits in the last chunk that is non zero
+ */
+BigInt *big_int_create_random(BigInt *r, int64_t number_of_chunks, int64_t number_of_non_zero_chunks, int64_t number_of_non_zero_bits_in_last_chunk)
+{
+    if (!r)
+        r = big_int_alloc(number_of_chunks);
+
+    r->sign = rand() % 2;
+    r->overflow  = 0;
+    r->size      = number_of_chunks;
+
+    dbl_chunk_size_t random_chunk;
+    int64_t i;
+
+    for(i = 0; i < number_of_non_zero_chunks - 1; i++)
+    {
+        random_chunk =  (((int64_t) rand()) << 60) + (((int64_t) rand()) << 45) + (rand() << 30) + (rand() << 15) + (rand() << 0); //rand() guarantees number between 0 and 7FFF (15 bits)
+        r->chunks[i] = random_chunk % BIGINT_RADIX;
+    }
+    number_of_non_zero_bits_in_last_chunk = number_of_non_zero_bits_in_last_chunk % 65;
+    random_chunk = ((((int64_t) rand()) << 60) + (((int64_t) rand()) << 45) + (rand() << 30) + (rand() << 15) + (rand() << 0));
+    random_chunk = random_chunk & ((~0) >> (64-number_of_non_zero_bits_in_last_chunk));
+    r->chunks[i] = random_chunk % BIGINT_RADIX;
+
+    return r;
+}
+
 
 
 /**
