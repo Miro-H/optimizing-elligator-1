@@ -1673,7 +1673,7 @@ int main(void)
    
     int bench_big_int_size_256_args[] = {8, 64};
     //int bench_big_int_size_256_random_mod_args[] = {8, 64, 1};
-    int bench_big_int_size_256_curve_mod_args[] = {8, 64, 0};
+    //int bench_big_int_size_256_curve_mod_args[] = {8, 64, 0};
     /*
     int bench_big_int_size_64c_args[] = {64, 64};
     int bench_big_int_size_512c_args[] = {512, 64};
@@ -1727,16 +1727,16 @@ int main(void)
     //--- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
 
     bench_big_int_create_random((void *)bench_big_int_size_256_args, LOG_PATH "/bench_big_int_create_random.log");
-    //bench_big_int_create_random((void *)bench_big_int_size_64c_args, LOG_PATH "/bench_big_int_create_random_64c.log");
-    //bench_big_int_create_random((void *)bench_big_int_size_512c_args, LOG_PATH "/bench_big_int_create_random_512c.log");
-    //bench_big_int_create_random((void *)bench_big_int_size_4096c_args, LOG_PATH "/bench_big_int_create_random_4096c.log");
+    ////bench_big_int_create_random((void *)bench_big_int_size_64c_args, LOG_PATH "/bench_big_int_create_random_64c.log");
+    ////bench_big_int_create_random((void *)bench_big_int_size_512c_args, LOG_PATH "/bench_big_int_create_random_512c.log");
+    ////bench_big_int_create_random((void *)bench_big_int_size_4096c_args, LOG_PATH "/bench_big_int_create_random_4096c.log");
 
     //--- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
 
     bench_big_int_duplicate((void *)bench_big_int_size_256_args, LOG_PATH "/bench_big_int_duplicate.log");
-    //bench_big_int_duplicate((void *)bench_big_int_size_64c_args, LOG_PATH "/bench_big_int_duplicate_64c.log");
-    //bench_big_int_duplicate((void *)bench_big_int_size_512c_args, LOG_PATH "/bench_big_int_duplicate_512c.log");
-    //bench_big_int_duplicate((void *)bench_big_int_size_4096c_args, LOG_PATH "/bench_big_int_duplicate_4096c.log");
+    ////bench_big_int_duplicate((void *)bench_big_int_size_64c_args, LOG_PATH "/bench_big_int_duplicate_64c.log");
+    ////bench_big_int_duplicate((void *)bench_big_int_size_512c_args, LOG_PATH "/bench_big_int_duplicate_512c.log");
+    ////bench_big_int_duplicate((void *)bench_big_int_size_4096c_args, LOG_PATH "/bench_big_int_duplicate_4096c.log");
 
     //--- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
 
@@ -1815,7 +1815,7 @@ int main(void)
 
     //--- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
 
-    bench_big_int_chi((void *)bench_big_int_size_256_curve_mod_args, LOG_PATH "/bench_big_int_chi_curve.log");
+    //bench_big_int_chi((void *)bench_big_int_size_256_curve_mod_args, LOG_PATH "/bench_big_int_chi_curve.log");
 
 
     /*
