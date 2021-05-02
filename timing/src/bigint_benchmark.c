@@ -638,7 +638,6 @@ void bench_big_int_add_mod_prep(void *argptr)
     big_int_array_2 = (BigInt **)malloc(big_int_array_size_ * sizeof(BigInt *));
     big_int_array_3 = (BigInt **)malloc(big_int_array_size_ * sizeof(BigInt *));
     big_int_array_4 = (BigInt **)malloc(big_int_array_size_ * sizeof(BigInt *));
-    BigInt *q = big_int_create_from_hex(NULL, "7FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF7");
     for (uint64_t i = 0; i < big_int_array_size_; i++)
     {
         big_int_array_1[i] = big_int_create_random(NULL, big_int_size_, big_int_size_, 31);
@@ -650,7 +649,7 @@ void bench_big_int_add_mod_prep(void *argptr)
         }
         else
         {
-            big_int_array_4[i] = q;
+            big_int_array_4[i] = big_int_create_from_hex(NULL, "7FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF7");;
         }
     }
 }
@@ -720,100 +719,95 @@ int main(void)
 
     //--- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
       
-    int bench_big_int_size_4_args[] = {8, 64};
-    int bench_big_int_size_4_random_mod_args[] = {8, 64, 1};
-    int bench_big_int_size_4_curve_mod_args[] = {8, 64, 0};
+    int bench_big_int_size_256_args[] = {8, 64};
+    int bench_big_int_size_256_random_mod_args[] = {8, 64, 1};
+    int bench_big_int_size_256_curve_mod_args[] = {8, 64, 0};
     /*
-    int bench_big_int_size_16_args[] = {16, 64};
-    int bench_big_int_size_64_args[] = {64, 64};
-    int bench_big_int_size_256_args[] = {256, 64};
-    int bench_big_int_size_1024_args[] = {1024, 64};
+    int bench_big_int_size_64c_args[] = {64, 64};
+    int bench_big_int_size_512c_args[] = {512, 64};
+    int bench_big_int_size_4096c_args[] = {4096, 64};
+    
     
     //--- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
 
-    bench_big_int_alloc((void *)bench_big_int_size_4_args, LOG_PATH "/bench_big_int_alloc_prep_4.log");
-    bench_big_int_alloc((void *)bench_big_int_size_16_args, LOG_PATH "/bench_big_int_alloc_prep_16.log");
-    bench_big_int_alloc((void *)bench_big_int_size_64_args, LOG_PATH "/bench_big_int_alloc_prep_64.log");
-    bench_big_int_alloc((void *)bench_big_int_size_256_args, LOG_PATH "/bench_big_int_alloc_prep_256.log");
-    bench_big_int_alloc((void *)bench_big_int_size_1024_args, LOG_PATH "/bench_big_int_alloc_prep_1024.log");
+    bench_big_int_alloc((void *)bench_big_int_size_256_args, LOG_PATH "/bench_big_int_alloc_prep.log");
+    bench_big_int_alloc((void *)bench_big_int_size_64c_args, LOG_PATH "/bench_big_int_alloc_prep_64c.log");
+    bench_big_int_alloc((void *)bench_big_int_size_512c_args, LOG_PATH "/bench_big_int_alloc_prep_512c.log");
+    bench_big_int_alloc((void *)bench_big_int_size_4096c_args, LOG_PATH "/bench_big_int_alloc_prep_4096c.log");
 
     //--- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
 
-    bench_big_int_calloc((void *)bench_big_int_size_4_args, LOG_PATH "/bench_big_int_calloc_prep_4.log");
-    bench_big_int_calloc((void *)bench_big_int_size_16_args, LOG_PATH "/bench_big_int_calloc_prep_16.log");
-    bench_big_int_calloc((void *)bench_big_int_size_64_args, LOG_PATH "/bench_big_int_calloc_prep_64.log");
-    bench_big_int_calloc((void *)bench_big_int_size_256_args, LOG_PATH "/bench_big_int_calloc_prep_256.log");
-    bench_big_int_calloc((void *)bench_big_int_size_1024_args, LOG_PATH "/bench_big_intc_calloc_prep_1024.log");
+    bench_big_int_calloc((void *)bench_big_int_size_256_args, LOG_PATH "/bench_big_int_calloc_prep.log");
+    bench_big_int_calloc((void *)bench_big_int_size_64c_args, LOG_PATH "/bench_big_int_calloc_prep_64c.log");
+    bench_big_int_calloc((void *)bench_big_int_size_512c_args, LOG_PATH "/bench_big_int_calloc_prep_512c.log");
+    bench_big_int_calloc((void *)bench_big_int_size_4096c_args, LOG_PATH "/bench_big_int_calloc_prep_4096c.log");
 
     //--- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
 
-    bench_big_int_destroy((void *)bench_big_int_size_4_args, LOG_PATH "/bench_big_int_destroy_prep_4.log");
-    bench_big_int_destroy((void *)bench_big_int_size_16_args, LOG_PATH "/bench_big_int_destroy_prep_16.log");
-    bench_big_int_destroy((void *)bench_big_int_size_64_args, LOG_PATH "/bench_big_int_destroy_prep_64.log");
-    bench_big_int_destroy((void *)bench_big_int_size_256_args, LOG_PATH "/bench_big_int_destroy_prep_256.log");
-    bench_big_int_destroy((void *)bench_big_int_size_1024_args, LOG_PATH "/bench_big_intc_destroy_prep_1024.log");
+    bench_big_int_destroy((void *)bench_big_int_size_256_args, LOG_PATH "/bench_big_int_destroy_prep.log");
+    bench_big_int_destroy((void *)bench_big_int_size_64c_args, LOG_PATH "/bench_big_int_destroy_prep_64c.log");
+    bench_big_int_destroy((void *)bench_big_int_size_512c_args, LOG_PATH "/bench_big_int_destroy_prep_512c.log");
+    bench_big_int_destroy((void *)bench_big_int_size_4096c_args, LOG_PATH "/bench_big_int_destroy_prep_4096c.log");
 
     //--- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
 
-    bench_big_int_copy((void *)bench_big_int_size_4_args, LOG_PATH "/bench_big_int_copy_prep_4.log");
+    bench_big_int_copy((void *)bench_big_int_size_256_args, LOG_PATH "/bench_big_int_copy_prep.log");
 
     //--- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
 
-    bench_big_int_prune((void *)bench_big_int_size_4_args, LOG_PATH "/bench_big_int_prune_prep_4.log");
-    bench_big_int_prune((void *)bench_big_int_size_16_args, LOG_PATH "/bench_big_int_prune_prep_16.log");
-    bench_big_int_prune((void *)bench_big_int_size_64_args, LOG_PATH "/bench_big_int_prune_prep_64.log");
-    bench_big_int_prune((void *)bench_big_int_size_256_args, LOG_PATH "/bench_big_int_prune_prep_256.log");
-    bench_big_int_prune((void *)bench_big_int_size_1024_args, LOG_PATH "/bench_big_int_prune_prep_1024.log");
+    bench_big_int_prune((void *)bench_big_int_size_256_args, LOG_PATH "/bench_big_int_prune_prep.log");
+    bench_big_int_prune((void *)bench_big_int_size_64c_args, LOG_PATH "/bench_big_int_prune_prep_64c.log");
+    bench_big_int_prune((void *)bench_big_int_size_512c_args, LOG_PATH "/bench_big_int_prune_prep_512c.log");
+    bench_big_int_prune((void *)bench_big_int_size_4096c_args, LOG_PATH "/bench_big_int_prune_prep_4096c.log");
     
     //--- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
 
-    bench_big_int_create((void *)bench_big_int_size_4_args, LOG_PATH "/bench_big_int_create.log");
+    bench_big_int_create((void *)bench_big_int_size_256_args, LOG_PATH "/bench_big_int_create.log");
 
     //--- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
 
-    bench_big_int_create_from_dbl_chunk((void *)bench_big_int_size_4_args, LOG_PATH "/bench_big_int_create_from_dbl_chunk.log");
+    bench_big_int_create_from_dbl_chunk((void *)bench_big_int_size_256_args, LOG_PATH "/bench_big_int_create_from_dbl_chunk.log");
 
     //--- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
 
-    bench_big_int_create_from_hex((void *)bench_big_int_size_4_args, LOG_PATH "/bench_big_int_create_from_hex.log");
+    bench_big_int_create_from_hex((void *)bench_big_int_size_256_args, LOG_PATH "/bench_big_int_create_from_hex.log");
     
     //--- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
 
-    bench_big_int_create_random((void *)bench_big_int_size_4_args, LOG_PATH "/bench_big_int_create_random_4.log");
-    //bench_big_int_create_random((void *)bench_big_int_size_16_args, LOG_PATH "/bench_big_int_create_random_16.log");
-    //bench_big_int_create_random((void *)bench_big_int_size_64_args, LOG_PATH "/bench_big_int_create_random_64.log");
-    //bench_big_int_create_random((void *)bench_big_int_size_256_args, LOG_PATH "/bench_big_int_create_random_256.log");
-    //bench_big_int_create_random((void *)bench_big_int_size_1024_args, LOG_PATH "/bench_big_int_create_random_1024.log");
+    bench_big_int_create_random((void *)bench_big_int_size_256_args, LOG_PATH "/bench_big_int_create_random.log");
+    //bench_big_int_create_random((void *)bench_big_int_size_64c_args, LOG_PATH "/bench_big_int_create_random_64c.log");
+    //bench_big_int_create_random((void *)bench_big_int_size_512c_args, LOG_PATH "/bench_big_int_create_random_512c.log");
+    //bench_big_int_create_random((void *)bench_big_int_size_4096c_args, LOG_PATH "/bench_big_int_create_random_4096c.log");
 
     //--- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
 
-    bench_big_int_duplicate((void *)bench_big_int_size_4_args, LOG_PATH "/bench_big_int_duplicate_4.log");
-    //bench_big_int_duplicate((void *)bench_big_int_size_16_args, LOG_PATH "/bench_big_int_duplicate_16.log");
-    //bench_big_int_duplicate((void *)bench_big_int_size_64_args, LOG_PATH "/bench_big_int_duplicate_64.log");
-    //bench_big_int_duplicate((void *)bench_big_int_size_256_args, LOG_PATH "/bench_big_int_duplicate_256.log");
-    //bench_big_int_duplicate((void *)bench_big_int_size_1024_args, LOG_PATH "/bench_big_int_duplicate_1024.log");
+    bench_big_int_duplicate((void *)bench_big_int_size_256_args, LOG_PATH "/bench_big_int_duplicate.log");
+    //bench_big_int_duplicate((void *)bench_big_int_size_64c_args, LOG_PATH "/bench_big_int_duplicate_64c.log");
+    //bench_big_int_duplicate((void *)bench_big_int_size_512c_args, LOG_PATH "/bench_big_int_duplicate_512c.log");
+    //bench_big_int_duplicate((void *)bench_big_int_size_4096c_args, LOG_PATH "/bench_big_int_duplicate_4096c.log");
 
     //--- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
 
-    bench_big_int_neg((void *)bench_big_int_size_4_args, LOG_PATH "/bench_big_int_negate.log");
+    bench_big_int_neg((void *)bench_big_int_size_256_args, LOG_PATH "/bench_big_int_negate.log");
 
     //--- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
 
-    bench_big_int_abs((void *)bench_big_int_size_4_args, LOG_PATH "/bench_big_int_abs.log");
+    bench_big_int_abs((void *)bench_big_int_size_256_args, LOG_PATH "/bench_big_int_abs.log");
     
     //--- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
-*/
-    bench_big_int_add((void *)bench_big_int_size_4_args, LOG_PATH "/bench_big_int_add.log");
-    bench_big_int_add_mod((void *)bench_big_int_size_4_random_mod_args, LOG_PATH "/bench_big_int_add_mod_random.log");
-    bench_big_int_add_mod((void *)bench_big_int_size_4_curve_mod_args, LOG_PATH "/bench_big_int_add_mod_curve.log");
+    */
+    bench_big_int_add((void *)bench_big_int_size_256_args, LOG_PATH "/bench_big_int_add.log");
+    bench_big_int_add_mod((void *)bench_big_int_size_256_random_mod_args, LOG_PATH "/bench_big_int_add_mod_random.log");
+    bench_big_int_add_mod((void *)bench_big_int_size_256_curve_mod_args, LOG_PATH "/bench_big_int_add_mod_curve.log");
     
-
+    /*
     BigInt *test = big_int_create_random(NULL, 8,4,31);
     big_int_print(test);
     printf("\n");
     test = big_int_create_from_hex(NULL, "7FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF7");
     big_int_print(test);
     printf("\n");
+    */
 
     return EXIT_SUCCESS;
 }
