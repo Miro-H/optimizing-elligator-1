@@ -153,7 +153,7 @@ void benchmark_runner(BenchmarkClosure bench_closure, char *bench_name,
  *        total runtime.
 */
 void benchmark_runner_always_set_up_and_clean(BenchmarkClosure bench_closure, char *bench_name,
-                                              char *log_fname, uint64_t num_sets, uint64_t num_reps)
+                                              char *log_fname, uint64_t num_sets, uint64_t num_reps, uint64_t num_internal_reps)
 {
     FILE *out_fp;
     uint64_t num_reps_warmup, cycles, start;
@@ -189,7 +189,7 @@ void benchmark_runner_always_set_up_and_clean(BenchmarkClosure bench_closure, ch
             bench_closure.bench_cleanup_fn();
         }
 
-        fprintf(out_fp, "%" PRId64 ", %.02lf\n", j, (double)cycles / num_reps);
+        fprintf(out_fp, "%" PRId64 ", %.02lf\n", j, (double)cycles / (num_reps * num_internal_reps));
     }
 
     if (!do_write_to_stdout)

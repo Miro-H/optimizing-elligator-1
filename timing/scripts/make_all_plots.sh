@@ -11,6 +11,7 @@ if [[ -z "${PUBLISH}" ]]; then
 fi
 
 ${SCRIPTS_DIR}/gen_perf_plot.py                         \
-    --plot_fname "${PLOTS_DIR}/chi_runtime_plot.png"    \
-    --title "BigInt Chi Runtime Plot"                   \
-    ${LOGS_DIR}/bench_chi.log
+    --plot_fname "${PLOTS_DIR}/abs_plot.png"    		\
+    --title "BigInt abs Runtime Plot"                   \
+    ${LOGS_DIR}/bench_big_int_abs.log
+	${LOGS_DIR}/bench_big_int_neg.log

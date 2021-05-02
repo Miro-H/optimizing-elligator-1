@@ -46,7 +46,7 @@ $(ODIR)/%.o: $(SDIR)/%.c $(DEPS)
 _OBJ	= benchmark_helpers.o bigint_benchmark.o
 OBJ 	= $(patsubst %,$(ODIR)/%,$(_OBJ))
 # Specify the object files of the benched functions
-_OBJ_BENCHED 	= bigint.o
+_OBJ_BENCHED 	= bigint.o elligator.o
 OBJ_BENCHED		= $(patsubst %,$(ODIR_BENCHED)/%,$(_OBJ_BENCHED))
 
 .PHONY: compile-bigint-benchmark

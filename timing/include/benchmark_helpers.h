@@ -15,7 +15,7 @@ void benchmark_runner(BenchmarkClosure bench_closure, char *bench_name,
 
 
 void benchmark_runner_always_set_up_and_clean(BenchmarkClosure bench_closure, char *bench_name,
-    char *log_fname, uint64_t num_sets, uint64_t num_reps);
+    char *log_fname, uint64_t num_sets, uint64_t num_reps, uint64_t num_internal_reps);
 
 void printf_bench_header(const char *fmt, ...);
 
