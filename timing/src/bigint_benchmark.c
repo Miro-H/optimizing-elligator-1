@@ -1281,7 +1281,7 @@ void bench_big_mod(void *bench_args, char *path)
 }
 
 //--- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
-
+// This leaks memory?
 void bench_big_int_inv_prep(void *argptr)
 {
     big_int_size_ =  ((int *)argptr)[0];
@@ -1336,44 +1336,344 @@ void bench_big_int_inv(void *bench_args, char *path)
                                              path, 50, 1000);
 }
 
+//--- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
+// This leaks memory?
+void bench_big_int_pow_prep(void *argptr)
+{
+    big_int_size_ =  ((int *)argptr)[0];
+    big_int_array_size_ = ((int *)argptr)[1];
+    int random_q = ((int *)argptr)[2];
+
+    big_int_array_1 = (BigInt **)malloc(big_int_array_size_ * sizeof(BigInt *));
+    big_int_array_2 = (BigInt **)malloc(big_int_array_size_ * sizeof(BigInt *));
+    big_int_array_3 = (BigInt **)malloc(big_int_array_size_ * sizeof(BigInt *));
+    big_int_array_4 = (BigInt **)malloc(big_int_array_size_ * sizeof(BigInt *));
+   
+    for (uint64_t i = 0; i < big_int_array_size_; i++)
+    {
+        big_int_array_1[i] = big_int_create_random(NULL, big_int_size_, big_int_size_, 64);
+        big_int_array_2[i] = big_int_create_random(NULL, big_int_size_, big_int_size_, 64);
+        big_int_array_3[i] = big_int_create_random(NULL, big_int_size_, big_int_size_, 64);
+        
+        if (random_q)
+        {
+            big_int_array_4[i] = big_int_create_random(NULL, big_int_size_, big_int_size_, 64);
+        }
+        else
+        {
+            big_int_array_4[i] = big_int_create_from_hex(NULL, "7FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF7");
+            ;
+        }
+            
+        
+    }
+}
+
+// Benchmark itself
+void bench_big_int_pow_fn(void)
+{
+    for (uint64_t i = 0; i < big_int_array_size_; i++)
+    {
+        big_int_pow(big_int_array_1[i], big_int_array_2[i], big_int_array_3[i], big_int_array_4[i]);
+    }
+}
+
+// Run after benchmark
+void bench_big_int_pow_cleanup(void)
+{
+    for (uint64_t i = 0; i < big_int_array_size_; i++)
+    {
+        big_int_destroy(big_int_array_1[i]);
+        big_int_destroy(big_int_array_2[i]);
+        big_int_destroy(big_int_array_3[i]);
+        big_int_destroy(big_int_array_4[i]);
+    }
+    free(big_int_array_1);
+    free(big_int_array_2);
+    free(big_int_array_3);
+    free(big_int_array_4);
+}
+
+void bench_big_int_pow(void *bench_args, char *path)
+{
+    BenchmarkClosure bench_closure = {
+        .bench_prep_args = bench_args,
+        .bench_prep_fn = bench_big_int_pow_prep,
+        .bench_fn = bench_big_int_pow_fn,
+        .bench_cleanup_fn = bench_big_int_pow_cleanup,
+    };
+    benchmark_runner_always_set_up_and_clean(bench_closure, "unopt.",
+                                             path, 50, 1000);
+}
 
 
+//--- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
 
+void bench_big_int_is_zero_prep(void *argptr)
+{
+    big_int_size_ =  ((int *)argptr)[0];
+    big_int_array_size_ = ((int *)argptr)[1];
+    
+    big_int_array_1 = (BigInt **)malloc(big_int_array_size_ * sizeof(BigInt *));
+    
+   
+    for (uint64_t i = 0; i < big_int_array_size_; i++)
+    {
+        big_int_array_1[i] = big_int_create_random(NULL, big_int_size_, big_int_size_, 64);
+    }
+}
 
+// Benchmark itself
+void bench_big_int_is_zero_fn(void)
+{
+    for (uint64_t i = 0; i < big_int_array_size_; i++)
+    {
+        big_int_is_zero(big_int_array_1[i]);
+    }
+}
 
+// Run after benchmark
+void bench_big_int_is_zero_cleanup(void)
+{
+    for (uint64_t i = 0; i < big_int_array_size_; i++)
+    {
+        big_int_destroy(big_int_array_1[i]);
+    }
+    free(big_int_array_1);
+}
 
+void bench_big_int_is_zero(void *bench_args, char *path)
+{
+    BenchmarkClosure bench_closure = {
+        .bench_prep_args = bench_args,
+        .bench_prep_fn = bench_big_int_is_zero_prep,
+        .bench_fn = bench_big_int_is_zero_fn,
+        .bench_cleanup_fn = bench_big_int_is_zero_cleanup,
+    };
+    benchmark_runner_always_set_up_and_clean(bench_closure, "unopt.",
+                                             path, 50, 1000);
+}
 
+//--- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
+
+void bench_big_int_is_odd_prep(void *argptr)
+{
+    big_int_size_ =  ((int *)argptr)[0];
+    big_int_array_size_ = ((int *)argptr)[1];
+    
+    big_int_array_1 = (BigInt **)malloc(big_int_array_size_ * sizeof(BigInt *));
+    
+   
+    for (uint64_t i = 0; i < big_int_array_size_; i++)
+    {
+        big_int_array_1[i] = big_int_create_random(NULL, big_int_size_, big_int_size_, 64);
+    }
+}
+
+// Benchmark itself
+void bench_big_int_is_odd_fn(void)
+{
+    for (uint64_t i = 0; i < big_int_array_size_; i++)
+    {
+        big_int_is_odd(big_int_array_1[i]);
+    }
+}
+
+// Run after benchmark
+void bench_big_int_is_odd_cleanup(void)
+{
+    for (uint64_t i = 0; i < big_int_array_size_; i++)
+    {
+        big_int_destroy(big_int_array_1[i]);
+    }
+    free(big_int_array_1);
+}
+
+void bench_big_int_is_odd(void *bench_args, char *path)
+{
+    BenchmarkClosure bench_closure = {
+        .bench_prep_args = bench_args,
+        .bench_prep_fn = bench_big_int_is_odd_prep,
+        .bench_fn = bench_big_int_is_odd_fn,
+        .bench_cleanup_fn = bench_big_int_is_odd_cleanup,
+    };
+    benchmark_runner_always_set_up_and_clean(bench_closure, "unopt.",
+                                             path, 50, 1000);
+}
+
+//--- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
+
+void bench_big_int_compare_prep(void *argptr)
+{
+    big_int_size_ =  ((int *)argptr)[0];
+    big_int_array_size_ = ((int *)argptr)[1];
+    
+    big_int_array_1 = (BigInt **)malloc(big_int_array_size_ * sizeof(BigInt *));
+    big_int_array_2 = (BigInt **)malloc(big_int_array_size_ * sizeof(BigInt *));
+    
+   
+    for (uint64_t i = 0; i < big_int_array_size_; i++)
+    {
+        big_int_array_1[i] = big_int_create_random(NULL, big_int_size_, big_int_size_, 64);
+        big_int_array_2[i] = big_int_create_random(NULL, big_int_size_, big_int_size_, 64);
+    }
+}
+
+// Benchmark itself
+void bench_big_int_compare_fn(void)
+{
+    for (uint64_t i = 0; i < big_int_array_size_; i++)
+    {
+        big_int_compare(big_int_array_1[i], big_int_array_2[i]);
+    }
+}
+
+// Run after benchmark
+void bench_big_int_compare_cleanup(void)
+{
+    for (uint64_t i = 0; i < big_int_array_size_; i++)
+    {
+        big_int_destroy(big_int_array_1[i]);
+        big_int_destroy(big_int_array_2[i]);
+    }
+    free(big_int_array_1);
+    free(big_int_array_2);
+}
+
+void bench_big_int_compare(void *bench_args, char *path)
+{
+    BenchmarkClosure bench_closure = {
+        .bench_prep_args = bench_args,
+        .bench_prep_fn = bench_big_int_compare_prep,
+        .bench_fn = bench_big_int_compare_fn,
+        .bench_cleanup_fn = bench_big_int_compare_cleanup,
+    };
+    benchmark_runner_always_set_up_and_clean(bench_closure, "unopt.",
+                                             path, 50, 1000);
+}
+
+//--- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
+//This causes Warning: sll caused overflow!
+void bench_big_int_egcd_prep(void *argptr)
+{
+    big_int_size_ =  ((int *)argptr)[0];
+    big_int_array_size_ = ((int *)argptr)[1];
+    
+    big_int_array_1 = (BigInt **)malloc(big_int_array_size_ * sizeof(BigInt *));
+    big_int_array_2 = (BigInt **)malloc(big_int_array_size_ * sizeof(BigInt *));
+    
+   
+    for (uint64_t i = 0; i < big_int_array_size_; i++)
+    {
+        big_int_array_1[i] = big_int_create_random(NULL, big_int_size_, big_int_size_, 64);
+        big_int_array_2[i] = big_int_create_random(NULL, big_int_size_, big_int_size_, 64);
+    }
+}
+
+// Benchmark itself
+void bench_big_int_egcd_fn(void)
+{
+    for (uint64_t i = 0; i < big_int_array_size_; i++)
+    {
+        big_int_egcd(big_int_array_1[i], big_int_array_2[i]);
+    }
+}
+
+// Run after benchmark
+void bench_big_int_egcd_cleanup(void)
+{
+    for (uint64_t i = 0; i < big_int_array_size_; i++)
+    {
+        big_int_destroy(big_int_array_1[i]);
+        big_int_destroy(big_int_array_2[i]);
+    }
+    free(big_int_array_1);
+    free(big_int_array_2);
+}
+
+void bench_big_int_egcd(void *bench_args, char *path)
+{
+    BenchmarkClosure bench_closure = {
+        .bench_prep_args = bench_args,
+        .bench_prep_fn = bench_big_int_egcd_prep,
+        .bench_fn = bench_big_int_egcd_fn,
+        .bench_cleanup_fn = bench_big_int_egcd_cleanup,
+    };
+    benchmark_runner_always_set_up_and_clean(bench_closure, "unopt.",
+                                             path, 50, 1000);
+}
+
+//--- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
+// This leaks memory?
+void bench_big_int_chi_prep(void *argptr)
+{
+    big_int_size_ =  ((int *)argptr)[0];
+    big_int_array_size_ = ((int *)argptr)[1];
+    int random_q = ((int *)argptr)[2];
+
+    big_int_array_1 = (BigInt **)malloc(big_int_array_size_ * sizeof(BigInt *));
+    big_int_array_2 = (BigInt **)malloc(big_int_array_size_ * sizeof(BigInt *));
+    big_int_array_3 = (BigInt **)malloc(big_int_array_size_ * sizeof(BigInt *));
+   
+    for (uint64_t i = 0; i < big_int_array_size_; i++)
+    {
+        big_int_array_1[i] = big_int_create_random(NULL, big_int_size_, big_int_size_, 64);
+        big_int_array_2[i] = big_int_create_random(NULL, big_int_size_, big_int_size_, 64);
+        if (random_q)
+        {
+            big_int_array_3[i] = big_int_create_random(NULL, big_int_size_, big_int_size_, 64);
+        }
+        else
+        {
+            big_int_array_3[i] = big_int_create_from_hex(NULL, "7FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF7");
+            ;
+        }
+    }
+}
+
+// Benchmark itself
+void bench_big_int_chi_fn(void)
+{
+    for (uint64_t i = 0; i < big_int_array_size_; i++)
+    {
+        big_int_chi(big_int_array_1[i], big_int_array_2[i], big_int_array_3[i]);
+    }
+}
+
+// Run after benchmark
+void bench_big_int_chi_cleanup(void)
+{
+    for (uint64_t i = 0; i < big_int_array_size_; i++)
+    {
+        big_int_destroy(big_int_array_1[i]);
+        big_int_destroy(big_int_array_2[i]);
+        big_int_destroy(big_int_array_3[i]);
+    }
+    free(big_int_array_1);
+    free(big_int_array_2);
+    free(big_int_array_3);
+}
+
+void bench_big_int_chi(void *bench_args, char *path)
+{
+    BenchmarkClosure bench_closure = {
+        .bench_prep_args = bench_args,
+        .bench_prep_fn = bench_big_int_chi_prep,
+        .bench_fn = bench_big_int_chi_fn,
+        .bench_cleanup_fn = bench_big_int_chi_cleanup,
+    };
+    benchmark_runner_always_set_up_and_clean(bench_closure, "unopt.",
+                                             path, 50, 1000);
+}
 
 
 
 int main(void)
 {
-    /*
-     * BigInt Chi Benchmark
-     */
-
-    // a is no square mod q, i.e., big_int_chi(r, a, q) = -1 mod q
-    char *bench_chi_prep_args[] = {
-        "0",                        // r
-        "A994F8591AF2F272B64058F",  // a
-        "68EFDACEEE191D78017E4503", // q
-    };
-
-    BenchmarkClosure bench_chi_closure = {
-        .bench_prep_args = (void *)bench_chi_prep_args,
-        .bench_prep_fn = bench_chi_prep,
-        .bench_fn = bench_chi_fn,
-        .bench_cleanup_fn = bench_chi_cleanup,
-    };
-
-    benchmark_runner(bench_chi_closure, "unopt.",
-                     LOG_PATH "/bench_chi.log", 50, 1000);
-
-    //--- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
-
+   
     int bench_big_int_size_256_args[] = {8, 64};
     //int bench_big_int_size_256_random_mod_args[] = {8, 64, 1};
-    //int bench_big_int_size_256_curve_mod_args[] = {8, 64, 0};
+    int bench_big_int_size_256_curve_mod_args[] = {8, 64, 0};
     /*
     int bench_big_int_size_64c_args[] = {64, 64};
     int bench_big_int_size_512c_args[] = {512, 64};
@@ -1485,12 +1785,37 @@ int main(void)
 
     //--- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
 
-    //bench_big_mod((void *)bench_big_int_size_256_random_mod_args, LOG_PATH "/bench_big_int_mod_random.log");
-    //bench_big_mod((void *)bench_big_int_size_256_curve_mod_args, LOG_PATH "/bench_big_int_mod_curve.log");
+    //bench_big_int_mod((void *)bench_big_int_size_256_random_mod_args, LOG_PATH "/bench_big_int_mod_random.log");
+    //bench_big_int_mod((void *)bench_big_int_size_256_curve_mod_args, LOG_PATH "/bench_big_int_mod_curve.log");
 
     //--- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
 
-    bench_big_int_inv((void *)bench_big_int_size_256_args, LOG_PATH "/bench_big_int_srl_small.log");
+    //bench_big_int_inv((void *)bench_big_int_size_256_args, LOG_PATH "/bench_big_int_srl_small.log");
+
+    //--- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
+
+    //bench_big_int_pow((void *)bench_big_int_size_256_random_mod_args, LOG_PATH "/bench_big_int_pow_random.log");
+    //bench_big_int_pow((void *)bench_big_int_size_256_curve_mod_args, LOG_PATH "/bench_big_int_pow_curve.log");
+    
+    //--- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
+
+    bench_big_int_is_zero((void *)bench_big_int_size_256_args, LOG_PATH "/bench_big_int_is_zero.log");
+
+    //--- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
+
+    bench_big_int_is_odd((void *)bench_big_int_size_256_args, LOG_PATH "/bench_big_int_is_odd.log");
+
+    //--- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
+
+    bench_big_int_compare((void *)bench_big_int_size_256_args, LOG_PATH "/bench_big_int_is_odd.log");
+
+    //--- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
+
+    //bench_big_int_egcd((void *)bench_big_int_size_256_args, LOG_PATH "/bench_big_int_is_odd.log");
+
+    //--- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
+
+    bench_big_int_chi((void *)bench_big_int_size_256_curve_mod_args, LOG_PATH "/bench_big_int_chi_curve.log");
 
 
     /*
