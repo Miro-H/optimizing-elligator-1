@@ -179,7 +179,7 @@ void benchmark_runner_always_set_up_and_clean(BenchmarkClosure bench_closure, ch
 
     for (j = 0; j < num_sets; ++j)
     {
-
+        cycles = 0;
         for (i = 0; i < num_reps; ++i)
         {
             bench_closure.bench_prep_fn(bench_closure.bench_prep_args);

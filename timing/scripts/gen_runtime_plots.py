@@ -79,7 +79,7 @@ def plot(plot_title, plot_fname, log_yaxis, bar):
             else:
                 ax.plot(in_file.split(".")[0], y_sum/c, marker='x', linewidth=.8, color=colors[color_idx])
 
-            ax.tick_params(axis='x', rotation=60)
+            ax.tick_params(axis='x', rotation=90)
             color_idx = (color_idx + 1) % len(colors)
 
     plt.grid(linestyle="-", axis="y", color="white")
