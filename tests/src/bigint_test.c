@@ -1161,7 +1161,208 @@ START_TEST(test_gcd)
     big_int_destroy(y_exp);
 }
 
-// TODO: test big_int_chi function
+START_TEST(test_chi)
+{
+    BigInt *r, *t, *q, *s, *u, *v;
+
+    // Basic tests. q = 7
+    // t is 0
+    t = big_int_create(NULL, 0);
+    q = big_int_create(NULL, 7);
+    r = big_int_create(NULL, 0);
+
+    big_int_chi(t, t, q);
+    ck_assert_int_eq(big_int_compare(t, r), 0);
+
+    // non-zero square
+    t = big_int_create(t, 16);
+    q = big_int_create(q, 7);
+    r = big_int_create(r, 1);
+
+    big_int_chi(t, t, q);
+    ck_assert_int_eq(big_int_compare(t, r), 0);
+
+    // non-square
+    t = big_int_create(t, 17);
+    q = big_int_create(q, 7);
+    r = big_int_create(r, -1);
+
+    big_int_chi(t, t, q);
+    ck_assert_int_eq(big_int_compare(t, r), 0);
+
+    // -1 is not a square
+    t = big_int_create(t, -1);
+    q = big_int_create(q, 7);
+    r = big_int_create(r, -1);
+
+    big_int_chi(t, t, q);
+    ck_assert_int_eq(big_int_compare(t, r), 0);
+
+    // Tests on bigger numbers: q = 2^61 - 1
+    t = big_int_create(t, 0);
+    q = big_int_create_from_hex(q, "1fffffffffffffff");
+    r = big_int_create(r, 0);
+
+    big_int_chi(t, t, q);
+    ck_assert_int_eq(big_int_compare(t, r), 0);
+
+    t = big_int_create_from_hex(t, "3626229738a3b9"); // 0x75bcd15 squared
+    q = big_int_create_from_hex(q, "1fffffffffffffff");
+    r = big_int_create(r, 1);
+
+    big_int_chi(t, t, q);
+    ck_assert_int_eq(big_int_compare(t, r), 0);
+
+    // negative numbers cannot be square
+    t = big_int_create_from_hex(t, "-3626229738a3b9"); 
+    q = big_int_create_from_hex(q, "1fffffffffffffff");
+    r = big_int_create(r, -1);
+
+    big_int_chi(t, t, q);
+    ck_assert_int_eq(big_int_compare(t, r), 0);
+
+    t = big_int_create(t, -1);
+    q = big_int_create_from_hex(q, "1fffffffffffffff");
+    r = big_int_create(r, -1);
+
+    big_int_chi(t, t, q);
+    ck_assert_int_eq(big_int_compare(t, r), 0);
+
+    /* Advanced tests (as specified in the paper). 
+     * Most of these are actually pretty trivial. 
+     */
+    // chi(chi(t)) = chi(t)
+    t = big_int_create_from_hex(t, "3626229738a3b8");
+    q = big_int_create_from_hex(q, "1fffffffffffffff");
+    r = big_int_create(r, -1);
+
+    big_int_chi(t, t, q);
+    big_int_chi(t, t, q);
+    ck_assert_int_eq(big_int_compare(t, r), 0);
+
+    t = big_int_create(t, 0);
+    q = big_int_create_from_hex(q, "1fffffffffffffff");
+    r = big_int_create(r, 0);
+
+    big_int_chi(t, t, q);
+    big_int_chi(t, t, q);
+    ck_assert_int_eq(big_int_compare(t, r), 0);
+
+    t = big_int_create_from_hex(t, "3626229738a3b9");
+    q = big_int_create_from_hex(q, "1fffffffffffffff");
+    r = big_int_create(r, 1);
+
+    big_int_chi(t, t, q);
+    big_int_chi(t, t, q);
+    ck_assert_int_eq(big_int_compare(t, r), 0);
+
+    // chi(st) = chi(s) * chi(t)
+    // s and t both square
+    s = big_int_create_from_hex(NULL, "3626229738a3b9"); // 0x75bcd15 squared
+    t = big_int_create_from_hex(t, "734cc30b14564b142bfafaaf71"); // ABCDEF1234567 squared
+    q = big_int_create_from_hex(q, "1fffffffffffffff");
+
+    r = big_int_duplicate(s);
+    big_int_mul(r, r, t);
+    big_int_chi(r, r, q); // chi(st)
+
+    u = big_int_duplicate(s);
+    big_int_chi(u, u, q); // chi(s)
+    
+    v = big_int_duplicate(t);
+    big_int_chi(v, v, q); // chi(t)
+
+    big_int_mul(u, u, v); // chi(s) * chi(t);
+
+    ck_assert_int_eq(big_int_compare(r, u), 0);
+
+    // s square, t non-square
+    s = big_int_create_from_hex(NULL, "3626229738a3b9"); // 0x75bcd15 squared
+    t = big_int_create_from_hex(t, "734cc30b14564b142bfafaaf70");
+    q = big_int_create_from_hex(q, "1fffffffffffffff");
+
+    r = big_int_duplicate(s);
+    big_int_mul(r, r, t);
+    big_int_chi(r, r, q); // chi(st)
+
+    u = big_int_duplicate(s);
+    big_int_chi(u, u, q); // chi(s)
+    
+    v = big_int_duplicate(t);
+    big_int_chi(v, v, q); // chi(t)
+
+    big_int_mul(u, u, v); // chi(s) * chi(t);
+
+    ck_assert_int_eq(big_int_compare(r, u), 0);
+
+    // chi(st) = chi(s) * chi(t) for s or t = 0 is trivial.
+
+    // chi(1/t) = chi(t) = 1/chi(t) if t != 0
+    // NOTE: I don't really understand the chi(1/t) part since chi is defined for integers only?
+    t = big_int_create_from_hex(t, "3626229738a3b9"); // 0x75bcd15 squared
+    q = big_int_create_from_hex(q, "1fffffffffffffff");
+
+    big_int_chi(t, t, q); // chi(t)
+
+    r = big_int_duplicate(t);
+    big_int_div(r, big_int_one, t); // 1/chi(t)
+
+    ck_assert_int_eq(big_int_compare(t, r), 0);
+
+    t = big_int_create_from_hex(t, "3626229738a3b8");
+    q = big_int_create_from_hex(q, "1fffffffffffffff");
+
+    big_int_chi(t, t, q); // chi(t)
+
+    r = big_int_duplicate(t);
+    big_int_div(r, big_int_one, t); // 1/chi(t)
+
+    ck_assert_int_eq(big_int_compare(t, r), 0);
+
+    // chi(t^2) = 1 if t != 0
+    t = big_int_create_from_hex(t, "ABCDEF123456789");
+    q = big_int_create_from_hex(q, "1fffffffffffffff");
+    r = big_int_create(r, 1);
+
+    big_int_mul(t, t, t); // t^2
+    big_int_chi(t, t, q); // chi(t^2)
+    ck_assert_int_eq(big_int_compare(t, r), 0);
+
+    // chi(t)t = t if t is square
+    t = big_int_create_from_hex(t, "3626229738a3b9"); // 0x75bcd15 squared
+    q = big_int_create_from_hex(q, "1fffffffffffffff");
+
+    r = big_int_duplicate(t);
+    big_int_chi(r, t, q); // chi(t)
+    big_int_mul(r, r, t); // chi(t) * t
+    ck_assert_int_eq(big_int_compare(t, r), 0);
+
+    // Any square root s of t satisfies s = chi(s) * t^((q + 1)/4)
+    /* TODO: Maybe I misunderstood this part of the paper,
+     * but I don't see how this can hold. If s is not square
+     * then it means s = -s.
+     */
+    t = big_int_create_from_hex(t, "3626229738a3b9"); // 0x75bcd15 squared
+    s = big_int_create_from_hex(s, "75bcd15");
+    q = big_int_create_from_hex(q, "1fffffffffffffff");
+
+    r = big_int_duplicate(s);
+    big_int_chi(r, r, q); // chi(s)
+
+    u = big_int_duplicate(q);
+    big_int_srl_small(u, big_int_add(u, u, big_int_one), 2); // (q + 1)/4
+    big_int_pow(u, t, u, q); // t^((q + 1)/4)
+    big_int_mul(r, r, u); // chi(s) * t^((q+1)/4)
+
+    //ck_assert_int_eq(big_int_compare(s, r), 0);
+
+    big_int_destroy(r);
+    big_int_destroy(t);
+    big_int_destroy(q);
+    big_int_destroy(s);
+    big_int_destroy(u);
+    big_int_destroy(v);
+}
 
 
 Suite *bigints_suite(void)
@@ -1199,6 +1400,7 @@ Suite *bigints_suite(void)
 
     tcase_add_test(tc_advanced_ops, test_power);
     tcase_add_test(tc_advanced_ops, test_gcd);
+    tcase_add_test(tc_advanced_ops, test_chi);
 
     tcase_add_test(tc_basic_arith, test_comparison);
 
