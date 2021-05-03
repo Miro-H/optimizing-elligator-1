@@ -19,6 +19,7 @@ PLOTS_DIR=${TIMING_BASE_DIR}/plots
 if [[ -z "${PUBLISH}" ]]; then
     PLOTS_DIR=${PLOTS_DIR}/local
 fi
+${SCRIPTS_DIR}/gen_runtime_plots.py                         
 
 ################################################################################
 #                  Generate bar plots of runtime measurements                  #
