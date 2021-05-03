@@ -1740,12 +1740,12 @@ int main(void)
 {
 
     int bench_big_int_size_256_args[] = {8, 100};
-    int bench_big_int_size_256_random_mod_args[] = {8, 64, 1};
-    int bench_big_int_size_256_curve_mod_args[] = {8, 64, 0};
+    int bench_big_int_size_256_random_mod_args[] = {8, 100, 1};
+    int bench_big_int_size_256_curve_mod_args[] = {8, 100, 0};
     
-    int bench_big_int_size_64c_args[] = {64, 64};
-    int bench_big_int_size_512c_args[] = {512, 64};
-    int bench_big_int_size_4096c_args[] = {4096, 64};
+    int bench_big_int_size_64c_args[] = {64, 100};
+    int bench_big_int_size_512c_args[] = {512, 100};
+    int bench_big_int_size_4096c_args[] = {4096, 100};
     
     
     //--- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
