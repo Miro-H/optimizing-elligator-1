@@ -1070,10 +1070,6 @@ START_TEST(test_power)
 {
     BigInt *b, *e, *q, *r;
 
-    // TODO: Test big_int_pow with more cases
-    // TODO: Test exponent 0
-    // TODO: Test base 1
-
     b = big_int_create_from_hex(NULL, "4F2B8718");
     e = big_int_create(NULL, 23);
     q = big_int_create_from_hex(NULL, "31DECA5CA5BE11D8DF78F332F");
@@ -1083,13 +1079,49 @@ START_TEST(test_power)
     ck_assert_int_eq(big_int_compare(b, r), 0);
 
     // Base close to max size & trigger rare case in div_rem
-    b = big_int_create_from_hex(NULL,
+    b = big_int_create_from_hex(b,
             "1FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFD");
-    e = big_int_create(NULL, 5);
-    q = big_int_create_from_hex(NULL,
+    e = big_int_create(e, 5);
+    q = big_int_create_from_hex(q,
             "7FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF7");
-    r = big_int_create_from_hex(NULL,
+    r = big_int_create_from_hex(r,
             "7C9FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF7");
+
+    big_int_pow(b, b, e, q);
+    ck_assert_int_eq(big_int_compare(b, r), 0);
+
+    // Test exponent 0
+    b = big_int_create_from_hex(b, "67AFE4589B");
+    e = big_int_create(e, 0);
+    q = big_int_create_from_hex(q, "987654321ABC");
+    r = big_int_create(r, 1);
+
+    big_int_pow(b, b, e, q);
+    ck_assert_int_eq(big_int_compare(b, r), 0);
+
+    // Test base 1
+    b = big_int_create(b, 1);
+    e = big_int_create_from_hex(e, "67AFE4589BABCD");
+    q = big_int_create_from_hex(q, "987654321ABC");
+    r = big_int_create(r, 1);
+
+    big_int_pow(b, b, e, q);
+    ck_assert_int_eq(big_int_compare(b, r), 0);
+
+    // Odd power
+    b = big_int_create_from_hex(b, "ABCDEF123456789");
+    e = big_int_create_from_hex(e, "89BABC1");
+    q = big_int_create_from_hex(q, "987654321ABC");
+    r = big_int_create_from_hex(r, "1b298135d355");
+
+    big_int_pow(b, b, e, q);
+    ck_assert_int_eq(big_int_compare(b, r), 0);
+
+    // Even power
+    b = big_int_create_from_hex(b, "ABCDEF123456789");
+    e = big_int_create_from_hex(e, "89BABC0");
+    q = big_int_create_from_hex(q, "987654321ABC");
+    r = big_int_create_from_hex(r, "cbffc2df1bd");
 
     big_int_pow(b, b, e, q);
     ck_assert_int_eq(big_int_compare(b, r), 0);
