@@ -34,7 +34,7 @@ TITLE_FONT_SIZE = 20
 LABEL_FONT_SIZE = 12
 
 
-def plot(plot_title, plot_fname, log_yaxis, bar):
+def plot(plot_title, plot_fname, log_yaxis, bar, logs_dir):
 
     x_label, y_label = "", ""
     is_first_data_set = True
@@ -46,8 +46,8 @@ def plot(plot_title, plot_fname, log_yaxis, bar):
     color_idx = 0
 
     xs, ys = [], []
-    for i, in_file in enumerate(os.listdir(LOGS_DIR_DEFAULT_PATH)):
-        with open(os.path.join(LOGS_DIR_DEFAULT_PATH, in_file), "r") as in_fp:
+    for i, in_file in enumerate(os.listdir(logs_dir)):
+        with open(os.path.join(logs_dir, in_file), "r") as in_fp:
             lines = in_fp.readlines()
 
             if len(lines) == 0:
@@ -104,15 +104,26 @@ if __name__ == "__main__":
     # Read arguments
     parser = argparse.ArgumentParser()
 
-    plot_fname_1 = f"{PLOTS_DIR_DEFAULT_PATH}/overview.png"
-    plot_fname_2 = f"{PLOTS_DIR_DEFAULT_PATH}/overview_log_scale.png"
+    parser.add_argument("--plots_dir", help="Path where generated plots are stored.",
+                        default=PLOTS_DIR_DEFAULT_PATH)
+    parser.add_argument("--logs_dir", help="Path where the input logs are stored.",
+                        default=LOGS_DIR_DEFAULT_PATH)
 
-    plot_fname_3 = f"{PLOTS_DIR_DEFAULT_PATH}/overview_bar.png"
-    plot_fname_4 = f"{PLOTS_DIR_DEFAULT_PATH}/overview_bar_log_scale.png"
+    args = parser.parse_args()
 
-    plot("Overview", plot_fname_1, False, False)
-    plot("Overview log scale", plot_fname_2, True, False)
+    plots_dir   = args.plots_dir
+    logs_dir    = args.logs_dir
 
-    plot("Overview bar", plot_fname_3, False, True)
-    plot("Overview bar log scale", plot_fname_4, True, True)
+    print(plots_dir)
 
+    plot_fname_1 = f"{plots_dir}/overview.png"
+    plot_fname_2 = f"{plots_dir}/overview_log_scale.png"
+
+    plot_fname_3 = f"{plots_dir}/overview_bar.png"
+    plot_fname_4 = f"{plots_dir}/overview_bar_log_scale.png"
+
+    plot("Overview", plot_fname_1, False, False, logs_dir)
+    plot("Overview log scale", plot_fname_2, True, False, logs_dir)
+
+    plot("Overview bar", plot_fname_3, False, True, logs_dir)
+    plot("Overview bar log scale", plot_fname_4, True, True, logs_dir)

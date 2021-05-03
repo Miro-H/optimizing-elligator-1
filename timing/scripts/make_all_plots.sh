@@ -9,7 +9,10 @@ PLOTS_DIR=${TIMING_BASE_DIR}/plots
 if [[ -z "${PUBLISH}" ]]; then
     PLOTS_DIR=${PLOTS_DIR}/local
 fi
-${SCRIPTS_DIR}/gen_runtime_plots.py                         
+
+${SCRIPTS_DIR}/gen_runtime_plots.py                     \
+    --plots_dir "${PLOTS_DIR}"                          \
+    --logs_dir "${LOGS_DIR}"                           \
 
 ${SCRIPTS_DIR}/gen_perf_plot.py                         \
     --plot_fname "${PLOTS_DIR}/abs_plot.png"    		\
