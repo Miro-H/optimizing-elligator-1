@@ -1740,9 +1740,9 @@ int main(void)
 {
 
     int bench_big_int_size_256_args[] = {8, 100};
-    //int bench_big_int_size_256_random_mod_args[] = {8, 64, 1};
-    //int bench_big_int_size_256_curve_mod_args[] = {8, 64, 0};
-    /*
+    int bench_big_int_size_256_random_mod_args[] = {8, 64, 1};
+    int bench_big_int_size_256_curve_mod_args[] = {8, 64, 0};
+    
     int bench_big_int_size_64c_args[] = {64, 64};
     int bench_big_int_size_512c_args[] = {512, 64};
     int bench_big_int_size_4096c_args[] = {4096, 64};
@@ -1831,7 +1831,7 @@ int main(void)
     bench_big_int_mul((void *)bench_big_int_size_256_args, LOG_PATH "/bench_big_int_mul.log");
     bench_big_int_mul_mod((void *)bench_big_int_size_256_random_mod_args, LOG_PATH "/bench_big_int_mul_mod_random.log");
     bench_big_int_mul_mod((void *)bench_big_int_size_256_curve_mod_args, LOG_PATH "/bench_big_int_mul_mod_curve.log");
-    */
+    
     //--- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
 
     //bench_big_int_div_rem((void *)bench_big_int_size_256_random_mod_args, LOG_PATH "/bench_big_int_div_rem_random.log");
