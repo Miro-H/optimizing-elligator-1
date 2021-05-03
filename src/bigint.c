@@ -33,6 +33,10 @@ BigInt *big_int_create_from_dbl_chunk(BigInt *r, dbl_chunk_size_t chunk,
     uint8_t sign);
 BigInt *big_int_prune_leading_zeros(BigInt *r, BigInt *a);
 
+/**
+ * Global variables
+ */
+uint8_t do_seed_rand = 1;
 
 /**
  * \brief Allocate a BigInt of the given size
@@ -217,33 +221,42 @@ BigInt *big_int_create_from_hex(BigInt *r, char* s)
 
 /**
  * \brief Create a random BigInt
- * 
+ *
  * \param r BigInt pointer should be NULL
- * \param number_of_chunks Number of chunks in the created BigInt
- * \param number_of_non_zero_chunks Number of chunks in the created BigInt that are non zero
- * \param number_of_non_zero_bits_in_last_chunk Number of non zero bits in the last chunk that is non zero
+ * \param nr_of_chunks Number of chunks in the created BigInt
+ * \param nr_of_non_zero_bits_in_last_chunk Number of non zero bits in the last
+ *        chunk that is non zero
  */
-BigInt *big_int_create_random(BigInt *r, int64_t number_of_chunks, int64_t number_of_non_zero_chunks, int64_t number_of_non_zero_bits_in_last_chunk)
+BigInt *big_int_create_random(BigInt *r, int64_t nr_of_chunks,
+    int64_t nr_of_non_zero_bits_in_last_chunk)
 {
+    int64_t i, offset;
+
+    // NOTE: For arbitrary sized BigInts, this would allocate at least nr_of_chunks
     if (!r)
-        r = big_int_alloc(number_of_chunks);
+        r = big_int_alloc(BIGINT_FIXED_SIZE);
+
+    if (do_seed_rand) {
+        srand(time(NULL));
+        do_seed_rand = 0;
+    }
 
     r->sign = rand() % 2;
     r->overflow  = 0;
-    r->size      = number_of_chunks;
+    r->size      = nr_of_chunks;
 
-    dbl_chunk_size_t random_chunk;
-    int64_t i;
-
-    for(i = 0; i < number_of_non_zero_chunks - 1; i++)
+    for(i = 0; i < nr_of_chunks; i++)
     {
-        random_chunk =  (((int64_t) rand()) << 60) + (((int64_t) rand()) << 45) + (rand() << 30) + (rand() << 15) + (rand() << 0); //rand() guarantees number between 0 and 7FFF (15 bits)
-        r->chunks[i] = random_chunk % BIGINT_RADIX;
+        offset = 1;
+        r->chunks[i] = 0;
+        while (offset < BIGINT_RADIX) {
+            r->chunks[i] += ((dbl_chunk_size_t) rand()) * offset;
+            offset *= RAND_MAX;
+        }
+        r->chunks[i] %= BIGINT_RADIX;
     }
-    number_of_non_zero_bits_in_last_chunk = number_of_non_zero_bits_in_last_chunk % 65;
-    random_chunk = ((((int64_t) rand()) << 60) + (((int64_t) rand()) << 45) + (rand() << 30) + (rand() << 15) + (rand() << 0));
-    random_chunk = random_chunk & (((uint64_t) ~0) >> (64-number_of_non_zero_bits_in_last_chunk));
-    r->chunks[i] = random_chunk % BIGINT_RADIX;
+    r->chunks[i] &= (((chunk_size_t) ~0) >> (64 - nr_of_non_zero_bits_in_last_chunk));
+
     return r;
 }
 
@@ -759,6 +772,8 @@ BigInt *big_int_div_rem(BigInt *q, BigInt *r, BigInt *a, BigInt *b)
         big_int_destroy(a_loc);
         big_int_destroy(b_loc);
         big_int_destroy(q_c_bigint);
+        big_int_destroy(radix_pow);
+        big_int_destroy(qb);
     }
 
     // Round towards -inf if either operand is negative

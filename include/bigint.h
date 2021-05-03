@@ -82,7 +82,8 @@ BigInt *big_int_create_from_dbl_chunk(BigInt *r, dbl_chunk_size_t chunk, uint8_t
 // Meta functions
 BigInt *big_int_create(BigInt *r, int64_t x);
 BigInt *big_int_create_from_hex(BigInt *r, char* s);
-BigInt *big_int_create_random(BigInt *r, int64_t number_of_chunks, int64_t number_of_non_zero_chunks, int64_t number_of_non_zero_bits_in_last_chunk);
+BigInt *big_int_create_random(BigInt *r, int64_t nr_of_chunks,
+    int64_t nr_of_non_zero_bits_in_last_chunk);
 void big_int_destroy(BigInt *a);
 BigInt *big_int_copy(BigInt *a, BigInt *b);
 BigInt *big_int_duplicate(BigInt *a);
