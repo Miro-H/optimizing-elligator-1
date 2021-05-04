@@ -43,7 +43,7 @@ $(ODIR)/%.o: $(SDIR)/%.c $(DEPS)
 	$(CC) -c -o $@ $< $(CFLAGS)
 
 # Specify the object files constituting the test
-_OBJ	= benchmark_helpers.o bigint_benchmark.o
+_OBJ	= benchmark_helpers.o runtime_benchmark.o
 OBJ 	= $(patsubst %,$(ODIR)/%,$(_OBJ))
 # Specify the object files of the benched functions
 _OBJ_BENCHED 	= bigint.o elligator.o
