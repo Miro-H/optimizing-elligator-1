@@ -1187,5 +1187,8 @@ BigInt *big_int_chi(BigInt *r, BigInt *t, BigInt *q)
 
     big_int_destroy(e);
 
-    return r;
+    if (!big_int_compare(r, big_int_zero) || !big_int_compare(r, big_int_one))
+        return r;
+    return big_int_create(r, -1);
+
 }
