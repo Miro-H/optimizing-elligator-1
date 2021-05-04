@@ -1850,8 +1850,8 @@ int main(void)
     //--- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
 
     bench_big_int_div((void *)bench_big_int_size_256_args, LOG_PATH "/bench_big_int_div.log");
-    bench_big_int_div((void *)bench_big_int_size_256_random_mod_args, LOG_PATH "/bench_big_int_mul_mod_random.log");
-    bench_big_int_div((void *)bench_big_int_size_256_curve_mod_args, LOG_PATH "/bench_big_int_mul_mod_curve.log");
+    bench_big_int_div((void *)bench_big_int_size_256_random_mod_args, LOG_PATH "/bench_big_int_div_random.log");
+    bench_big_int_div((void *)bench_big_int_size_256_curve_mod_args, LOG_PATH "/bench_big_int_div_curve.log");
 
     //--- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
 
@@ -1868,7 +1868,7 @@ int main(void)
 
     //--- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
 
-    bench_big_int_inv((void *)bench_big_int_size_256_args, LOG_PATH "/bench_big_int_srl_small.log");
+    bench_big_int_inv((void *)bench_big_int_size_256_args, LOG_PATH "/bench_big_int_inv.log");
 
     //--- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
 
@@ -1885,11 +1885,11 @@ int main(void)
 
     //--- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
 
-    bench_big_int_compare((void *)bench_big_int_size_256_args, LOG_PATH "/bench_big_int_is_odd.log");
+    bench_big_int_compare((void *)bench_big_int_size_256_args, LOG_PATH "/bench_big_int_compare.log");
 
     //--- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
 
-    bench_big_int_egcd((void *)bench_big_int_size_256_args, LOG_PATH "/bench_big_int_is_odd.log");
+    bench_big_int_egcd((void *)bench_big_int_size_256_args, LOG_PATH "/bench_big_int_egcd.log");
 
     //--- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
 
@@ -1902,7 +1902,7 @@ int main(void)
 
     //--- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
 
-    bench_elligator_1_point_to_string((void *)bench_big_int_size_256_args, LOG_PATH "/bench_elligator_1_point_to_string.log");
+    // bench_elligator_1_point_to_string((void *)bench_big_int_size_256_args, LOG_PATH "/bench_elligator_1_point_to_string.log");
 
     // BigInt *test = big_int_create_random(NULL, 8, 31);
     // big_int_print(test);
