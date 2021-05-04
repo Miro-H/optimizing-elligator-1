@@ -137,8 +137,12 @@ void benchmark_runner(BenchmarkClosure bench_closure, char *bench_name,
         cycles = stop_tsc(start);
 
         fprintf(out_fp, "%" PRId64 ", %.02lf\n", j, (double)cycles / num_reps);
+        fflush(out_fp);
+
         bench_closure.bench_cleanup_fn();
     }
+
+    fclose(out_fp);
 
     if (!do_write_to_stdout)
         printf("Wrote benchmark results to log file: '%s'\n", log_fname);
@@ -190,7 +194,10 @@ void benchmark_runner_always_set_up_and_clean(BenchmarkClosure bench_closure, ch
         }
 
         fprintf(out_fp, "%" PRId64 ", %.02lf\n", j, (double)cycles / (num_reps * num_internal_reps));
+        fflush(out_fp);
     }
+
+    fclose(out_fp);
 
     if (!do_write_to_stdout)
         printf("Wrote benchmark results to log file: '%s'\n", log_fname);
