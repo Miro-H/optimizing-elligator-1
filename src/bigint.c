@@ -1167,7 +1167,7 @@ EgcdResult big_int_egcd(BigInt *a, BigInt *b)
  */
 BigInt *big_int_chi(BigInt *r, BigInt *t, BigInt *q)
 {
-    BigInt *e, *m;
+    BigInt *e;
 
     // Check assumption that q is odd (otherwise our chi function might need to
     // be changed)
@@ -1186,15 +1186,9 @@ BigInt *big_int_chi(BigInt *r, BigInt *t, BigInt *q)
     big_int_pow(r, t, e, q);
 
     big_int_destroy(e);
-    
-    m = big_int_duplicate(q);
-    big_int_sub(m, m, big_int_one);
-    if (big_int_compare(r, m) == 0)
-    {
-        r = big_int_create(r, -1);
-    }
-    big_int_destroy(m);
-    
 
-    return r;
+    if (!big_int_compare(r, big_int_zero) || !big_int_compare(r, big_int_one))
+        return r;
+    return big_int_create(r, -1);
+
 }
