@@ -80,8 +80,7 @@ def plot(plot_title, plot_fname, log_xaxis, log_yaxis, bar_plot, logs_dir):
 
             cycles_median = median(cycles)
 
-            label = in_file.split(".")[0].replace("bench_", "").replace("big_int_", "").replace("_", " ")
-            x_labels.append(label)
+            x_labels.append(data_label)
             xs.append(i)
             ys.append(cycles_median)
 
