@@ -20,6 +20,17 @@ CFLAGS += -Wall -Werror
 # Add macros for compiled C files
 CFLAGS += -DLOG_PATH=\"$(abspath $(LOG_DIR))\"
 
+# Add default number of sets and reps for benchmarks
+ifeq ($(SETS),)
+	SETS = 10
+endif
+
+ifeq ($(REPS),)
+	REPS = 1000
+endif
+
+CFLAGS += -DSETS=$(SETS) -REPS=$(REPS)
+
 # Assume that the executable depends on all header files.
 DEPS = $(wildcard $(IDIR)/*.h)
 
@@ -61,7 +72,7 @@ bigint-benchmark: $(OBJ_BENCHED) $(OBJ)
 
 .PHONY: plots
 plots: run-all
-	${SCRIPTS_DIR}/make_all_plots.sh
+	SETS=$(SETS) REPS=$(REPS) $(SCRIPTS_DIR)/make_all_plots.sh
 
 .PHONY: publish-plots
 publish-plots: run-all
