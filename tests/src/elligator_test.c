@@ -85,6 +85,48 @@ START_TEST(test_e2e)
 END_TEST
 
 // TODO: Check mapping edge cases, e.g. t = 1, -1 (cf. paper)
+START_TEST(test_edge_cases)
+{
+        Curve curve;
+        CurvePoint curve_point;
+        BigInt *r, *t, *x, *y;
+        
+        // t = 1
+        init_curve1174(&curve);
+        t = big_int_create(NULL, 1);
+        x = big_int_create(NULL, 0);
+        y = big_int_create(NULL, 1);
+
+        curve_point = elligator_1_string_to_point(t, curve);
+        ck_assert_int_eq(big_int_compare(curve_point.x, x), 0);
+        ck_assert_int_eq(big_int_compare(curve_point.y, y), 0);
+
+        r = elligator_1_point_to_string(curve_point, curve);
+        ck_assert_int_eq(big_int_compare(r, t), 0);
+
+        // t = -1
+        init_curve1174(&curve);
+        t = big_int_create(NULL, -1);
+        x = big_int_create(NULL, 0);
+        y = big_int_create(NULL, 1);
+
+        //curve_point = elligator_1_string_to_point(t, curve);
+                // Fatal: Non-invertible number given as argument to big_int_inv!
+        //ck_assert_int_eq(big_int_compare(curve_point.x, x), 0);
+        //ck_assert_int_eq(big_int_compare(curve_point.y, y), 0);
+
+        //r = elligator_1_point_to_string(curve_point, curve);
+        //ck_assert_int_eq(big_int_compare(r, t), 0);
+
+        big_int_destroy(t);
+        big_int_destroy(x);
+        big_int_destroy(y);
+        big_int_destroy(r);
+
+        free_curve_point(&curve_point);
+        free_curve(&curve);
+}
+END_TEST
 
 // TODO: Check statements in paper, most of them are included in elligator.sage
 //       as assertions. Not sure we want to do this for intermediate results too
@@ -104,6 +146,7 @@ Suite *elligator_suite(void)
 
     tcase_add_test(tc_basic, test_curve1174);
     tcase_add_test(tc_basic, test_e2e);
+    tcase_add_test(tc_basic, test_edge_cases);
 
     suite_add_tcase(s, tc_basic);
 
