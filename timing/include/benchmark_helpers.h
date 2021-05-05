@@ -1,7 +1,7 @@
 #ifndef BENCHMARK_H_    /* Include guard */
 #define BENCHMARK_H_
 
-#define WARMUP_CYCLES 10
+#define WARMUP_CYCLES 1000
 
 typedef struct BenchmarkClosure {
     void *bench_prep_args;
