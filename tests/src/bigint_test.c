@@ -1137,8 +1137,6 @@ START_TEST(test_gcd)
     EgcdResult res;
     BigInt *a, *b, *g_exp, *x_exp, *y_exp;
 
-    // TODO: Test big_int_egcd with (many!) more cases
-
     a = big_int_create_from_hex(NULL, "F18A8F06266D15799D7FD7C1B");
     b = big_int_create_from_hex(NULL, "31A9B6D0509E9");
     g_exp = big_int_create(NULL, 5);
@@ -1153,6 +1151,30 @@ START_TEST(test_gcd)
     big_int_destroy(res.g);
     big_int_destroy(res.x);
     big_int_destroy(res.y);
+
+    // Coprimes (gcd = 1)
+    a = big_int_create(a, 2);
+    b = big_int_create(b, 3);
+    g_exp = big_int_create(g_exp, 1);
+    x_exp = big_int_create(x_exp, -1);
+    y_exp = big_int_create(y_exp, 1);
+
+    res = big_int_egcd(a, b);
+    ck_assert_int_eq(big_int_compare(res.g, g_exp), 0);
+    ck_assert_int_eq(big_int_compare(res.x, x_exp), 0);
+    ck_assert_int_eq(big_int_compare(res.y, y_exp), 0);
+
+    // a = b
+    a = big_int_create_from_hex(a, "ABCDEF123456789ABCDEF");
+    b = big_int_create_from_hex(b, "ABCDEF123456789ABCDEF");
+    g_exp = big_int_create_from_hex(g_exp, "ABCDEF123456789ABCDEF");
+    x_exp = big_int_create(x_exp, 1);
+    y_exp = big_int_create(y_exp, 0);
+
+    res = big_int_egcd(a, b);
+    ck_assert_int_eq(big_int_compare(res.g, g_exp), 0);
+    ck_assert_int_eq(big_int_compare(res.x, x_exp), 0);
+    ck_assert_int_eq(big_int_compare(res.y, y_exp), 0);
 
     big_int_destroy(a);
     big_int_destroy(b);
