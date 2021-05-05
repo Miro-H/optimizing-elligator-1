@@ -29,7 +29,7 @@ ifeq ($(REPS),)
 	REPS = 1000
 endif
 
-CFLAGS += -DSETS=$(SETS) -REPS=$(REPS)
+CFLAGS += -DSETS=$(SETS) -DREPS=$(REPS)
 
 # Assume that the executable depends on all header files.
 DEPS = $(wildcard $(IDIR)/*.h)
