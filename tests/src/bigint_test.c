@@ -467,6 +467,9 @@ START_TEST(test_multiplication)
     big_int_destroy(r);
 }
 
+/**
+* \brief Test division of BigInts
+*/
 START_TEST(test_division)
 {
     BigInt *a, *b, *q, *r_exp, *q_exp, *r;
@@ -560,9 +563,6 @@ START_TEST(test_division)
     ck_assert_int_eq(big_int_compare(q_exp, q), 0);
     ck_assert_int_eq(big_int_compare(r_exp, r), 0);
 
-    // TODO: test special case marked in big_int_div_rem in a TODO and mentioned
-    //       specifically in the book (last link in git issue).
-
     // Divisor larger than dividend
     big_int_create_from_hex(a, "3B0CD7F86F07");
     big_int_create_from_hex(b, "20B3EAD995ED443F46535EA");
@@ -612,6 +612,9 @@ START_TEST(test_division)
     big_int_destroy(q_exp);
 }
 
+/**
+* \brief Test left shift of BigInts
+*/
 START_TEST(test_sll_small)
 {
     BigInt *a, *r;
@@ -648,6 +651,9 @@ START_TEST(test_sll_small)
     big_int_destroy(r);
 }
 
+/**
+* \brief Test right shift of BigInts
+*/
 START_TEST(test_srl_small)
 {
     BigInt *a, *r;
@@ -724,7 +730,9 @@ START_TEST(test_srl_small)
     big_int_destroy(r);
 }
 
-
+/**
+* \brief Test modulo operation on BigInts
+*/
 START_TEST(test_modulo_operation)
 {
     BigInt *a, *q, *r;
@@ -781,6 +789,9 @@ START_TEST(test_modulo_operation)
     big_int_destroy(r);
 }
 
+/**
+* \brief Test addition of BigInts modulo q
+*/
 START_TEST(test_add_mod)
 {
     BigInt *a, *b, *q, *r;
@@ -834,6 +845,9 @@ START_TEST(test_add_mod)
     big_int_destroy(r);
 }
 
+/**
+* \brief Test subtraction of BigInts modulo q
+*/
 START_TEST(test_sub_mod)
 {
     BigInt *a, *b, *q, *r;
@@ -887,6 +901,9 @@ START_TEST(test_sub_mod)
     big_int_destroy(r);
 }
 
+/**
+* \brief Test multiplication of BigInts modulo q
+*/
 START_TEST(test_mul_mod)
 {
     BigInt *a, *b, *q, *r;
@@ -953,6 +970,9 @@ START_TEST(test_mul_mod)
     big_int_destroy(r);
 }
 
+/**
+* \brief Test division of BigInts modulo q
+*/
 START_TEST(test_div_mod)
 {
     BigInt *a, *b, *q, *r, *x;
@@ -1001,6 +1021,9 @@ START_TEST(test_div_mod)
     big_int_destroy(x);
 }
 
+/**
+* \brief Test finding the modular inverse of BigInts
+*/
 START_TEST(test_modulo_inverse)
 {
     BigInt *a, *q, *ainv_exp;
@@ -1066,6 +1089,9 @@ START_TEST(test_modulo_inverse)
     big_int_destroy(ainv_exp);
 }
 
+/**
+* \brief Test raising BigInts to a (BigInt) power
+*/
 START_TEST(test_power)
 {
     BigInt *b, *e, *q, *r;
@@ -1132,6 +1158,9 @@ START_TEST(test_power)
     big_int_destroy(r);
 }
 
+/**
+* \brief Test finding the greatest common divisor of BigInts
+*/
 START_TEST(test_gcd)
 {
     EgcdResult res;
@@ -1183,6 +1212,9 @@ START_TEST(test_gcd)
     big_int_destroy(y_exp);
 }
 
+/**
+* \brief Test chi function on BigInts
+*/
 START_TEST(test_chi)
 {
     BigInt *r, *t, *q, *s, *u, *v;
