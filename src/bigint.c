@@ -1113,6 +1113,13 @@ EgcdResult big_int_egcd(BigInt *a, BigInt *b)
     BigInt *q, *a_loc, *b_loc, *x0, *x1, *y0, *y1, *tmp;
     EgcdResult res;
 
+    if (big_int_is_zero(a) && big_int_is_zero(b)) {
+        res.x = big_int_create(NULL, 0);
+        res.y = big_int_create(NULL, 0);
+        res.g = big_int_create(NULL, 0);
+        return res;
+    }
+
     q = big_int_alloc(BIGINT_FIXED_SIZE);
     tmp = big_int_alloc(BIGINT_FIXED_SIZE);
     a_loc = big_int_duplicate(a);

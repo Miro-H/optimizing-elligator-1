@@ -467,6 +467,9 @@ START_TEST(test_multiplication)
     big_int_destroy(r);
 }
 
+/**
+* \brief Test division of BigInts
+*/
 START_TEST(test_division)
 {
     BigInt *a, *b, *q, *r_exp, *q_exp, *r;
@@ -560,9 +563,6 @@ START_TEST(test_division)
     ck_assert_int_eq(big_int_compare(q_exp, q), 0);
     ck_assert_int_eq(big_int_compare(r_exp, r), 0);
 
-    // TODO: test special case marked in big_int_div_rem in a TODO and mentioned
-    //       specifically in the book (last link in git issue).
-
     // Divisor larger than dividend
     big_int_create_from_hex(a, "3B0CD7F86F07");
     big_int_create_from_hex(b, "20B3EAD995ED443F46535EA");
@@ -612,6 +612,9 @@ START_TEST(test_division)
     big_int_destroy(q_exp);
 }
 
+/**
+* \brief Test left shift of BigInts
+*/
 START_TEST(test_sll_small)
 {
     BigInt *a, *r;
@@ -648,6 +651,9 @@ START_TEST(test_sll_small)
     big_int_destroy(r);
 }
 
+/**
+* \brief Test right shift of BigInts
+*/
 START_TEST(test_srl_small)
 {
     BigInt *a, *r;
@@ -724,7 +730,9 @@ START_TEST(test_srl_small)
     big_int_destroy(r);
 }
 
-
+/**
+* \brief Test modulo operation on BigInts
+*/
 START_TEST(test_modulo_operation)
 {
     BigInt *a, *q, *r;
@@ -781,6 +789,9 @@ START_TEST(test_modulo_operation)
     big_int_destroy(r);
 }
 
+/**
+* \brief Test addition of BigInts modulo q
+*/
 START_TEST(test_add_mod)
 {
     BigInt *a, *b, *q, *r;
@@ -834,6 +845,9 @@ START_TEST(test_add_mod)
     big_int_destroy(r);
 }
 
+/**
+* \brief Test subtraction of BigInts modulo q
+*/
 START_TEST(test_sub_mod)
 {
     BigInt *a, *b, *q, *r;
@@ -887,6 +901,9 @@ START_TEST(test_sub_mod)
     big_int_destroy(r);
 }
 
+/**
+* \brief Test multiplication of BigInts modulo q
+*/
 START_TEST(test_mul_mod)
 {
     BigInt *a, *b, *q, *r;
@@ -953,6 +970,9 @@ START_TEST(test_mul_mod)
     big_int_destroy(r);
 }
 
+/**
+* \brief Test division of BigInts modulo q
+*/
 START_TEST(test_div_mod)
 {
     BigInt *a, *b, *q, *r, *x;
@@ -1001,6 +1021,9 @@ START_TEST(test_div_mod)
     big_int_destroy(x);
 }
 
+/**
+* \brief Test finding the modular inverse of BigInts
+*/
 START_TEST(test_modulo_inverse)
 {
     BigInt *a, *q, *ainv_exp;
@@ -1066,6 +1089,9 @@ START_TEST(test_modulo_inverse)
     big_int_destroy(ainv_exp);
 }
 
+/**
+* \brief Test raising BigInts to a (BigInt) power
+*/
 START_TEST(test_power)
 {
     BigInt *b, *e, *q, *r;
@@ -1132,12 +1158,13 @@ START_TEST(test_power)
     big_int_destroy(r);
 }
 
+/**
+* \brief Test finding the greatest common divisor of BigInts
+*/
 START_TEST(test_gcd)
 {
     EgcdResult res;
     BigInt *a, *b, *g_exp, *x_exp, *y_exp;
-
-    // TODO: Test big_int_egcd with (many!) more cases
 
     a = big_int_create_from_hex(NULL, "F18A8F06266D15799D7FD7C1B");
     b = big_int_create_from_hex(NULL, "31A9B6D0509E9");
@@ -1154,6 +1181,66 @@ START_TEST(test_gcd)
     big_int_destroy(res.x);
     big_int_destroy(res.y);
 
+    // Coprimes (gcd = 1)
+    a = big_int_create(a, 2);
+    b = big_int_create(b, 3);
+    g_exp = big_int_create(g_exp, 1);
+    x_exp = big_int_create(x_exp, -1);
+    y_exp = big_int_create(y_exp, 1);
+
+    res = big_int_egcd(a, b);
+    ck_assert_int_eq(big_int_compare(res.g, g_exp), 0);
+    ck_assert_int_eq(big_int_compare(res.x, x_exp), 0);
+    ck_assert_int_eq(big_int_compare(res.y, y_exp), 0);
+
+    // a = b
+    a = big_int_create_from_hex(a, "ABCDEF123456789ABCDEF");
+    b = big_int_create_from_hex(b, "ABCDEF123456789ABCDEF");
+    g_exp = big_int_create_from_hex(g_exp, "ABCDEF123456789ABCDEF");
+    x_exp = big_int_create(x_exp, 1);
+    y_exp = big_int_create(y_exp, 0);
+
+    res = big_int_egcd(a, b);
+    ck_assert_int_eq(big_int_compare(res.g, g_exp), 0);
+    ck_assert_int_eq(big_int_compare(res.x, x_exp), 0);
+    ck_assert_int_eq(big_int_compare(res.y, y_exp), 0);
+
+    // Zero in 1st argument
+    a = big_int_create(a, 0);
+    b = big_int_create_from_hex(b, "ABCDEF123456789ABCDEF");
+    g_exp = big_int_create_from_hex(g_exp, "ABCDEF123456789ABCDEF");
+    x_exp = big_int_create(x_exp, 0);
+    y_exp = big_int_create(y_exp, 1);
+
+    res = big_int_egcd(a, b);
+    ck_assert_int_eq(big_int_compare(res.g, g_exp), 0);
+    ck_assert_int_eq(big_int_compare(res.x, x_exp), 0);
+    ck_assert_int_eq(big_int_compare(res.y, y_exp), 0);
+
+    // Zero in 2nd argument
+    a = big_int_create_from_hex(a, "ABCDEF123456789ABCDEF");
+    b = big_int_create(b, 0);
+    g_exp = big_int_create_from_hex(g_exp, "ABCDEF123456789ABCDEF");
+    x_exp = big_int_create(x_exp, 1);
+    y_exp = big_int_create(y_exp, 0);
+
+    res = big_int_egcd(a, b);
+    ck_assert_int_eq(big_int_compare(res.g, g_exp), 0);
+    ck_assert_int_eq(big_int_compare(res.x, x_exp), 0);
+    ck_assert_int_eq(big_int_compare(res.y, y_exp), 0);
+
+    // Both zero arguments
+    a = big_int_create(a, 0);
+    b = big_int_create(b, 0);
+    g_exp = big_int_create(g_exp, 0);
+    x_exp = big_int_create(x_exp, 0);
+    y_exp = big_int_create(y_exp, 0);
+
+    res = big_int_egcd(a, b);
+    ck_assert_int_eq(big_int_compare(res.g, g_exp), 0);
+    ck_assert_int_eq(big_int_compare(res.x, x_exp), 0);
+    ck_assert_int_eq(big_int_compare(res.y, y_exp), 0);
+
     big_int_destroy(a);
     big_int_destroy(b);
     big_int_destroy(g_exp);
@@ -1161,6 +1248,9 @@ START_TEST(test_gcd)
     big_int_destroy(y_exp);
 }
 
+/**
+* \brief Test chi function on BigInts
+*/
 START_TEST(test_chi)
 {
     BigInt *r, *t, *q, *s, *u, *v;
@@ -1214,7 +1304,7 @@ START_TEST(test_chi)
     ck_assert_int_eq(big_int_compare(t, r), 0);
 
     // negative numbers cannot be square
-    t = big_int_create_from_hex(t, "-3626229738a3b9"); 
+    t = big_int_create_from_hex(t, "-3626229738a3b9");
     q = big_int_create_from_hex(q, "1fffffffffffffff");
     r = big_int_create(r, -1);
 
@@ -1228,8 +1318,8 @@ START_TEST(test_chi)
     big_int_chi(t, t, q);
     ck_assert_int_eq(big_int_compare(t, r), 0);
 
-    /* Advanced tests (as specified in the paper). 
-     * Most of these are actually pretty trivial. 
+    /* Advanced tests (as specified in the paper).
+     * Most of these are actually pretty trivial.
      */
     // chi(chi(t)) = chi(t)
     t = big_int_create_from_hex(t, "3626229738a3b8");
@@ -1268,7 +1358,7 @@ START_TEST(test_chi)
 
     u = big_int_duplicate(s);
     big_int_chi(u, u, q); // chi(s)
-    
+
     v = big_int_duplicate(t);
     big_int_chi(v, v, q); // chi(t)
 
@@ -1287,7 +1377,7 @@ START_TEST(test_chi)
 
     u = big_int_duplicate(s);
     big_int_chi(u, u, q); // chi(s)
-    
+
     v = big_int_duplicate(t);
     big_int_chi(v, v, q); // chi(t)
 
