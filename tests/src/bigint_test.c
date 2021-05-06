@@ -1205,6 +1205,42 @@ START_TEST(test_gcd)
     ck_assert_int_eq(big_int_compare(res.x, x_exp), 0);
     ck_assert_int_eq(big_int_compare(res.y, y_exp), 0);
 
+    // Zero in 1st argument
+    a = big_int_create(a, 0);
+    b = big_int_create_from_hex(b, "ABCDEF123456789ABCDEF");
+    g_exp = big_int_create_from_hex(g_exp, "ABCDEF123456789ABCDEF");
+    x_exp = big_int_create(x_exp, 0);
+    y_exp = big_int_create(y_exp, 1);
+
+    res = big_int_egcd(a, b);
+    ck_assert_int_eq(big_int_compare(res.g, g_exp), 0);
+    ck_assert_int_eq(big_int_compare(res.x, x_exp), 0);
+    ck_assert_int_eq(big_int_compare(res.y, y_exp), 0);
+
+    // Zero in 2nd argument
+    a = big_int_create_from_hex(a, "ABCDEF123456789ABCDEF");
+    b = big_int_create(b, 0);
+    g_exp = big_int_create_from_hex(g_exp, "ABCDEF123456789ABCDEF");
+    x_exp = big_int_create(x_exp, 1);
+    y_exp = big_int_create(y_exp, 0);
+
+    res = big_int_egcd(a, b);
+    ck_assert_int_eq(big_int_compare(res.g, g_exp), 0);
+    ck_assert_int_eq(big_int_compare(res.x, x_exp), 0);
+    ck_assert_int_eq(big_int_compare(res.y, y_exp), 0);
+
+    // Both zero arguments
+    a = big_int_create(a, 0);
+    b = big_int_create(b, 0);
+    g_exp = big_int_create(g_exp, 0);
+    x_exp = big_int_create(x_exp, 0);
+    y_exp = big_int_create(y_exp, 0);
+
+    res = big_int_egcd(a, b);
+    ck_assert_int_eq(big_int_compare(res.g, g_exp), 0);
+    ck_assert_int_eq(big_int_compare(res.x, x_exp), 0);
+    ck_assert_int_eq(big_int_compare(res.y, y_exp), 0);
+
     big_int_destroy(a);
     big_int_destroy(b);
     big_int_destroy(g_exp);
@@ -1268,7 +1304,7 @@ START_TEST(test_chi)
     ck_assert_int_eq(big_int_compare(t, r), 0);
 
     // negative numbers cannot be square
-    t = big_int_create_from_hex(t, "-3626229738a3b9"); 
+    t = big_int_create_from_hex(t, "-3626229738a3b9");
     q = big_int_create_from_hex(q, "1fffffffffffffff");
     r = big_int_create(r, -1);
 
@@ -1282,8 +1318,8 @@ START_TEST(test_chi)
     big_int_chi(t, t, q);
     ck_assert_int_eq(big_int_compare(t, r), 0);
 
-    /* Advanced tests (as specified in the paper). 
-     * Most of these are actually pretty trivial. 
+    /* Advanced tests (as specified in the paper).
+     * Most of these are actually pretty trivial.
      */
     // chi(chi(t)) = chi(t)
     t = big_int_create_from_hex(t, "3626229738a3b8");
@@ -1322,7 +1358,7 @@ START_TEST(test_chi)
 
     u = big_int_duplicate(s);
     big_int_chi(u, u, q); // chi(s)
-    
+
     v = big_int_duplicate(t);
     big_int_chi(v, v, q); // chi(t)
 
@@ -1341,7 +1377,7 @@ START_TEST(test_chi)
 
     u = big_int_duplicate(s);
     big_int_chi(u, u, q); // chi(s)
-    
+
     v = big_int_duplicate(t);
     big_int_chi(v, v, q); // chi(t)
 
