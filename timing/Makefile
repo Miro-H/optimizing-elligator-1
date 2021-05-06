@@ -64,8 +64,14 @@ OBJ 	= $(patsubst %,$(ODIR)/%,$(_OBJ))
 _OBJ_BENCHED 	= bigint.o elligator.o
 OBJ_BENCHED		= $(patsubst %,$(ODIR_BENCHED)/%,$(_OBJ_BENCHED))
 
+.PHONY: gen-bench-types
+gen-bench-types:
+	${SCRIPTS_DIR}/gen_benchmark_types.py \
+		--src_file ${SDIR}/runtime_benchmark.c \
+		--tar_file ${IDIR}/benchmark_types.h
+
 .PHONY: compile-runtime-benchmark
-compile-runtime-benchmark: all-benched runtime-benchmark
+compile-runtime-benchmark: all-benched gen-bench-types runtime-benchmark
 
 .PHONY: run-runtime-benchmark
 run-runtime-benchmark: compile-runtime-benchmark

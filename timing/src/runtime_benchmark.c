@@ -12,6 +12,7 @@
 #include "elligator.h"
 #include "debug.h"
 #include "benchmark_helpers.h"
+#include "benchmark_types.h"
 
 void bench_big_int_alloc_fn(void)
 {
