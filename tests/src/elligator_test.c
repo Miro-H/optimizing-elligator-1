@@ -73,6 +73,60 @@ START_TEST(test_e2e)
     ck_assert_int_eq(big_int_compare(r, t), 0);
 
     // TODO: Do the same with more complex inputs
+    t = big_int_create_from_hex(t, "75bcd15");
+    x = big_int_create_from_hex(x, 
+            "1a47d90e9f9c19ab846c9e100317f693607a1d16851fd05b40e7da6fff5bcf");
+    y = big_int_create_from_hex(y, 
+            "5bbe4619cea4729f94082b429693ac4b565f94cda5d6d875689de765c19a461");
+    curve_point = elligator_1_string_to_point(t, curve);
+    //printf("x: "); big_int_print(curve_point.x); printf("\n");
+    //printf("y: "); big_int_print(curve_point.y); printf("\n");
+    ck_assert_int_eq(big_int_compare(curve_point.x, x), 0);
+    ck_assert_int_eq(big_int_compare(curve_point.y, y), 0);
+
+    // Map curve point back to BigInt
+    r = elligator_1_point_to_string(curve_point, curve);
+    ck_assert_int_eq(big_int_compare(r, t), 0);
+
+    t = big_int_create_from_hex(t, "abcdef1234567899987654321abcabcdefdef");
+    x = big_int_create_from_hex(x, 
+            "7d4dd83c5e1f4e2dbc79ca0941102de6376604c9d8a75eb41b6875010211b50");
+    y = big_int_create_from_hex(y, 
+            "61c507d563235bea439c1d53bddf33e0d87c0041d3228cd0ca00c3d2a59025e");
+    curve_point = elligator_1_string_to_point(t, curve);
+    ck_assert_int_eq(big_int_compare(curve_point.x, x), 0);
+    ck_assert_int_eq(big_int_compare(curve_point.y, y), 0);
+
+    // Map curve point back to BigInt
+    r = elligator_1_point_to_string(curve_point, curve);
+    ck_assert_int_eq(big_int_compare(r, t), 0);
+
+    t = big_int_create(t, 2);
+    x = big_int_create_from_hex(x, 
+            "6f5374156b145ff8bb3288e0418f513b5d7bbbab6e252ea1bc2db6428e1454e");
+    y = big_int_create_from_hex(y, 
+            "ed7f6014f111318ed7f6014f111318ed7f6014f111318ed7f6014f111318ec");
+    curve_point = elligator_1_string_to_point(t, curve);
+    ck_assert_int_eq(big_int_compare(curve_point.x, x), 0);
+    ck_assert_int_eq(big_int_compare(curve_point.y, y), 0);
+
+    // Map curve point back to BigInt
+    r = elligator_1_point_to_string(curve_point, curve);
+    ck_assert_int_eq(big_int_compare(r, t), 0);
+
+    // Negative t
+    t = big_int_create_from_hex(t, "-ABCDEFABCDEFABCDEF142536464757586879");
+    x = big_int_create_from_hex(x, 
+            "47aa4e613a756ced885cb2e9733f8a60d7d1f38d7fcfdcc554fbc3f8b8127ae");
+    y = big_int_create_from_hex(y, 
+            "5e8b1fafa40b3e7b872cbb64f1b6230388d9645d4527e983aa5622baf0a6990");
+    curve_point = elligator_1_string_to_point(t, curve);
+    ck_assert_int_eq(big_int_compare(curve_point.x, x), 0);
+    ck_assert_int_eq(big_int_compare(curve_point.y, y), 0);
+
+    // Map curve point back to BigInt
+    r = elligator_1_point_to_string(curve_point, curve);
+    //ck_assert_int_eq(big_int_compare(r, t), 0);
 
     big_int_destroy(t);
     big_int_destroy(x);
@@ -106,9 +160,9 @@ START_TEST(test_edge_cases)
 
         // t = -1
         init_curve1174(&curve);
-        t = big_int_create(NULL, -1);
-        x = big_int_create(NULL, 0);
-        y = big_int_create(NULL, 1);
+        t = big_int_create(t, -1);
+        x = big_int_create(x, 0);
+        y = big_int_create(y, 1);
 
         //curve_point = elligator_1_string_to_point(t, curve);
                 // Fatal: Non-invertible number given as argument to big_int_inv!
@@ -133,6 +187,38 @@ END_TEST
 //       (that would require copy-pasting part of the implementation into the
 //       test case) but we can for sure test e2e properties. E.g., that points
 //       are actually on the curve or that curve params satisfy those equations.
+START_TEST(test_advanced_curve1174)
+{
+    Curve curve;
+    BigInt *q_mod4, *q_mod4_exp, *four, *c, *temp1, *temp2;
+
+    init_curve1174(&curve);
+
+    // q % 4 = 3
+    q_mod4_exp = big_int_create(NULL, 3);
+
+    q_mod4 = big_int_create(NULL, 0);
+    four = big_int_create(NULL, 4);
+    q_mod4 = big_int_mod(q_mod4, curve.q, four);
+    ck_assert_int_eq(big_int_compare(q_mod4, q_mod4_exp), 0);
+
+    // c * (c - 1) * (c + 1) != 0
+    temp1 = big_int_create(NULL, 0);
+    temp2 = big_int_create(NULL, 0);
+    big_int_sub(temp1, curve.c, big_int_one);
+
+    c = big_int_create(NULL, 0);
+
+
+    big_int_destroy(q_mod4_exp);
+    big_int_destroy(q_mod4);
+    big_int_destroy(four);
+    big_int_destroy(c);
+    big_int_destroy(temp1);
+
+    free_curve(&curve); 
+}
+END_TEST
 
 
 Suite *elligator_suite(void)
@@ -147,6 +233,7 @@ Suite *elligator_suite(void)
     tcase_add_test(tc_basic, test_curve1174);
     tcase_add_test(tc_basic, test_e2e);
     tcase_add_test(tc_basic, test_edge_cases);
+    tcase_add_test(tc_basic, test_advanced_curve1174);
 
     suite_add_tcase(s, tc_basic);
 
