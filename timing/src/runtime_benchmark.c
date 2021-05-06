@@ -740,184 +740,190 @@ void bench_elligator_1_point_to_string(void *bench_args, char *bench_name, char 
                                              path, SETS, REPS, ((int *)bench_args)[1]);
 }
 
-int main(void)
+int main(int argc, char const *argv[])
 {
-    //--- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
 
-    bench_big_int_alloc((void *)bench_big_int_size_256_args, "alloc",
-        LOG_PATH "/bench_big_int_alloc_prep.log");
+#if 0
+    BigInt *test = big_int_create_random(NULL, 8, 31);
+    big_int_print(test);
+    printf("\n");
+    test = big_int_create_from_hex(NULL,
+            "7FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF7");
+    big_int_print(test);
+    printf("\n");
+#endif
 
-    //--- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
+    int bench_type;
+    for (int i = 1; i < argc; ++i) {
+        bench_type = atoi(argv[i]);
 
-    bench_big_int_calloc((void *)bench_big_int_size_256_args, "calloc",
-        LOG_PATH "/bench_big_int_calloc_prep.log");
+        BENCHMARK(bench_type, BENCH_TYPE_ALLOC,
+            bench_big_int_alloc((void *)bench_big_int_size_256_args, "alloc",
+                LOG_PATH "/bench_big_int_alloc_prep.log"));
 
-    //--- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
+        BENCHMARK(bench_type, BENCH_TYPE_CALLOC,
+            bench_big_int_calloc((void *)bench_big_int_size_256_args, "calloc",
+                LOG_PATH "/bench_big_int_calloc_prep.log"));
 
-    bench_big_int_destroy((void *)bench_big_int_size_256_args, "destroy",
-        LOG_PATH "/bench_big_int_destroy_prep.log");
+        BENCHMARK(bench_type, BENCH_TYPE_DESTROY,
+            bench_big_int_destroy((void *)bench_big_int_size_256_args, "destroy",
+                LOG_PATH "/bench_big_int_destroy_prep.log"));
 
-    //--- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
+        BENCHMARK(bench_type, BENCH_TYPE_COPY,
+            bench_big_int_copy((void *)bench_big_int_size_256_args, "copy",
+                LOG_PATH "/bench_big_int_copy_prep.log"));
 
-    bench_big_int_copy((void *)bench_big_int_size_256_args, "copy",
-        LOG_PATH "/bench_big_int_copy_prep.log");
+        BENCHMARK(bench_type, BENCH_TYPE_PRUNE,
+            bench_big_int_prune((void *)bench_big_int_size_256_args, "prune",
+                LOG_PATH "/bench_big_int_prune_prep.log"));
 
-    // --- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
+        BENCHMARK(bench_type, BENCH_TYPE_CREATE,
+            bench_big_int_create((void *)bench_big_int_size_256_args, "create",
+                LOG_PATH "/bench_big_int_create.log"););
 
-    bench_big_int_prune((void *)bench_big_int_size_256_args, "prune",
-        LOG_PATH "/bench_big_int_prune_prep.log");
+        BENCHMARK(bench_type, BENCH_TYPE_CREATE_DBL_CHUNK,
+            bench_big_int_create_from_dbl_chunk((void *)bench_big_int_size_256_args,
+                "create from double chunk",
+                LOG_PATH "/bench_big_int_create_from_dbl_chunk.log"));
 
-    //--- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
+        BENCHMARK(bench_type, BENCH_TYPE_CREATE_HEX,
+            bench_big_int_create_from_hex((void *)bench_big_int_size_256_args,
+                "create from hex", LOG_PATH "/bench_big_int_create_from_hex.log"));
 
-    bench_big_int_create((void *)bench_big_int_size_256_args, "create",
-        LOG_PATH "/bench_big_int_create.log");
+        BENCHMARK(bench_type, BENCH_TYPE_CREATE_RANDOM,
+            bench_big_int_create_random((void *)bench_big_int_size_256_args,
+                "create random", LOG_PATH "/bench_big_int_create_random.log"));
 
-    //--- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
+        BENCHMARK(bench_type, BENCH_TYPE_DUPLICATE,
+            bench_big_int_duplicate((void *)bench_big_int_size_256_args, "duplicate",
+                LOG_PATH "/bench_big_int_duplicate.log"));
 
-    bench_big_int_create_from_dbl_chunk((void *)bench_big_int_size_256_args,
-        "create from double chunk", LOG_PATH "/bench_big_int_create_from_dbl_chunk.log");
+        BENCHMARK(bench_type, BENCH_TYPE_NEG,
+            bench_big_int_neg((void *)bench_big_int_size_256_args, "negate",
+                LOG_PATH "/bench_big_int_negate.log"));
 
-    //--- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
+        BENCHMARK(bench_type, BENCH_TYPE_ABS,
+            bench_big_int_abs((void *)bench_big_int_size_256_args, "abs",
+                LOG_PATH "/bench_big_int_abs.log"));
 
-    bench_big_int_create_from_hex((void *)bench_big_int_size_256_args,
-        "create from hex", LOG_PATH "/bench_big_int_create_from_hex.log");
+        BENCHMARK(bench_type, BENCH_TYPE_ADD,
+            bench_big_int_add((void *)bench_big_int_size_256_args,
+                "add", LOG_PATH "/bench_big_int_add.log"));
 
-    //--- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
+        BENCHMARK(bench_type, BENCH_TYPE_ADD_CURVE,
+            bench_big_int_add_mod((void *)bench_big_int_size_256_curve_mod_args,
+                "add mod (curve)", LOG_PATH "/bench_big_int_add_mod_curve.log"));
 
-    bench_big_int_create_random((void *)bench_big_int_size_256_args,
-        "create random", LOG_PATH "/bench_big_int_create_random.log");
+        BENCHMARK(bench_type, BENCH_TYPE_ADD_RANDOM,
+            bench_big_int_add_mod((void *)bench_big_int_size_256_random_mod_args,
+                "add mod (random)", LOG_PATH "/bench_big_int_add_mod_random.log"));
 
-    //--- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
+        BENCHMARK(bench_type, BENCH_TYPE_SUB,
+            bench_big_int_sub((void *)bench_big_int_size_256_args,
+                "sub", LOG_PATH "/bench_big_int_sub.log"));
 
-    bench_big_int_duplicate((void *)bench_big_int_size_256_args, "duplicate",
-        LOG_PATH "/bench_big_int_duplicate.log");
+        BENCHMARK(bench_type, BENCH_TYPE_SUB_CURVE,
+            bench_big_int_sub_mod((void *)bench_big_int_size_256_curve_mod_args,
+                "sub mod (curve)", LOG_PATH "/bench_big_int_sub_mod_curve.log"));
 
-    //--- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
+        BENCHMARK(bench_type, BENCH_TYPE_SUB_RANDOM,
+            bench_big_int_sub_mod((void *)bench_big_int_size_256_random_mod_args,
+                "sub mod (random)", LOG_PATH "/bench_big_int_sub_mod_random.log"));
 
-    bench_big_int_neg((void *)bench_big_int_size_256_args, "negate",
-        LOG_PATH "/bench_big_int_negate.log");
+        BENCHMARK(bench_type, BENCH_TYPE_MUL,
+            bench_big_int_mul((void *)bench_big_int_size_256_args, "mul",
+                LOG_PATH "/bench_big_int_mul.log"));
 
-    //--- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
+        BENCHMARK(bench_type, BENCH_TYPE_MUL_CURVE,
+            bench_big_int_mul_mod((void *)bench_big_int_size_256_curve_mod_args,
+                "mul mod (curve)", LOG_PATH "/bench_big_int_mul_mod_curve.log"));
 
-    bench_big_int_abs((void *)bench_big_int_size_256_args, "abs",
-        LOG_PATH "/bench_big_int_abs.log");
+        BENCHMARK(bench_type, BENCH_TYPE_MUL_RANDOM,
+            bench_big_int_mul_mod((void *)bench_big_int_size_256_random_mod_args,
+                "mul mod (random)", LOG_PATH "/bench_big_int_mul_mod_random.log"));
 
-    //--- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
+        BENCHMARK(bench_type, BENCH_TYPE_DIVREM,
+            bench_big_int_div_rem((void *)bench_big_int_size_256_random_mod_args,
+                "divrem", LOG_PATH "/bench_big_int_div_rem_random.log"));
 
-    bench_big_int_add((void *)bench_big_int_size_256_args,
-        "add", LOG_PATH "/bench_big_int_add.log");
-    bench_big_int_add_mod((void *)bench_big_int_size_256_random_mod_args,
-        "add mod (random)", LOG_PATH "/bench_big_int_add_mod_random.log");
-    bench_big_int_add_mod((void *)bench_big_int_size_256_curve_mod_args,
-        "add mod (curve)", LOG_PATH "/bench_big_int_add_mod_curve.log");
+        BENCHMARK(bench_type, BENCH_TYPE_DIVREM_CURVE,
+            bench_big_int_div_rem((void *)bench_big_int_size_256_curve_mod_args,
+                "divrem (curve)", LOG_PATH "/bench_big_int_div_rem_curve.log"));
 
-    //--- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
+        BENCHMARK(bench_type, BENCH_TYPE_DIVREM_RANDOM,
+            bench_big_int_div_rem((void *)bench_big_int_size_256_random_mod_args,
+                "divrem (random)", LOG_PATH "/bench_big_int_div_rem_random.log"));
 
-    bench_big_int_sub((void *)bench_big_int_size_256_args,
-        "sub", LOG_PATH "/bench_big_int_sub.log");
-    bench_big_int_sub_mod((void *)bench_big_int_size_256_random_mod_args,
-        "sub mod (random)", LOG_PATH "/bench_big_int_sub_mod_random.log");
-    bench_big_int_sub_mod((void *)bench_big_int_size_256_curve_mod_args,
-        "sub mod (curve)", LOG_PATH "/bench_big_int_sub_mod_curve.log");
+        BENCHMARK(bench_type, BENCH_TYPE_DIV,
+            bench_big_int_div((void *)bench_big_int_size_256_args, "div",
+                LOG_PATH "/bench_big_int_div.log"));
 
-    //--- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
+        BENCHMARK(bench_type, BENCH_TYPE_DIV_CURVE,
+            bench_big_int_div((void *)bench_big_int_size_256_curve_mod_args,
+                "div (curve)", LOG_PATH "/bench_big_int_div_curve.log"));
 
-    bench_big_int_mul((void *)bench_big_int_size_256_args, "mul",
-        LOG_PATH "/bench_big_int_mul.log");
-    bench_big_int_mul_mod((void *)bench_big_int_size_256_random_mod_args,
-        "mul mod (random)", LOG_PATH "/bench_big_int_mul_mod_random.log");
-    bench_big_int_mul_mod((void *)bench_big_int_size_256_curve_mod_args,
-        "mul mod (curve)", LOG_PATH "/bench_big_int_mul_mod_curve.log");
+        BENCHMARK(bench_type, BENCH_TYPE_DIV_RANDOM,
+            bench_big_int_div((void *)bench_big_int_size_256_random_mod_args,
+                "div (random)", LOG_PATH "/bench_big_int_div_random.log"));
 
-    //--- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
+        BENCHMARK(bench_type, BENCH_TYPE_SLL,
+            bench_big_int_sll_small((void *)bench_big_int_size_256_args, "sll",
+                LOG_PATH "/bench_big_int_sll_small.log"));
 
-    bench_big_int_div_rem((void *)bench_big_int_size_256_random_mod_args,
-        "divrem", LOG_PATH "/bench_big_int_div_rem_random.log");
-    bench_big_int_div_rem((void *)bench_big_int_size_256_random_mod_args,
-        "divrem (random)", LOG_PATH "/bench_big_int_div_rem_random.log");
-    bench_big_int_div_rem((void *)bench_big_int_size_256_curve_mod_args,
-        "divrem (curve)", LOG_PATH "/bench_big_int_div_rem_curve.log");
+        BENCHMARK(bench_type, BENCH_TYPE_SRL,
+            bench_big_int_srl_small((void *)bench_big_int_size_256_args, "srl",
+                LOG_PATH "/bench_big_int_srl_small.log"));
 
-    //--- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
+        BENCHMARK(bench_type, BENCH_TYPE_MOD_CURVE,
+            bench_big_int_mod((void *)bench_big_int_size_256_curve_mod_args,
+            "mod (curve)", LOG_PATH "/bench_big_int_mod_curve.log"););
 
-    bench_big_int_div((void *)bench_big_int_size_256_args, "div",
-        LOG_PATH "/bench_big_int_div.log");
-    bench_big_int_div((void *)bench_big_int_size_256_random_mod_args,
-        "div (random)", LOG_PATH "/bench_big_int_div_random.log");
-    bench_big_int_div((void *)bench_big_int_size_256_curve_mod_args,
-        "div (curve)", LOG_PATH "/bench_big_int_div_curve.log");
+        BENCHMARK(bench_type, BENCH_TYPE_MOD_RANDOM,
+            bench_big_int_mod((void *)bench_big_int_size_256_random_mod_args,
+            "mod (random)", LOG_PATH "/bench_big_int_mod_random.log"));
 
-    //--- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
+        BENCHMARK(bench_type, BENCH_TYPE_INV,
+            bench_big_int_inv((void *)bench_big_int_size_256_curve_mod_args, "inv",
+                LOG_PATH "/bench_big_int_inv.log"));
 
-    bench_big_int_sll_small((void *)bench_big_int_size_256_args, "sll",
-        LOG_PATH "/bench_big_int_sll_small.log");
+        BENCHMARK(bench_type, BENCH_TYPE_POW_CURVE,
+            bench_big_int_pow((void *)bench_big_int_size_256_curve_mod_args,
+                "pow (curve)", LOG_PATH "/bench_big_int_pow_curve.log"));
 
-    //--- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
+        BENCHMARK(bench_type, BENCH_TYPE_POW_RANDOM,
+            bench_big_int_pow((void *)bench_big_int_size_256_random_mod_args,
+                "pow (random)", LOG_PATH "/bench_big_int_pow_random.log"));
 
-    bench_big_int_srl_small((void *)bench_big_int_size_256_args, "srl",
-        LOG_PATH "/bench_big_int_srl_small.log");
+        BENCHMARK(bench_type, BENCH_TYPE_IS_ZERO,
+            bench_big_int_is_zero((void *)bench_big_int_size_256_args,
+            "check if zero", LOG_PATH "/bench_big_int_is_zero.log"));
 
-    //--- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
+        BENCHMARK(bench_type, BENCH_TYPE_IS_ODD,
+            bench_big_int_is_odd((void *)bench_big_int_size_256_args,
+            "check if odd", LOG_PATH "/bench_big_int_is_odd.log"));
 
-    bench_big_int_mod((void *)bench_big_int_size_256_random_mod_args, "mod (random)",
-        LOG_PATH "/bench_big_int_mod_random.log");
-    bench_big_int_mod((void *)bench_big_int_size_256_curve_mod_args, "mod (curve)",
-        LOG_PATH "/bench_big_int_mod_curve.log");
+        BENCHMARK(bench_type, BENCH_TYPE_COMPARE,
+            bench_big_int_compare((void *)bench_big_int_size_256_args, "compare",
+                LOG_PATH "/bench_big_int_compare.log"));
 
-    //--- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
+        BENCHMARK(bench_type, BENCH_TYPE_EGCD,
+            bench_big_int_egcd((void *)bench_big_int_size_256_args, "eGCD",
+                LOG_PATH "/bench_big_int_egcd.log"));
 
-    bench_big_int_inv((void *)bench_big_int_size_256_curve_mod_args, "inv",
-        LOG_PATH "/bench_big_int_inv.log");
+        BENCHMARK(bench_type, BENCH_TYPE_CHI,
+            bench_big_int_chi((void *)bench_big_int_size_256_curve_mod_args, "chi",
+                LOG_PATH "/bench_big_int_chi_curve.log"));
 
-    //--- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
+        BENCHMARK(bench_type, BENCH_TYPE_ELLIGATOR1_STR2PNT,
+            bench_elligator_1_string_to_point((void *)bench_big_int_size_256_args,
+                "Elligator str2pnt",
+                LOG_PATH "/bench_elligator_1_string_to_point.log"));
 
-    bench_big_int_pow((void *)bench_big_int_size_256_random_mod_args,
-        "pow (random)", LOG_PATH "/bench_big_int_pow_random.log");
-    bench_big_int_pow((void *)bench_big_int_size_256_curve_mod_args,
-        "pow (curve)", LOG_PATH "/bench_big_int_pow_curve.log");
-
-    //--- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
-
-    bench_big_int_is_zero((void *)bench_big_int_size_256_args, "check if zero",
-        LOG_PATH "/bench_big_int_is_zero.log");
-
-    //--- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
-
-    bench_big_int_is_odd((void *)bench_big_int_size_256_args, "check if odd",
-        LOG_PATH "/bench_big_int_is_odd.log");
-
-    //--- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
-
-    bench_big_int_compare((void *)bench_big_int_size_256_args, "compare",
-        LOG_PATH "/bench_big_int_compare.log");
-
-    //--- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
-
-    bench_big_int_egcd((void *)bench_big_int_size_256_args, "eGCD",
-        LOG_PATH "/bench_big_int_egcd.log");
-
-    //--- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
-
-    bench_big_int_chi((void *)bench_big_int_size_256_curve_mod_args, "chi",
-        LOG_PATH "/bench_big_int_chi_curve.log");
-
-    //--- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
-
-    // TODO: Outsource elligator benchmarks to their own file.
-    bench_elligator_1_string_to_point((void *)bench_big_int_size_256_args,
-        "Elligator str2pnt", LOG_PATH "/bench_elligator_1_string_to_point.log");
-
-    //--- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
-
-    bench_elligator_1_point_to_string((void *)bench_big_int_size_256_args,
-        "Elligator pnt2str", LOG_PATH "/bench_elligator_1_point_to_string.log");
-
-    // BigInt *test = big_int_create_random(NULL, 8, 31);
-    // big_int_print(test);
-    // printf("\n");
-    // test = big_int_create_from_hex(NULL, "7FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF7");
-    // big_int_print(test);
-    // printf("\n");
+        BENCHMARK(bench_type, BENCH_TYPE_ELLIGATOR1_PNT2STR,
+            bench_elligator_1_point_to_string((void *)bench_big_int_size_256_args,
+                "Elligator pnt2str",
+                LOG_PATH "/bench_elligator_1_point_to_string.log"));
+    }
 
     return EXIT_SUCCESS;
 }

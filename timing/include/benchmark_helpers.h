@@ -19,4 +19,11 @@ void benchmark_runner_always_set_up_and_clean(BenchmarkClosure bench_closure, ch
 
 void printf_bench_header(const char *fmt, ...);
 
+#define BENCHMARK(arg, type, bench_fn)                  \
+    do {                                                \
+        if ((arg) == (type) || (arg) == -1) {           \
+            bench_fn;                                   \
+        }                                               \
+    } while(0);
+
 #endif // BENCHMARK_H_

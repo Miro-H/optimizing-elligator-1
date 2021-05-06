@@ -6,6 +6,10 @@ SCRIPTS_DIR = scripts
 BIN_FILES   = $(filter-out $(wildcard $(BDIR)/.*), $(wildcard $(BDIR)/*))
 LOG_DIR 	= logs/
 
+ifeq ($(BENCHMARKS),)
+	BENCHMARKS = -1
+endif
+
 # src directory of the benchmarked code
 SRC_BENCHED		= ../src
 ODIR_BENCHED 	= $(SRC_BENCHED)/obj
@@ -37,10 +41,10 @@ DEPS = $(wildcard $(IDIR)/*.h)
 LIBS =
 
 # Main target, building all benchmarks
-all: compile-bigint-benchmark
+all: compile-runtime-benchmark
 
 .PHONY: run-all
-run-all: run-bigint-benchmark
+run-all: run-runtime-benchmark
 
 .PHONY: all-benched
 all-benched:
@@ -60,14 +64,14 @@ OBJ 	= $(patsubst %,$(ODIR)/%,$(_OBJ))
 _OBJ_BENCHED 	= bigint.o elligator.o
 OBJ_BENCHED		= $(patsubst %,$(ODIR_BENCHED)/%,$(_OBJ_BENCHED))
 
-.PHONY: compile-bigint-benchmark
-compile-bigint-benchmark: all-benched bigint-benchmark
+.PHONY: compile-runtime-benchmark
+compile-runtime-benchmark: all-benched runtime-benchmark
 
-.PHONY: run-bigint-benchmark
-run-bigint-benchmark: compile-bigint-benchmark
-	./$(BDIR)/bigint-benchmark
+.PHONY: run-runtime-benchmark
+run-runtime-benchmark: compile-runtime-benchmark
+	./$(BDIR)/runtime-benchmark $(BENCHMARKS)
 
-bigint-benchmark: $(OBJ_BENCHED) $(OBJ)
+runtime-benchmark: $(OBJ_BENCHED) $(OBJ)
 	$(CC) -o $(BDIR)/$@ $^ $(CFLAGS) $(LIBS)
 
 .PHONY: plots
