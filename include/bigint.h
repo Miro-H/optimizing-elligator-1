@@ -4,6 +4,9 @@
 #include <inttypes.h>
 #include <string.h>
 
+// Whether to count function calls
+#define COLLECTSTATS ((uint64_t) 0)
+
 // To work with 4 chunk integers (256 bits) we internally need 9 chunk integers.
 // The reason is that intermediate products can be 8 chunks and division performs
 // a scaling that may require an additional chunk.
@@ -72,6 +75,46 @@ __attribute__((unused)) static BigInt *big_int_min_one = &((BigInt) {
     .chunks = &chunk_one,
 });
 
+
+/*
+* Struct that tracks usage of BigInt functions
+*/
+typedef struct BigIntStats
+{
+    uint64_t big_int_alloc;          
+    uint64_t big_int_calloc;      
+    uint64_t big_int_prune_leading_zeros;         
+    uint64_t big_int_create_from_dbl_chunk;   
+    uint64_t big_int_create;          
+    uint64_t big_int_create_from_hex;      
+    uint64_t big_int_create_random;            
+    uint64_t big_int_destroy;      
+    uint64_t big_int_copy;         
+    uint64_t big_int_duplicate;   
+    uint64_t big_int_neg;          
+    uint64_t big_int_abs;      
+    uint64_t big_int_add;         
+    uint64_t big_int_sub;   
+    uint64_t big_int_mul;          
+    uint64_t big_int_div;      
+    uint64_t big_int_div_rem;         
+    uint64_t big_int_sll_small;   
+    uint64_t big_int_srl_small;          
+    uint64_t big_int_mod;      
+    uint64_t big_int_add_mod;         
+    uint64_t big_int_sub_mod;  
+    uint64_t big_int_mul_mod;          
+    uint64_t big_int_div_mod;      
+    uint64_t big_int_inv;         
+    uint64_t big_int_compare; 
+    uint64_t big_int_is_zero;      
+    uint64_t big_int_is_odd;         
+    uint64_t big_int_pow;  
+    uint64_t big_int_egcd;         
+    uint64_t big_int_chi;        
+} BigIntStats;
+
+BigIntStats big_int_stats;
 
 //Functions only exposed for Benchmarks
 BigInt *big_int_alloc(uint64_t size);

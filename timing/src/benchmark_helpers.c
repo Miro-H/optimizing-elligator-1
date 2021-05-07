@@ -15,6 +15,7 @@
 #include <assert.h>
 #include <stdarg.h>
 #include <stdint.h>
+#include <string.h>
 
 // Include header files
 #include "benchmark_helpers.h"
@@ -160,22 +161,29 @@ void benchmark_runner_always_set_up_and_clean(BenchmarkClosure bench_closure, ch
                                               char *log_fname, uint64_t num_sets, uint64_t num_reps, uint64_t num_internal_reps)
 {
     FILE *out_fp;
+    //FILE *out_fp_stats;
+    
     uint64_t num_reps_warmup, cycles, start;
     uint8_t do_write_to_stdout;
     int64_t i, j;
-
+    
     printf_bench_header(bench_name);
-
     do_write_to_stdout = !log_fname;
     if (do_write_to_stdout)
         out_fp = stdout;
     else
+    {
         out_fp = fopen(log_fname, "w+");
+    }
 
     assert(out_fp);
+    
 
     fprintf(out_fp, "%s\n", bench_name);
     fprintf(out_fp, "Measurement, Runtime [cycles]\n");
+
+    //fprintf(out_fp_stats, "%s\n", bench_name);
+    //fprintf(out_fp_stats, "Measurement, Function calls [cycles]\n");
 
     num_reps_warmup = bench_warmup_with_set_up_clean(bench_closure);
     if (!num_reps)

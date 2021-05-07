@@ -43,6 +43,10 @@ uint8_t do_seed_rand = 1;
  */
 BigInt *big_int_alloc(uint64_t size)
 {
+    #ifdef COLLECTSTATS
+        big_int_stats.big_int_alloc++;
+    #endif
+    
     BigInt *a;
 
     a = (BigInt *) malloc(sizeof(BigInt));
@@ -64,6 +68,10 @@ BigInt *big_int_alloc(uint64_t size)
  */
 BigInt *big_int_calloc(uint64_t size)
 {
+    #ifdef COLLECTSTATS
+        big_int_stats.big_int_calloc++;
+    #endif
+
     BigInt *a;
 
     a = (BigInt *) calloc(1, sizeof(BigInt));
@@ -101,6 +109,10 @@ BigInt *big_int_get_res(BigInt *r, BigInt *a)
  */
 BigInt *big_int_prune_leading_zeros(BigInt *r, BigInt *a)
 {
+    #ifdef COLLECTSTATS
+        big_int_stats.big_int_prune_leading_zeros++;
+    #endif
+    
     r = big_int_get_res(r, a);
 
     // Find actual size of r (at least 1)
@@ -120,6 +132,10 @@ BigInt *big_int_prune_leading_zeros(BigInt *r, BigInt *a)
  */
 BigInt *big_int_create(BigInt *r, int64_t x)
 {
+    #ifdef COLLECTSTATS
+        big_int_stats.big_int_create++;
+    #endif
+
     if (x > BIGINT_RADIX_SIGNED || x == INT64_MIN || x < -BIGINT_RADIX_SIGNED)
         FATAL("Integer %" PRId64 " does not fit into a single chunk of %lu bytes\n",
             x, sizeof(chunk_size_t));
@@ -143,6 +159,10 @@ BigInt *big_int_create(BigInt *r, int64_t x)
 BigInt *big_int_create_from_dbl_chunk(BigInt *r, dbl_chunk_size_t chunk,
     uint8_t sign)
 {
+    #ifdef COLLECTSTATS
+        big_int_stats.big_int_create_from_dbl_chunk++;
+    #endif
+
     if (!r)
         r = big_int_alloc(BIGINT_FIXED_SIZE);
 
@@ -167,6 +187,10 @@ BigInt *big_int_create_from_dbl_chunk(BigInt *r, dbl_chunk_size_t chunk,
  */
 BigInt *big_int_create_from_hex(BigInt *r, char* s)
 {
+    #ifdef COLLECTSTATS
+        big_int_stats.big_int_create_from_hex++;
+    #endif
+
     size_t s_len;
     int64_t chunk_size, i;
     // buf needs space for zero byte and sign too
@@ -230,6 +254,10 @@ BigInt *big_int_create_from_hex(BigInt *r, char* s)
 BigInt *big_int_create_random(BigInt *r, int64_t nr_of_chunks,
     int64_t nr_of_non_zero_bits_in_last_chunk)
 {
+    #ifdef COLLECTSTATS
+        big_int_stats.big_int_create_random++;
+    #endif
+
     int64_t i, offset;
 
     // NOTE: For arbitrary sized BigInts, this would allocate at least nr_of_chunks
@@ -267,6 +295,10 @@ BigInt *big_int_create_random(BigInt *r, int64_t nr_of_chunks,
  */
 void big_int_destroy(BigInt *a)
 {
+    #ifdef COLLECTSTATS
+        big_int_stats.big_int_destroy++;
+    #endif
+
     if (a->alloc_size > 0)
         free(a->chunks);
     free(a);
@@ -278,6 +310,10 @@ void big_int_destroy(BigInt *a)
  */
 BigInt *big_int_copy(BigInt *a, BigInt *b)
 {
+    #ifdef COLLECTSTATS
+        big_int_stats.big_int_copy++;
+    #endif
+
     // NOTE: For arbitrary sizes, we'd need a realloc here
     if (a->alloc_size < b->size)
         FATAL("Cannot copy larger BigInt into smaller one!\n");
@@ -295,6 +331,10 @@ BigInt *big_int_copy(BigInt *a, BigInt *b)
  */
 BigInt *big_int_duplicate(BigInt *a)
 {
+   #ifdef COLLECTSTATS
+        big_int_stats.big_int_duplicate++;
+    #endif
+
     BigInt *b;
 
     b = big_int_alloc(a->alloc_size);
@@ -323,6 +363,10 @@ void big_int_print(BigInt *a)
  */
 BigInt *big_int_neg(BigInt *r, BigInt *a)
 {
+    #ifdef COLLECTSTATS
+        big_int_stats.big_int_neg++;
+    #endif
+
     r = big_int_get_res(r, a);
     r->sign = !r->sign;
 
@@ -336,6 +380,10 @@ BigInt *big_int_neg(BigInt *r, BigInt *a)
  */
 BigInt *big_int_abs(BigInt *r, BigInt *a)
 {
+    #ifdef COLLECTSTATS
+        big_int_stats.big_int_abs++;
+    #endif
+
     r = big_int_get_res(r, a);
     r->sign = 0;
 
@@ -349,6 +397,10 @@ BigInt *big_int_abs(BigInt *r, BigInt *a)
  */
 BigInt *big_int_add(BigInt *r, BigInt *a, BigInt *b)
 {
+    #ifdef COLLECTSTATS
+        big_int_stats.big_int_add++;
+    #endif
+
     BigInt *aa, *bb, *neg;
     uint8_t carry;
     int64_t i;
@@ -440,6 +492,10 @@ BigInt *big_int_add(BigInt *r, BigInt *a, BigInt *b)
  */
 BigInt *big_int_sub(BigInt *r, BigInt *a, BigInt *b)
 {
+    #ifdef COLLECTSTATS
+        big_int_stats.big_int_sub++;
+    #endif
+
     BigInt *b_neg, *a_abs, *b_abs, *aa_abs, *bb_abs;
     int borrow;
     int64_t i;
@@ -536,6 +592,10 @@ BigInt *big_int_sub(BigInt *r, BigInt *a, BigInt *b)
  */
 BigInt *big_int_mul(BigInt *r, BigInt *a, BigInt *b)
 {
+    #ifdef COLLECTSTATS
+        big_int_stats.big_int_mul++;
+    #endif
+
     int64_t i, j;
     dbl_chunk_size_t carry;
     BigInt *r_loc;
@@ -592,6 +652,10 @@ BigInt *big_int_mul(BigInt *r, BigInt *a, BigInt *b)
  */
 BigInt *big_int_div_rem(BigInt *q, BigInt *r, BigInt *a, BigInt *b)
 {
+    #ifdef COLLECTSTATS
+        big_int_stats.big_int_div_rem++;
+    #endif
+
     dbl_chunk_size_t a_tmp, b_tmp, tmp, q_c, r_c;
     uint8_t q_sign;
     uint64_t factor;
@@ -806,6 +870,10 @@ BigInt *big_int_div_rem(BigInt *q, BigInt *r, BigInt *a, BigInt *b)
  */
 BigInt *big_int_div(BigInt *q, BigInt *a, BigInt *b)
 {
+    #ifdef COLLECTSTATS
+        big_int_stats.big_int_div++;
+    #endif
+
     return big_int_div_rem(q, NULL, a, b);
 }
 
@@ -815,6 +883,10 @@ BigInt *big_int_div(BigInt *q, BigInt *a, BigInt *b)
  */
 BigInt *big_int_sll_small(BigInt *r, BigInt *a, uint64_t shift)
 {
+    #ifdef COLLECTSTATS
+        big_int_stats.big_int_sll_small++;
+    #endif
+
     BigInt *r_loc;
 
     dbl_chunk_size_t carry;
@@ -877,6 +949,10 @@ BigInt *big_int_sll_small(BigInt *r, BigInt *a, uint64_t shift)
  */
 BigInt *big_int_srl_small(BigInt *r, BigInt *a, uint64_t shift)
 {
+    #ifdef COLLECTSTATS
+        big_int_stats.big_int_srl_small++;
+    #endif
+
     BigInt *last_bit_bigint;
     dbl_chunk_size_t carry, last_bit;
     int64_t i, a_idx;
@@ -937,6 +1013,10 @@ BigInt *big_int_srl_small(BigInt *r, BigInt *a, uint64_t shift)
  */
 BigInt *big_int_mod(BigInt *r, BigInt *a, BigInt *q)
 {
+    #ifdef COLLECTSTATS
+        big_int_stats.big_int_mod++;
+    #endif
+
     BigInt *tmp;
 
     // NOTE: for arbitrary sized BigInts, r would only need to be of size q->size
@@ -964,6 +1044,10 @@ BigInt *big_int_mod(BigInt *r, BigInt *a, BigInt *q)
  */
 BigInt *big_int_add_mod(BigInt *r, BigInt *a, BigInt *b, BigInt *q)
 {
+    #ifdef COLLECTSTATS
+        big_int_stats.big_int_add_mod++;
+    #endif
+
     BigInt *r_loc;
 
     r_loc = big_int_add(NULL, a, b);
@@ -980,6 +1064,10 @@ BigInt *big_int_add_mod(BigInt *r, BigInt *a, BigInt *b, BigInt *q)
  */
 BigInt *big_int_sub_mod(BigInt *r, BigInt *a, BigInt *b, BigInt *q)
 {
+    #ifdef COLLECTSTATS
+        big_int_stats.big_int_sub_mod++;
+    #endif
+
     BigInt *r_loc;
 
     r_loc = big_int_sub(NULL, a, b);
@@ -996,6 +1084,10 @@ BigInt *big_int_sub_mod(BigInt *r, BigInt *a, BigInt *b, BigInt *q)
  */
 BigInt *big_int_mul_mod(BigInt *r, BigInt *a, BigInt *b, BigInt *q)
 {
+    #ifdef COLLECTSTATS
+        big_int_stats.big_int_mul_mod++;
+    #endif
+
     BigInt *r_loc;
 
     r_loc = big_int_mul(NULL, a, b);
@@ -1012,6 +1104,10 @@ BigInt *big_int_mul_mod(BigInt *r, BigInt *a, BigInt *b, BigInt *q)
  */
 BigInt *big_int_div_mod(BigInt *r, BigInt *a, BigInt *b, BigInt *q)
 {
+    #ifdef COLLECTSTATS
+        big_int_stats.big_int_div_mod++;
+    #endif
+
     BigInt *r_loc;
 
     // Write to local copy to be save against pointer reuse
@@ -1029,6 +1125,10 @@ BigInt *big_int_div_mod(BigInt *r, BigInt *a, BigInt *b, BigInt *q)
  */
 BigInt *big_int_inv(BigInt *r, BigInt *a, BigInt *q)
 {
+    #ifdef COLLECTSTATS
+        big_int_stats.big_int_inv++;
+    #endif
+
     EgcdResult res;
 
     if (!r)
@@ -1059,6 +1159,10 @@ BigInt *big_int_inv(BigInt *r, BigInt *a, BigInt *q)
  */
 BigInt *big_int_pow(BigInt *r, BigInt *b, BigInt *e, BigInt *q)
 {
+    #ifdef COLLECTSTATS
+        big_int_stats.big_int_pow++;
+    #endif
+
     BigInt *b_loc, *e_loc, *r_loc;
 
     // NOTE: for arbitrary sized BigInts, we'd need to figure out some good size
@@ -1095,6 +1199,10 @@ BigInt *big_int_pow(BigInt *r, BigInt *b, BigInt *e, BigInt *q)
  */
 int8_t big_int_is_zero(BigInt *a)
 {
+    #ifdef COLLECTSTATS
+        big_int_stats.big_int_is_zero++;
+    #endif
+
     return a->size == 1 && a->chunks[0] == 0;
 }
 
@@ -1104,6 +1212,10 @@ int8_t big_int_is_zero(BigInt *a)
  */
 int8_t big_int_is_odd(BigInt *a)
 {
+    #ifdef COLLECTSTATS
+        big_int_stats.big_int_is_odd++;
+    #endif
+
     return (a->size > 0) && (a->chunks[0] & 1);
 }
 
@@ -1114,6 +1226,10 @@ int8_t big_int_is_odd(BigInt *a)
  */
 int8_t big_int_compare(BigInt *a, BigInt *b)
 {
+    #ifdef COLLECTSTATS
+        big_int_stats.big_int_compare++;
+    #endif
+
     if (a->size == b->size) {
         if (big_int_is_zero(b)) {
             if (big_int_is_zero(a)) {
@@ -1224,6 +1340,10 @@ EgcdResult big_int_egcd(BigInt *a, BigInt *b)
  */
 BigInt *big_int_chi(BigInt *r, BigInt *t, BigInt *q)
 {
+    #ifdef COLLECTSTATS
+        big_int_stats.big_int_chi++;
+    #endif
+
     BigInt *e;
 
     // Check assumption that q is odd (otherwise our chi function might need to
@@ -1248,4 +1368,43 @@ BigInt *big_int_chi(BigInt *r, BigInt *t, BigInt *q)
         return r;
     return big_int_create(r, -1);
 
+}
+
+
+void reset_stats()
+{
+    big_int_stats.big_int_alloc = 0;          
+    big_int_stats.big_int_calloc = 0;      
+    big_int_stats.big_int_prune_leading_zeros = 0;         
+    big_int_stats.big_int_create_from_dbl_chunk = 0;   
+    big_int_stats.big_int_create = 0;          
+    big_int_stats.big_int_create_from_hex = 0;      
+    big_int_stats.big_int_create_random = 0;         
+    big_int_stats.big_int_create_random = 0;   
+    big_int_stats.big_int_create = 0;          
+    big_int_stats.big_int_destroy = 0;      
+    big_int_stats.big_int_copy = 0;         
+    big_int_stats.big_int_duplicate = 0;   
+    big_int_stats.big_int_neg = 0;          
+    big_int_stats.big_int_abs = 0;      
+    big_int_stats.big_int_add = 0;         
+    big_int_stats.big_int_sub = 0;   
+    big_int_stats.big_int_mul = 0;          
+    big_int_stats.big_int_div = 0;      
+    big_int_stats.big_int_div_rem = 0;         
+    big_int_stats.big_int_sll_small = 0;   
+    big_int_stats.big_int_srl_small = 0;          
+    big_int_stats.big_int_mod = 0;      
+    big_int_stats.big_int_add_mod = 0;         
+    big_int_stats.big_int_sub_mod = 0;  
+    big_int_stats.big_int_mul_mod = 0;          
+    big_int_stats.big_int_div_mod = 0;      
+    big_int_stats.big_int_inv = 0;         
+    big_int_stats.big_int_compare = 0; 
+    big_int_stats.big_int_mul_mod = 0;          
+    big_int_stats.big_int_is_zero = 0;      
+    big_int_stats.big_int_is_odd = 0;         
+    big_int_stats.big_int_pow = 0;  
+    big_int_stats.big_int_egcd = 0;         
+    big_int_stats.big_int_chi = 0;        
 }

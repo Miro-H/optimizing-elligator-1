@@ -30,7 +30,7 @@ ifeq ($(SETS),)
 endif
 
 ifeq ($(REPS),)
-	REPS = 1000
+	REPS = 10
 endif
 
 CFLAGS += -DSETS=$(SETS) -DREPS=$(REPS)
