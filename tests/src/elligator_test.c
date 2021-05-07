@@ -79,8 +79,8 @@ START_TEST(test_e2e)
     y = big_int_create_from_hex(y,
             "5BBE4619CEA4729F94082B429693AC4B565F94CDA5D6D875689DE765C19A461");
     curve_point = elligator_1_string_to_point(t, curve);
-    //printf("x: "); big_int_print(curve_point.x); printf("\n");
-    //printf("y: "); big_int_print(curve_point.y); printf("\n");
+    // DEBUG_BIGINT(curve_point.x, "x: ");
+    // DEBUG_BIGINT(curve_point.y, "y: ");
     ck_assert_int_eq(big_int_compare(curve_point.x, x), 0);
     ck_assert_int_eq(big_int_compare(curve_point.y, y), 0);
 
@@ -114,19 +114,7 @@ START_TEST(test_e2e)
     r = elligator_1_point_to_string(curve_point, curve);
     ck_assert_int_eq(big_int_compare(r, t), 0);
 
-    // Negative t
-    t = big_int_create_from_hex(t, "-ABCDEFABCDEFABCDEF142536464757586879");
-    x = big_int_create_from_hex(x,
-            "47AA4E613A756CED885CB2E9733F8A60D7D1F38D7FCFDCC554FBC3F8B8127AE");
-    y = big_int_create_from_hex(y,
-            "5E8B1FAFA40B3E7B872CBB64F1B6230388D9645D4527E983AA5622BAF0A6990");
-    curve_point = elligator_1_string_to_point(t, curve);
-    ck_assert_int_eq(big_int_compare(curve_point.x, x), 0);
-    ck_assert_int_eq(big_int_compare(curve_point.y, y), 0);
-
-    // Map curve point back to BigInt
-    r = elligator_1_point_to_string(curve_point, curve);
-    //ck_assert_int_eq(big_int_compare(r, t), 0);
+    // Negative t are no valid input for Elligator 1
 
     big_int_destroy(t);
     big_int_destroy(x);
@@ -138,7 +126,6 @@ START_TEST(test_e2e)
 }
 END_TEST
 
-// TODO: Check mapping edge cases, e.g. t = 1, -1 (cf. paper)
 START_TEST(test_edge_cases)
 {
         Curve curve;
@@ -158,19 +145,7 @@ START_TEST(test_edge_cases)
         r = elligator_1_point_to_string(curve_point, curve);
         ck_assert_int_eq(big_int_compare(r, t), 0);
 
-        // t = -1
-        init_curve1174(&curve);
-        t = big_int_create(t, -1);
-        x = big_int_create(x, 0);
-        y = big_int_create(y, 1);
-
-        //curve_point = elligator_1_string_to_point(t, curve);
-                // Fatal: Non-invertible number given as argument to big_int_inv!
-        //ck_assert_int_eq(big_int_compare(curve_point.x, x), 0);
-        //ck_assert_int_eq(big_int_compare(curve_point.y, y), 0);
-
-        //r = elligator_1_point_to_string(curve_point, curve);
-        //ck_assert_int_eq(big_int_compare(r, t), 0);
+        // t = -1 is not a valid input for the Elligator mapping
 
         big_int_destroy(t);
         big_int_destroy(x);

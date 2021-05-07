@@ -63,9 +63,17 @@ void free_curve_point(CurvePoint *point)
     big_int_destroy(point->y);
 }
 
+/**
+ * \brief Maps a random string (interpreted as big integer) to a point on the
+ *        given curve.
+ *
+ * \param t Integer in range [0, (q-1)/2]
+ * \param curve Curve satisfying the properties needed for Elligator one (e.g. Curve1174)
+ */
 CurvePoint elligator_1_string_to_point(BigInt *t, Curve curve)
 {
-    BigInt *u, *u0, *u1,
+    BigInt *q_half,
+           *u, *u0, *u1,
            *v, *v0, *v1, *v2,
            *CHIV,
            *X, *X_plus_1, *X_plus_1_squared,
@@ -73,8 +81,14 @@ CurvePoint elligator_1_string_to_point(BigInt *t, Curve curve)
            *x, *x0, *rX,
            *y, *y0, *y1;
 
-    if (big_int_compare(t, big_int_one) == 0
-        || big_int_compare(t, big_int_min_one) == 0)
+    // Enforce correct input range
+    q_half = big_int_sub(NULL, curve.q, big_int_one);
+    big_int_div(q_half, q_half, big_int_two);
+
+    if (big_int_compare(t, big_int_zero) == -1 || big_int_compare(t, q_half) == 1)
+        FATAL("Invalid input value for Elligator 1: t must be in the range [0, (q-1)/2]\n");
+
+    if (big_int_compare(t, big_int_one) == 0)
     {
         x = big_int_create(NULL, 0);
         y = big_int_create(NULL, 1);
@@ -156,11 +170,22 @@ CurvePoint elligator_1_string_to_point(BigInt *t, Curve curve)
         big_int_destroy(y1);
     }
 
+    big_int_destroy(q_half);
+
     CurvePoint r = {x, y};
     return r;
 }
 
-
+/**
+ * \brief Maps a point on the given curve back to a random value in the range
+ *        [0, (q-1)/2]
+ *
+ * Prerequisites:
+ *  - the given point is on the curve
+ *
+ * \param p Point on the given curve (with x, y coordinates)
+ * \param curve Curve satisfying the properties needed for Elligator one (e.g. Curve1174)
+ */
 BigInt *elligator_1_point_to_string(CurvePoint p, Curve curve)
 {
     BigInt *eta, *eta0, *eta1,
