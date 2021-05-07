@@ -72,15 +72,13 @@ START_TEST(test_e2e)
     r = elligator_1_point_to_string(curve_point, curve);
     ck_assert_int_eq(big_int_compare(r, t), 0);
 
-    // TODO: Do the same with more complex inputs
+    // Do the same with more complex inputs
     t = big_int_create_from_hex(t, "75BCD15");
     x = big_int_create_from_hex(x,
             "1A47D90E9F9C19AB846C9E100317F693607A1D16851FD05B40E7DA6FFF5BCF");
     y = big_int_create_from_hex(y,
             "5BBE4619CEA4729F94082B429693AC4B565F94CDA5D6D875689DE765C19A461");
     curve_point = elligator_1_string_to_point(t, curve);
-    // DEBUG_BIGINT(curve_point.x, "x: ");
-    // DEBUG_BIGINT(curve_point.y, "y: ");
     ck_assert_int_eq(big_int_compare(curve_point.x, x), 0);
     ck_assert_int_eq(big_int_compare(curve_point.y, y), 0);
 
@@ -126,6 +124,9 @@ START_TEST(test_e2e)
 }
 END_TEST
 
+/**
+* \brief Test edges cases for Elligator mapping
+*/
 START_TEST(test_edge_cases)
 {
         Curve curve;
@@ -157,11 +158,9 @@ START_TEST(test_edge_cases)
 }
 END_TEST
 
-// TODO: Check statements in paper, most of them are included in elligator.sage
-//       as assertions. Not sure we want to do this for intermediate results too
-//       (that would require copy-pasting part of the implementation into the
-//       test case) but we can for sure test e2e properties. E.g., that points
-//       are actually on the curve or that curve params satisfy those equations.
+/**
+* \brief Tests based on statements about curve1174 in paper
+*/
 START_TEST(test_advanced_curve1174)
 {
     Curve curve;
@@ -216,6 +215,9 @@ START_TEST(test_advanced_curve1174)
 }
 END_TEST
 
+/**
+* \brief Tests based on statements about mapping in paper
+*/
 START_TEST(test_advanced_string_to_point)
 {
     Curve curve;
@@ -257,7 +259,6 @@ START_TEST(test_advanced_string_to_point)
 
     // u * v * X * Y * x * (y + 1) != 0 (requires intermediate results)
     // Y^2 = X^5 + (r^2 - 2) * X^3 + X (requires intermediate results)
-    
 
     big_int_destroy(t);
     big_int_destroy(temp1);
