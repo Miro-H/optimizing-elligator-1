@@ -914,11 +914,11 @@ int main(int argc, char const *argv[])
             bench_big_int_add((void *)bench_big_int_size_256_args,
                 "add", LOG_PATH "/runtime_big_int_add.log"));
 
-        BENCHMARK(bench_type, BENCH_TYPE_ADD_CURVE,
+        BENCHMARK(bench_type, BENCH_TYPE_ADD_MOD_CURVE,
             bench_big_int_add_mod((void *)bench_big_int_size_256_curve_mod_args,
                 "add mod (curve)", LOG_PATH "/runtime_big_int_add_mod_curve.log"));
 
-        BENCHMARK(bench_type, BENCH_TYPE_ADD_RANDOM,
+        BENCHMARK(bench_type, BENCH_TYPE_ADD_MOD_RANDOM,
             bench_big_int_add_mod((void *)bench_big_int_size_256_random_mod_args,
                 "add mod (random)", LOG_PATH "/runtime_big_int_add_mod_random.log"));
 
@@ -926,11 +926,11 @@ int main(int argc, char const *argv[])
             bench_big_int_sub((void *)bench_big_int_size_256_args,
                 "sub", LOG_PATH "/runtime_big_int_sub.log"));
 
-        BENCHMARK(bench_type, BENCH_TYPE_SUB_CURVE,
+        BENCHMARK(bench_type, BENCH_TYPE_SUB_MOD_CURVE,
             bench_big_int_sub_mod((void *)bench_big_int_size_256_curve_mod_args,
                 "sub mod (curve)", LOG_PATH "/runtime_big_int_sub_mod_curve.log"));
 
-        BENCHMARK(bench_type, BENCH_TYPE_SUB_RANDOM,
+        BENCHMARK(bench_type, BENCH_TYPE_SUB_MOD_RANDOM,
             bench_big_int_sub_mod((void *)bench_big_int_size_256_random_mod_args,
                 "sub mod (random)", LOG_PATH "/runtime_big_int_sub_mod_random.log"));
 
@@ -942,7 +942,7 @@ int main(int argc, char const *argv[])
             bench_big_int_mul_mod((void *)bench_big_int_size_256_curve_mod_args,
                 "mul mod (curve)", LOG_PATH "/runtime_big_int_mul_mod_curve.log"));
 
-        BENCHMARK(bench_type, BENCH_TYPE_MUL_RANDOM,
+        BENCHMARK(bench_type, BENCH_TYPE_MUL_MOD_RANDOM,
             bench_big_int_mul_mod((void *)bench_big_int_size_256_random_mod_args,
                 "mul mod (random)", LOG_PATH "/runtime_big_int_mul_mod_random.log"));
 

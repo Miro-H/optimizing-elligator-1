@@ -5,7 +5,7 @@ Intel VTune is not available on MacOS. Instead, Apple's Instruments (the binary 
 
 ### Time Profiler
 #### BENCH\_TYPE\_ADD\_RANDOM
-Number: 14
+Number: 12
 
 #### BENCH\_TYPE\_SUB\_RANDOM
 Number: 17
