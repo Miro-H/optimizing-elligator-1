@@ -73,11 +73,11 @@ START_TEST(test_e2e)
     ck_assert_int_eq(big_int_compare(r, t), 0);
 
     // TODO: Do the same with more complex inputs
-    t = big_int_create_from_hex(t, "75bcd15");
-    x = big_int_create_from_hex(x, 
-            "1a47d90e9f9c19ab846c9e100317f693607a1d16851fd05b40e7da6fff5bcf");
-    y = big_int_create_from_hex(y, 
-            "5bbe4619cea4729f94082b429693ac4b565f94cda5d6d875689de765c19a461");
+    t = big_int_create_from_hex(t, "75BCD15");
+    x = big_int_create_from_hex(x,
+            "1A47D90E9F9C19AB846C9E100317F693607A1D16851FD05B40E7DA6FFF5BCF");
+    y = big_int_create_from_hex(y,
+            "5BBE4619CEA4729F94082B429693AC4B565F94CDA5D6D875689DE765C19A461");
     curve_point = elligator_1_string_to_point(t, curve);
     //printf("x: "); big_int_print(curve_point.x); printf("\n");
     //printf("y: "); big_int_print(curve_point.y); printf("\n");
@@ -88,11 +88,11 @@ START_TEST(test_e2e)
     r = elligator_1_point_to_string(curve_point, curve);
     ck_assert_int_eq(big_int_compare(r, t), 0);
 
-    t = big_int_create_from_hex(t, "abcdef1234567899987654321abcabcdefdef");
-    x = big_int_create_from_hex(x, 
-            "7d4dd83c5e1f4e2dbc79ca0941102de6376604c9d8a75eb41b6875010211b50");
-    y = big_int_create_from_hex(y, 
-            "61c507d563235bea439c1d53bddf33e0d87c0041d3228cd0ca00c3d2a59025e");
+    t = big_int_create_from_hex(t, "ABCDEF1234567899987654321ABCABCDEFDEF");
+    x = big_int_create_from_hex(x,
+            "7D4DD83C5E1F4E2DBC79CA0941102DE6376604C9D8A75EB41B6875010211B50");
+    y = big_int_create_from_hex(y,
+            "61C507D563235BEA439C1D53BDDF33E0D87C0041D3228CD0CA00C3D2A59025E");
     curve_point = elligator_1_string_to_point(t, curve);
     ck_assert_int_eq(big_int_compare(curve_point.x, x), 0);
     ck_assert_int_eq(big_int_compare(curve_point.y, y), 0);
@@ -102,10 +102,10 @@ START_TEST(test_e2e)
     ck_assert_int_eq(big_int_compare(r, t), 0);
 
     t = big_int_create(t, 2);
-    x = big_int_create_from_hex(x, 
-            "6f5374156b145ff8bb3288e0418f513b5d7bbbab6e252ea1bc2db6428e1454e");
-    y = big_int_create_from_hex(y, 
-            "ed7f6014f111318ed7f6014f111318ed7f6014f111318ed7f6014f111318ec");
+    x = big_int_create_from_hex(x,
+            "6F5374156B145FF8BB3288E0418F513B5D7BBBAB6E252EA1BC2DB6428E1454E");
+    y = big_int_create_from_hex(y,
+            "ED7F6014F111318ED7F6014F111318ED7F6014F111318ED7F6014F111318EC");
     curve_point = elligator_1_string_to_point(t, curve);
     ck_assert_int_eq(big_int_compare(curve_point.x, x), 0);
     ck_assert_int_eq(big_int_compare(curve_point.y, y), 0);
@@ -116,10 +116,10 @@ START_TEST(test_e2e)
 
     // Negative t
     t = big_int_create_from_hex(t, "-ABCDEFABCDEFABCDEF142536464757586879");
-    x = big_int_create_from_hex(x, 
-            "47aa4e613a756ced885cb2e9733f8a60d7d1f38d7fcfdcc554fbc3f8b8127ae");
-    y = big_int_create_from_hex(y, 
-            "5e8b1fafa40b3e7b872cbb64f1b6230388d9645d4527e983aa5622baf0a6990");
+    x = big_int_create_from_hex(x,
+            "47AA4E613A756CED885CB2E9733F8A60D7D1F38D7FCFDCC554FBC3F8B8127AE");
+    y = big_int_create_from_hex(y,
+            "5E8B1FAFA40B3E7B872CBB64F1B6230388D9645D4527E983AA5622BAF0A6990");
     curve_point = elligator_1_string_to_point(t, curve);
     ck_assert_int_eq(big_int_compare(curve_point.x, x), 0);
     ck_assert_int_eq(big_int_compare(curve_point.y, y), 0);
@@ -144,7 +144,7 @@ START_TEST(test_edge_cases)
         Curve curve;
         CurvePoint curve_point;
         BigInt *r, *t, *x, *y;
-        
+
         // t = 1
         init_curve1174(&curve);
         t = big_int_create(NULL, 1);
@@ -216,7 +216,7 @@ START_TEST(test_advanced_curve1174)
     big_int_destroy(c);
     big_int_destroy(temp1);
 
-    free_curve(&curve); 
+    free_curve(&curve);
 }
 END_TEST
 
