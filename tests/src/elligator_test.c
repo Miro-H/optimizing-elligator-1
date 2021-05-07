@@ -4,7 +4,7 @@
  * (https://gitlab.inf.ethz.ch/COURSE-ASL/asl21/team36).
  *
  * Short description of this file:
- * This is a unit test file to test the BigInt implementation.
+ * This is a unit test file to test the Elligator implementation.
  */
 
 /*
@@ -190,13 +190,25 @@ START_TEST(test_advanced_curve1174)
     big_int_add(temp2, curve.c, big_int_one); // temp2 = curve.c + 1
     ck_assert_int_ne(big_int_compare(temp2, big_int_zero), 0);
 
-    /* d = -1174
-     * This test fails. In test_curve1174 we check that 
-     * d = 7FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFB61,
-     * so I'm not sure why we have two different assertions for this.
+    /*
+     * Check that d = -1174 mod q
      */
     temp1 = big_int_create(temp1, -1174);
-    //ck_assert_int_eq(big_int_compare(temp1, curve.d), 0);
+    big_int_mod(temp1, temp1, curve.q);
+    ck_assert_int_eq(big_int_compare(temp1, curve.d), 0);
+
+    // Check that d = -(c + 1)^2 / (c - 1)^2 mod q
+    big_int_copy(temp1, curve.c);
+    big_int_add(temp1, temp1, big_int_one);
+    big_int_mul_mod(temp1, temp1, temp1, curve.q);
+    big_int_neg(temp1, temp1); // temp1 = -(c + 1)^2
+
+    big_int_copy(temp2, curve.c);
+    big_int_sub(temp2, temp2, big_int_one);
+    big_int_mul_mod(temp2, temp2, temp2, curve.q); // temp1 = (c - 1)^2
+
+    big_int_div_mod(temp1, temp1, temp2, curve.q); // temp1 = -(c + 1)^2 / (c - 1)^2 mod q
+    ck_assert_int_eq(big_int_compare(temp1, curve.d), 0);
 
     // r != 0
     ck_assert_int_ne(big_int_compare(curve.r, big_int_zero), 0);
@@ -228,9 +240,7 @@ START_TEST(test_advanced_string_to_point)
     t = big_int_create_from_hex(NULL, "ABCDEF1234567899987654321ABCABCDEFDEF");
     curve_point = elligator_1_string_to_point(t, curve);
 
-    /* x^2 + y^2 = 1 + d * x^2 * y^2
-     * mod q to avoid overflow
-     */
+    // x^2 + y^2 = 1 + d * x^2 * y^2 (mod q)
     temp1 = big_int_create(NULL, 0);
     temp2 = big_int_create(NULL, 0);
     temp3 = big_int_create(NULL, 0);
