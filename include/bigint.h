@@ -65,7 +65,7 @@ __attribute__((unused)) static BigInt *big_int_one = &((BigInt) {
     .chunks = &chunk_one,
 });
 __attribute__((unused)) static BigInt *big_int_min_one = &((BigInt) {
-    .sign = 0,
+    .sign = 1,
     .overflow = 0,
     .size = 1,
     .alloc_size = BIGINT_FIXED_SIZE,
