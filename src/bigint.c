@@ -847,9 +847,7 @@ BigInt *big_int_div(BigInt *q, BigInt *a, BigInt *b)
  */
 BigInt *big_int_sll_small(BigInt *r, BigInt *a, uint64_t shift)
 {
-    #ifdef COLLECT_STATS
-        big_int_stats.big_int_sll_small++;
-    #endif
+    ADD_STAT_COLLECTION(BIGINT_TYPE_BIG_INT_SLL_SMALL);
 
     BigInt *r_loc;
 

@@ -24,20 +24,21 @@
 #define BIGINT_TYPE_BIG_INT_MUL                   15
 #define BIGINT_TYPE_BIG_INT_DEV_REM               16
 #define BIGINT_TYPE_BIG_INT_DIV                   17
-#define BIGINT_TYPE_BIG_INT_SRL_SMALL             18
-#define BIGINT_TYPE_BIG_INT_MOD                   19
-#define BIGINT_TYPE_BIG_INT_ADD_MOD               20
-#define BIGINT_TYPE_BIG_INT_SUB_MOD               21
-#define BIGINT_TYPE_BIG_INT_MUL_MOD               22
-#define BIGINT_TYPE_BIG_INT_DIV_MOD               23
-#define BIGINT_TYPE_BIG_INT_INV                   24
-#define BIGINT_TYPE_BIG_INT_POW                   25
-#define BIGINT_TYPE_BIG_INT_IS_ZERO               26
-#define BIGINT_TYPE_BIG_INT_IS_ODD                27
-#define BIGINT_TYPE_BIG_INT_COMPARE               28
-#define BIGINT_TYPE_BIG_INT_EGCD                  29
-#define BIGINT_TYPE_BIG_INT_CHI                   30
-#define BIGINT_TYPE_LAST                          31
+#define BIGINT_TYPE_BIG_INT_SLL_SMALL             18
+#define BIGINT_TYPE_BIG_INT_SRL_SMALL             19
+#define BIGINT_TYPE_BIG_INT_MOD                   20
+#define BIGINT_TYPE_BIG_INT_ADD_MOD               21
+#define BIGINT_TYPE_BIG_INT_SUB_MOD               22
+#define BIGINT_TYPE_BIG_INT_MUL_MOD               23
+#define BIGINT_TYPE_BIG_INT_DIV_MOD               24
+#define BIGINT_TYPE_BIG_INT_INV                   25
+#define BIGINT_TYPE_BIG_INT_POW                   26
+#define BIGINT_TYPE_BIG_INT_IS_ZERO               27
+#define BIGINT_TYPE_BIG_INT_IS_ODD                28
+#define BIGINT_TYPE_BIG_INT_COMPARE               29
+#define BIGINT_TYPE_BIG_INT_EGCD                  30
+#define BIGINT_TYPE_BIG_INT_CHI                   31
+#define BIGINT_TYPE_LAST                          32
 
 static char *big_int_type_names[] = {
     "big_int_alloc",
@@ -58,6 +59,7 @@ static char *big_int_type_names[] = {
     "big_int_mul",
     "big_int_dev_rem",
     "big_int_div",
+    "big_int_sll_small",
     "big_int_srl_small",
     "big_int_mod",
     "big_int_add_mod",

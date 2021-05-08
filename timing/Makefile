@@ -55,11 +55,9 @@ all: compile-runtime-benchmark
 run-all: run-runtime-benchmark
 
 .PHONY: all-benched
-ifeq ($(COLLECT_STATS),)
-	make -C $(SRC_BENCHED) all
-else
-	COLLECT_STATS=${COLLECT_STATS} make -C $(SRC_BENCHED) all
-endif
+all-benched:
+	make -C $(SRC_BENCHED) clean
+	COLLECT_STATS=$(COLLECT_STATS) make -C $(SRC_BENCHED) all
 
 # Fresh build
 .PHONY: rebuild

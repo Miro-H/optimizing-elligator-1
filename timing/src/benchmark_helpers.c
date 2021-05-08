@@ -92,7 +92,7 @@ void benchmark_runner(BenchmarkClosure bench_closure, char *bench_name,
 
     uint64_t cycles, start;
     uint8_t do_write_to_stdout;
-    int64_t i, j;
+    int64_t j;
     uint64_t cleanup_args[2] = {used_values, num_reps};
 
     printf_bench_header(bench_name);
@@ -110,38 +110,42 @@ void benchmark_runner(BenchmarkClosure bench_closure, char *bench_name,
     // of the benchmarked function.
 #ifdef COLLECT_STATS
     fprintf(out_fp, "Function name, Function calls\n");
-    num_reps = 1;
-    num_sets = 1;
-    cleanup_args[0] = 1;
+    cleanup_args[0] = (used_values) ? 1 : 0;
+
+    bench_closure.bench_prep_fn(bench_closure.bench_prep_args);
     reset_stats();
+
+    j = 0;
+    start = start_tsc();
+    bench_closure.bench_fn((void *) &j);
+    cycles = stop_tsc(start);
+
+    for (j = 0; j < BIGINT_TYPE_LAST; ++j)
+    {
+        fprintf(out_fp, "%s, %" PRIu64 "\n", big_int_type_names[j], big_int_stats[j]);
+        fflush(out_fp);
+    }
+
+    bench_closure.bench_cleanup_fn((void *) cleanup_args);
 #else
     fprintf(out_fp, "Measurement, Runtime [cycles]\n");
     bench_warmup(bench_closure, num_sets, num_reps, used_values);
-#endif
 
-    for (j = 0; j < num_sets; ++j)
+    for (uint64_t i = 0; i < num_sets; ++i)
     {
         bench_closure.bench_prep_fn(bench_closure.bench_prep_args);
 
         start = start_tsc();
-        for (i = 0; i < num_reps; ++i)
+        for (j = 0; j < num_reps; ++j)
         {
-            bench_closure.bench_fn((void *) &i);
+            bench_closure.bench_fn((void *) &j);
         }
         cycles = stop_tsc(start);
 
-#ifndef COLLECT_STATS
         fprintf(out_fp, "%" PRId64 ", %.02lf\n", j, (double)cycles / num_reps);
         fflush(out_fp);
-#endif
 
         bench_closure.bench_cleanup_fn((void *) cleanup_args);
-    }
-#ifdef COLLECT_STATS
-    for (i = 0; i < BIGINT_TYPE_LAST; ++i)
-    {
-        fprintf(out_fp, "%s, %" PRIu64 "\n", big_int_type_names[i], big_int_stats[i]);
-        fflush(out_fp);
     }
 #endif
 
