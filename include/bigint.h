@@ -3,9 +3,7 @@
 
 #include <inttypes.h>
 #include <string.h>
-
-// Whether to count function calls
-#define COLLECTSTATS ((uint64_t) 0)
+#include "bigint_types.h"
 
 // To work with 4 chunk integers (256 bits) we internally need 9 chunk integers.
 // The reason is that intermediate products can be 8 chunks and division performs
@@ -19,6 +17,13 @@
 #define CHUNK_ABS llabs
 #define BIGINT_RADIX (((dbl_chunk_size_t) 1) << (sizeof(chunk_size_t) * 8))
 #define BIGINT_RADIX_SIGNED ((int64_t) BIGINT_RADIX)
+
+// Stats collection
+#ifdef COLLECT_STATS
+#define ADD_STAT_COLLECTION(type) big_int_stats[(type)]++;
+#elif
+#define ADD_STAT_COLLECTION(type)
+#endif
 
 typedef uint32_t chunk_size_t;
 typedef uint64_t dbl_chunk_size_t;
@@ -49,6 +54,11 @@ typedef struct EgcdResult {
     BigInt *x;
 } EgcdResult;
 
+/*
+* Struct that tracks usage of BigInt functions
+*/
+uint64_t big_int_stats[NR_OF_BIG_INT_FNS];
+
 static dbl_chunk_size_t chunk_zero = 0;
 static dbl_chunk_size_t chunk_one = 1;
 
@@ -75,47 +85,6 @@ __attribute__((unused)) static BigInt *big_int_min_one = &((BigInt) {
     .chunks = &chunk_one,
 });
 
-
-/*
-* Struct that tracks usage of BigInt functions
-*/
-typedef struct BigIntStats
-{
-    uint64_t big_int_alloc;          
-    uint64_t big_int_calloc;      
-    uint64_t big_int_prune_leading_zeros;         
-    uint64_t big_int_create_from_dbl_chunk;   
-    uint64_t big_int_create;          
-    uint64_t big_int_create_from_hex;      
-    uint64_t big_int_create_random;            
-    uint64_t big_int_destroy;      
-    uint64_t big_int_copy;         
-    uint64_t big_int_duplicate;   
-    uint64_t big_int_neg;          
-    uint64_t big_int_abs;      
-    uint64_t big_int_add;         
-    uint64_t big_int_sub;   
-    uint64_t big_int_mul;          
-    uint64_t big_int_div;      
-    uint64_t big_int_div_rem;         
-    uint64_t big_int_sll_small;   
-    uint64_t big_int_srl_small;          
-    uint64_t big_int_mod;      
-    uint64_t big_int_add_mod;         
-    uint64_t big_int_sub_mod;  
-    uint64_t big_int_mul_mod;          
-    uint64_t big_int_div_mod;      
-    uint64_t big_int_inv;         
-    uint64_t big_int_compare; 
-    uint64_t big_int_is_zero;      
-    uint64_t big_int_is_odd;         
-    uint64_t big_int_pow;  
-    uint64_t big_int_egcd;         
-    uint64_t big_int_chi;        
-} BigIntStats;
-
-BigIntStats big_int_stats;
-
 //Functions only exposed for Benchmarks
 BigInt *big_int_alloc(uint64_t size);
 BigInt *big_int_calloc(uint64_t size);
@@ -125,8 +94,7 @@ BigInt *big_int_create_from_dbl_chunk(BigInt *r, dbl_chunk_size_t chunk, uint8_t
 // Meta functions
 BigInt *big_int_create(BigInt *r, int64_t x);
 BigInt *big_int_create_from_hex(BigInt *r, char* s);
-BigInt *big_int_create_random(BigInt *r, int64_t nr_of_chunks,
-    int64_t nr_of_non_zero_bits_in_last_chunk);
+BigInt *big_int_create_random(BigInt *r, int64_t nr_of_chunks);
 void big_int_destroy(BigInt *a);
 BigInt *big_int_copy(BigInt *a, BigInt *b);
 BigInt *big_int_duplicate(BigInt *a);
@@ -170,5 +138,8 @@ int8_t big_int_is_odd(BigInt *a);
 BigInt *big_int_pow(BigInt *r, BigInt *b, BigInt *e, BigInt *q);
 EgcdResult big_int_egcd(BigInt *a, BigInt *b);
 BigInt *big_int_chi(BigInt *r, BigInt *t, BigInt *q);
+
+// Reset stats (use in combination with setting the env variable COLLECT_STATS)
+void reset_stats(void);
 
 #endif // BIGINT_H_

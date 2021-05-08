@@ -6,6 +6,7 @@
 #endif
 
 #ifndef BIGINTSIZE
+// 256 bits
 #define BIGINTSIZE 8
 #endif
 
@@ -14,15 +15,7 @@
 #endif
 
 #ifndef REPS
-#define REPS 10
-#endif
-
-#ifndef MICROREPS
-#define MICROREPS 1000
-#endif
-
-#ifndef NONZEROBITS
-#define NONZEROBITS 32
+#define REPS 1000
 #endif
 
 #include "bigint.h"
@@ -47,9 +40,9 @@ uint64_t *uint64_t_array_1;
 int big_int_size_;
 int big_int_array_size_;
 
-int bench_big_int_size_256_args[] = {BIGINTSIZE, MICROREPS, 1};
-int bench_big_int_size_256_random_mod_args[] = {BIGINTSIZE, MICROREPS, 1};
-int bench_big_int_size_256_curve_mod_args[] = {BIGINTSIZE, MICROREPS, 0};
+int bench_big_int_size_256_args[] = {BIGINTSIZE, 1};
+int bench_big_int_size_256_random_mod_args[] = {BIGINTSIZE, 1};
+int bench_big_int_size_256_curve_mod_args[] = {BIGINTSIZE, 0};
 
 
 #endif // RUNTIME_BENCHMARK_H_

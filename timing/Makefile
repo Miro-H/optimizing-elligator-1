@@ -15,6 +15,9 @@ SRC_BENCHED		= ../src
 ODIR_BENCHED 	= $(SRC_BENCHED)/obj
 IDIR_BENCHED	= $(SRC_BENCHED)/../include
 
+# common scripts
+ROOT_SCRIPTS_DIR = ../scripts
+
 CC      	= gcc
 CFLAGS  	= -I$(IDIR_BENCHED) -I$(IDIR)
 
@@ -35,6 +38,11 @@ endif
 
 CFLAGS += -DSETS=$(SETS) -DREPS=$(REPS)
 
+# Forward COLLECT_STATS env variable to compiled binaries
+ifneq ($(COLLECT_STATS),)
+	CFLAGS += -DCOLLECT_STATS=${COLLECT_STATS}
+endif
+
 # Assume that the executable depends on all header files.
 DEPS = $(wildcard $(IDIR)/*.h)
 
@@ -47,8 +55,11 @@ all: compile-runtime-benchmark
 run-all: run-runtime-benchmark
 
 .PHONY: all-benched
-all-benched:
+ifeq ($(COLLECT_STATS),)
 	make -C $(SRC_BENCHED) all
+else
+	COLLECT_STATS=${COLLECT_STATS} make -C $(SRC_BENCHED) all
+endif
 
 # Fresh build
 .PHONY: rebuild
@@ -66,7 +77,7 @@ OBJ_BENCHED		= $(patsubst %,$(ODIR_BENCHED)/%,$(_OBJ_BENCHED))
 
 .PHONY: gen-bench-types
 gen-bench-types:
-	${SCRIPTS_DIR}/gen_benchmark_types.py \
+	${ROOT_SCRIPTS_DIR}/gen_types.py \
 		--src_file ${SDIR}/runtime_benchmark.c \
 		--tar_file ${IDIR}/benchmark_types.h
 

@@ -18,6 +18,7 @@
 #include <string.h>
 
 // Include header files
+#include "bigint.h"
 #include "benchmark_helpers.h"
 #include "debug.h"
 #include "tsc_x86.h"
@@ -34,7 +35,6 @@
  * Local function prototypes
  */
 uint64_t bench_warmup(BenchmarkClosure bench_closure);
-uint64_t bench_warmup_with_set_up_clean(BenchmarkClosure bench_closure);
 
 /**
 * \brief Make warmup runs for a benchmark of at least WARMUP_CYCLES cycles.
@@ -54,41 +54,12 @@ uint64_t bench_warmup(BenchmarkClosure bench_closure)
         start = start_tsc();
         for (i = 0; i < num_reps; ++i)
         {
-            bench_closure.bench_fn();
+            bench_closure.bench_fn((void *) i);
         }
         cycles = stop_tsc(start);
     } while (cycles < WARMUP_CYCLES);
 
     bench_closure.bench_cleanup_fn();
-
-    return num_reps;
-}
-
-/**
-* \brief Make warmup runs for a benchmark of at least WARMUP_CYCLES cycles.
-*/
-uint64_t bench_warmup_with_set_up_clean(BenchmarkClosure bench_closure)
-{
-    uint64_t num_reps, cycles, start;
-    int i;
-
-    num_reps = 1;
-    cycles = 0;
-
-    do
-    {
-        num_reps <<= 1;
-
-        for (i = 0; i < num_reps; ++i)
-        {
-            bench_closure.bench_prep_fn(bench_closure.bench_prep_args);
-            start = start_tsc();
-            bench_closure.bench_fn();
-            cycles += stop_tsc(start);
-            bench_closure.bench_cleanup_fn();
-        }
-
-    } while (cycles < WARMUP_CYCLES);
 
     return num_reps;
 }
@@ -105,6 +76,7 @@ void benchmark_runner(BenchmarkClosure bench_closure, char *bench_name,
                       char *log_fname, uint64_t num_sets, uint64_t num_reps)
 {
     FILE *out_fp;
+
     uint64_t num_reps_warmup, cycles, start;
     uint8_t do_write_to_stdout;
     int64_t i, j;
@@ -118,13 +90,22 @@ void benchmark_runner(BenchmarkClosure bench_closure, char *bench_name,
         out_fp = fopen(log_fname, "w+");
 
     assert(out_fp);
-
     fprintf(out_fp, "%s\n", bench_name);
+
+    // For collecting stats, we have no warmup instructions and only one call
+    // of the benchmarked function.
+#ifdef COLLECT_STATS
+    fprintf(out_fp, "Function name, Function calls\n");
+    num_reps = 1;
+    num_sets = 1;
+    reset_stats();
+#elif
     fprintf(out_fp, "Measurement, Runtime [cycles]\n");
 
     num_reps_warmup = bench_warmup(bench_closure);
     if (!num_reps)
         num_reps = num_reps_warmup;
+#endif
 
     for (j = 0; j < num_sets; ++j)
     {
@@ -133,77 +114,25 @@ void benchmark_runner(BenchmarkClosure bench_closure, char *bench_name,
         start = start_tsc();
         for (i = 0; i < num_reps; ++i)
         {
-            bench_closure.bench_fn();
+            bench_closure.bench_fn((void *) i);
         }
         cycles = stop_tsc(start);
 
+#ifndef COLLECT_STATS
         fprintf(out_fp, "%" PRId64 ", %.02lf\n", j, (double)cycles / num_reps);
         fflush(out_fp);
+#endif
 
         bench_closure.bench_cleanup_fn();
     }
 
-    fclose(out_fp);
-
-    if (!do_write_to_stdout)
-        printf("Wrote benchmark results to log file: '%s'\n", log_fname);
-}
-
-/**
- * \brief Run a benchmark
- *
- * \param num_sets Number of times the entire measurement is repeated.
- * \param num_reps Number of calls to the benchmarked function for every set.
- *        If 0, set to the number of reps required to achieve WARMUP_CYCLES
- *        total runtime.
-*/
-void benchmark_runner_always_set_up_and_clean(BenchmarkClosure bench_closure, char *bench_name,
-                                              char *log_fname, uint64_t num_sets, uint64_t num_reps, uint64_t num_internal_reps)
-{
-    FILE *out_fp;
-    //FILE *out_fp_stats;
-    
-    uint64_t num_reps_warmup, cycles, start;
-    uint8_t do_write_to_stdout;
-    int64_t i, j;
-    
-    printf_bench_header(bench_name);
-    do_write_to_stdout = !log_fname;
-    if (do_write_to_stdout)
-        out_fp = stdout;
-    else
+#ifdef COLLECT_STATS
+    for (i = 0; i < NR_OF_BIG_INT_FNS; ++i)
     {
-        out_fp = fopen(log_fname, "w+");
-    }
-
-    assert(out_fp);
-    
-
-    fprintf(out_fp, "%s\n", bench_name);
-    fprintf(out_fp, "Measurement, Runtime [cycles]\n");
-
-    //fprintf(out_fp_stats, "%s\n", bench_name);
-    //fprintf(out_fp_stats, "Measurement, Function calls [cycles]\n");
-
-    num_reps_warmup = bench_warmup_with_set_up_clean(bench_closure);
-    if (!num_reps)
-        num_reps = num_reps_warmup;
-
-    for (j = 0; j < num_sets; ++j)
-    {
-        cycles = 0;
-        for (i = 0; i < num_reps; ++i)
-        {
-            bench_closure.bench_prep_fn(bench_closure.bench_prep_args);
-            start = start_tsc();
-            bench_closure.bench_fn();
-            cycles += stop_tsc(start);
-            bench_closure.bench_cleanup_fn();
-        }
-
-        fprintf(out_fp, "%" PRId64 ", %.02lf\n", j, (double)cycles / (num_reps * num_internal_reps));
+        fprintf(out_fp, "%s, %" PRIu64 "\n", big_int_type_names[i], big_int_stats[i]);
         fflush(out_fp);
     }
+#endif
 
     fclose(out_fp);
 

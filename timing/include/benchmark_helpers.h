@@ -6,7 +6,7 @@
 typedef struct BenchmarkClosure {
     void *bench_prep_args;
     void (*bench_prep_fn)(void *);
-    void (*bench_fn)(void);
+    void (*bench_fn)(void *);
     void (*bench_cleanup_fn)(void);
 } BenchmarkClosure;
 
