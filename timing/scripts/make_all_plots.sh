@@ -20,37 +20,48 @@ if [[ -z "${PUBLISH}" ]]; then
     PLOTS_DIR=${PLOTS_DIR}/local
 fi
 
-################################################################################
-#                  Generate bar plots of runtime measurements                  #
-################################################################################
-${SCRIPTS_DIR}/gen_runtime_plots.py                                            \
-    --title "Overview Median Runtime (${SETS} sets, ${REPS} reps)"             \
-    --plot_fname "${PLOTS_DIR}/overview.png"                                   \
-    --logs_dir "${LOGS_DIR}"
+if [[ -z "${COLLECT_STATS}" ]]; then
+    echo "#####################################################################"
+    echo "#             Generate bar plots of runtime measurements            #"
+    echo "#####################################################################"
 
-${SCRIPTS_DIR}/gen_runtime_plots.py                                            \
-    --title "Overview Median Runtime (log scale, ${SETS} sets, ${REPS} reps)"  \
-    --plot_fname "${PLOTS_DIR}/overview_log_scale.png"                         \
-    --logs_dir "${LOGS_DIR}"                                                   \
-    --log_yaxis
+    ${SCRIPTS_DIR}/gen_runtime_plots.py                                            \
+        --title "Overview Median Runtime (${SETS} sets, ${REPS} reps)"             \
+        --plot_fname "${PLOTS_DIR}/overview.png"                                   \
+        --logs_dir "${LOGS_DIR}"
 
-${SCRIPTS_DIR}/gen_runtime_plots.py                                            \
-    --title "Overview Median Runtime (${SETS} sets, ${REPS} reps)"             \
-    --plot_fname "${PLOTS_DIR}/overview_bar.png"                               \
-    --logs_dir "${LOGS_DIR}"                                                   \
-    --bar_plot
+    ${SCRIPTS_DIR}/gen_runtime_plots.py                                            \
+        --title "Overview Median Runtime (log scale, ${SETS} sets, ${REPS} reps)"  \
+        --plot_fname "${PLOTS_DIR}/overview_log_scale.png"                         \
+        --logs_dir "${LOGS_DIR}"                                                   \
+        --log_yaxis
 
-${SCRIPTS_DIR}/gen_runtime_plots.py                                            \
-    --title "Overview Median Runtime (log scale, ${SETS} sets, ${REPS} reps)"  \
-    --plot_fname "${PLOTS_DIR}/overview_bar_log_scale.png"                     \
-    --logs_dir "${LOGS_DIR}"                                                   \
-    --bar_plot                                                                 \
-    --log_yaxis
+    ${SCRIPTS_DIR}/gen_runtime_plots.py                                            \
+        --title "Overview Median Runtime (${SETS} sets, ${REPS} reps)"             \
+        --plot_fname "${PLOTS_DIR}/overview_bar.png"                               \
+        --logs_dir "${LOGS_DIR}"                                                   \
+        --bar_plot
 
-################################################################################
-#                 Generate line plots of runtime measurements                  #
-################################################################################
-${SCRIPTS_DIR}/gen_perf_plot.py                         \
-    --plot_fname "${PLOTS_DIR}/abs_plot.png"    		\
-    --title "BigInt abs Runtime Plot"                   \
-    ${LOGS_DIR}/bench_big_int_abs.log
+    ${SCRIPTS_DIR}/gen_runtime_plots.py                                            \
+        --title "Overview Median Runtime (log scale, ${SETS} sets, ${REPS} reps)"  \
+        --plot_fname "${PLOTS_DIR}/overview_bar_log_scale.png"                     \
+        --logs_dir "${LOGS_DIR}"                                                   \
+        --bar_plot                                                                 \
+        --log_yaxis
+
+
+    echo "#####################################################################"
+    echo "#             Generate line plots of runtime measurements           #"
+    echo "#####################################################################"
+
+    ${SCRIPTS_DIR}/gen_perf_plot.py                         \
+        --plot_fname "${PLOTS_DIR}/abs_plot.png"    		\
+        --title "BigInt abs Runtime Plot"                   \
+        ${LOGS_DIR}/bench_big_int_abs.log
+else
+    echo "#####################################################################"
+    echo "#                    Generate plots for stats                       #"
+    echo "#####################################################################"
+
+    echo "TODO..."
+fi

@@ -93,7 +93,7 @@ runtime-benchmark: $(OBJ_BENCHED) $(OBJ)
 
 .PHONY: plots
 plots: run-all
-	SETS=$(SETS) REPS=$(REPS) $(SCRIPTS_DIR)/make_all_plots.sh
+	COLLECT_STATS=$(COLLECT_STATS) SETS=$(SETS) REPS=$(REPS) $(SCRIPTS_DIR)/make_all_plots.sh
 
 .PHONY: publish-plots
 publish-plots: run-all
