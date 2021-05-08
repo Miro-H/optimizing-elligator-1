@@ -10,3 +10,5 @@ logs/*
 # them.
 plots/local/*
 !plots/local/.keep
+!plots/local/runtime
+!plots/local/stats

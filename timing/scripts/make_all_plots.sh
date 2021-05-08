@@ -21,6 +21,8 @@ if [[ -z "${PUBLISH}" ]]; then
 fi
 
 if [[ -z "${COLLECT_STATS}" ]]; then
+    PLOTS_DIR=${PLOTS_DIR}/runtime
+
     echo "#####################################################################"
     echo "#             Generate bar plots of runtime measurements            #"
     echo "#####################################################################"
@@ -59,6 +61,8 @@ if [[ -z "${COLLECT_STATS}" ]]; then
         --title "BigInt abs Runtime Plot"                   \
         ${LOGS_DIR}/bench_big_int_abs.log
 else
+    PLOTS_DIR=${PLOTS_DIR}/stats
+
     echo "#####################################################################"
     echo "#                    Generate plots for stats                       #"
     echo "#####################################################################"
