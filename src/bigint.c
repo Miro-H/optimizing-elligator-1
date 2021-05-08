@@ -989,7 +989,7 @@ BigInt *big_int_inv(BigInt *r, BigInt *a, BigInt *q)
         big_int_destroy(res.g);
         big_int_destroy(res.x);
         big_int_destroy(res.y);
-        FATAL("Non-invertible number given as argument to big_int_inv!");
+        FATAL("Non-invertible number given as argument to big_int_inv!\n");
         return NULL;
     }
 
