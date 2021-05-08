@@ -40,6 +40,7 @@
 #define BIGINT_TYPE_BIG_INT_CHI                   31
 #define BIGINT_TYPE_LAST                          32
 
+__attribute__((unused))
 static char *big_int_type_names[] = {
     "big_int_alloc",
     "big_int_calloc",

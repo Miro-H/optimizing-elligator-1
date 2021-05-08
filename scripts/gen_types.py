@@ -70,6 +70,7 @@ if __name__ == '__main__':
             tar_fp.write(LINE_FORMAT.format(match.ljust(line_len), idx))
 
         if add_translation:
+            tar_fp.write("\n__attribute__((unused))")
             tar_fp.write(f"\nstatic char *{array_name}[] = {{\n")
 
             names = [match.replace(strip_prefix, "").lower() for match in matches]
