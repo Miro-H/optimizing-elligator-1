@@ -11,7 +11,6 @@
  * Includes
  */
 #include <gmp.h>
-#include <stdlib.h>
 
 // Include header files
 #include "benchmark_helpers.h"
@@ -19,9 +18,3 @@
 #ifndef LOG_PATH
     #define LOG_PATH "../logs"
 #endif
-
-int main(void)
-{
-    printf_bench_header("GMP Benchmarks");
-    return EXIT_SUCCESS;
-}
