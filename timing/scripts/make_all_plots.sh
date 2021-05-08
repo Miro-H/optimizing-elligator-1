@@ -16,12 +16,15 @@ REPS="${REPS:-$DEFAULT_REPS}"
 
 # Only plots outside the local directory will be checked in for git
 PLOTS_DIR=${TIMING_BASE_DIR}/plots
+SUBFOLDER=""
 if [[ -z "${PUBLISH}" ]]; then
     PLOTS_DIR=${PLOTS_DIR}/local
+    SUBFOLDER="/$(date "+%Y-%m-%d_%H-%M-%S")"
 fi
 
 if [[ -z "${COLLECT_STATS}" ]]; then
-    PLOTS_DIR=${PLOTS_DIR}/runtime
+    PLOTS_DIR="${PLOTS_DIR}/runtime${SUBFOLDER}"
+    mkdir -p ${PLOTS_DIR}
 
     echo "#####################################################################"
     echo "#             Generate bar plots of runtime measurements            #"
@@ -61,7 +64,8 @@ if [[ -z "${COLLECT_STATS}" ]]; then
         --title "BigInt abs Runtime Plot"                   \
         ${LOGS_DIR}/bench_big_int_abs.log
 else
-    PLOTS_DIR=${PLOTS_DIR}/stats
+    PLOTS_DIR="${PLOTS_DIR}/stats${SUBFOLDER}"
+    mkdir -p ${PLOTS_DIR}
 
     echo "#####################################################################"
     echo "#                    Generate plots for stats                       #"
