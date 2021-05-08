@@ -205,3 +205,11 @@ optional arguments:
   --plot_fname PLOT_FNAME
                         Path of the generated plot.
 ```
+
+## Profiling
+### Count function calls
+There is the option to collect statistics on which functions were called. For that purpose, compile the BigInt library with the environment variable `COLLECT_STATS` set. One can use the benchmarking code to get the stats of single function invocations. for that, run the following in the `timing` subfolder:
+```
+BENCHMARKS=14 COLLECT_STATS=1 make plots
+```
+Where `BENCHMARKS` is set to the benchmarks from which the stats should be collected. Each of them gets its own file with the stat count for every BigInt function.
