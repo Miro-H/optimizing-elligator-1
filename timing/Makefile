@@ -122,6 +122,25 @@ run-runtime-benchmark: compile-runtime-benchmark
 runtime-benchmark: $(OBJ_BENCHED) $(OBJ)
 	$(CC) -o $(BDIR)/$@ $^ $(CFLAGS) $(LIBS)
 
+
+# Specify the object files constituting the test
+_OBJ	= benchmark_helpers.o gmp_benchmark.o
+OBJ 	= $(patsubst %,$(ODIR)/%,$(_OBJ))
+
+# Specify the object files of the benched functions
+_OBJ_BENCHED 	=
+OBJ_BENCHED		= $(patsubst %,$(ODIR_BENCHED)/%,$(_OBJ_BENCHED))
+
+.PHONY: compile-gmp-benchmark
+compile-gmp-benchmark: gmp-benchmark
+
+.PHONY: run-gmp-benchmark
+run-gmp-benchmark: compile-gmp-benchmark
+	./$(BDIR)/gmp-benchmark
+
+gmp-benchmark: $(OBJ_BENCHED) $(OBJ)
+	$(CC) -o $(BDIR)/$@ $^ $(CFLAGS) $(LIBS)
+
 .PHONY: plots
 plots: run-all
 	PUBLISH=$(PUBLISH) COLLECT_STATS=$(COLLECT_STATS) LOGS_DIR=$(LOG_PATH) SETS=$(SETS) \
