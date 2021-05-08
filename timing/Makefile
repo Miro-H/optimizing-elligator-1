@@ -24,9 +24,6 @@ CFLAGS  	= -I$(IDIR_BENCHED) -I$(IDIR)
 # Add additional compilation flags to improve code quality
 CFLAGS += -Wall -Werror
 
-# Add macros for compiled C files
-CFLAGS += -DLOG_PATH=\"$(abspath $(LOG_DIR))\"
-
 # Add default number of sets and reps for benchmarks
 ifeq ($(SETS),)
 	SETS = 10
@@ -39,9 +36,18 @@ endif
 CFLAGS += -DSETS=$(SETS) -DREPS=$(REPS)
 
 # Forward COLLECT_STATS env variable to compiled binaries
+LOG_PATH := $(abspath $(LOG_DIR))
 ifneq ($(COLLECT_STATS),)
+	LOG_PATH := $(LOG_PATH)/stats
 	CFLAGS += -DCOLLECT_STATS=${COLLECT_STATS}
+else
+	LOG_PATH := $(LOG_PATH)/runtime
 endif
+
+LOG_PATH := $(LOG_PATH)/$(shell date "+%Y-%m-%d_%H-%M-%S")
+
+# Add macros for compiled C files
+CFLAGS += -DLOG_PATH=\"$(LOG_PATH)\"
 
 # Assume that the executable depends on all header files.
 DEPS = $(wildcard $(IDIR)/*.h)
@@ -50,6 +56,10 @@ LIBS =
 
 # Main target, building all benchmarks
 all: compile-runtime-benchmark
+
+.PHONY: prepare-logs
+prepare-logs:
+	mkdir -p $(LOG_PATH)
 
 .PHONY: run-all
 run-all: run-runtime-benchmark
@@ -80,7 +90,7 @@ gen-bench-types:
 		--tar_file ${IDIR}/benchmark_types.h
 
 .PHONY: compile-runtime-benchmark
-compile-runtime-benchmark: all-benched gen-bench-types runtime-benchmark
+compile-runtime-benchmark: prepare-logs all-benched gen-bench-types runtime-benchmark
 
 .PHONY: run-runtime-benchmark
 run-runtime-benchmark: compile-runtime-benchmark
@@ -91,7 +101,8 @@ runtime-benchmark: $(OBJ_BENCHED) $(OBJ)
 
 .PHONY: plots
 plots: run-all
-	COLLECT_STATS=$(COLLECT_STATS) SETS=$(SETS) REPS=$(REPS) $(SCRIPTS_DIR)/make_all_plots.sh
+	COLLECT_STATS=$(COLLECT_STATS) LOGS_DIR=$(LOG_PATH) SETS=$(SETS) \
+	REPS=$(REPS) $(SCRIPTS_DIR)/make_all_plots.sh
 
 .PHONY: publish-plots
 publish-plots: run-all

@@ -2,7 +2,7 @@
 #define RUNTIME_BENCHMARK_H_
 
 #ifndef LOG_PATH
-#define LOG_PATH "../logs/runtime/"
+#define LOG_PATH "../logs/runtime"
 #endif
 
 #ifndef BIGINTSIZE

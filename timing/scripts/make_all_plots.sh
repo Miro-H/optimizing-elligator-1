@@ -2,7 +2,6 @@
 
 SCRIPTS_DIR=$(cd $(dirname $0) && pwd)
 TIMING_BASE_DIR=$(dirname ${SCRIPTS_DIR})
-LOGS_DIR=${TIMING_BASE_DIR}/logs
 
 DEFAULT_SETS=10
 DEFAULT_REPS=10000
