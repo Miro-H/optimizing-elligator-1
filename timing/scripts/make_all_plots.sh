@@ -25,22 +25,22 @@ if [[ -z "${COLLECT_STATS}" ]]; then
     echo "#             Generate bar plots of runtime measurements            #"
     echo "#####################################################################"
 
-    ${SCRIPTS_DIR}/gen_runtime_plots.py                                            \
-        --title "Overview Median Runtime (${SETS} sets, ${REPS} reps)"             \
-        --plot_fname "${PLOTS_DIR}/overview.png"                                   \
-        --logs_dir "${LOGS_DIR}"
-
-    ${SCRIPTS_DIR}/gen_runtime_plots.py                                            \
-        --title "Overview Median Runtime (log scale, ${SETS} sets, ${REPS} reps)"  \
-        --plot_fname "${PLOTS_DIR}/overview_log_scale.png"                         \
-        --logs_dir "${LOGS_DIR}"                                                   \
-        --log_yaxis
-
-    ${SCRIPTS_DIR}/gen_runtime_plots.py                                            \
-        --title "Overview Median Runtime (${SETS} sets, ${REPS} reps)"             \
-        --plot_fname "${PLOTS_DIR}/overview_bar.png"                               \
-        --logs_dir "${LOGS_DIR}"                                                   \
-        --bar_plot
+    # ${SCRIPTS_DIR}/gen_runtime_plots.py                                            \
+    #     --title "Overview Median Runtime (${SETS} sets, ${REPS} reps)"             \
+    #     --plot_fname "${PLOTS_DIR}/overview.png"                                   \
+    #     --logs_dir "${LOGS_DIR}"
+    #
+    # ${SCRIPTS_DIR}/gen_runtime_plots.py                                            \
+    #     --title "Overview Median Runtime (log scale, ${SETS} sets, ${REPS} reps)"  \
+    #     --plot_fname "${PLOTS_DIR}/overview_log_scale.png"                         \
+    #     --logs_dir "${LOGS_DIR}"                                                   \
+    #     --log_yaxis
+    #
+    # ${SCRIPTS_DIR}/gen_runtime_plots.py                                            \
+    #     --title "Overview Median Runtime (${SETS} sets, ${REPS} reps)"             \
+    #     --plot_fname "${PLOTS_DIR}/overview_bar.png"                               \
+    #     --logs_dir "${LOGS_DIR}"                                                   \
+    #     --bar_plot
 
     ${SCRIPTS_DIR}/gen_runtime_plots.py                                            \
         --title "Overview Median Runtime (log scale, ${SETS} sets, ${REPS} reps)"  \
@@ -63,5 +63,9 @@ else
     echo "#                    Generate plots for stats                       #"
     echo "#####################################################################"
 
-    echo "TODO..."
+    ${SCRIPTS_DIR}/gen_stats_plots.py                                          \
+        --plot_dir "${PLOTS_DIR}"                                              \
+        --logs_dir "${LOGS_DIR}"                                               \
+        --bar_plot                                                             \
+        --log_yaxis
 fi
