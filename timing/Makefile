@@ -72,14 +72,14 @@ DEPS = $(wildcard $(IDIR)/*.h)
 LIBS =
 
 # Main target, building all benchmarks
-all: compile-runtime-benchmark
+all: compile-runtime-benchmark compile-gmp-benchmark
 
 .PHONY: prepare-logs
 prepare-logs:
 	mkdir -p $(LOG_PATH)
 
 .PHONY: run-all
-run-all: run-runtime-benchmark
+run-all: run-runtime-benchmark run-gmp-benchmark
 
 .PHONY: all-benched
 all-benched:
