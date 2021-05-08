@@ -21,7 +21,7 @@
 // Stats collection
 #ifdef COLLECT_STATS
 #define ADD_STAT_COLLECTION(type) big_int_stats[(type)]++;
-#elif
+#else
 #define ADD_STAT_COLLECTION(type)
 #endif
 
@@ -57,7 +57,7 @@ typedef struct EgcdResult {
 /*
 * Struct that tracks usage of BigInt functions
 */
-uint64_t big_int_stats[NR_OF_BIG_INT_FNS];
+uint64_t big_int_stats[BIGINT_TYPE_LAST];
 
 static dbl_chunk_size_t chunk_zero = 0;
 static dbl_chunk_size_t chunk_one = 1;

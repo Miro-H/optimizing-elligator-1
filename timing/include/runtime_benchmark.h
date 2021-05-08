@@ -15,7 +15,7 @@
 #endif
 
 #ifndef REPS
-#define REPS 1000
+#define REPS 10000
 #endif
 
 #include "bigint.h"

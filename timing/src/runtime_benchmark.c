@@ -20,20 +20,19 @@
 void bench_big_int_prep(void *argptr)
 {
     big_int_size_ = ((int *)argptr)[0];
-    big_int_array_size_ = ((int *)argptr)[1];
     int random_q = ((int *)argptr)[2];
 
-    big_int_array = (BigInt **)malloc(big_int_array_size_ * sizeof(BigInt *));
-    big_int_array_1 = (BigInt **)malloc(big_int_array_size_ * sizeof(BigInt *));
-    big_int_array_2 = (BigInt **)malloc(big_int_array_size_ * sizeof(BigInt *));
-    big_int_array_3 = (BigInt **)malloc(big_int_array_size_ * sizeof(BigInt *));
-    big_int_array_4 = (BigInt **)malloc(big_int_array_size_ * sizeof(BigInt *));
-    big_int_array_q = (BigInt **)malloc(big_int_array_size_ * sizeof(BigInt *));
+    big_int_array = (BigInt **)malloc(REPS * sizeof(BigInt *));
+    big_int_array_1 = (BigInt **)malloc(REPS * sizeof(BigInt *));
+    big_int_array_2 = (BigInt **)malloc(REPS * sizeof(BigInt *));
+    big_int_array_3 = (BigInt **)malloc(REPS * sizeof(BigInt *));
+    big_int_array_4 = (BigInt **)malloc(REPS * sizeof(BigInt *));
+    big_int_array_q = (BigInt **)malloc(REPS * sizeof(BigInt *));
 
-    int8_t_array_1 = (int8_t *)malloc(big_int_array_size_ * sizeof(int8_t));
-    uint64_t_array_1 = (uint64_t *)malloc(big_int_array_size_ * sizeof(uint64_t));
+    int8_t_array_1 = (int8_t *)malloc(REPS * sizeof(int8_t));
+    uint64_t_array_1 = (uint64_t *)malloc(REPS * sizeof(uint64_t));
 
-    for (uint64_t i = 0; i < big_int_array_size_; i++)
+    for (uint64_t i = 0; i < REPS; i++)
     {
 
         big_int_array_1[i] = big_int_create_random(NULL, big_int_size_);
@@ -58,7 +57,7 @@ void bench_big_int_prep(void *argptr)
 // Run after benchmark
 void bench_big_int_cleanup(void)
 {
-    for (uint64_t i = 0; i < big_int_array_size_; i++)
+    for (uint64_t i = 0; i < REPS; i++)
     {
         big_int_destroy(big_int_array_1[i]);
         big_int_destroy(big_int_array_2[i]);
@@ -81,10 +80,9 @@ void bench_big_int_cleanup(void)
 void bench_big_int_small_prep(void *argptr)
 {
     big_int_size_ = ((int *)argptr)[0];
-    big_int_array_size_ = ((int *)argptr)[1];
-    big_int_array = (BigInt **)malloc(big_int_array_size_ * sizeof(BigInt *));
-    big_int_array_1 = (BigInt **)malloc(big_int_array_size_ * sizeof(BigInt *));
-    for (uint64_t i = 0; i < big_int_array_size_; i++)
+    big_int_array = (BigInt **)malloc(REPS * sizeof(BigInt *));
+    big_int_array_1 = (BigInt **)malloc(REPS * sizeof(BigInt *));
+    for (uint64_t i = 0; i < REPS; i++)
     {
         big_int_array_1[i] = big_int_create_random(NULL, big_int_size_);
     }
@@ -93,7 +91,7 @@ void bench_big_int_small_prep(void *argptr)
 // Run after benchmark
 void bench_big_int_small_cleanup(void)
 {
-    for (uint64_t i = 0; i < big_int_array_size_; i++)
+    for (uint64_t i = 0; i < REPS; i++)
     {
         big_int_destroy(big_int_array[i]);
         big_int_destroy(big_int_array_1[i]);
@@ -106,9 +104,8 @@ void bench_big_int_small_cleanup(void)
 void bench_big_int_destroy_prep(void *argptr)
 {
     big_int_size_ = ((int *)argptr)[0];
-    big_int_array_size_ = ((int *)argptr)[1];
-    big_int_array = (BigInt **)malloc(big_int_array_size_ * sizeof(BigInt *));
-    for (uint64_t i = 0; i < big_int_array_size_; i++)
+    big_int_array = (BigInt **)malloc(REPS * sizeof(BigInt *));
+    for (uint64_t i = 0; i < REPS; i++)
     {
         big_int_array[i] = big_int_alloc(big_int_size_);
     }
@@ -123,13 +120,12 @@ void bench_big_int_destroy_cleanup(void)
 void bench_elligator_1_string_to_point_prep(void *argptr)
 {
     big_int_size_ = ((int *)argptr)[0];
-    big_int_array_size_ = ((int *)argptr)[1];
-    big_int_array_1 = (BigInt **)malloc(big_int_array_size_ * sizeof(BigInt *));
+    big_int_array_1 = (BigInt **)malloc(REPS * sizeof(BigInt *));
 
     init_curve1174(&bench_curve);
-    curve_point_array = (CurvePoint *)malloc(big_int_array_size_ * sizeof(CurvePoint));
+    curve_point_array = (CurvePoint *)malloc(REPS * sizeof(CurvePoint));
 
-    for (uint64_t i = 0; i < big_int_array_size_; i++)
+    for (uint64_t i = 0; i < REPS; i++)
     {
         big_int_array_1[i] = big_int_create_random(NULL, big_int_size_);
     }
@@ -138,7 +134,7 @@ void bench_elligator_1_string_to_point_prep(void *argptr)
 // Run after benchmark
 void bench_elligator_1_string_to_point_cleanup(void)
 {
-    for (uint64_t i = 0; i < big_int_array_size_; i++)
+    for (uint64_t i = 0; i < REPS; i++)
     {
         big_int_destroy(big_int_array_1[i]);
     }
@@ -151,14 +147,13 @@ void bench_elligator_1_string_to_point_cleanup(void)
 void bench_elligator_1_point_to_string_prep(void *argptr)
 {
     big_int_size_ = ((int *)argptr)[0];
-    big_int_array_size_ = ((int *)argptr)[1];
-    big_int_array_1 = (BigInt **)malloc(big_int_array_size_ * sizeof(BigInt *));
+    big_int_array_1 = (BigInt **)malloc(REPS * sizeof(BigInt *));
 
     init_curve1174(&bench_curve);
-    curve_point_array = (CurvePoint *)malloc(big_int_array_size_ * sizeof(CurvePoint));
+    curve_point_array = (CurvePoint *)malloc(REPS * sizeof(CurvePoint));
 
 
-    for (uint64_t i = 0; i < big_int_array_size_; i++)
+    for (uint64_t i = 0; i < REPS; i++)
     {
         big_int_array_1[i] = big_int_create_random(NULL, big_int_size_);
         curve_point_array[i] = elligator_1_string_to_point(big_int_array_1[i], bench_curve);;
@@ -168,7 +163,7 @@ void bench_elligator_1_point_to_string_prep(void *argptr)
 // Run after benchmark
 void bench_elligator_1_point_to_string_cleanup(void)
 {
-    for (uint64_t i = 0; i < big_int_array_size_; i++)
+    for (uint64_t i = 0; i < REPS; i++)
     {
         big_int_destroy(big_int_array_1[i]);
     }

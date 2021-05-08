@@ -5,7 +5,7 @@ TIMING_BASE_DIR=$(dirname ${SCRIPTS_DIR})
 LOGS_DIR=${TIMING_BASE_DIR}/logs
 
 DEFAULT_SETS=10
-DEFAULT_REPS=1000
+DEFAULT_REPS=10000
 
 if [[ -z $SETS || -z $REPS ]]; then
     echo "WARNING: using default value for SETS (${DEFAULT_SETS}) and/or "\

@@ -54,7 +54,8 @@ gen-bigint-types:
 		--src_file ${SDIR}/bigint.c \
 		--tar_file ${IDIR}/bigint_types.h \
 		--add_translation \
-		--array_name "big_int_type_names"
+		--array_name "big_int_type_names" \
+		--strip_prefix "BIGINT_TYPE_"
 
 $(LIB_NAME): $(LIB_OBJS)
 

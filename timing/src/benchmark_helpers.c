@@ -34,34 +34,37 @@
 /**
  * Local function prototypes
  */
-uint64_t bench_warmup(BenchmarkClosure bench_closure);
+uint64_t bench_warmup(BenchmarkClosure bench_closure, uint64_t num_reps);
 
 /**
 * \brief Make warmup runs for a benchmark of at least WARMUP_CYCLES cycles.
+*
+* \returns a number of repetitions that achieves at least WARMUP_CYCLES cycles
 */
-uint64_t bench_warmup(BenchmarkClosure bench_closure)
+uint64_t bench_warmup(BenchmarkClosure bench_closure, uint64_t num_reps)
 {
-    uint64_t num_reps, cycles, start;
-    int i;
+    uint64_t num_reps_local, cycles, start;
+    int64_t i;
 
-    num_reps = 1;
+    num_reps_local = (num_reps) ? num_reps : 1;
     cycles = 0;
 
-    bench_closure.bench_prep_fn(bench_closure.bench_prep_args);
     do
     {
-        num_reps <<= 1;
+        bench_closure.bench_prep_fn(bench_closure.bench_prep_args);
+
         start = start_tsc();
-        for (i = 0; i < num_reps; ++i)
+        for (i = 0; i < num_reps_local; ++i)
         {
-            bench_closure.bench_fn((void *) i);
+            bench_closure.bench_fn((void *) &i);
         }
         cycles = stop_tsc(start);
+        bench_closure.bench_cleanup_fn();
+
+        num_reps_local <<= 1;
     } while (cycles < WARMUP_CYCLES);
 
-    bench_closure.bench_cleanup_fn();
-
-    return num_reps;
+    return num_reps_local >> 1;
 }
 
 /**
@@ -99,22 +102,23 @@ void benchmark_runner(BenchmarkClosure bench_closure, char *bench_name,
     num_reps = 1;
     num_sets = 1;
     reset_stats();
-#elif
+#else
     fprintf(out_fp, "Measurement, Runtime [cycles]\n");
 
-    num_reps_warmup = bench_warmup(bench_closure);
+    num_reps_warmup = bench_warmup(bench_closure, num_reps);
     if (!num_reps)
         num_reps = num_reps_warmup;
 #endif
 
     for (j = 0; j < num_sets; ++j)
     {
+
         bench_closure.bench_prep_fn(bench_closure.bench_prep_args);
 
         start = start_tsc();
         for (i = 0; i < num_reps; ++i)
         {
-            bench_closure.bench_fn((void *) i);
+            bench_closure.bench_fn((void *) &i);
         }
         cycles = stop_tsc(start);
 
@@ -127,7 +131,7 @@ void benchmark_runner(BenchmarkClosure bench_closure, char *bench_name,
     }
 
 #ifdef COLLECT_STATS
-    for (i = 0; i < NR_OF_BIG_INT_FNS; ++i)
+    for (i = 0; i < BIGINT_TYPE_LAST; ++i)
     {
         fprintf(out_fp, "%s, %" PRIu64 "\n", big_int_type_names[i], big_int_stats[i]);
         fflush(out_fp);

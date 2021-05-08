@@ -14,6 +14,15 @@ HEADER = \
 
 LINE_FORMAT = "#define {0}{1}\n"
 
+def unique_list(l):
+    l_unique = []
+
+    for e in l:
+        if e not in l_unique:
+            l_unique.append(e)
+
+    return l_unique
+
 if __name__ == '__main__':
     # Read arguments
     parser = argparse.ArgumentParser()
@@ -38,7 +47,7 @@ if __name__ == '__main__':
     array_name      = args.array_name
     strip_prefix    = args.strip_prefix
 
-    if add_translation and array_name = None:
+    if add_translation and array_name == None:
         print("ERROR: --array_name must be specified with --add_translation")
         exit(1)
 
@@ -47,19 +56,27 @@ if __name__ == '__main__':
         regex   = re.compile(pattern)
         matches = regex.findall(src_fp.read())
 
+    matches = unique_list(matches)
     line_len = max([len(match) for match in matches]) + 1
 
     with open(tar_file, "w+") as tar_fp:
         tar_fp.write(HEADER)
 
+        # Include guard
+        guard_macro = tar_file.split("/")[-1].split(".")[0].upper() + "_H_"
+        tar_fp.write(f"#ifndef {guard_macro}\n#define {guard_macro}\n\n")
+
         for idx, match in enumerate(matches):
             tar_fp.write(LINE_FORMAT.format(match.ljust(line_len), idx))
 
         if add_translation:
-            tar_fp.write("\nchar *{array_name}[] = {\n")
+            tar_fp.write(f"\nstatic char *{array_name}[] = {{\n")
 
-            for match in matches[:-1]:
-                name = match.replace(strip_prefix, "").lower()
-                tar_fp.write("    \"{name}\",")
+            names = [match.replace(strip_prefix, "").lower() for match in matches]
 
-            tar_fp.write("    \"{matches[-1]}\"\n};")
+            for name in names[:-1]:
+                tar_fp.write(f"    \"{name}\",\n")
+
+            tar_fp.write(f"    \"{names[-1]}\"\n}};\n")
+
+        tar_fp.write(f"\n#endif // {guard_macro}")

@@ -1313,11 +1313,10 @@ BigInt *big_int_chi(BigInt *r, BigInt *t, BigInt *q)
 }
 
 
+// This function has to be at the end of this file for the type auto-generation
+// to work.
 void reset_stats()
 {
-    for (int64_t i = 0; i < NR_OF_BIG_INT_FNS; ++i)
+    for (int64_t i = 0; i < BIGINT_TYPE_LAST; ++i)
         big_int_stats[i] = 0;
 }
-
-// The following line must be at the end of this file to the type auto-generation.
-// BIGINT_TYPE_NR_OF_BIG_INT_FNS

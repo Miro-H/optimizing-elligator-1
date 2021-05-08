@@ -3,6 +3,9 @@
  * OVERWRITTEN!
  */
 
+#ifndef BENCHMARK_TYPES_H_
+#define BENCHMARK_TYPES_H_
+
 #define BENCH_TYPE_ALLOC              0
 #define BENCH_TYPE_CALLOC             1
 #define BENCH_TYPE_DESTROY            2
@@ -44,3 +47,5 @@
 #define BENCH_TYPE_CHI                38
 #define BENCH_TYPE_ELLIGATOR1_STR2PNT 39
 #define BENCH_TYPE_ELLIGATOR1_PNT2STR 40
+
+#endif // BENCHMARK_TYPES_H_
