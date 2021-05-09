@@ -15,43 +15,158 @@
 
 // Include header files
 #include "benchmark_helpers.h"
+#include "runtime_benchmark.h"
+#include "benchmark_types.h"
 
-#ifndef LOG_PATH
-    #define LOG_PATH "../logs"
-#endif
+/*
+ * Global mpz_t variables
+ */
+mpz_t **mpz_array;
+mpz_t **mpz_array_1;
+mpz_t **mpz_array_2;
+mpz_t **mpz_array_3;
+mpz_t **mpz_array_4;
+mpz_t **mpz_array_q;
+
+int8_t *int8_t_array_1;
+uint64_t *uint64_t_array_1;
+
+int mpz_size_;
+
+int bench_mpz_size_256_args[] = {BIGINTSIZE, REPS, 1};
 
 //--- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
 
 void bench_GMP_prep(void *argptr)
 {
+    mpz_size_ = ((int *)argptr)[0];
+    int64_t array_size = ((int *)argptr)[1];
+    int random_q = ((int *)argptr)[2];
 
+    mpz_array = (mpz_t **)malloc(array_size * sizeof(mpz_t *));
+    mpz_array_1 = (mpz_t **)malloc(array_size * sizeof(mpz_t *));
+    mpz_array_2 = (mpz_t **)malloc(array_size * sizeof(mpz_t *));
+    mpz_array_3 = (mpz_t **)malloc(array_size * sizeof(mpz_t *));
+    mpz_array_4 = (mpz_t **)malloc(array_size * sizeof(mpz_t *));
+    mpz_array_q = (mpz_t **)malloc(array_size * sizeof(mpz_t *));
+
+    int8_t_array_1 = (int8_t *)malloc(array_size * sizeof(int8_t));
+    uint64_t_array_1 = (uint64_t *)malloc(array_size * sizeof(uint64_t));
+
+    gmp_randstate_t state;
+    gmp_randinit_default(state);
+
+    for (uint64_t i = 0; i < array_size; i++)
+    {
+        mpz_init(*(mpz_array_1[i]));
+        mpz_urandomb(*(mpz_array_1[i]), state, 256);
+
+        mpz_init(*(mpz_array_2[i]));
+        mpz_urandomb(*(mpz_array_2[i]), state, 256);
+
+        mpz_init(*(mpz_array_3[i]));
+        mpz_urandomb(*(mpz_array_3[i]), state, 256);
+
+        mpz_init(*(mpz_array_4[i]));
+        mpz_urandomb(*(mpz_array_4[i]), state, 256);
+
+        if (random_q)
+        {
+            mpz_init(*(mpz_array_q[i]));
+            mpz_urandomb(*(mpz_array_4[i]), state, 256);
+        }
+        else
+        {
+            mpz_init(*(mpz_array_q[i]));
+            mpz_set_str(*(mpz_array_q[i]), "7FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF7", 16);
+        }
+
+        uint64_t_array_1[i] = rand() % 256;
+    }
 }
 
 // Run after benchmark
 void bench_GMP_cleanup(void *argptr)
 {
+    int64_t used_values = ((int64_t *) argptr)[0];
+    int64_t array_size = ((int64_t *) argptr)[1];
 
+    for (uint64_t i = 0; i < array_size; i++)
+    {
+        mpz_clear(*(mpz_array_1[i]));
+        mpz_clear(*(mpz_array_2[i]));
+        mpz_clear(*(mpz_array_3[i]));
+        mpz_clear(*(mpz_array_4[i]));
+        mpz_clear(*(mpz_array_q[i]));
+    }
+
+    for (uint64_t i = 0; i < used_values; i++)
+    {
+        mpz_clear(*(mpz_array[i]));
+    }
+    free(mpz_array);
+    free(mpz_array_1);
+    free(mpz_array_2);
+    free(mpz_array_3);
+    free(mpz_array_4);
+    free(mpz_array_q);
+
+    free(int8_t_array_1);
+    free(uint64_t_array_1);
 }
 
 void bench_GMP_small_prep(void *argptr)
 {
+    mpz_size_ = ((int *)argptr)[0];
+    int64_t array_size = ((int *)argptr)[1];
 
+    mpz_array = (mpz_t **)malloc(array_size * sizeof(mpz_t *));
+    mpz_array_1 = (mpz_t **)malloc(array_size * sizeof(mpz_t *));
+    
+    gmp_randstate_t state;
+    gmp_randinit_default(state);
+
+    for (uint64_t i = 0; i < array_size; i++)
+    {
+        mpz_init(*(mpz_array_1[i]));
+        mpz_urandomb(*(mpz_array_1[i]), state, 256);
+    }
 }
 
 // Run after benchmark
 void bench_GMP_small_cleanup(void *argptr)
 {
+    int64_t used_values = ((int64_t *) argptr)[0];
+    int64_t array_size = ((int64_t *) argptr)[1];
 
+    for (uint64_t i = 0; i < array_size; i++)
+    {
+        mpz_clear(*(mpz_array_1[i]));
+    }
+
+    for (uint64_t i = 0; i < used_values; i++)
+    {
+        mpz_clear(*(mpz_array[i]));
+    }
+    free(mpz_array);
+    free(mpz_array_1);
 }
 
 void bench_GMP_destroy_prep(void *argptr)
 {
+    mpz_size_ = ((int *)argptr)[0];
+    int64_t array_size = ((int *)argptr)[1];
 
+    mpz_array = (mpz_t **)malloc(array_size * sizeof(mpz_t *));
+    for (uint64_t i = 0; i < array_size; i++)
+    {
+        mpz_init(*(mpz_array[i]));
+    }
 }
 
 void bench_GMP_destroy_cleanup(void *argptr)
 {
-
+    free(mpz_array);
 }
 
 //--- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
@@ -60,12 +175,19 @@ void bench_GMP_destroy_cleanup(void *argptr)
 /* mpz_init is analagous to big_int_alloc */
 void bench_mpz_init_fn(void *arg)
 {
-
+    int64_t i = *((int64_t *) arg);
+    mpz_init(*(mpz_array[i]));
 }
 
 void bench_mpz_init(void *bench_args, char *bench_name, char *path)
 {
-
+    BenchmarkClosure bench_closure = {
+        .bench_prep_args = bench_args,
+        .bench_prep_fn = bench_GMP_small_prep,
+        .bench_fn = bench_mpz_init_fn,
+        .bench_cleanup_fn = bench_GMP_small_cleanup,
+    };
+    benchmark_runner(bench_closure, bench_name, path, SETS, REPS, REPS);
 }
 
 //--- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
@@ -333,8 +455,17 @@ void bench_mpz_gcd_ext(void *bench_args, char *bench_name, char *path)
 
 //--- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
 
-int main(void)
+int main(int argc, char const *argv[])
 {
+    int bench_type;
+    for (int i = 1; i < argc; ++i) {
+        bench_type = atoi(argv[i]);
+
+        BENCHMARK(bench_type, BENCH_TYPE_ALLOC,
+            bench_mpz_init((void *)bench_mpz_size_256_args, "init",
+                LOG_PATH "/runtime_mpz_init_prep.log"));
+    }
+
     printf_bench_header("GMP Benchmarks");
     return EXIT_SUCCESS;
 }
