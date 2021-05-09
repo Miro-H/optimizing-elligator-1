@@ -53,15 +53,15 @@ if [[ -z "${COLLECT_STATS}" ]]; then
         --bar_plot                                                                 \
         --log_yaxis
 
+    # echo "#####################################################################"
+    # echo "#             Generate line plots of runtime measurements           #"
+    # echo "#####################################################################"
+    #
+    # ${SCRIPTS_DIR}/gen_perf_plot.py                         \
+    #     --plot_fname "${PLOTS_DIR}/runtime_big_int_abs.png" \
+    #     --title "BigInt abs Runtime Plot"                   \
+    #     ${LOGS_DIR}/bench_big_int_abs.log
 
-    echo "#####################################################################"
-    echo "#             Generate line plots of runtime measurements           #"
-    echo "#####################################################################"
-
-    ${SCRIPTS_DIR}/gen_perf_plot.py                         \
-        --plot_fname "${PLOTS_DIR}/abs_plot.png"    		\
-        --title "BigInt abs Runtime Plot"                   \
-        ${LOGS_DIR}/bench_big_int_abs.log
 else
     PLOTS_DIR="${PLOTS_DIR}/stats${SUBFOLDER}"
     mkdir -p ${PLOTS_DIR}
