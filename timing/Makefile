@@ -144,7 +144,7 @@ run-gmp-benchmark: compile-gmp-benchmark
 	./$(BDIR)/gmp-benchmark
 
 gmp-benchmark: $(OBJ_BENCHED) $(OBJ)
-	$(CC) -o $(BDIR)/$@ $^ $(CFLAGS) $(LIBS)
+	$(CC) -o $(BDIR)/$@ $^ $(CFLAGS) $(LIBS) -lgmp
 
 .PHONY: plots
 plots: run-all
