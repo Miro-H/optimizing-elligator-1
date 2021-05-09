@@ -4,16 +4,33 @@ SDIR  		= src
 BDIR		= bin
 SCRIPTS_DIR = scripts
 BIN_FILES   = $(filter-out $(wildcard $(BDIR)/.*), $(wildcard $(BDIR)/*))
-LOG_DIR 	= logs/
+LOG_DIR 	= logs
 
 ifeq ($(BENCHMARKS),)
 	BENCHMARKS = -1
 endif
 
 # src directory of the benchmarked code
-SRC_BENCHED		= ../src
-ODIR_BENCHED 	= $(SRC_BENCHED)/obj
-IDIR_BENCHED	= $(SRC_BENCHED)/../include
+
+#
+# The following versions exist:
+#	- Version 1.0: Straightforward C, unoptimized
+#	- Version 2.0: Uptimized C using standard techniques
+#	- Version 3.0 (in the future): C including AVX optimizations
+#
+ifeq ($(VERSION),)
+	VERSION = 2.0
+endif
+
+ifeq ($(VERSION), 1.0)
+	BENCHED_ROOT_DIR = ../code_unoptimized
+else ifeq ($(VERSION), 2.0)
+	BENCHED_ROOT_DIR = ../code_optimized/standard_optimizations
+endif
+
+SRC_BENCHED	 = $(BENCHED_ROOT_DIR)/src
+ODIR_BENCHED = $(SRC_BENCHED)/obj
+IDIR_BENCHED = $(BENCHED_ROOT_DIR)/include
 
 # common scripts
 ROOT_SCRIPTS_DIR = ../scripts
@@ -66,8 +83,14 @@ run-all: run-runtime-benchmark
 
 .PHONY: all-benched
 all-benched:
-	make -C $(SRC_BENCHED) clean
-	COLLECT_STATS=$(COLLECT_STATS) make -C $(SRC_BENCHED) all
+ifeq ($(BENCHED_ROOT_DIR),)
+	$(error Unsupported version $(VERSION) (check Makefile comments))
+endif
+	@echo "\n------------------------------------------------------------------------"
+	@echo "Compile timing for using $(BENCHED_ROOT_DIR)"
+	@echo "------------------------------------------------------------------------\n\n"
+	make -C $(BENCHED_ROOT_DIR) clean
+	COLLECT_STATS=$(COLLECT_STATS) make -C $(BENCHED_ROOT_DIR) all
 
 # Fresh build
 .PHONY: rebuild

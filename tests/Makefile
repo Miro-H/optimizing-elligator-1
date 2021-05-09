@@ -6,9 +6,26 @@ SCRIPTS_DIR = scripts
 BIN_FILES   = $(filter-out $(wildcard $(BDIR)/.*), $(wildcard $(BDIR)/*))
 
 # src directory of the code to be tested
-SRC_TESTED	= ../src
+
+#
+# The following versions exist:
+#	- Version 1.0: Straightforward C, unoptimized
+#	- Version 2.0: Uptimized C using standard techniques
+#	- Version 3.0 (in the future): C including AVX optimizations
+#
+ifeq ($(VERSION),)
+	VERSION = 2.0
+endif
+
+ifeq ($(VERSION), 1.0)
+	TESTED_ROOT_DIR = ../code_unoptimized
+else ifeq ($(VERSION), 2.0)
+	TESTED_ROOT_DIR = ../code_optimized/standard_optimizations
+endif
+
+SRC_TESTED	= $(TESTED_ROOT_DIR)/src
 ODIR_TESTED = $(SRC_TESTED)/obj
-IDIR_TESTED	= $(SRC_TESTED)/../include
+IDIR_TESTED	= $(TESTED_ROOT_DIR)/include
 
 CC      	= gcc
 CFLAGS  	= -I$(IDIR_TESTED) -I$(IDIR)
@@ -40,11 +57,17 @@ else
 endif
 
 # Main target, building all tests
-all: compile-example-test compile-bigint-test compile-elligator-test
+all: compile-bigint-test compile-elligator-test
 
 .PHONY: all-tested
 all-tested:
-	make -C $(SRC_TESTED) all
+ifeq ($(TESTED_ROOT_DIR),)
+	$(error Unsupported version $(VERSION) (check Makefile comments))
+endif
+	@echo "\n------------------------------------------------------------------------"
+	@echo "Compile tests for using $(TESTED_ROOT_DIR)"
+	@echo "------------------------------------------------------------------------\n\n"
+	make -C $(TESTED_ROOT_DIR) all
 
 # Fresh build
 .PHONY: rebuild
@@ -57,19 +80,6 @@ run-tests: all
 
 $(ODIR)/%.o: $(SDIR)/%.c $(DEPS)
 	$(CC) -c -o $@ $< $(CFLAGS)
-
-# Specify the object files constituting the test
-_OBJ	= example_test.o
-OBJ 	= $(patsubst %,$(ODIR)/%,$(_OBJ))
-# Specify the object files of the tested functions
-_OBJ_TESTED = example.o
-OBJ_TESTED 	= $(patsubst %,$(ODIR_TESTED)/%,$(_OBJ_TESTED))
-
-.PHONY: compile-example-test
-compile-example-test: all-tested example-test
-
-example-test: $(OBJ_TESTED) $(OBJ)
-	$(CC) -o $(BDIR)/$@ $^ $(CFLAGS) $(LIBS)
 
 # Specify the object files constituting the test
 _OBJ	= bigint_test.o

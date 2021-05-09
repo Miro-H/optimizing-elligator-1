@@ -1,8 +1,8 @@
-IDIR    	= ../include
-LDIR		= ../lib
-BDIR		= ../bin
-ODIR    	= obj
-SDIR		= .
+IDIR    	= ./include
+LDIR		= ./lib
+BDIR		= ./bin
+SDIR		= ./src
+ODIR    	= ./$(SDIR)/obj
 TESTS_DIR 	= ../tests
 BIN_FILES   = $(filter-out $(wildcard $(BDIR)/.*), $(wildcard $(BDIR)/*))
 
@@ -25,7 +25,7 @@ LIBS    =
 
 LIB_NAME 	= $(LDIR)/elligator.a
 # Add the name of every .c file that you want to compile here
-_LIB_SRCS		= example.c elligator.c bigint.c
+_LIB_SRCS		= elligator.c bigint.c
 LIB_SRCS 		= $(patsubst %,$(SDIR)/%,$(_LIB_SRCS))
 # This assumes the library depends on all header files in IDIR
 LIB_HEADERS = $(wildcard $(IDIR)/*.h)
