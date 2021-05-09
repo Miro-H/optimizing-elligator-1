@@ -71,7 +71,7 @@ void bench_warmup(BenchmarkClosure bench_closure, uint64_t num_sets,
     if (num_sets_local > num_sets) {
         WARNING("Current benchmark uses less than %d cycles. It's recommended "
             "to increase the number of reps to %" PRIu64,
-            WARMUP_CYCLES, num_reps * (num_sets_local - num_sets));
+            WARMUP_CYCLES, (num_reps * (num_sets_local - num_sets)) / num_sets);
     }
 }
 
@@ -142,7 +142,7 @@ void benchmark_runner(BenchmarkClosure bench_closure, char *bench_name,
         }
         cycles = stop_tsc(start);
 
-        fprintf(out_fp, "%" PRId64 ", %.02lf\n", j, (double)cycles / num_reps);
+        fprintf(out_fp, "%" PRId64 ", %.02lf\n", i, (double)cycles / num_reps);
         fflush(out_fp);
 
         bench_closure.bench_cleanup_fn((void *) cleanup_args);
