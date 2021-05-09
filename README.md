@@ -8,4 +8,10 @@ This project is developed by the following people:
 - Miro Haller
 
 ## Development
-The [development readme](./DEVELOPMENT.md) provides information on how to contribute to this project.
+The [development readme](./documentation/DEVELOPMENT.md) provides information on how to contribute to this project.
+
+## Optimizations
+The [optimizations readme](./documentation/optimizations/README.md) gives information on the performed optimizations.
+
+## Meeting Notes
+The [meeting notes folder](./documentation/meeting_notes) collects notes from project meetings.

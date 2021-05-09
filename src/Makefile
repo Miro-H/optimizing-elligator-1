@@ -6,19 +6,27 @@ SDIR		= .
 TESTS_DIR 	= ../tests
 BIN_FILES   = $(filter-out $(wildcard $(BDIR)/.*), $(wildcard $(BDIR)/*))
 
+# common scripts
+ROOT_SCRIPTS_DIR = ../scripts
+
 CC      = gcc
 CFLAGS  = -I$(IDIR)
 
 # Add additional compilation flags to improve code quality
 CFLAGS += -Wall -Werror
 
+# Forward COLLECT_STATS env variable to compiled binaries
+ifneq ($(COLLECT_STATS),)
+	CFLAGS += -DCOLLECT_STATS=${COLLECT_STATS}
+endif
+
 # Add libraries to this macro, if needed
 LIBS    =
 
 LIB_NAME 	= $(LDIR)/elligator.a
 # Add the name of every .c file that you want to compile here
-_LIB_SRCS	= example.c
-LIB_SRCS 	= $(patsubst %,$(SDIR)/%,$(_LIB_SRCS))
+_LIB_SRCS		= example.c elligator.c bigint.c
+LIB_SRCS 		= $(patsubst %,$(SDIR)/%,$(_LIB_SRCS))
 # This assumes the library depends on all header files in IDIR
 LIB_HEADERS = $(wildcard $(IDIR)/*.h)
 LIB_OBJS 	= $(patsubst %,$(ODIR)/%,$(_LIB_SRCS:.c=.o))
@@ -26,7 +34,7 @@ LIB_OBJS 	= $(patsubst %,$(ODIR)/%,$(_LIB_SRCS:.c=.o))
 
 # This target is run whenever make is called without any additional
 # arguments. Make sure it always compiles the main project.
-all: $(LIB_NAME) build-lib
+all: gen-bigint-types $(LIB_NAME) build-lib
 
 $(ODIR)/%.o: $(SDIR)/%.c $(DEPS)
 	$(CC) -c -o $@ $< $(CFLAGS)
@@ -38,6 +46,16 @@ rebuild: clean all
 build-lib:
 	ar rcs $(LIB_NAME) $(LIB_HEADERS) $(LIB_OBJS)
 	ranlib $(LIB_NAME)
+
+
+.PHONY: gen-bigint-types
+gen-bigint-types:
+	${ROOT_SCRIPTS_DIR}/gen_types.py \
+		--src_file ${SDIR}/bigint.c \
+		--tar_file ${IDIR}/bigint_types.h \
+		--add_translation \
+		--array_name "big_int_type_names" \
+		--strip_prefix "BIGINT_TYPE_"
 
 $(LIB_NAME): $(LIB_OBJS)
 
