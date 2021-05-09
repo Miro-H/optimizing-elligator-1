@@ -14,7 +14,7 @@ BIN_FILES   = $(filter-out $(wildcard $(BDIR)/.*), $(wildcard $(BDIR)/*))
 #	- Version 3.0 (in the future): C including AVX optimizations
 #
 ifeq ($(VERSION),)
-	VERSION = 1.0
+	VERSION = 2.0
 endif
 
 ifeq ($(VERSION), 1.0)
