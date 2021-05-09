@@ -1,7 +1,7 @@
 # This command just forwards make commands to the src subdirectory
 
 TARGETS 	:= all clean
-SUB_DIRS 	:= src tests
+SUB_DIRS 	:= code_unoptimized code_optimized/standard_optimizations tests
 
 .PHONY: $(SUB_DIRS) $(TARGETS)
 

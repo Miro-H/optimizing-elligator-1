@@ -1,13 +1,13 @@
-IDIR    	= ../include
-LDIR		= ../lib
-BDIR		= ../bin
-ODIR    	= obj
-SDIR		= .
+IDIR    	= ./include
+LDIR		= ./lib
+BDIR		= ./bin
+SDIR		= ./src
+ODIR    	= ./$(SDIR)/obj
 TESTS_DIR 	= ../tests
 BIN_FILES   = $(filter-out $(wildcard $(BDIR)/.*), $(wildcard $(BDIR)/*))
 
 # common scripts
-ROOT_SCRIPTS_DIR = ../scripts
+ROOT_SCRIPTS_DIR = ../../scripts
 
 CC      = gcc
 CFLAGS  = -I$(IDIR)

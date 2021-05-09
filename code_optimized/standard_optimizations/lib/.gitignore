@@ -1,0 +1,2 @@
+# Ignore libraries compiled in this project
+*.a
