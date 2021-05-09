@@ -57,7 +57,7 @@ else
 endif
 
 # Main target, building all tests
-all: compile-example-test compile-bigint-test compile-elligator-test
+all: compile-bigint-test compile-elligator-test
 
 .PHONY: all-tested
 all-tested:
@@ -80,19 +80,6 @@ run-tests: all
 
 $(ODIR)/%.o: $(SDIR)/%.c $(DEPS)
 	$(CC) -c -o $@ $< $(CFLAGS)
-
-# Specify the object files constituting the test
-_OBJ	= example_test.o
-OBJ 	= $(patsubst %,$(ODIR)/%,$(_OBJ))
-# Specify the object files of the tested functions
-_OBJ_TESTED = example.o
-OBJ_TESTED 	= $(patsubst %,$(ODIR_TESTED)/%,$(_OBJ_TESTED))
-
-.PHONY: compile-example-test
-compile-example-test: all-tested example-test
-
-example-test: $(OBJ_TESTED) $(OBJ)
-	$(CC) -o $(BDIR)/$@ $^ $(CFLAGS) $(LIBS)
 
 # Specify the object files constituting the test
 _OBJ	= bigint_test.o
