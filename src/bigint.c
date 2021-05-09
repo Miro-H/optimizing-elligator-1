@@ -12,6 +12,7 @@
  * Includes
  */
 #include <stdlib.h>
+#include <time.h> // for random BigInt
 
 // header files
 #include "bigint.h"
@@ -32,12 +33,18 @@ BigInt *big_int_create_from_dbl_chunk(BigInt *r, dbl_chunk_size_t chunk,
     uint8_t sign);
 BigInt *big_int_prune_leading_zeros(BigInt *r, BigInt *a);
 
+/**
+ * Global variables
+ */
+uint8_t do_seed_rand = 1;
 
 /**
  * \brief Allocate a BigInt of the given size
  */
 BigInt *big_int_alloc(uint64_t size)
 {
+    ADD_STAT_COLLECTION(BIGINT_TYPE_BIG_INT_ALLOC);
+
     BigInt *a;
 
     a = (BigInt *) malloc(sizeof(BigInt));
@@ -59,6 +66,8 @@ BigInt *big_int_alloc(uint64_t size)
  */
 BigInt *big_int_calloc(uint64_t size)
 {
+    ADD_STAT_COLLECTION(BIGINT_TYPE_BIG_INT_CALLOC);
+
     BigInt *a;
 
     a = (BigInt *) calloc(1, sizeof(BigInt));
@@ -83,6 +92,8 @@ BigInt *big_int_calloc(uint64_t size)
  */
 BigInt *big_int_get_res(BigInt *r, BigInt *a)
 {
+    ADD_STAT_COLLECTION(BIGINT_TYPE_BIG_INT_GET_RES);
+
     if (!r)
         return big_int_duplicate(a);
     if (r == a)
@@ -96,6 +107,8 @@ BigInt *big_int_get_res(BigInt *r, BigInt *a)
  */
 BigInt *big_int_prune_leading_zeros(BigInt *r, BigInt *a)
 {
+    ADD_STAT_COLLECTION(BIGINT_TYPE_BIG_INT_PRUNE_LEADING_ZEROS);
+
     r = big_int_get_res(r, a);
 
     // Find actual size of r (at least 1)
@@ -115,6 +128,8 @@ BigInt *big_int_prune_leading_zeros(BigInt *r, BigInt *a)
  */
 BigInt *big_int_create(BigInt *r, int64_t x)
 {
+    ADD_STAT_COLLECTION(BIGINT_TYPE_BIG_CREATE);
+
     if (x > BIGINT_RADIX_SIGNED || x == INT64_MIN || x < -BIGINT_RADIX_SIGNED)
         FATAL("Integer %" PRId64 " does not fit into a single chunk of %lu bytes\n",
             x, sizeof(chunk_size_t));
@@ -138,6 +153,8 @@ BigInt *big_int_create(BigInt *r, int64_t x)
 BigInt *big_int_create_from_dbl_chunk(BigInt *r, dbl_chunk_size_t chunk,
     uint8_t sign)
 {
+    ADD_STAT_COLLECTION(BIGINT_TYPE_BIG_INT_CREATE_FROM_DBL_CHUNK);
+
     if (!r)
         r = big_int_alloc(BIGINT_FIXED_SIZE);
 
@@ -162,6 +179,8 @@ BigInt *big_int_create_from_dbl_chunk(BigInt *r, dbl_chunk_size_t chunk,
  */
 BigInt *big_int_create_from_hex(BigInt *r, char* s)
 {
+    ADD_STAT_COLLECTION(BIGINT_TYPE_BIG_INT_CREATE_FROM_HEX);
+
     size_t s_len;
     int64_t chunk_size, i;
     // buf needs space for zero byte and sign too
@@ -215,10 +234,53 @@ BigInt *big_int_create_from_hex(BigInt *r, char* s)
 
 
 /**
+ * \brief Create a random BigInt
+ *
+ * \param r BigInt pointer should be NULL
+ * \param nr_of_chunks Number of chunks in the created BigInt
+ */
+BigInt *big_int_create_random(BigInt *r, int64_t nr_of_chunks)
+{
+    ADD_STAT_COLLECTION(BIGINT_TYPE_BIG_INT_CREATE_RANDOM);
+
+    int64_t i, offset;
+
+    // NOTE: For arbitrary sized BigInts, this would allocate at least nr_of_chunks
+    if (!r)
+        r = big_int_alloc(BIGINT_FIXED_SIZE);
+
+    if (do_seed_rand) {
+        srand(time(NULL));
+        do_seed_rand = 0;
+    }
+
+    r->sign = rand() % 2;
+    r->overflow  = 0;
+    r->size      = nr_of_chunks;
+
+    for(i = 0; i < nr_of_chunks; i++)
+    {
+        offset = 1;
+        r->chunks[i] = 0;
+        while (offset < BIGINT_RADIX) {
+            r->chunks[i] += ((dbl_chunk_size_t) rand()) * offset;
+            offset *= RAND_MAX;
+        }
+        r->chunks[i] %= BIGINT_RADIX;
+    }
+
+    return r;
+}
+
+
+
+/**
  * \brief Free a BigInt
  */
 void big_int_destroy(BigInt *a)
 {
+    ADD_STAT_COLLECTION(BIGINT_TYPE_BIG_INT_DESTROY);
+
     if (a->alloc_size > 0)
         free(a->chunks);
     free(a);
@@ -230,6 +292,8 @@ void big_int_destroy(BigInt *a)
  */
 BigInt *big_int_copy(BigInt *a, BigInt *b)
 {
+    ADD_STAT_COLLECTION(BIGINT_TYPE_BIG_INT_COPY);
+
     // NOTE: For arbitrary sizes, we'd need a realloc here
     if (a->alloc_size < b->size)
         FATAL("Cannot copy larger BigInt into smaller one!\n");
@@ -247,6 +311,8 @@ BigInt *big_int_copy(BigInt *a, BigInt *b)
  */
 BigInt *big_int_duplicate(BigInt *a)
 {
+    ADD_STAT_COLLECTION(BIGINT_TYPE_BIG_INT_DUPLICATE);
+
     BigInt *b;
 
     b = big_int_alloc(a->alloc_size);
@@ -275,6 +341,8 @@ void big_int_print(BigInt *a)
  */
 BigInt *big_int_neg(BigInt *r, BigInt *a)
 {
+    ADD_STAT_COLLECTION(BIGINT_TYPE_BIG_INT_NEG);
+
     r = big_int_get_res(r, a);
     r->sign = !r->sign;
 
@@ -288,6 +356,8 @@ BigInt *big_int_neg(BigInt *r, BigInt *a)
  */
 BigInt *big_int_abs(BigInt *r, BigInt *a)
 {
+    ADD_STAT_COLLECTION(BIGINT_TYPE_BIG_INT_ABS);
+
     r = big_int_get_res(r, a);
     r->sign = 0;
 
@@ -301,6 +371,8 @@ BigInt *big_int_abs(BigInt *r, BigInt *a)
  */
 BigInt *big_int_add(BigInt *r, BigInt *a, BigInt *b)
 {
+    ADD_STAT_COLLECTION(BIGINT_TYPE_BIG_INT_ADD);
+
     BigInt *aa, *bb, *neg;
     uint8_t carry;
     int64_t i;
@@ -392,6 +464,8 @@ BigInt *big_int_add(BigInt *r, BigInt *a, BigInt *b)
  */
 BigInt *big_int_sub(BigInt *r, BigInt *a, BigInt *b)
 {
+    ADD_STAT_COLLECTION(BIGINT_TYPE_BIG_INT_SUB);
+
     BigInt *b_neg, *a_abs, *b_abs, *aa_abs, *bb_abs;
     int borrow;
     int64_t i;
@@ -488,6 +562,8 @@ BigInt *big_int_sub(BigInt *r, BigInt *a, BigInt *b)
  */
 BigInt *big_int_mul(BigInt *r, BigInt *a, BigInt *b)
 {
+    ADD_STAT_COLLECTION(BIGINT_TYPE_BIG_INT_MUL);
+
     int64_t i, j;
     dbl_chunk_size_t carry;
     BigInt *r_loc;
@@ -544,6 +620,8 @@ BigInt *big_int_mul(BigInt *r, BigInt *a, BigInt *b)
  */
 BigInt *big_int_div_rem(BigInt *q, BigInt *r, BigInt *a, BigInt *b)
 {
+    ADD_STAT_COLLECTION(BIGINT_TYPE_BIG_INT_DEV_REM);
+
     dbl_chunk_size_t a_tmp, b_tmp, tmp, q_c, r_c;
     uint8_t q_sign;
     uint64_t factor;
@@ -724,6 +802,8 @@ BigInt *big_int_div_rem(BigInt *q, BigInt *r, BigInt *a, BigInt *b)
         big_int_destroy(a_loc);
         big_int_destroy(b_loc);
         big_int_destroy(q_c_bigint);
+        big_int_destroy(radix_pow);
+        big_int_destroy(qb);
     }
 
     // Round towards -inf if either operand is negative
@@ -756,6 +836,8 @@ BigInt *big_int_div_rem(BigInt *q, BigInt *r, BigInt *a, BigInt *b)
  */
 BigInt *big_int_div(BigInt *q, BigInt *a, BigInt *b)
 {
+    ADD_STAT_COLLECTION(BIGINT_TYPE_BIG_INT_DIV);
+
     return big_int_div_rem(q, NULL, a, b);
 }
 
@@ -765,6 +847,8 @@ BigInt *big_int_div(BigInt *q, BigInt *a, BigInt *b)
  */
 BigInt *big_int_sll_small(BigInt *r, BigInt *a, uint64_t shift)
 {
+    ADD_STAT_COLLECTION(BIGINT_TYPE_BIG_INT_SLL_SMALL);
+
     BigInt *r_loc;
 
     dbl_chunk_size_t carry;
@@ -827,6 +911,8 @@ BigInt *big_int_sll_small(BigInt *r, BigInt *a, uint64_t shift)
  */
 BigInt *big_int_srl_small(BigInt *r, BigInt *a, uint64_t shift)
 {
+    ADD_STAT_COLLECTION(BIGINT_TYPE_BIG_INT_SRL_SMALL);
+
     BigInt *last_bit_bigint;
     dbl_chunk_size_t carry, last_bit;
     int64_t i, a_idx;
@@ -887,6 +973,8 @@ BigInt *big_int_srl_small(BigInt *r, BigInt *a, uint64_t shift)
  */
 BigInt *big_int_mod(BigInt *r, BigInt *a, BigInt *q)
 {
+    ADD_STAT_COLLECTION(BIGINT_TYPE_BIG_INT_MOD);
+
     BigInt *tmp;
 
     // NOTE: for arbitrary sized BigInts, r would only need to be of size q->size
@@ -914,6 +1002,8 @@ BigInt *big_int_mod(BigInt *r, BigInt *a, BigInt *q)
  */
 BigInt *big_int_add_mod(BigInt *r, BigInt *a, BigInt *b, BigInt *q)
 {
+    ADD_STAT_COLLECTION(BIGINT_TYPE_BIG_INT_ADD_MOD);
+
     BigInt *r_loc;
 
     r_loc = big_int_add(NULL, a, b);
@@ -930,6 +1020,8 @@ BigInt *big_int_add_mod(BigInt *r, BigInt *a, BigInt *b, BigInt *q)
  */
 BigInt *big_int_sub_mod(BigInt *r, BigInt *a, BigInt *b, BigInt *q)
 {
+    ADD_STAT_COLLECTION(BIGINT_TYPE_BIG_INT_SUB_MOD);
+
     BigInt *r_loc;
 
     r_loc = big_int_sub(NULL, a, b);
@@ -946,6 +1038,8 @@ BigInt *big_int_sub_mod(BigInt *r, BigInt *a, BigInt *b, BigInt *q)
  */
 BigInt *big_int_mul_mod(BigInt *r, BigInt *a, BigInt *b, BigInt *q)
 {
+    ADD_STAT_COLLECTION(BIGINT_TYPE_BIG_INT_MUL_MOD);
+
     BigInt *r_loc;
 
     r_loc = big_int_mul(NULL, a, b);
@@ -962,6 +1056,8 @@ BigInt *big_int_mul_mod(BigInt *r, BigInt *a, BigInt *b, BigInt *q)
  */
 BigInt *big_int_div_mod(BigInt *r, BigInt *a, BigInt *b, BigInt *q)
 {
+    ADD_STAT_COLLECTION(BIGINT_TYPE_BIG_INT_DIV_MOD);
+
     BigInt *r_loc;
 
     // Write to local copy to be save against pointer reuse
@@ -979,6 +1075,8 @@ BigInt *big_int_div_mod(BigInt *r, BigInt *a, BigInt *b, BigInt *q)
  */
 BigInt *big_int_inv(BigInt *r, BigInt *a, BigInt *q)
 {
+    ADD_STAT_COLLECTION(BIGINT_TYPE_BIG_INT_INV);
+
     EgcdResult res;
 
     if (!r)
@@ -1009,6 +1107,8 @@ BigInt *big_int_inv(BigInt *r, BigInt *a, BigInt *q)
  */
 BigInt *big_int_pow(BigInt *r, BigInt *b, BigInt *e, BigInt *q)
 {
+    ADD_STAT_COLLECTION(BIGINT_TYPE_BIG_INT_POW);
+
     BigInt *b_loc, *e_loc, *r_loc;
 
     // NOTE: for arbitrary sized BigInts, we'd need to figure out some good size
@@ -1045,6 +1145,8 @@ BigInt *big_int_pow(BigInt *r, BigInt *b, BigInt *e, BigInt *q)
  */
 int8_t big_int_is_zero(BigInt *a)
 {
+    ADD_STAT_COLLECTION(BIGINT_TYPE_BIG_INT_IS_ZERO);
+
     return a->size == 1 && a->chunks[0] == 0;
 }
 
@@ -1054,6 +1156,8 @@ int8_t big_int_is_zero(BigInt *a)
  */
 int8_t big_int_is_odd(BigInt *a)
 {
+    ADD_STAT_COLLECTION(BIGINT_TYPE_BIG_INT_IS_ODD);
+
     return (a->size > 0) && (a->chunks[0] & 1);
 }
 
@@ -1064,6 +1168,8 @@ int8_t big_int_is_odd(BigInt *a)
  */
 int8_t big_int_compare(BigInt *a, BigInt *b)
 {
+    ADD_STAT_COLLECTION(BIGINT_TYPE_BIG_INT_COMPARE);
+
     if (a->size == b->size) {
         if (big_int_is_zero(b)) {
             if (big_int_is_zero(a)) {
@@ -1110,6 +1216,8 @@ int8_t big_int_compare(BigInt *a, BigInt *b)
  */
 EgcdResult big_int_egcd(BigInt *a, BigInt *b)
 {
+    ADD_STAT_COLLECTION(BIGINT_TYPE_BIG_INT_EGCD);
+
     BigInt *q, *a_loc, *b_loc, *x0, *x1, *y0, *y1, *tmp;
     EgcdResult res;
 
@@ -1174,6 +1282,8 @@ EgcdResult big_int_egcd(BigInt *a, BigInt *b)
  */
 BigInt *big_int_chi(BigInt *r, BigInt *t, BigInt *q)
 {
+    ADD_STAT_COLLECTION(BIGINT_TYPE_BIG_INT_CHI);
+
     BigInt *e;
 
     // Check assumption that q is odd (otherwise our chi function might need to
@@ -1198,4 +1308,13 @@ BigInt *big_int_chi(BigInt *r, BigInt *t, BigInt *q)
         return r;
     return big_int_create(r, -1);
 
+}
+
+
+// This function has to be at the end of this file for the type auto-generation
+// to work.
+void reset_stats()
+{
+    for (int64_t i = 0; i < BIGINT_TYPE_LAST; ++i)
+        big_int_stats[i] = 0;
 }

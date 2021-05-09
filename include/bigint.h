@@ -3,6 +3,7 @@
 
 #include <inttypes.h>
 #include <string.h>
+#include "bigint_types.h"
 
 // To work with 4 chunk integers (256 bits) we internally need 9 chunk integers.
 // The reason is that intermediate products can be 8 chunks and division performs
@@ -16,6 +17,13 @@
 #define CHUNK_ABS llabs
 #define BIGINT_RADIX (((dbl_chunk_size_t) 1) << (sizeof(chunk_size_t) * 8))
 #define BIGINT_RADIX_SIGNED ((int64_t) BIGINT_RADIX)
+
+// Stats collection
+#ifdef COLLECT_STATS
+#define ADD_STAT_COLLECTION(type) big_int_stats[(type)]++;
+#else
+#define ADD_STAT_COLLECTION(type)
+#endif
 
 typedef uint32_t chunk_size_t;
 typedef uint64_t dbl_chunk_size_t;
@@ -46,6 +54,11 @@ typedef struct EgcdResult {
     BigInt *x;
 } EgcdResult;
 
+/*
+* Struct that tracks usage of BigInt functions
+*/
+uint64_t big_int_stats[BIGINT_TYPE_LAST];
+
 static dbl_chunk_size_t chunk_zero = 0;
 static dbl_chunk_size_t chunk_one = 1;
 
@@ -72,9 +85,16 @@ __attribute__((unused)) static BigInt *big_int_min_one = &((BigInt) {
     .chunks = &chunk_one,
 });
 
+//Functions only exposed for Benchmarks
+BigInt *big_int_alloc(uint64_t size);
+BigInt *big_int_calloc(uint64_t size);
+BigInt *big_int_prune_leading_zeros(BigInt *r, BigInt *a);
+BigInt *big_int_create_from_dbl_chunk(BigInt *r, dbl_chunk_size_t chunk, uint8_t sign);
+
 // Meta functions
 BigInt *big_int_create(BigInt *r, int64_t x);
 BigInt *big_int_create_from_hex(BigInt *r, char* s);
+BigInt *big_int_create_random(BigInt *r, int64_t nr_of_chunks);
 void big_int_destroy(BigInt *a);
 BigInt *big_int_copy(BigInt *a, BigInt *b);
 BigInt *big_int_duplicate(BigInt *a);
@@ -118,5 +138,8 @@ int8_t big_int_is_odd(BigInt *a);
 BigInt *big_int_pow(BigInt *r, BigInt *b, BigInt *e, BigInt *q);
 EgcdResult big_int_egcd(BigInt *a, BigInt *b);
 BigInt *big_int_chi(BigInt *r, BigInt *t, BigInt *q);
+
+// Reset stats (use in combination with setting the env variable COLLECT_STATS)
+void reset_stats(void);
 
 #endif // BIGINT_H_

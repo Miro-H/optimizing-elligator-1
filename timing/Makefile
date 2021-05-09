@@ -6,10 +6,17 @@ SCRIPTS_DIR = scripts
 BIN_FILES   = $(filter-out $(wildcard $(BDIR)/.*), $(wildcard $(BDIR)/*))
 LOG_DIR 	= logs/
 
+ifeq ($(BENCHMARKS),)
+	BENCHMARKS = -1
+endif
+
 # src directory of the benchmarked code
 SRC_BENCHED		= ../src
 ODIR_BENCHED 	= $(SRC_BENCHED)/obj
 IDIR_BENCHED	= $(SRC_BENCHED)/../include
+
+# common scripts
+ROOT_SCRIPTS_DIR = ../scripts
 
 CC      	= gcc
 CFLAGS  	= -I$(IDIR_BENCHED) -I$(IDIR)
@@ -17,8 +24,30 @@ CFLAGS  	= -I$(IDIR_BENCHED) -I$(IDIR)
 # Add additional compilation flags to improve code quality
 CFLAGS += -Wall -Werror
 
+# Add default number of sets and reps for benchmarks
+ifeq ($(SETS),)
+	SETS = 10
+endif
+
+ifeq ($(REPS),)
+	REPS = 10000
+endif
+
+CFLAGS += -DSETS=$(SETS) -DREPS=$(REPS)
+
+# Forward COLLECT_STATS env variable to compiled binaries
+LOG_PATH := $(abspath $(LOG_DIR))
+ifneq ($(COLLECT_STATS),)
+	LOG_PATH := $(LOG_PATH)/stats
+	CFLAGS += -DCOLLECT_STATS=${COLLECT_STATS}
+else
+	LOG_PATH := $(LOG_PATH)/runtime
+endif
+
+LOG_PATH := $(LOG_PATH)/$(shell date "+%Y-%m-%d_%H-%M-%S")
+
 # Add macros for compiled C files
-CFLAGS += -DLOG_PATH=\"$(abspath $(LOG_DIR))\"
+CFLAGS += -DLOG_PATH=\"$(LOG_PATH)\"
 
 # Assume that the executable depends on all header files.
 DEPS = $(wildcard $(IDIR)/*.h)
@@ -26,14 +55,19 @@ DEPS = $(wildcard $(IDIR)/*.h)
 LIBS =
 
 # Main target, building all benchmarks
-all: compile-bigint-benchmark
+all: compile-runtime-benchmark
+
+.PHONY: prepare-logs
+prepare-logs:
+	mkdir -p $(LOG_PATH)
 
 .PHONY: run-all
-run-all: run-bigint-benchmark
+run-all: run-runtime-benchmark
 
 .PHONY: all-benched
 all-benched:
-	make -C $(SRC_BENCHED) all
+	make -C $(SRC_BENCHED) clean
+	COLLECT_STATS=$(COLLECT_STATS) make -C $(SRC_BENCHED) all
 
 # Fresh build
 .PHONY: rebuild
@@ -43,25 +77,32 @@ $(ODIR)/%.o: $(SDIR)/%.c $(DEPS)
 	$(CC) -c -o $@ $< $(CFLAGS)
 
 # Specify the object files constituting the test
-_OBJ	= benchmark_helpers.o bigint_benchmark.o
+_OBJ	= benchmark_helpers.o runtime_benchmark.o
 OBJ 	= $(patsubst %,$(ODIR)/%,$(_OBJ))
 # Specify the object files of the benched functions
-_OBJ_BENCHED 	= bigint.o
+_OBJ_BENCHED 	= bigint.o elligator.o
 OBJ_BENCHED		= $(patsubst %,$(ODIR_BENCHED)/%,$(_OBJ_BENCHED))
 
-.PHONY: compile-bigint-benchmark
-compile-bigint-benchmark: all-benched bigint-benchmark
+.PHONY: gen-bench-types
+gen-bench-types:
+	${ROOT_SCRIPTS_DIR}/gen_types.py \
+		--src_file ${SDIR}/runtime_benchmark.c \
+		--tar_file ${IDIR}/benchmark_types.h
 
-.PHONY: run-bigint-benchmark
-run-bigint-benchmark: compile-bigint-benchmark
-	./$(BDIR)/bigint-benchmark
+.PHONY: compile-runtime-benchmark
+compile-runtime-benchmark: prepare-logs all-benched gen-bench-types runtime-benchmark
 
-bigint-benchmark: $(OBJ_BENCHED) $(OBJ)
+.PHONY: run-runtime-benchmark
+run-runtime-benchmark: compile-runtime-benchmark
+	./$(BDIR)/runtime-benchmark $(BENCHMARKS)
+
+runtime-benchmark: $(OBJ_BENCHED) $(OBJ)
 	$(CC) -o $(BDIR)/$@ $^ $(CFLAGS) $(LIBS)
 
 .PHONY: plots
 plots: run-all
-	${SCRIPTS_DIR}/make_all_plots.sh
+	COLLECT_STATS=$(COLLECT_STATS) LOGS_DIR=$(LOG_PATH) SETS=$(SETS) \
+	REPS=$(REPS) $(SCRIPTS_DIR)/make_all_plots.sh
 
 .PHONY: publish-plots
 publish-plots: run-all
