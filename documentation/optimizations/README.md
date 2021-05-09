@@ -1,6 +1,24 @@
 # Optimizations
 This folder contains information on the optimization process.
 
+## Makefile Integration
+The repository is split into different folders containing the following optimization states:
+- [Version 1.0](../../code_unoptimized): Straightforward C, unoptimized
+- [Version 2.0](../../code_optimized/standard_optimizations): Uptimized C using standard techniques
+- [Version 3.0](../../code_optimized/advanced_optimizations) (in the future): C including AVX and cache optimizations
+
+The tests and plots can be configured to run for a specific version by setting the environment variable `VERSION`.
+
+Examples:
+```bash
+# Run tests for version 2.0, execute in repo's root folder
+VERSION=2.0 make run-tests
+
+# Run plots for version 1.0, execute in ./timing folder
+cd timing
+VERSION=1.0 make plots
+```
+
 ## Optimization Target
 
 ### Target processor
