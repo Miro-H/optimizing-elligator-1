@@ -78,8 +78,13 @@ all: compile-runtime-benchmark compile-gmp-benchmark
 prepare-logs:
 	mkdir -p $(LOG_PATH)
 
+# Stats can only be collected for our BigInt library
 .PHONY: run-all
+ifeq ($(COLLECT_STATS),)
 run-all: run-runtime-benchmark run-gmp-benchmark
+else
+run-all: run-runtime-benchmark
+endif
 
 .PHONY: all-benched
 all-benched:
