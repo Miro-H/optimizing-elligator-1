@@ -81,7 +81,7 @@ void bench_GMP_prep(void *argptr)
         if (random_q)
         {
             mpz_init(mpz_array_q[i]);
-            mpz_urandomb(mpz_array_4[i], state, 256);
+            mpz_urandomb(mpz_array_q[i], state, 256);
         }
         else
         {
@@ -369,7 +369,7 @@ void bench_mpz_urandomb(void *bench_args, char *bench_name, char *path)
 
 //--- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
 
-/* mpz_set is similar to the big_int_duplicate function. */
+/* mpz_set is similar to the big_int_duplicate/copy function. */
 void bench_mpz_set_fn(void *arg)
 {
 
@@ -500,9 +500,7 @@ void bench_mpz_tdiv_qr_fn(void *arg)
 {
     int64_t i = *((int64_t *) arg);
     mpz_tdiv_qr(mpz_array_1[i], mpz_array_2[i], mpz_array_3[i], 
-        mpz_array_4[i]);
-    // for some reason if I make the last arg mpz_array_q[i] I get
-    //      Floating point exception: 8
+        mpz_array_q[i]);
 }
 
 void bench_mpz_tdiv_qr(void *bench_args, char *bench_name, char *path)
@@ -576,7 +574,6 @@ void bench_mpz_invert_fn(void *arg)
 {
     int64_t i = *((int64_t *) arg);
     mpz_invert(mpz_array_1[i], mpz_array_2[i], mpz_array_q[i]);
-    // TODO: Investigate why this is so much faster with mpz_array_q rather than mpz_array_3
 }
 
 void bench_mpz_invert(void *bench_args, char *bench_name, char *path)
@@ -597,8 +594,7 @@ void bench_mpz_powm_fn(void *arg)
 {
     int64_t i = *((int64_t *) arg);
     mpz_powm(mpz_array_1[i], mpz_array_2[i], mpz_array_3[i],
-        mpz_array_4[i]);
-    // TODO: Fix floating point exception with final arg as mpz_array_q
+        mpz_array_q[i]);
 }
 
 void bench_mpz_powm(void *bench_args, char *bench_name, char *path)
