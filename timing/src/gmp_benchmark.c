@@ -153,7 +153,7 @@ void bench_GMP_small_cleanup(void *argptr)
     free(mpz_array_1);
 }
 
-void bench_GMP_destroy_prep(void *argptr)
+void bench_mpz_clear_prep(void *argptr)
 {
     mpz_size_ = ((int *)argptr)[0];
     int64_t array_size = ((int *)argptr)[1];
@@ -165,7 +165,7 @@ void bench_GMP_destroy_prep(void *argptr)
     }
 }
 
-void bench_GMP_destroy_cleanup(void *argptr)
+void bench_mpz_clear_cleanup(void *argptr)
 {
     free(mpz_array);
 }
@@ -196,12 +196,19 @@ void bench_mpz_init(void *bench_args, char *bench_name, char *path)
 /* mpz_clear is analagous to big_int_destroy */
 void bench_mpz_clear_fn(void *arg)
 {
-
+    int64_t i = *((int64_t *) arg);
+    mpz_clear(mpz_array[i]);
 }
 
 void bench_mpz_clear(void *bench_args, char *bench_name, char *path)
 {
-
+    BenchmarkClosure bench_closure = {
+        .bench_prep_args = bench_args,
+        .bench_prep_fn = bench_mpz_clear_prep,
+        .bench_fn = bench_mpz_clear_fn,
+        .bench_cleanup_fn = bench_mpz_clear_cleanup,
+    };
+    benchmark_runner(bench_closure, bench_name, path, SETS, REPS, 0);
 }
 
 //--- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
@@ -461,12 +468,15 @@ int main(int argc, char const *argv[])
     int bench_type;
     for (int i = 1; i < argc; ++i) {
         bench_type = atoi(argv[i]);
-
+        
         BENCHMARK(bench_type, BENCH_TYPE_ALLOC,
             bench_mpz_init((void *)bench_mpz_size_256_args, "init",
                 NULL));
+        
+        BENCHMARK(bench_type, BENCH_TYPE_DESTROY,
+            bench_mpz_clear((void *)bench_mpz_size_256_args, "clear",
+                NULL));
     }
 
-    printf_bench_header("GMP Benchmarks");
     return EXIT_SUCCESS;
 }
