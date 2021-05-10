@@ -36,6 +36,8 @@ uint64_t *uint64_t_array_1;
 int mpz_size_;
 
 int bench_mpz_size_256_args[] = {BIGINTSIZE, REPS, 1};
+int bench_mpz_size_256_random_mod_args[] = {BIGINTSIZE, REPS, 1};
+int bench_mpz_size_256_curve_mod_args[] = {BIGINTSIZE, REPS, 0};
 
 //--- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
 
@@ -715,17 +717,25 @@ int main(int argc, char const *argv[])
             bench_mpz_tdiv_q((void *)bench_mpz_size_256_args,
                 "division", NULL));
 
+        BENCHMARK(bench_type, BENCH_TYPE_MOD_CURVE,
+            bench_mpz_mod((void *)bench_mpz_size_256_curve_mod_args,
+                "modulo (curve)", NULL));
+
         BENCHMARK(bench_type, BENCH_TYPE_MOD_RANDOM,
-            bench_mpz_mod((void *)bench_mpz_size_256_args,
-                "modulo", NULL));
+            bench_mpz_mod((void *)bench_mpz_size_256_random_mod_args,
+                "modulo (random)", NULL));
 
         BENCHMARK(bench_type, BENCH_TYPE_INV,
             bench_mpz_invert((void *)bench_mpz_size_256_args,
                 "modular inversion", NULL));
 
+        BENCHMARK(bench_type, BENCH_TYPE_POW_CURVE,
+            bench_mpz_powm((void *)bench_mpz_size_256_curve_mod_args,
+            "exponentation (curve)", NULL));
+
         BENCHMARK(bench_type, BENCH_TYPE_POW_RANDOM,
-            bench_mpz_powm((void *)bench_mpz_size_256_args,
-                "exponentiation", NULL));
+            bench_mpz_powm((void *)bench_mpz_size_256_random_mod_args,
+                "exponentiation (random)", NULL));
 
         BENCHMARK(bench_type, BENCH_TYPE_COMPARE,
             bench_mpz_cmp((void *)bench_mpz_size_256_args,
