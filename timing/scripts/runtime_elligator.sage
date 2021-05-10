@@ -7,6 +7,8 @@
 import random
 from hwcounter import count, count_end
 import argparse
+import os
+import datetime
 
 input_data = []
 output_data = []
@@ -26,11 +28,11 @@ class Curve1174:  # struct in c  # edward curve
         self.r = self.c + 1 / self.c
 
         # Sanity checks
-        assert(self.q % 4 == 3)
-        assert(self.c * (self.c - 1) * (self.c + 1) != 0)
-        assert(self.d == -1174)
-        assert(self.r != 0)
-        assert(not self.d.is_square())
+        # assert(self.q % 4 == 3)
+        # assert(self.c * (self.c - 1) * (self.c + 1) != 0)
+        # assert(self.d == -1174)
+        # assert(self.r != 0)
+        # assert(not self.d.is_square())
 
 curve = Curve1174()
 
@@ -52,21 +54,21 @@ def elligator1_map(t):
     y = (curve.r * X - (1 + X)^2) / (curve.r * X + (1 + X)^2)
 
     # Sanity checks
-    assert(x^2 + y^2 == 1 + curve.d * x^2 * y^2)
-    assert(u * v * X * Y * x * (y + 1) != 0)
-    assert(Y^2 == X^5 + (curve.r^2 - 2) * X^3 + X)
+    # assert(x^2 + y^2 == 1 + curve.d * x^2 * y^2)
+    # assert(u * v * X * Y * x * (y + 1) != 0)
+    # assert(Y^2 == X^5 + (curve.r^2 - 2) * X^3 + X)
 
     return x, y
 
 def elligator1_invmap(x, y):
-    assert(y + 1 != 0)
+    # assert(y + 1 != 0)
 
     eta = (y - 1) / (2 * (y + 1))
 
     # Two sanity checks
-    assert(((1 + eta * curve.r)^2 - 1).is_square())
-    if eta * curve.r == -2:
-        assert(x == 2 * curve.s * (curve.c - 1) * chi(curve.c, curve.q) / curve.r)
+    # assert(((1 + eta * curve.r)^2 - 1).is_square())
+    # if eta * curve.r == -2:
+    #     assert(x == 2 * curve.s * (curve.c - 1) * chi(curve.c, curve.q) / curve.r)
 
     X = -(1 + eta * curve.r) + ((1 + eta * curve.r)^2 - 1)^((curve.q + 1) / 4)
     z = chi((curve.c - 1) * curve.s * X * (1 + X) * x * (X^2 + 1 / curve.c^2), curve.q)
@@ -92,7 +94,7 @@ def elligator1_invmap_prep(reps):
 
 def runtime(setup_f, f, title, path, sets, reps):
     output_file = open(path, "w")
-    output_file.write(title)
+    output_file.write(f"{title}\n")
     output_file.write("Measurement, Runtime [cycles]\n")
 
     for set_ in range(sets):
@@ -101,29 +103,38 @@ def runtime(setup_f, f, title, path, sets, reps):
         for rep_ in range(reps):
             output_data.append(f(input_data[rep_]))
         elapsed = float((count_end() - start)) / float(reps)
-        output_file.write(f"{reps}, {elapsed}\n")
+        output_file.write(f"{set_}, {elapsed}\n")
         input_data.clear()
         output_data.clear()
     output_file.close()
 
-
-
-
+    print(f"Wrote plot with title '{title}' to file '{path}'")
 
 if __name__ == '__main__':
+    script_dir = os.path.dirname(os.path.realpath(__file__))
+    default_logs_dir = f"{script_dir}/../logs/runtime"
+
     # Read arguments
-    
     parser = argparse.ArgumentParser()
-    
-    parser.add_argument("--sets", help="Number of sets",
-                        default=10)
-    parser.add_argument("--reps", help="Number of reps",
-                        default=1000)
-    
+
+    parser.add_argument("--logs_dir", help="Directory for log files",
+                        default=default_logs_dir)
+    parser.add_argument("--sets", help="Number of sets", default=10, type=int)
+    parser.add_argument("--reps", help="Number of reps", default=1000, type=int)
+
     args = parser.parse_args()
-    
-    sets = args.sets
-    reps = args.reps
-    
-    runtime(elligator1_map_prep, elligator1_map, "sage elligator1 map\n", "../logs/runtime_sage_elligator1_map.log", sets, reps)
-    runtime(elligator1_invmap_prep, elligator1_invmap_helper, "sage elligator1 invmap\n", "../logs/runtime_sage_elligator1_invmap.log", sets, reps)
+
+    sets        = args.sets
+    reps        = args.reps
+    logs_dir    = args.logs_dir
+
+    timestamp_dir_name = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+    logs_dir = f"{logs_dir}/{timestamp_dir_name}"
+    os.mkdir(logs_dir)
+
+    runtime(elligator1_map_prep, elligator1_map, "sage elligator1 map",
+        f"{logs_dir}/runtime_sage_elligator1_map.log", sets, reps)
+
+    runtime(elligator1_invmap_prep, elligator1_invmap_helper,
+        "sage elligator1 invmap",
+        f"{logs_dir}/runtime_sage_elligator1_invmap.log", sets, reps)
