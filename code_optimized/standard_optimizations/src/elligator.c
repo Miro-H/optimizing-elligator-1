@@ -22,46 +22,25 @@
 void init_curve1174(Curve *curve)
 {
     // q = 2^251 - 9
-    curve->q = big_int_create_from_hex(NULL,
+    big_int_create_from_hex(curve->q,
         "7FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF7");
 
-    curve->d = big_int_create(NULL, -1174);
-    curve->d = big_int_mod(curve->d, curve->d, curve->q);
+    // d = -1174
+    big_int_create_from_hex(curve->d,
+        "7FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFB61");
 
-    curve->s = big_int_create_from_hex(NULL,
+    big_int_create_from_hex(curve->s,
         "3FE707F0D7004FD334EE813A5F1A74AB2449139C82C39D84A09AE74CC78C615");
 
     // c = 2 / s^2
-    curve->c = big_int_mul_mod(NULL, curve->s, curve->s, curve->q);
-    big_int_div_mod(curve->c, big_int_two, curve->c, curve->q);
+    big_int_create_from_hex(curve->c,
+        "4D1A3398ED42CEEB451D20824CA9CB49B69EF546BD7E6546AEF19AF1F9E49E1");
 
     // r = c + 1/c
-    curve->r = big_int_inv(NULL, curve->c, curve->q);
-    big_int_add_mod(curve->r, curve->c, curve->r, curve->q);
+    big_int_create_from_hex(curve->r,
+        "6006FBDA7649C433816B286006FBDA7649C433816B286006FBDA7649C43383");
 }
 
-
-/**
-* \brief Free elliptic curve
-*/
-void free_curve(Curve *curve)
-{
-    big_int_destroy(curve->q);
-    big_int_destroy(curve->d);
-    big_int_destroy(curve->s);
-    big_int_destroy(curve->c);
-    big_int_destroy(curve->r);
-}
-
-
-/**
-* \brief Free elliptic curve point
-*/
-void free_curve_point(CurvePoint *point)
-{
-    big_int_destroy(point->x);
-    big_int_destroy(point->y);
-}
 
 /**
  * \brief Maps a random string (interpreted as big integer) to a point on the

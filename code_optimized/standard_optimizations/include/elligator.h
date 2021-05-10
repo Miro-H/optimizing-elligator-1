@@ -6,59 +6,34 @@
 
 typedef struct CurvePoint
 {
-    BigInt *x;
-    BigInt *y;
+    BigInt x;
+    BigInt y;
 } CurvePoint;
 
 typedef struct Curve // edward curve
 {
-    BigInt *q; // prime field
-    BigInt *d; // d of curve
-    BigInt *s; // s of curve
+    BigInt q; // prime field
+    BigInt d; // d of curve
+    BigInt s; // s of curve
 
-    BigInt *c; // c = 2/(s^2)
-    BigInt *r; // r = c + 1/c
+    BigInt c; // c = 2/(s^2)
+    BigInt r; // r = c + 1/c
 } Curve;
 
+// Special BigInts
+__attribute__((unused))
+BIG_INT_DEFINE_STATIC_STRUCT_PTR(big_int_two, 0, 0, 1, 2);
 
-static dbl_chunk_size_t chunk_two = 2;
-static dbl_chunk_size_t chunk_three = 3;
-static dbl_chunk_size_t chunk_four = 4;
-static dbl_chunk_size_t chunk_five = 5;
+__attribute__((unused))
+BIG_INT_DEFINE_STATIC_STRUCT_PTR(big_int_three, 0, 0, 1, 3);
 
-// Special BigInts, never free those! They cannot be copied.
-__attribute__((unused)) static BigInt *big_int_two = &((BigInt) {
-    .sign = 0,
-    .overflow = 0,
-    .size = 1,
-    .alloc_size = BIGINT_FIXED_SIZE,
-    .chunks = &chunk_two,
-});
-__attribute__((unused)) static BigInt *big_int_three = &((BigInt) {
-    .sign = 0,
-    .overflow = 0,
-    .size = 1,
-    .alloc_size = BIGINT_FIXED_SIZE,
-    .chunks = &chunk_three,
-});
-__attribute__((unused)) static BigInt *big_int_four = &((BigInt) {
-    .sign = 0,
-    .overflow = 0,
-    .size = 1,
-    .alloc_size = BIGINT_FIXED_SIZE,
-    .chunks = &chunk_four,
-});
-__attribute__((unused)) static BigInt *big_int_five = &((BigInt) {
-    .sign = 0,
-    .overflow = 0,
-    .size = 1,
-    .alloc_size = BIGINT_FIXED_SIZE,
-    .chunks = &chunk_five,
-});
+__attribute__((unused))
+BIG_INT_DEFINE_STATIC_STRUCT_PTR(big_int_four, 0, 0, 1, 4);
+
+__attribute__((unused))
+BIG_INT_DEFINE_STATIC_STRUCT_PTR(big_int_five, 0, 0, 1, 5);
 
 void init_curve1174(Curve *curve);
-void free_curve(Curve *curve);
-void free_curve_point(CurvePoint *point);
 
 CurvePoint elligator_1_string_to_point(BigInt *t, Curve curve);
 BigInt* elligator_1_point_to_string(CurvePoint p, Curve curve);
