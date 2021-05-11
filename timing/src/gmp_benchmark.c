@@ -302,7 +302,6 @@ void bench_mpz_clear(void *bench_args, char *bench_name, char *path)
 
 /* Prune? */
 
-
 //--- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
 
 /* mpz_set_si is similar to the big_int_create function. */
@@ -442,8 +441,24 @@ void bench_mpz_add(void *bench_args, char *bench_name, char *path)
 
 //--- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
 
+/* There is no built-in add_mod function in GMP */
+void bench_mpz_add_mod_fn(void *arg)
+{
+    int64_t i = *((int64_t *) arg);
+    mpz_add(mpz_array_1[i], mpz_array_2[i], mpz_array_3[i]);
+    mpz_mod(mpz_array_1[i], mpz_array_1[i], mpz_array_q[i]);
+}
 
-/* add mod? */
+void bench_mpz_add_mod(void *bench_args, char *bench_name, char *path)
+{
+    BenchmarkClosure bench_closure = {
+        .bench_prep_args = bench_args,
+        .bench_prep_fn = bench_GMP_prep,
+        .bench_fn = bench_mpz_add_mod_fn,
+        .bench_cleanup_fn = bench_GMP_cleanup,
+    };
+    benchmark_runner(bench_closure, bench_name, path, SETS, REPS, 0);
+}
 
 //--- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
 
@@ -467,7 +482,24 @@ void bench_mpz_sub(void *bench_args, char *bench_name, char *path)
 
 //--- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
 
-/* sub mod? */
+/* There is no built-in sub_mod function in GMP. */
+void bench_mpz_sub_mod_fn(void *arg)
+{
+    int64_t i = *((int64_t *) arg);
+    mpz_sub(mpz_array_1[i], mpz_array_2[i], mpz_array_3[i]);
+    mpz_mod(mpz_array_1[i], mpz_array_1[i], mpz_array_q[i]);
+}
+
+void bench_mpz_sub_mod(void *bench_args, char *bench_name, char *path)
+{
+    BenchmarkClosure bench_closure = {
+        .bench_prep_args = bench_args,
+        .bench_prep_fn = bench_GMP_prep,
+        .bench_fn = bench_mpz_sub_mod_fn,
+        .bench_cleanup_fn = bench_GMP_cleanup,
+    };
+    benchmark_runner(bench_closure, bench_name, path, SETS, REPS, 0);
+}
 
 //--- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
 
@@ -491,7 +523,24 @@ void bench_mpz_mul(void *bench_args, char *bench_name, char *path)
 
 //--- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
 
-/* mul mod? */
+/* There is no built-in mul_mod function in GMP. */
+void bench_mpz_mul_mod_fn(void *arg)
+{
+    int64_t i = *((int64_t *) arg);
+    mpz_mul(mpz_array_1[i], mpz_array_2[i], mpz_array_3[i]);
+    mpz_mod(mpz_array_1[i], mpz_array_1[i], mpz_array_1[i]);
+}
+
+void bench_mpz_mul_mod(void *bench_args, char *bench_name, char *path)
+{
+    BenchmarkClosure bench_closure = {
+        .bench_prep_args = bench_args,
+        .bench_prep_fn = bench_GMP_prep,
+        .bench_fn = bench_mpz_mul_mod_fn,
+        .bench_cleanup_fn = bench_GMP_cleanup,
+    };
+    benchmark_runner(bench_closure, bench_name, path, SETS, REPS, 0);
+}
 
 //--- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
 
@@ -536,7 +585,24 @@ void bench_mpz_tdiv_q(void *bench_args, char *bench_name, char *path)
 
 //--- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
 
-/* div mod? */
+/* There is no built-in div_mod function in GMP. */
+void bench_mpz_tdiv_q_mod_fn(void *arg)
+{
+    int64_t i = *((int64_t *) arg);
+    mpz_tdiv_q(mpz_array_1[i], mpz_array_2[i], mpz_array_3[i]);
+    mpz_mod(mpz_array_1[i], mpz_array_1[i], mpz_array_q[i]);
+}
+
+void bench_mpz_tdiv_q_mod(void *bench_args, char *bench_name, char *path)
+{
+    BenchmarkClosure bench_closure = {
+        .bench_prep_args = bench_args,
+        .bench_prep_fn = bench_GMP_prep,
+        .bench_fn = bench_mpz_tdiv_q_mod_fn,
+        .bench_cleanup_fn = bench_GMP_cleanup,
+    };
+    benchmark_runner(bench_closure, bench_name, path, SETS, REPS, 0);
+}
 
 //--- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
 
@@ -552,8 +618,7 @@ void bench_mpz_tdiv_q(void *bench_args, char *bench_name, char *path)
 void bench_mpz_mod_fn(void *arg)
 {
     int64_t i = *((int64_t *) arg);
-    mpz_mod(mpz_array_1[i], mpz_array_2[i], mpz_array_3[i]);
-    // TODO: fix mpz_array_q[i] causing error as last arg
+    mpz_mod(mpz_array_1[i], mpz_array_2[i], mpz_array_q[i]);
 }
 
 void bench_mpz_mod(void *bench_args, char *bench_name, char *path)
@@ -696,22 +761,62 @@ int main(int argc, char const *argv[])
         BENCHMARK(bench_type, BENCH_TYPE_ADD,
             bench_mpz_add((void *)bench_mpz_size_256_args,
                 "addition", NULL));
+            
+        BENCHMARK(bench_type, BENCH_TYPE_ADD_MOD_RANDOM,
+            bench_mpz_add_mod((void *)bench_mpz_size_256_random_mod_args,
+                "addition with modulo (random)", NULL));
+
+        BENCHMARK(bench_type, BENCH_TYPE_ADD_MOD_CURVE,
+            bench_mpz_add_mod((void *)bench_mpz_size_256_curve_mod_args,
+                "addition with modulo (curve)", NULL))
 
         BENCHMARK(bench_type, BENCH_TYPE_SUB,
             bench_mpz_sub((void *)bench_mpz_size_256_args,
                 "subtraction", NULL));
 
+        BENCHMARK(bench_type, BENCH_TYPE_SUB_MOD_RANDOM,
+            bench_mpz_sub_mod((void *)bench_mpz_size_256_random_mod_args,
+                "subtraction with modulo (random)", NULL));
+
+        BENCHMARK(bench_type, BENCH_TYPE_SUB_MOD_CURVE,
+            bench_mpz_sub_mod((void *)bench_mpz_size_256_curve_mod_args,
+                "subtraction with modulo (curve)", NULL));
+
         BENCHMARK(bench_type, BENCH_TYPE_MUL,
             bench_mpz_mul((void *)bench_mpz_size_256_args,
                 "multiplication", NULL));
 
+        BENCHMARK(bench_type, BENCH_TYPE_MUL_MOD_RANDOM,
+            bench_mpz_mul_mod((void *)bench_mpz_size_256_random_mod_args,
+                "multiplication with modulo (random)", NULL));
+
+        BENCHMARK(bench_type, BENCH_TYPE_MUL_CURVE,
+            bench_mpz_mul_mod((void *)bench_mpz_size_256_curve_mod_args,
+                "multiplication with modulo (random)", NULL));
+
         BENCHMARK(bench_type, BENCH_TYPE_DIVREM,
-            bench_mpz_tdiv_qr((void *)bench_mpz_size_256_args,
+            bench_mpz_tdiv_qr((void *)bench_mpz_size_256_random_mod_args,
                 "division with remainder", NULL));
+
+        BENCHMARK(bench_type, BENCH_TYPE_DIVREM_RANDOM,
+            bench_mpz_tdiv_qr((void *)bench_mpz_size_256_random_mod_args,
+                "division with remainder (random)", NULL));
+
+        BENCHMARK(bench_type, BENCH_TYPE_DIVREM_CURVE,
+            bench_mpz_tdiv_qr((void *)bench_mpz_size_256_curve_mod_args,
+                "division with remainder (curve)", NULL));
 
         BENCHMARK(bench_type, BENCH_TYPE_DIV,
             bench_mpz_tdiv_q((void *)bench_mpz_size_256_args,
                 "division", NULL));
+
+        BENCHMARK(bench_type, BENCH_TYPE_DIV_RANDOM,
+            bench_mpz_tdiv_q_mod((void *)bench_mpz_size_256_random_mod_args,
+                "division with modulo (random)", NULL));
+
+        BENCHMARK(bench_type, BENCH_TYPE_DIV_CURVE,
+            bench_mpz_tdiv_q_mod((void *)bench_mpz_size_256_curve_mod_args,
+                "division with modulo (curve)", NULL));
 
         BENCHMARK(bench_type, BENCH_TYPE_MOD_CURVE,
             bench_mpz_mod((void *)bench_mpz_size_256_curve_mod_args,
