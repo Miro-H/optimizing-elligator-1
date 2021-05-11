@@ -69,8 +69,8 @@ CurvePoint elligator_1_string_to_point(BigInt *t, Curve curve)
 
     if (big_int_compare(t, big_int_one) == 0)
     {
-        x = big_int_create(NULL, 0);
-        y = big_int_create(NULL, 1);
+        x = big_int_create_from_chunk(NULL, 0, 0);
+        y = big_int_create_from_chunk(NULL, 1, 0);
     }
     else {
         u0 = big_int_sub(NULL, big_int_one, t);

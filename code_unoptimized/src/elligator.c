@@ -25,7 +25,7 @@ void init_curve1174(Curve *curve)
     curve->q = big_int_create_from_hex(NULL,
         "7FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF7");
 
-    curve->d = big_int_create(NULL, -1174);
+    curve->d = big_int_create_from_chunk(NULL, -1174);
     curve->d = big_int_mod(curve->d, curve->d, curve->q);
 
     curve->s = big_int_create_from_hex(NULL,
@@ -90,8 +90,8 @@ CurvePoint elligator_1_string_to_point(BigInt *t, Curve curve)
 
     if (big_int_compare(t, big_int_one) == 0)
     {
-        x = big_int_create(NULL, 0);
-        y = big_int_create(NULL, 1);
+        x = big_int_create_from_chunk(NULL, 0);
+        y = big_int_create_from_chunk(NULL, 1);
     }
     else {
         u0 = big_int_sub(NULL, big_int_one, t);

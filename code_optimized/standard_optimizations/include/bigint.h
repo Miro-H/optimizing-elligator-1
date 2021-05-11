@@ -159,7 +159,7 @@ int8_t big_int_is_odd(BigInt *a);
 
 // Advanced operations
 BigInt *big_int_pow(BigInt *r, BigInt *b, BigInt *e, BigInt *q);
-EgcdResult big_int_egcd(BigInt *a, BigInt *b);
+EgcdResult *big_int_egcd(EgcdResult *r, BigInt *a, BigInt *b);
 BigInt *big_int_chi(BigInt *r, BigInt *t, BigInt *q);
 
 // Reset stats (use in combination with setting the env variable COLLECT_STATS)

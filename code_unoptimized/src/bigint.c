@@ -126,7 +126,7 @@ BigInt *big_int_prune_leading_zeros(BigInt *r, BigInt *a)
  * \brief Create BigInt from 64-bit integer
  *        Precondition: x fits into chunk_size_t
  */
-BigInt *big_int_create(BigInt *r, int64_t x)
+BigInt *big_int_create_from_chunk(BigInt *r, int64_t x)
 {
     ADD_STAT_COLLECTION(BIGINT_TYPE_BIG_CREATE);
 
@@ -644,12 +644,12 @@ BigInt *big_int_div_rem(BigInt *q, BigInt *r, BigInt *a, BigInt *b)
 
     // zero dividend
     if (big_int_is_zero(a)) {
-        q = big_int_create(q, 0);
-        r_loc = big_int_create(NULL, 0);
+        q = big_int_create_from_chunk(q, 0);
+        r_loc = big_int_create_from_chunk(NULL, 0);
     }
     // divisor larger than dividend
     else if (big_int_compare(b_abs, a_abs) == 1) {
-        q = big_int_create(q, 0);
+        q = big_int_create_from_chunk(q, 0);
 
         // Save unsigned rest, account for signs later
         r_loc = big_int_duplicate(a);
@@ -658,9 +658,9 @@ BigInt *big_int_div_rem(BigInt *q, BigInt *r, BigInt *a, BigInt *b)
     // Simple case for small BigInts, just use normal C division (but round
     // towards -inf at the end)
     else if (a->size == 1) {
-        q = big_int_create(q, a->chunks[0] / b->chunks[0]);
+        q = big_int_create_from_chunk(q, a->chunks[0] / b->chunks[0]);
         q->sign = a->sign ^ b->sign;
-        r_loc = big_int_create(r_loc, a->chunks[0] % b->chunks[0]);
+        r_loc = big_int_create_from_chunk(r_loc, a->chunks[0] % b->chunks[0]);
     }
     // Since we do operations on double chunks, we can also do the shortcut for length 2
     else if (a->size == 2) {
@@ -758,7 +758,7 @@ BigInt *big_int_div_rem(BigInt *q, BigInt *r, BigInt *a, BigInt *b)
             a_part->size = i;
             a_part->sign = 0;
 
-            big_int_create(q_c_bigint, q_c);
+            big_int_create_from_chunk(q_c_bigint, q_c);
             big_int_sub(qb, a_part, big_int_mul(qb, q_c_bigint, b_loc));
 
             // TODO: test this case specifically, apparently this is a very unlikely
@@ -926,11 +926,11 @@ BigInt *big_int_srl_small(BigInt *r, BigInt *a, uint64_t shift)
     if (shift / BIGINT_CHUNK_BIT_SIZE >= a->size) {
         // Special case for rounding towards -inf
         if (a->sign && (shift - 1) / BIGINT_CHUNK_BIT_SIZE < a->size) {
-            big_int_create(r, a->chunks[a->size - 1] >> (((shift - 1) % BIGINT_CHUNK_BIT_SIZE)));
+            big_int_create_from_chunk(r, a->chunks[a->size - 1] >> (((shift - 1) % BIGINT_CHUNK_BIT_SIZE)));
             r->sign = 1;
         }
         else {
-            big_int_create(r, 0);
+            big_int_create_from_chunk(r, 0);
         }
         return r;
     }
@@ -956,7 +956,7 @@ BigInt *big_int_srl_small(BigInt *r, BigInt *a, uint64_t shift)
 
     // Add last bit (round towards -inf)
     if (a->sign && last_bit) {
-        last_bit_bigint = big_int_create(NULL, last_bit);
+        last_bit_bigint = big_int_create_from_chunk(NULL, last_bit);
         big_int_sub(r, r, last_bit_bigint);
         big_int_destroy(last_bit_bigint);
     }
@@ -1113,7 +1113,7 @@ BigInt *big_int_pow(BigInt *r, BigInt *b, BigInt *e, BigInt *q)
 
     // NOTE: for arbitrary sized BigInts, we'd need to figure out some good size
     //       to allocate for the first r. For now, this implicitly use the fixed size.
-    r_loc = big_int_create(NULL, 1);
+    r_loc = big_int_create_from_chunk(NULL, 1);
     e_loc = big_int_duplicate(e);
     b_loc = big_int_duplicate(b);
 
@@ -1222,9 +1222,9 @@ EgcdResult big_int_egcd(BigInt *a, BigInt *b)
     EgcdResult res;
 
     if (big_int_is_zero(a) && big_int_is_zero(b)) {
-        res.x = big_int_create(NULL, 0);
-        res.y = big_int_create(NULL, 0);
-        res.g = big_int_create(NULL, 0);
+        res.x = big_int_create_from_chunk(NULL, 0);
+        res.y = big_int_create_from_chunk(NULL, 0);
+        res.g = big_int_create_from_chunk(NULL, 0);
         return res;
     }
 
@@ -1237,10 +1237,10 @@ EgcdResult big_int_egcd(BigInt *a, BigInt *b)
     big_int_abs(a_loc, a_loc);
     big_int_abs(b_loc, b_loc);
 
-    x0 = big_int_create(NULL, 0);
-    x1 = big_int_create(NULL, 1);
-    y0 = big_int_create(NULL, 1);
-    y1 = big_int_create(NULL, 0);
+    x0 = big_int_create_from_chunk(NULL, 0);
+    x1 = big_int_create_from_chunk(NULL, 1);
+    y0 = big_int_create_from_chunk(NULL, 1);
+    y1 = big_int_create_from_chunk(NULL, 0);
 
     while (big_int_compare(a_loc, big_int_zero) != 0)
     {
@@ -1295,7 +1295,7 @@ BigInt *big_int_chi(BigInt *r, BigInt *t, BigInt *q)
         r = big_int_alloc(BIGINT_FIXED_SIZE);
 
     if (big_int_compare(t, big_int_zero) == 0)
-        return big_int_create(r, 0);
+        return big_int_create_from_chunk(r, 0);
 
     e = big_int_duplicate(q);
     big_int_srl_small(e, big_int_sub(e, e, big_int_one), 1);
@@ -1306,7 +1306,7 @@ BigInt *big_int_chi(BigInt *r, BigInt *t, BigInt *q)
 
     if (!big_int_compare(r, big_int_zero) || !big_int_compare(r, big_int_one))
         return r;
-    return big_int_create(r, -1);
+    return big_int_create_from_chunk(r, -1);
 
 }
 

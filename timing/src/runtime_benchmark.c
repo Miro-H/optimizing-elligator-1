@@ -332,10 +332,10 @@ void bench_big_int_prune(void *bench_args, char *bench_name, char *path)
 void bench_big_int_create_fn(void *arg)
 {
     int64_t i = *((int64_t *) arg);
-    big_int_array[i] = big_int_create(NULL, 1);
+    big_int_array[i] = big_int_create_from_chunk(NULL, 1);
 }
 
-void bench_big_int_create(void *bench_args, char *bench_name, char *path)
+void bench_big_int_create_from_chunk(void *bench_args, char *bench_name, char *path)
 {
     BenchmarkClosure bench_closure = {
         .bench_prep_args = bench_args,
@@ -898,7 +898,7 @@ int main(int argc, char const *argv[])
                 LOG_PATH "/runtime_big_int_prune_prep.log"));
 
         BENCHMARK(bench_type, BENCH_TYPE_CREATE,
-            bench_big_int_create((void *)bench_big_int_size_256_args, "create",
+            bench_big_int_create_from_chunk((void *)bench_big_int_size_256_args, "create",
                 LOG_PATH "/runtime_big_int_create.log"););
 
         BENCHMARK(bench_type, BENCH_TYPE_CREATE_DBL_CHUNK,

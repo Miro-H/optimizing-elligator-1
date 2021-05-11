@@ -92,7 +92,7 @@ BigInt *big_int_prune_leading_zeros(BigInt *r, BigInt *a);
 BigInt *big_int_create_from_dbl_chunk(BigInt *r, dbl_chunk_size_t chunk, uint8_t sign);
 
 // Meta functions
-BigInt *big_int_create(BigInt *r, int64_t x);
+BigInt *big_int_create_from_chunk(BigInt *r, int64_t x);
 BigInt *big_int_create_from_hex(BigInt *r, char* s);
 BigInt *big_int_create_random(BigInt *r, int64_t nr_of_chunks);
 void big_int_destroy(BigInt *a);

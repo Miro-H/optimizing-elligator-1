@@ -34,3 +34,4 @@ Optimizations:
 - Change `Curve`, `CurvePoint`, and `EgcdResult` to directly hold `BigInt` instead of only pointers
     - Remove corresponding obsolete `free_*` functions
 - Initialize curve parameters in `init_curve1174` directly from hex strings instead of computing them whenever possible
+- Change GCD to return pointer to `EgcdResult`, add `EgcdResult` as argument

@@ -9,17 +9,17 @@ BIN_FILES   = $(filter-out $(wildcard $(BDIR)/.*), $(wildcard $(BDIR)/*))
 
 #
 # The following versions exist:
-#	- Version 1.0: Straightforward C, unoptimized
-#	- Version 2.0: Uptimized C using standard techniques
-#	- Version 3.0 (in the future): C including AVX optimizations
+#	- Version 1: Straightforward C, unoptimized
+#	- Version 2: Uptimized C using standard techniques
+#	- Version 3 (in the future): C including AVX optimizations
 #
 ifeq ($(VERSION),)
-	VERSION = 2.0
+	VERSION = 2
 endif
 
-ifeq ($(VERSION), 1.0)
+ifeq ($(VERSION), 1)
 	TESTED_ROOT_DIR = ../code_unoptimized
-else ifeq ($(VERSION), 2.0)
+else ifeq ($(VERSION), 2)
 	TESTED_ROOT_DIR = ../code_optimized/standard_optimizations
 endif
 
@@ -36,6 +36,9 @@ CFLAGS += -Wall -Werror
 ifneq ($(DEBUG),)
 	CFLAGS += -Wno-unused-variable
 endif
+
+# Transfer variables to compiled C files
+CFLAGS += -DVERSION=$(VERSION)
 
 # Assume that the executable depends on all header files.
 DEPS = $(wildcard $(IDIR)/*.h)
@@ -57,7 +60,7 @@ else
 endif
 
 # Main target, building all tests
-all: compile-bigint-test compile-elligator-test
+all: compile-bigint-test # compile-elligator-test
 
 .PHONY: all-tested
 all-tested:

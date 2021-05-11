@@ -14,17 +14,17 @@ endif
 
 #
 # The following versions exist:
-#	- Version 1.0: Straightforward C, unoptimized
-#	- Version 2.0: Uptimized C using standard techniques
-#	- Version 3.0 (in the future): C including AVX optimizations
+#	- Version 1: Straightforward C, unoptimized
+#	- Version 2: Uptimized C using standard techniques
+#	- Version 3 (in the future): C including AVX optimizations
 #
 ifeq ($(VERSION),)
-	VERSION = 2.0
+	VERSION = 2
 endif
 
-ifeq ($(VERSION), 1.0)
+ifeq ($(VERSION), 1)
 	BENCHED_ROOT_DIR = ../code_unoptimized
-else ifeq ($(VERSION), 2.0)
+else ifeq ($(VERSION), 2)
 	BENCHED_ROOT_DIR = ../code_optimized/standard_optimizations
 endif
 

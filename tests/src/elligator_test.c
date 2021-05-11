@@ -57,7 +57,7 @@ START_TEST(test_e2e)
     BigInt *r, *t, *x, *y;
 
     init_curve1174(&curve);
-    t = big_int_create(NULL, 7);
+    t = big_int_create_from_chunk(NULL, 7, 0);
     x = big_int_create_from_hex(NULL,
             "AB65983CF55A18C0E2C8BB8A156E030566D23767D6C1473ACFCF4D17439AC7");
     y = big_int_create_from_hex(NULL,
@@ -99,7 +99,7 @@ START_TEST(test_e2e)
     r = elligator_1_point_to_string(curve_point, curve);
     ck_assert_int_eq(big_int_compare(r, t), 0);
 
-    t = big_int_create(t, 2);
+    t = big_int_create_from_chunk(t, 2, 0);
     x = big_int_create_from_hex(x,
             "6F5374156B145FF8BB3288E0418F513B5D7BBBAB6E252EA1BC2DB6428E1454E");
     y = big_int_create_from_hex(y,
@@ -135,9 +135,9 @@ START_TEST(test_edge_cases)
 
         // t = 1
         init_curve1174(&curve);
-        t = big_int_create(NULL, 1);
-        x = big_int_create(NULL, 0);
-        y = big_int_create(NULL, 1);
+        t = big_int_create_from_chunk(NULL, 1, 0);
+        x = big_int_create_from_chunk(NULL, 0, 0);
+        y = big_int_create_from_chunk(NULL, 1, 0);
 
         curve_point = elligator_1_string_to_point(t, curve);
         ck_assert_int_eq(big_int_compare(curve_point.x, x), 0);
@@ -169,10 +169,10 @@ START_TEST(test_advanced_curve1174)
     init_curve1174(&curve);
 
     // q % 4 = 3
-    q_mod4_exp = big_int_create(NULL, 3);
+    q_mod4_exp = big_int_create_from_chunk(NULL, 3, 0);
 
-    q_mod4 = big_int_create(NULL, 0);
-    four = big_int_create(NULL, 4);
+    q_mod4 = big_int_create_from_chunk(NULL, 0, 0);
+    four = big_int_create_from_chunk(NULL, 4, 0);
     q_mod4 = big_int_mod(q_mod4, curve.q, four);
     ck_assert_int_eq(big_int_compare(q_mod4, q_mod4_exp), 0);
 
@@ -180,8 +180,8 @@ START_TEST(test_advanced_curve1174)
      * Actually calculating this with BigInts requires too many bits,
      * so I will just check that each part != 0 instead.
      */
-    temp1 = big_int_create(NULL, 0);
-    temp2 = big_int_create(NULL, 0);
+    temp1 = big_int_create_from_chunk(NULL, 0, 0);
+    temp2 = big_int_create_from_chunk(NULL, 0, 0);
     ck_assert_int_ne(big_int_compare(curve.c, big_int_zero), 0);
 
     big_int_sub(temp1, curve.c, big_int_one); // temp1 = curve.c - 1
@@ -193,7 +193,7 @@ START_TEST(test_advanced_curve1174)
     /*
      * Check that d = -1174 mod q
      */
-    temp1 = big_int_create(temp1, -1174);
+    temp1 = big_int_create_from_chunk(temp1, 1174, 1);
     big_int_mod(temp1, temp1, curve.q);
     ck_assert_int_eq(big_int_compare(temp1, curve.d), 0);
 
@@ -241,9 +241,9 @@ START_TEST(test_advanced_string_to_point)
     curve_point = elligator_1_string_to_point(t, curve);
 
     // x^2 + y^2 = 1 + d * x^2 * y^2 (mod q)
-    temp1 = big_int_create(NULL, 0);
-    temp2 = big_int_create(NULL, 0);
-    temp3 = big_int_create(NULL, 0);
+    temp1 = big_int_create_from_chunk(NULL, 0, 0);
+    temp2 = big_int_create_from_chunk(NULL, 0, 0);
+    temp3 = big_int_create_from_chunk(NULL, 0, 0);
     big_int_mul_mod(temp1, curve_point.x, curve_point.x, curve.q); // temp1 = x^2
     big_int_mul_mod(temp2, curve_point.y, curve_point.y, curve.q); // temp2 = y^2
     big_int_mul_mod(temp3, temp1, temp2, curve.q); // temp3 = x^2 * y^2
@@ -253,12 +253,12 @@ START_TEST(test_advanced_string_to_point)
     ck_assert_int_eq(big_int_compare(temp1, temp3), 0);
 
     // Same test with t = 1
-    t = big_int_create(t, 1);
+    t = big_int_create_from_chunk(t, 1, 0);
     curve_point = elligator_1_string_to_point(t, curve);
 
-    temp1 = big_int_create(NULL, 0);
-    temp2 = big_int_create(NULL, 0);
-    temp3 = big_int_create(NULL, 0);
+    temp1 = big_int_create_from_chunk(NULL, 0, 0);
+    temp2 = big_int_create_from_chunk(NULL, 0, 0);
+    temp3 = big_int_create_from_chunk(NULL, 0, 0);
     big_int_mul_mod(temp1, curve_point.x, curve_point.x, curve.q); // temp1 = x^2
     big_int_mul_mod(temp2, curve_point.y, curve_point.y, curve.q); // temp2 = y^2
     big_int_mul_mod(temp3, temp1, temp2, curve.q); // temp3 = x^2 * y^2

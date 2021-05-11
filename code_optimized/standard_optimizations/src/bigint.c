@@ -937,7 +937,7 @@ BigInt *big_int_inv(BigInt *r, BigInt *a, BigInt *q)
 
     EgcdResult res;
 
-    res = big_int_egcd(a, q);
+    big_int_egcd(&res, a, q);
 
     // set r = x mod q
     big_int_mod(r, &res.x, q);
@@ -1054,12 +1054,12 @@ int8_t big_int_compare(BigInt *a, BigInt *b)
 /**
  * \brief Calculate the greatest common divisor using the extended Euclidean
  *        algorithm (iterative version).
- * \returns EgcdResult (x, y, g), where x * a + y * b = g
+ * \returns Pointer to EgcdResult (x, y, g), where x * a + y * b = g
  *          and g is the GCD.
  *
- * \assumption a, b != NULL
+ * \assumption r, a, b != NULL
  */
-EgcdResult big_int_egcd(BigInt *a, BigInt *b)
+EgcdResult *big_int_egcd(EgcdResult *r, BigInt *a, BigInt *b)
 {
     ADD_STAT_COLLECTION(BIGINT_TYPE_BIG_INT_EGCD);
 
@@ -1069,19 +1069,17 @@ EgcdResult big_int_egcd(BigInt *a, BigInt *b)
     BIG_INT_DEFINE_PTR(y1);
     BIG_INT_DEFINE_PTR(tmp);
 
-    EgcdResult res;
-
     // Avoid copying intermediate results to final result by using the latter
     // from the start
-    BigInt *b_loc = &res.g;
-    BigInt *x0 = &res.x;
-    BigInt *y0 = &res.y;
+    BigInt *b_loc = &(r->g);
+    BigInt *x0 = &(r->x);
+    BigInt *y0 = &(r->y);
 
     if (big_int_is_zero(a) && big_int_is_zero(b)) {
-        big_int_create_from_chunk(&res.x, 0, 0);
-        big_int_create_from_chunk(&res.y, 0, 0);
-        big_int_create_from_chunk(&res.g, 0, 0);
-        return res;
+        big_int_create_from_chunk(x0, 0, 0);
+        big_int_create_from_chunk(y0, 0, 0);
+        big_int_create_from_chunk(b_loc, 0, 0);
+        return r;
     }
 
     big_int_create_from_chunk(x0, 0, 0);
@@ -1115,7 +1113,7 @@ EgcdResult big_int_egcd(BigInt *a, BigInt *b)
     x0->sign ^= a->sign;
     y0->sign ^= b->sign;
 
-    return res;
+    return r;
 }
 
 
