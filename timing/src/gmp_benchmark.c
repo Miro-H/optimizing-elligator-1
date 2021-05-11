@@ -296,7 +296,23 @@ void bench_mpz_clear(void *bench_args, char *bench_name, char *path)
 
 //--- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
 
-/* Copy? */
+/* mpz_set is similar to the big_int_copy function. */
+void bench_mpz_set_fn(void *arg)
+{
+    int64_t i = *((int64_t *) arg);
+    mpz_set(mpz_array_1[i], mpz_array_2[i]);
+}
+
+void bench_mpz_set(void *bench_args, char *bench_name, char *path)
+{
+    BenchmarkClosure bench_closure = {
+        .bench_prep_args = bench_args,
+        .bench_prep_fn = bench_GMP_prep,
+        .bench_fn = bench_mpz_set_fn,
+        .bench_cleanup_fn = bench_GMP_cleanup,
+    };
+    benchmark_runner(bench_closure, bench_name, path, SETS, REPS, 0);
+}
 
 //--- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
 
@@ -368,15 +384,25 @@ void bench_mpz_urandomb(void *bench_args, char *bench_name, char *path)
 
 //--- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
 
-/* mpz_set is similar to the big_int_duplicate/copy function. */
-void bench_mpz_set_fn(void *arg)
+/* GMP doesn't have a duplicate function, so here we use a create
+ * and then a copy instead.
+ */
+void bench_mpz_duplicate_fn(void *arg)
 {
-
+    int64_t i = *((int64_t *) arg);
+    mpz_init(mpz_array[i]);
+    mpz_set(mpz_array[i], mpz_array_1[i]);
 }
 
-void bench_mpz_set(void *bench_args, char *bench_name, char *path)
+void bench_mpz_duplicate(void *bench_args, char *bench_name, char *path)
 {
-
+    BenchmarkClosure bench_closure = {
+        .bench_prep_args = bench_args,
+        .bench_prep_fn = bench_GMP_small_prep,
+        .bench_fn = bench_mpz_duplicate_fn,
+        .bench_cleanup_fn = bench_GMP_small_cleanup,
+    };
+    benchmark_runner(bench_closure, bench_name, path, SETS, REPS, REPS);
 }
 
 //--- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
@@ -606,7 +632,23 @@ void bench_mpz_tdiv_q_mod(void *bench_args, char *bench_name, char *path)
 
 //--- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
 
-/* left shift? */
+/* mpz_mul_2exp is similar to big_int_sll_small function. */
+void bench_mpz_mul_2exp_fn(void *arg)
+{
+    int64_t i = *((int64_t *) arg);
+    mpz_mul_2exp(mpz_array_1[i], mpz_array_2[i], uint64_t_array_1[i]);
+}
+
+void bench_mpz_mul_2exp(void *bench_args, char *bench_name, char *path)
+{
+    BenchmarkClosure bench_closure = {
+        .bench_prep_args = bench_args,
+        .bench_prep_fn = bench_GMP_prep,
+        .bench_fn = bench_mpz_mul_2exp_fn,
+        .bench_cleanup_fn = bench_GMP_cleanup,
+    };
+    benchmark_runner(bench_closure, bench_name, path, SETS, REPS, 0);
+}
 
 //--- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
 
@@ -738,6 +780,10 @@ int main(int argc, char const *argv[])
             bench_mpz_clear((void *)bench_mpz_size_256_args, "clear",
                 NULL));
 
+        BENCHMARK(bench_type, BENCH_TYPE_COPY,
+            bench_mpz_set((void *)bench_mpz_size_256_args, "set",
+                NULL));
+
         BENCHMARK(bench_type, BENCH_TYPE_CREATE,
             bench_mpz_set_si((void*)bench_mpz_size_256_args, "set from signed int",
                 NULL));
@@ -749,6 +795,10 @@ int main(int argc, char const *argv[])
         BENCHMARK(bench_type, BENCH_TYPE_CREATE_RANDOM,
             bench_mpz_urandomb((void *)bench_mpz_size_256_args,
                 "set to random", NULL));
+
+        BENCHMARK(bench_type, BENCH_TYPE_DUPLICATE,
+            bench_mpz_duplicate((void *)bench_mpz_size_256_args, "duplicate",
+                NULL));
 
         BENCHMARK(bench_type, BENCH_TYPE_NEG,
             bench_mpz_neg((void *)bench_mpz_size_256_args,
@@ -817,6 +867,10 @@ int main(int argc, char const *argv[])
         BENCHMARK(bench_type, BENCH_TYPE_DIV_CURVE,
             bench_mpz_tdiv_q_mod((void *)bench_mpz_size_256_curve_mod_args,
                 "division with modulo (curve)", NULL));
+
+        BENCHMARK(bench_type, BENCH_TYPE_SLL,
+            bench_mpz_mul_2exp((void *)bench_mpz_size_256_args, "left shift",
+                NULL));
 
         BENCHMARK(bench_type, BENCH_TYPE_MOD_CURVE,
             bench_mpz_mod((void *)bench_mpz_size_256_curve_mod_args,
