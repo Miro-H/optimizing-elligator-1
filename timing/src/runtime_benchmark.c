@@ -146,10 +146,17 @@ void bench_elligator_1_string_to_point_prep(void *argptr)
     init_curve1174(&bench_curve);
     curve_point_array = (CurvePoint *)malloc(array_size * sizeof(CurvePoint));
 
+    // q_half = (q-1)/2
+    BigInt *q_half = big_int_srl_small(NULL, bench_curve.q, 1);
+
     for (uint64_t i = 0; i < array_size; i++)
     {
+        // t \in [0, (q-1)/2)
         big_int_array_1[i] = big_int_create_random(NULL, big_int_size_);
+        big_int_mod(big_int_array_1[i], big_int_array_1[i], q_half);
     }
+
+    big_int_destroy(q_half);
 }
 
 // Run after benchmark
@@ -179,17 +186,25 @@ void bench_elligator_1_point_to_string_prep(void *argptr)
     big_int_size_ = ((int *)argptr)[0];
     int64_t array_size = ((int *)argptr)[1];
 
+    big_int_array = (BigInt **)malloc(array_size * sizeof(BigInt *));
     big_int_array_1 = (BigInt **)malloc(array_size * sizeof(BigInt *));
 
     init_curve1174(&bench_curve);
     curve_point_array = (CurvePoint *)malloc(array_size * sizeof(CurvePoint));
 
+    // q_half = (q-1)/2
+    BigInt *q_half = big_int_srl_small(NULL, bench_curve.q, 1);
 
     for (uint64_t i = 0; i < array_size; i++)
     {
+        // t \in [0, (q-1)/2)
         big_int_array_1[i] = big_int_create_random(NULL, big_int_size_);
+        big_int_mod(big_int_array_1[i], big_int_array_1[i], q_half);
+
         curve_point_array[i] = elligator_1_string_to_point(big_int_array_1[i], bench_curve);;
     }
+
+    big_int_destroy(q_half);
 }
 
 // Run after benchmark
@@ -210,6 +225,7 @@ void bench_elligator_1_point_to_string_cleanup(void *argptr)
     }
     free(curve_point_array);
     free(big_int_array_1);
+    free(big_int_array);
     free_curve(&bench_curve);
 }
 
