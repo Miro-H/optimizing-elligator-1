@@ -107,6 +107,7 @@ uint64_t big_int_stats[BIGINT_TYPE_LAST];
 #define BIG_INT_DEFINE_STATIC_STRUCT_PTR(name, sign, overflow, size, chunks)   \
     BIG_INT_DEFINE_STRUCT_GENERAL(static BigInt, name, sign, overflow,         \
         size, chunks);                                                         \
+    __attribute__((unused))                                                    \
     static BigInt *name = &name##_bigint
 
 // Special BigInts, never free those! They cannot be copied.
