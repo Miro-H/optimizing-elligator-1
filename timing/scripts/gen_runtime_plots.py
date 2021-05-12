@@ -4,6 +4,7 @@ import argparse
 import matplotlib
 import matplotlib.pyplot as plt
 import os
+import numpy as np
 
 from statistics import median
 from ast import literal_eval
@@ -42,7 +43,7 @@ TITLE_FONT_SIZE = 20
 LABEL_FONT_SIZE = 12
 
 
-def plot(plot_title, plot_fname, log_xaxis, log_yaxis, bar_plot, logs_dir):
+def plot(plot_title, plot_fname, log_xaxis, log_yaxis, bar_plot, logs_dirs):
     plt.rcParams["figure.figsize"] = (14,8)
 
     x_label, y_label = "", ""
@@ -54,41 +55,65 @@ def plot(plot_title, plot_fname, log_xaxis, log_yaxis, bar_plot, logs_dir):
 
     color_idx = 0
 
+    first = True
     x_labels = []
-    xs, ys = [], []
-    for i, in_file in enumerate(os.listdir(logs_dir)):
-        with open(os.path.join(logs_dir, in_file), "r") as in_fp:
-            lines = in_fp.readlines()
+    versions = []
+    ys = dict()
+    for logs_dir in logs_dirs:
+        version = logs_dir.split("/")[-1].replace("_", " ")
+        versions.append(version)
+        ys[version] = []
 
-            if len(lines) == 0:
-                continue
+        for i, in_file in enumerate(os.listdir(logs_dir)):
+            print(in_file)
+            with open(os.path.join(logs_dir, in_file), "r") as in_fp:
+                lines = in_fp.readlines()
 
-            data_label = lines[0].rstrip()
-            _, data_y_label = lines[1].split(", ")
-            data_x_label = "Benchmark"
+                if len(lines) == 0:
+                    continue
 
-            if is_first_data_set:
-                x_label, y_label = data_x_label, data_y_label
-                is_first_data_set = False
-            elif x_label != data_x_label or y_label != data_y_label:
-                print("ERROR: trying to plot data with different x/y axis labels!")
-                exit(1)
+                data_label = lines[0].rstrip()
+                _, data_y_label = lines[1].split(", ")
+                data_x_label = "Benchmark"
 
-            cycles = []
-            for line in lines[2:]:
-                cycles.append(literal_eval(line.split(", ")[1]))
+                if is_first_data_set:
+                    x_label, y_label = data_x_label, data_y_label
+                    is_first_data_set = False
+                elif x_label != data_x_label or y_label != data_y_label:
+                    print("ERROR: trying to plot data with different x/y axis labels!")
+                    exit(1)
 
-            cycles_median = median(cycles)
+                cycles = []
+                for line in lines[2:]:
+                    cycles.append(literal_eval(line.split(", ")[1]))
 
-            x_labels.append(data_label)
-            xs.append(i)
-            ys.append(cycles_median)
+                cycles_median = median(cycles)
 
-    colors = [next(color_cycler)["color"] for i in range(len(xs))]
-    if bar_plot:
-        ax.bar(xs, ys, width=0.5, color=colors)
-    else:
-        ax.scatter(xs, ys, marker='x', c=colors)
+                ys[version].append(cycles_median)
+                if first:
+                    x_labels.append(data_label)
+                elif x_labels[i] != data_label:
+                    print("ERROR: parsing error, all folders are required to " \
+                          "have the same log files (in the same order) and for " \
+                          "the same data labels!")
+                    exit(1)
+        first = False
+
+    xs = np.arange(len(ys))
+    colors = [next(color_cycler)["color"] for i in range(len(ys))]
+    nr_of_versions = len(nr_of_versions)
+    bar_width = 1 / nr_of_versions + 2
+
+    fig, ax = plt.subplots()
+
+    x_off = -bar_width * int(len(prefetchers)/2)
+    for version in versions:
+        if bar_plot:
+            ax.bar(xs + x_off, ys[version], bar_width,
+                   label=version, align="center")
+            x_off += bar_width
+        else:
+            ax.scatter(xs, ys, marker='x', c=colors)
 
     plt.xticks(ticks=xs, labels=x_labels, rotation='vertical')
     plt.grid(linestyle="-", axis="y", color="white")
@@ -104,15 +129,16 @@ def plot(plot_title, plot_fname, log_xaxis, log_yaxis, bar_plot, logs_dir):
     fig.savefig(plot_fname, dpi=600)
     print(f"Plot stored in '{plot_fname}'")
 
-
-
 if __name__ == "__main__":
     # Read arguments
     parser = argparse.ArgumentParser()
 
     parser.add_argument("--title", help="Title for the generated plot.")
     parser.add_argument("--plot_fname", help="Path of the generated plot.")
-    parser.add_argument("--logs_dir", help="Path where the input logs are stored.",
+    parser.add_argument("--logs_dirs", nargs="*",
+                        help="Path where the input logs are stored. If multiple " \
+                        "directories are given, this expects multiple log files " \
+                        "with the same data name and will do a comparison for them.",
                         default=LOGS_DIR_DEFAULT_PATH)
     parser.add_argument("--log_xaxis", help="Toggle x-axis to have a log scale.",
                         action="store_true")
@@ -125,9 +151,13 @@ if __name__ == "__main__":
 
     title       = args.title
     plot_fname  = args.plot_fname
-    logs_dir    = args.logs_dir
+    logs_dirs   = args.logs_dirs
     log_xaxis   = args.log_xaxis
     log_yaxis   = args.log_yaxis
     bar_plot    = args.bar_plot
 
-    plot(title, plot_fname, log_xaxis, log_yaxis, bar_plot, logs_dir)
+    if len(logs_dirs) > 1 and not bar_plot:
+        print("ERROR: comparison plots are only supported for bar plots.")
+        exit(1)
+
+    plot(title, plot_fname, log_xaxis, log_yaxis, bar_plot, logs_dirs)
