@@ -4,6 +4,9 @@
 # visited 07.03.2021
 #
 
+#### Sage generated files
+*.sage.py
+
 ##### Windows
 # Windows thumbnail cache files
 Thumbs.db
