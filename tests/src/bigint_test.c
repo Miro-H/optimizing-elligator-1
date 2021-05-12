@@ -20,11 +20,31 @@
 // Create macro to define a BigInt chunk according to the different APIs of
 // different versions of our code
 #if VERSION == 1
-#define TEST_BIG_INT_DEFINE(v) BigInt *v = big_int_create_from_chunk(NULL, 0)
+
+#define TEST_BIG_INT_DEFINE(v) BigInt *v = big_int_create_from_chunk(NULL, 0, 0)
 #define TEST_BIG_INT_DESTROY(v) big_int_destroy(v)
+#define TEST_BIG_INT_CMP_GCD_RES(res, g_exp, x_exp, y_exp)                     \
+    do {                                                                       \
+        ck_assert_int_eq(big_int_compare((res).g, (g_exp)), 0);                \
+        ck_assert_int_eq(big_int_compare((res).x, (x_exp)), 0);                \
+        ck_assert_int_eq(big_int_compare((res).y, (y_exp)), 0);                \
+                                                                               \
+        big_int_destroy((res).g);                                              \
+        big_int_destroy((res).x);                                              \
+        big_int_destroy((res).y);                                              \
+    } while (0)
+
 #else
+
 #define TEST_BIG_INT_DEFINE(v) BIG_INT_DEFINE_FROM_CHUNK(v, 0, 0)
 #define TEST_BIG_INT_DESTROY(v)
+#define TEST_BIG_INT_CMP_GCD_RES(res, g_exp, x_exp, y_exp)                     \
+    do {                                                                       \
+        ck_assert_int_eq(big_int_compare(&(res).g, (g_exp)), 0);               \
+        ck_assert_int_eq(big_int_compare(&(res).x, (x_exp)), 0);               \
+        ck_assert_int_eq(big_int_compare(&(res).y, (y_exp)), 0);               \
+    } while (0)
+
 #endif
 
 /**
@@ -1219,13 +1239,7 @@ START_TEST(test_gcd)
     big_int_create_from_hex(y_exp, "A661FAF8D8580423D4219FE1");
 
     big_int_egcd(&res, a, b);
-    ck_assert_int_eq(big_int_compare(&res.g, g_exp), 0);
-    ck_assert_int_eq(big_int_compare(&res.x, x_exp), 0);
-    ck_assert_int_eq(big_int_compare(&res.y, y_exp), 0);
-
-    TEST_BIG_INT_DESTROY(&res.g);
-    TEST_BIG_INT_DESTROY(&res.x);
-    TEST_BIG_INT_DESTROY(&res.y);
+    TEST_BIG_INT_CMP_GCD_RES(res, g_exp, x_exp, y_exp);
 
     // Coprimes (gcd = 1)
     big_int_create_from_chunk(a, 2, 0);
@@ -1235,9 +1249,7 @@ START_TEST(test_gcd)
     big_int_create_from_chunk(y_exp, 1, 0);
 
     big_int_egcd(&res, a, b);
-    ck_assert_int_eq(big_int_compare(&res.g, g_exp), 0);
-    ck_assert_int_eq(big_int_compare(&res.x, x_exp), 0);
-    ck_assert_int_eq(big_int_compare(&res.y, y_exp), 0);
+    TEST_BIG_INT_CMP_GCD_RES(res, g_exp, x_exp, y_exp);
 
     // a = b
     big_int_create_from_hex(a, "ABCDEF123456789ABCDEF");
@@ -1247,9 +1259,7 @@ START_TEST(test_gcd)
     big_int_create_from_chunk(y_exp, 0, 0);
 
     big_int_egcd(&res, a, b);
-    ck_assert_int_eq(big_int_compare(&res.g, g_exp), 0);
-    ck_assert_int_eq(big_int_compare(&res.x, x_exp), 0);
-    ck_assert_int_eq(big_int_compare(&res.y, y_exp), 0);
+    TEST_BIG_INT_CMP_GCD_RES(res, g_exp, x_exp, y_exp);
 
     // Zero in 1st argument
     big_int_create_from_chunk(a, 0, 0);
@@ -1259,9 +1269,7 @@ START_TEST(test_gcd)
     big_int_create_from_chunk(y_exp, 1, 0);
 
     big_int_egcd(&res, a, b);
-    ck_assert_int_eq(big_int_compare(&res.g, g_exp), 0);
-    ck_assert_int_eq(big_int_compare(&res.x, x_exp), 0);
-    ck_assert_int_eq(big_int_compare(&res.y, y_exp), 0);
+    TEST_BIG_INT_CMP_GCD_RES(res, g_exp, x_exp, y_exp);
 
     // Zero in 2nd argument
     big_int_create_from_hex(a, "ABCDEF123456789ABCDEF");
@@ -1271,9 +1279,7 @@ START_TEST(test_gcd)
     big_int_create_from_chunk(y_exp, 0, 0);
 
     big_int_egcd(&res, a, b);
-    ck_assert_int_eq(big_int_compare(&res.g, g_exp), 0);
-    ck_assert_int_eq(big_int_compare(&res.x, x_exp), 0);
-    ck_assert_int_eq(big_int_compare(&res.y, y_exp), 0);
+    TEST_BIG_INT_CMP_GCD_RES(res, g_exp, x_exp, y_exp);
 
     // Both zero arguments
     big_int_create_from_chunk(a, 0, 0);
@@ -1283,9 +1289,7 @@ START_TEST(test_gcd)
     big_int_create_from_chunk(y_exp, 0, 0);
 
     big_int_egcd(&res, a, b);
-    ck_assert_int_eq(big_int_compare(&res.g, g_exp), 0);
-    ck_assert_int_eq(big_int_compare(&res.x, x_exp), 0);
-    ck_assert_int_eq(big_int_compare(&res.y, y_exp), 0);
+    TEST_BIG_INT_CMP_GCD_RES(res, g_exp, x_exp, y_exp);
 
     TEST_BIG_INT_DESTROY(a);
     TEST_BIG_INT_DESTROY(b);
