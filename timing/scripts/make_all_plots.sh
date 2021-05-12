@@ -19,6 +19,8 @@ SUBFOLDER=""
 if [[ -z "${PUBLISH}" ]]; then
     PLOTS_DIR=${PLOTS_DIR}/local
     SUBFOLDER="/$(date "+%Y-%m-%d_%H-%M-%S")"
+else
+    PLOTS_DIR=${PLOTS_DIR}/${PUBLISH}
 fi
 
 if [[ -z "${COLLECT_STATS}" ]]; then
