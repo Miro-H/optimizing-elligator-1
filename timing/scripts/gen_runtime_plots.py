@@ -8,21 +8,23 @@ import numpy as np
 
 from statistics import median
 from ast import literal_eval
-from matplotlib import cycler
+from itertools import cycle
 
 # Use nicer colors
-colors_codes = ["#140e1e", "#2d1a71", "#3257be", "#409def", "#70dbff",
-                "#bfffff", "#3e32d5", "#6e6aff", "#a6adff", "#d8e0ff", "#652bbc",
-                "#b44cef", "#ec8cff", "#ffcdff", "#480e55", "#941887", "#e444c3",
-                "#ff91e2", "#190c12", "#550e2b", "#af102e", "#ff424f", "#ff9792",
-                "#ffd5cf", "#491d1e", "#aa2c1e", "#f66d1e", "#ffae68", "#ffe1b5",
-                "#492917", "#97530f", "#dd8c00", "#fbc800", "#fff699", "#0c101b",
-                "#0e3e12", "#38741a", "#6cb328", "#afe356", "#e4fca2", "#0d384c",
-                "#177578", "#00bc9f", "#6becbd", "#c9fccc", "#353234", "#665d5b",
-                "#998d86", "#cdbfb3", "#eae6da", "#2f3143", "#505d6d", "#7b95a0",
-                "#a6cfd0", "#dfeae4", "#8d4131", "#cb734d", "#efaf79", "#9c2b3b",
-                "#e45761", "#ffffff", "#000000", "#e4162b", "#ffff40"]
-color_cycler = cycler('color', colors_codes)()
+colors_iter = cycle([
+                "#2d1a71", "#3257be", "#409def", "#70dbff", "#bfffff", "#3e32d5",
+                "#6e6aff", "#a6adff", "#d8e0ff", "#652bbc", "#b44cef", "#ec8cff",
+                "#ffcdff", "#480e55", "#941887", "#e444c3", "#ff91e2", "#190c12",
+                "#550e2b", "#af102e", "#ff424f", "#ff9792", "#ffd5cf", "#491d1e",
+                "#aa2c1e", "#f66d1e", "#ffae68", "#ffe1b5", "#492917", "#97530f",
+                "#dd8c00", "#fbc800", "#fff699", "#0c101b", "#0e3e12", "#38741a",
+                "#6cb328", "#afe356", "#e4fca2", "#0d384c", "#177578", "#00bc9f",
+                "#6becbd", "#c9fccc", "#353234", "#665d5b", "#998d86", "#cdbfb3",
+                "#eae6da", "#2f3143", "#505d6d", "#7b95a0", "#a6cfd0", "#dfeae4",
+                "#8d4131", "#cb734d", "#efaf79", "#9c2b3b", "#e45761", "#ffffff",
+                "#000000", "#e4162b", "#ffff40"])
+
+hatches_iter = cycle([ "///" , "\\\\\\" , "|||" , "-" , "+" , "x", "o", "O", ".", "*"])
 
 plt.rc("axes", facecolor="#E6E6E6", axisbelow=True)
 
@@ -65,7 +67,6 @@ def plot(plot_title, plot_fname, log_xaxis, log_yaxis, bar_plot, logs_dirs):
         ys[version] = []
 
         for i, in_file in enumerate(os.listdir(logs_dir)):
-            print(in_file)
             with open(os.path.join(logs_dir, in_file), "r") as in_fp:
                 lines = in_fp.readlines()
 
@@ -95,22 +96,28 @@ def plot(plot_title, plot_fname, log_xaxis, log_yaxis, bar_plot, logs_dirs):
                 elif x_labels[i] != data_label:
                     print("ERROR: parsing error, all folders are required to " \
                           "have the same log files (in the same order) and for " \
-                          "the same data labels!")
+                          "the same data labels! " \
+                          f"Offending labels {x_labels[i]} != {data_label}")
                     exit(1)
         first = False
 
-    xs = np.arange(len(ys))
-    colors = [next(color_cycler)["color"] for i in range(len(ys))]
-    nr_of_versions = len(nr_of_versions)
-    bar_width = 1 / nr_of_versions + 2
+    xs = np.arange(len(ys[version]))
+    nr_of_versions = len(versions)
+    colors = [next(colors_iter) for i in range(len(ys[version]))]
+    hatches = [next(hatches_iter) for i in range(nr_of_versions)]
+
+    if nr_of_versions == 1:
+        bar_width = 0.5
+    else:
+        bar_width = 1 / (nr_of_versions + 2)
 
     fig, ax = plt.subplots()
 
-    x_off = -bar_width * int(len(prefetchers)/2)
-    for version in versions:
+    x_off = -bar_width * len(versions) / 2
+    for i, version in enumerate(versions):
         if bar_plot:
-            ax.bar(xs + x_off, ys[version], bar_width,
-                   label=version, align="center")
+            ax.bar(xs + x_off, ys[version], bar_width, label=version,
+                   align="edge", color=colors, hatch=hatches[i])
             x_off += bar_width
         else:
             ax.scatter(xs, ys, marker='x', c=colors)
@@ -119,6 +126,16 @@ def plot(plot_title, plot_fname, log_xaxis, log_yaxis, bar_plot, logs_dirs):
     plt.grid(linestyle="-", axis="y", color="white")
     ax.set_xlabel(x_label)
     ax.set_ylabel(y_label, rotation=0, loc="top")
+
+    if nr_of_versions > 1:
+        ax.legend()
+
+        legend = ax.get_legend()
+        for i in range(nr_of_versions):
+            handle = legend.legendHandles[i]
+            handle.set_color(ax.get_facecolor())
+            handle.set_edgecolor("black")
+            handle.set_linewidth(1)
 
     ax.set_title(plot_title, loc="left", fontsize=TITLE_FONT_SIZE, pad=20)
     ax.spines['left'].set_visible(False)

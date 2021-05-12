@@ -159,6 +159,12 @@ Install `matplotlib` for `pip3`. One way to install all packages needed for this
 pip3 install --user -r pip_requirements.txt
 ```
 
+#### Comparison Plots
+Rename the folders with the logs you want to compare to have useful names. The folder name will be used as name of the data set. E.g., rename the logs for the straightforward C implementation to `V1` and the one of the sage runtime measurements to `sage`. Then run the following command, where you need to set the `SETS` and `REPS` to the correct values that were used when generating the logs.
+```
+PUBLISH=comparison LOGS_DIRS="../logs/runtime/V1 ../logs/runtime/sage" SETS=10 REPS=10 ./make_all_plots.sh
+```
+
 #### Help Pages
 You can also directly use the plotting scripts. They have the following options.
 

@@ -132,9 +132,9 @@ if __name__ == '__main__':
     logs_dir = f"{logs_dir}/{timestamp_dir_name}"
     os.mkdir(logs_dir)
 
-    runtime(elligator1_map_prep, elligator1_map, "sage elligator1 map",
-        f"{logs_dir}/runtime_sage_elligator1_map.log", sets, reps)
+    runtime(elligator1_map_prep, elligator1_map, "Elligator str2pnt",
+        f"{logs_dir}/runtime_sage_elligator_1_string_to_point.log", sets, reps)
 
     runtime(elligator1_invmap_prep, elligator1_invmap_helper,
-        "sage elligator1 invmap",
-        f"{logs_dir}/runtime_sage_elligator1_invmap.log", sets, reps)
+        "Elligator pnt2str",
+        f"{logs_dir}/runtime_sage_elligator_1_point_to_string.log", sets, reps)
