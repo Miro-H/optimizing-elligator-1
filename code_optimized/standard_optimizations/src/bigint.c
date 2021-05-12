@@ -213,7 +213,7 @@ BigInt *big_int_copy(BigInt *a, BigInt *b)
     ADD_STAT_COLLECTION(BIGINT_TYPE_BIG_INT_COPY);
 
     // Copy exactly as many bits as we need and not a single one more
-    memcpy((void *) a, (void *) b, BIGINT_METADATA_SIZE + (b->size) * BIGINT_CHUNK_BYTE_SIZE);
+    memcpy((void *) a, (void *) b, BIGINT_METADATA_SIZE + (b->size) * BIGINT_INTERNAL_CHUNK_BYTE);
     return a;
 }
 
@@ -274,8 +274,9 @@ BigInt *big_int_add(BigInt *r, BigInt *a, BigInt *b)
 {
     ADD_STAT_COLLECTION(BIGINT_TYPE_BIG_INT_ADD);
 
-    BIG_INT_DEFINE_PTR(aa);
-    BIG_INT_DEFINE_PTR(bb);
+    // Pointer used to point to a or b depending on which is larger
+    BigInt *aa, *bb;
+
     BIG_INT_DEFINE_PTR(neg);
 
     uint8_t carry;
@@ -287,11 +288,11 @@ BigInt *big_int_add(BigInt *r, BigInt *a, BigInt *b)
     if (a->sign != b->sign) {
         if (a->sign == 0) {
             big_int_neg(neg, b);
-            r = big_int_sub(r, a, neg);
+            big_int_sub(r, a, neg);
         }
         else {
             big_int_neg(neg, a);
-            r = big_int_sub(r, b, neg);
+            big_int_sub(r, b, neg);
         }
         return r;
     }
@@ -968,7 +969,7 @@ BigInt *big_int_pow(BigInt *r, BigInt *b, BigInt *e, BigInt *q)
     }
 
     // TODO: copy could be saved if we assume no aliasing
-    return big_int_copy(r_loc, r);
+    return big_int_copy(r, r_loc);
 }
 
 

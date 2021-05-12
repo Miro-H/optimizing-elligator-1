@@ -8,8 +8,9 @@
 // To work with 4 chunk integers (256 bits) we internally need 9 chunk integers.
 // The reason is that intermediate products can be 8 chunks and division performs
 // a scaling that may require an additional chunk.
-#define BIGINT_METADATA_SIZE ((uint32_t) sizeof(uint32_t))
 #define BIGINT_FIXED_SIZE ((uint32_t) 17)
+#define BIGINT_METADATA_SIZE ((uint32_t) 2 * sizeof(uint32_t))
+#define BIGINT_INTERNAL_CHUNK_BYTE ((uint32_t) sizeof(dbl_chunk_size_t))
 #define BIGINT_CHUNK_BYTE_SIZE ((uint32_t) sizeof(chunk_size_t))
 #define BIGINT_CHUNK_HEX_SIZE ((uint32_t) sizeof(chunk_size_t) * 2)
 #define BIGINT_CHUNK_BIT_SIZE ((uint32_t) sizeof(chunk_size_t) * 8)
@@ -48,6 +49,7 @@ typedef struct __attribute__((packed, aligned(4))) BigInt
     uint32_t sign : 1;          // O: positive, 1: negative
     uint32_t overflow : 1;      // 1 if operation overflowed (only supported for add/sub)
     uint32_t size : 30;         // Number of chunks used in the BigInt
+    uint32_t pad;               // XXX: remove when switching to chunks of 32 bits
     dbl_chunk_size_t chunks[BIGINT_FIXED_SIZE];// Chunks of size chunk_size_t in reverse order
 } BigInt;
 
