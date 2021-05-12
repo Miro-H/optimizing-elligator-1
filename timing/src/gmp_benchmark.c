@@ -632,7 +632,7 @@ void bench_mpz_tdiv_q_mod(void *bench_args, char *bench_name, char *path)
 
 //--- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
 
-/* mpz_mul_2exp is similar to big_int_sll_small function. */
+/* mpz_mul_2exp is similar to the big_int_sll_small function. */
 void bench_mpz_mul_2exp_fn(void *arg)
 {
     int64_t i = *((int64_t *) arg);
@@ -652,7 +652,24 @@ void bench_mpz_mul_2exp(void *bench_args, char *bench_name, char *path)
 
 //--- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
 
-/* right shift? */
+/* mpz_tdiv_q_2exp is similar to the big_int_srl_small function. */
+void bench_mpz_tdiv_q_2exp_fn(void *arg)
+{
+    int64_t i = *((int64_t *) arg);
+    mpz_tdiv_q_2exp(mpz_array_1[i], mpz_array_2[i], uint64_t_array_1[i]);
+}
+
+void bench_mpz_tdiv_q_2exp(void *bench_args, char *bench_name, char *path)
+{
+    BenchmarkClosure bench_closure = {
+        .bench_prep_args = bench_args,
+        .bench_prep_fn = bench_GMP_prep,
+        .bench_fn = bench_mpz_tdiv_q_2exp_fn,
+        .bench_cleanup_fn = bench_GMP_cleanup,
+    };
+    benchmark_runner(bench_closure, bench_name, path, SETS, REPS, 0);
+}
+
 
 //--- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
 
@@ -717,11 +734,47 @@ void bench_mpz_powm(void *bench_args, char *bench_name, char *path)
 
 //--- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
 
-/* Is zero? */
+/* mpz_cmp_si can be used to check whether an input is zero. */
+void bench_mpz_cmp_si_fn(void *arg)
+{
+    int64_t i = *((int64_t *) arg);
+    mpz_cmp_si(mpz_array_1[i], 0);
+}
+
+void bench_mpz_cmp_si(void *bench_args, char *bench_name, char *path)
+{
+    BenchmarkClosure bench_closure = {
+        .bench_prep_args = bench_args,
+        .bench_prep_fn = bench_GMP_prep,
+        .bench_fn = bench_mpz_cmp_si_fn,
+        .bench_cleanup_fn = bench_GMP_cleanup,
+    };
+    benchmark_runner(bench_closure, bench_name, path, SETS, REPS, 0);
+}
+
 
 //--- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
 
-/* Is odd? */
+/* mpz_divisible_2exp_p with the 2nd argument as 1 checks whether
+ * the first argument is divisible by 2, thus giving similar functionality
+ * to the big_int_is_odd function.
+ */
+void bench_mpz_divisible_2exp_p_fn(void *arg)
+{
+    int64_t i = *((int64_t *) arg);
+    mpz_divisible_2exp_p(mpz_array_1[i], 1);
+}
+
+void bench_mpz_divisible_2exp_p(void *bench_args, char *bench_name, char *path)
+{
+    BenchmarkClosure bench_closure = {
+        .bench_prep_args = bench_args,
+        .bench_prep_fn = bench_GMP_prep,
+        .bench_fn = bench_mpz_divisible_2exp_p_fn,
+        .bench_cleanup_fn = bench_GMP_cleanup,
+    };
+    benchmark_runner(bench_closure, bench_name, path, SETS, REPS, 0);
+}
 
 //--- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
 
@@ -872,6 +925,10 @@ int main(int argc, char const *argv[])
             bench_mpz_mul_2exp((void *)bench_mpz_size_256_args, "left shift",
                 NULL));
 
+        BENCHMARK(bench_type, BENCH_TYPE_SRL,
+            bench_mpz_tdiv_q_2exp((void *)bench_mpz_size_256_args, "right shift",
+                NULL));
+
         BENCHMARK(bench_type, BENCH_TYPE_MOD_CURVE,
             bench_mpz_mod((void *)bench_mpz_size_256_curve_mod_args,
                 "modulo (curve)", NULL));
@@ -891,6 +948,14 @@ int main(int argc, char const *argv[])
         BENCHMARK(bench_type, BENCH_TYPE_POW_RANDOM,
             bench_mpz_powm((void *)bench_mpz_size_256_random_mod_args,
                 "exponentiation (random)", NULL));
+
+        BENCHMARK(bench_type, BENCH_TYPE_IS_ODD,
+            bench_mpz_cmp_si((void *)bench_mpz_size_256_args,
+                "check if zero", NULL));
+
+        BENCHMARK(bench_type, BENCH_TYPE_IS_ODD,
+            bench_mpz_divisible_2exp_p((void *)bench_mpz_size_256_args,
+                "check if odd", NULL));
 
         BENCHMARK(bench_type, BENCH_TYPE_COMPARE,
             bench_mpz_cmp((void *)bench_mpz_size_256_args,
