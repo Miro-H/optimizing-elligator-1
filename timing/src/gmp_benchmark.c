@@ -18,32 +18,8 @@
 
 // Include header files
 #include "benchmark_helpers.h"
-#include "runtime_benchmark.h"
+#include "gmp_benchmark.h"
 #include "benchmark_types.h"
-
-#ifndef LOG_PATH_F
-#define LOG_PATH_F "./logs/gmp"
-#endif
-
-/*
- * Global mpz_t variables
- */
-mpz_t *mpz_array;
-mpz_t *mpz_array_1;
-mpz_t *mpz_array_2;
-mpz_t *mpz_array_3;
-mpz_t *mpz_array_4;
-mpz_t *mpz_array_5;
-mpz_t *mpz_array_q;
-
-int8_t *int8_t_array_1;
-uint64_t *uint64_t_array_1;
-
-int mpz_size_;
-
-int bench_mpz_size_256_args[] = {BIGINTSIZE, REPS, 1};
-int bench_mpz_size_256_random_mod_args[] = {BIGINTSIZE, REPS, 1};
-int bench_mpz_size_256_curve_mod_args[] = {BIGINTSIZE, REPS, 0};
 
 //--- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
 
@@ -833,144 +809,144 @@ int main(int argc, char const *argv[])
         
         BENCHMARK(bench_type, BENCH_TYPE_ALLOC,
             bench_mpz_init((void *)bench_mpz_size_256_args, "init",
-                LOG_PATH_F "/gmp_mpz_init.log"));
+                LOG_PATH_GMP "/gmp_mpz_init.log"));
         
         BENCHMARK(bench_type, BENCH_TYPE_DESTROY,
             bench_mpz_clear((void *)bench_mpz_size_256_args, "clear",
-                LOG_PATH_F "/gmp_mpz_clear.log"));
+                LOG_PATH_GMP "/gmp_mpz_clear.log"));
 
         BENCHMARK(bench_type, BENCH_TYPE_COPY,
             bench_mpz_set((void *)bench_mpz_size_256_args, "set",
-                LOG_PATH_F "/gmp_mpz_set.log"));
+                LOG_PATH_GMP "/gmp_mpz_set.log"));
 
         BENCHMARK(bench_type, BENCH_TYPE_CREATE,
             bench_mpz_set_si((void*)bench_mpz_size_256_args, "set from signed int",
-                LOG_PATH_F "/gmp_mpz_set_si.log"));
+                LOG_PATH_GMP "/gmp_mpz_set_si.log"));
 
         BENCHMARK(bench_type, BENCH_TYPE_CREATE_HEX,
             bench_mpz_set_str((void *)bench_mpz_size_256_args,
-                "set from string", LOG_PATH_F "/gmp_mpz_set_str.log"));
+                "set from string", LOG_PATH_GMP "/gmp_mpz_set_str.log"));
 
         BENCHMARK(bench_type, BENCH_TYPE_CREATE_RANDOM,
             bench_mpz_urandomb((void *)bench_mpz_size_256_args,
-                "set to random", LOG_PATH_F "/gmp_mpz_urandomb.log"));
+                "set to random", LOG_PATH_GMP "/gmp_mpz_urandomb.log"));
 
         BENCHMARK(bench_type, BENCH_TYPE_DUPLICATE,
             bench_mpz_duplicate((void *)bench_mpz_size_256_args, "duplicate",
-                LOG_PATH_F "/gmp_mpz_duplicate.log"));
+                LOG_PATH_GMP "/gmp_mpz_duplicate.log"));
 
         BENCHMARK(bench_type, BENCH_TYPE_NEG,
             bench_mpz_neg((void *)bench_mpz_size_256_args,
-                "negate", LOG_PATH_F "/gmp_mpz_neg.log"));
+                "negate", LOG_PATH_GMP "/gmp_mpz_neg.log"));
 
         BENCHMARK(bench_type, BENCH_TYPE_ABS,
             bench_mpz_abs((void *)bench_mpz_size_256_args,
-                "absolute value", LOG_PATH_F "/gmp_mpz_abs.log"));
+                "absolute value", LOG_PATH_GMP "/gmp_mpz_abs.log"));
         
         BENCHMARK(bench_type, BENCH_TYPE_ADD,
             bench_mpz_add((void *)bench_mpz_size_256_args,
-                "addition", LOG_PATH_F "/gmp_mpz_add.log"));
+                "addition", LOG_PATH_GMP "/gmp_mpz_add.log"));
             
         BENCHMARK(bench_type, BENCH_TYPE_ADD_MOD_RANDOM,
             bench_mpz_add_mod((void *)bench_mpz_size_256_random_mod_args,
                 "addition with modulo (random)", 
-                    LOG_PATH_F "/gmp_mpz_add_mod_random.log"));
+                    LOG_PATH_GMP "/gmp_mpz_add_mod_random.log"));
 
         BENCHMARK(bench_type, BENCH_TYPE_ADD_MOD_CURVE,
             bench_mpz_add_mod((void *)bench_mpz_size_256_curve_mod_args,
-                "addition with modulo (curve)", LOG_PATH_F "/gmp_mpz_add_mod_curve.log"))
+                "addition with modulo (curve)", LOG_PATH_GMP "/gmp_mpz_add_mod_curve.log"))
 
         BENCHMARK(bench_type, BENCH_TYPE_SUB,
             bench_mpz_sub((void *)bench_mpz_size_256_args,
-                "subtraction", LOG_PATH_F "/gmp_mpz_sub.log"));
+                "subtraction", LOG_PATH_GMP "/gmp_mpz_sub.log"));
 
         BENCHMARK(bench_type, BENCH_TYPE_SUB_MOD_RANDOM,
             bench_mpz_sub_mod((void *)bench_mpz_size_256_random_mod_args,
-                "subtraction with modulo (random)", LOG_PATH_F "/gmp_mpz_sub_mod_random.log"));
+                "subtraction with modulo (random)", LOG_PATH_GMP "/gmp_mpz_sub_mod_random.log"));
 
         BENCHMARK(bench_type, BENCH_TYPE_SUB_MOD_CURVE,
             bench_mpz_sub_mod((void *)bench_mpz_size_256_curve_mod_args,
-                "subtraction with modulo (curve)", LOG_PATH_F "/gmp_mpz_sub_mod_curve.log"));
+                "subtraction with modulo (curve)", LOG_PATH_GMP "/gmp_mpz_sub_mod_curve.log"));
 
         BENCHMARK(bench_type, BENCH_TYPE_MUL,
             bench_mpz_mul((void *)bench_mpz_size_256_args,
-                "multiplication", LOG_PATH_F "/gmp_mpz_mul.log"));
+                "multiplication", LOG_PATH_GMP "/gmp_mpz_mul.log"));
 
         BENCHMARK(bench_type, BENCH_TYPE_MUL_MOD_RANDOM,
             bench_mpz_mul_mod((void *)bench_mpz_size_256_random_mod_args,
-                "multiplication with modulo (random)", LOG_PATH_F "/gmp_mpz_mul_mod_random.log"));
+                "multiplication with modulo (random)", LOG_PATH_GMP "/gmp_mpz_mul_mod_random.log"));
 
         BENCHMARK(bench_type, BENCH_TYPE_MUL_CURVE,
             bench_mpz_mul_mod((void *)bench_mpz_size_256_curve_mod_args,
-                "multiplication with modulo (random)", LOG_PATH_F "/gmp_mpz_mul_mod_curve.log"));
+                "multiplication with modulo (random)", LOG_PATH_GMP "/gmp_mpz_mul_mod_curve.log"));
 
         BENCHMARK(bench_type, BENCH_TYPE_DIVREM,
             bench_mpz_tdiv_qr((void *)bench_mpz_size_256_random_mod_args,
-                "division with remainder", LOG_PATH_F "/gmp_mpz_tdiv_qr.log"));
+                "division with remainder", LOG_PATH_GMP "/gmp_mpz_tdiv_qr.log"));
 
         BENCHMARK(bench_type, BENCH_TYPE_DIVREM_RANDOM,
             bench_mpz_tdiv_qr((void *)bench_mpz_size_256_random_mod_args,
-                "division with remainder (random)", LOG_PATH_F "/gmp_mpz_tdiv_qr_random.log"));
+                "division with remainder (random)", LOG_PATH_GMP "/gmp_mpz_tdiv_qr_random.log"));
 
         BENCHMARK(bench_type, BENCH_TYPE_DIVREM_CURVE,
             bench_mpz_tdiv_qr((void *)bench_mpz_size_256_curve_mod_args,
-                "division with remainder (curve)", LOG_PATH_F "/gmp_mpz_tdiv_qr_curve.log"));
+                "division with remainder (curve)", LOG_PATH_GMP "/gmp_mpz_tdiv_qr_curve.log"));
 
         BENCHMARK(bench_type, BENCH_TYPE_DIV,
             bench_mpz_tdiv_q((void *)bench_mpz_size_256_args,
-                "division", LOG_PATH_F "/gmp_mpz_tdiv_q.log"));
+                "division", LOG_PATH_GMP "/gmp_mpz_tdiv_q.log"));
 
         BENCHMARK(bench_type, BENCH_TYPE_DIV_RANDOM,
             bench_mpz_tdiv_q_mod((void *)bench_mpz_size_256_random_mod_args,
-                "division with modulo (random)", LOG_PATH_F "/gmp_mpz_tdiv_q_mod_random.log"));
+                "division with modulo (random)", LOG_PATH_GMP "/gmp_mpz_tdiv_q_mod_random.log"));
 
         BENCHMARK(bench_type, BENCH_TYPE_DIV_CURVE,
             bench_mpz_tdiv_q_mod((void *)bench_mpz_size_256_curve_mod_args,
-                "division with modulo (curve)", LOG_PATH_F "/gmp_mpz_tdiv_q_mod_curve.log"));
+                "division with modulo (curve)", LOG_PATH_GMP "/gmp_mpz_tdiv_q_mod_curve.log"));
 
         BENCHMARK(bench_type, BENCH_TYPE_SLL,
             bench_mpz_mul_2exp((void *)bench_mpz_size_256_args, "left shift",
-                LOG_PATH_F "/gmp_mpz_mul_2exp.log"));
+                LOG_PATH_GMP "/gmp_mpz_mul_2exp.log"));
 
         BENCHMARK(bench_type, BENCH_TYPE_SRL,
             bench_mpz_tdiv_q_2exp((void *)bench_mpz_size_256_args, "right shift",
-                LOG_PATH_F "/gmp_mpz_tdiv_q_2exp.log"));
+                LOG_PATH_GMP "/gmp_mpz_tdiv_q_2exp.log"));
 
         BENCHMARK(bench_type, BENCH_TYPE_MOD_CURVE,
             bench_mpz_mod((void *)bench_mpz_size_256_curve_mod_args,
-                "modulo (curve)", LOG_PATH_F "/gmp_mpz_mod_curve.log"));
+                "modulo (curve)", LOG_PATH_GMP "/gmp_mpz_mod_curve.log"));
 
         BENCHMARK(bench_type, BENCH_TYPE_MOD_RANDOM,
             bench_mpz_mod((void *)bench_mpz_size_256_random_mod_args,
-                "modulo (random)", LOG_PATH_F "/gmp_mpz_mod_random.log"));
+                "modulo (random)", LOG_PATH_GMP "/gmp_mpz_mod_random.log"));
 
         BENCHMARK(bench_type, BENCH_TYPE_INV,
             bench_mpz_invert((void *)bench_mpz_size_256_args,
-                "modular inversion", LOG_PATH_F "/gmp_mpz_invert.log"));
+                "modular inversion", LOG_PATH_GMP "/gmp_mpz_invert.log"));
 
         BENCHMARK(bench_type, BENCH_TYPE_POW_CURVE,
             bench_mpz_powm((void *)bench_mpz_size_256_curve_mod_args,
-            "exponentation (curve)", LOG_PATH_F "/gmp_mpz_powm_curve.log"));
+            "exponentation (curve)", LOG_PATH_GMP "/gmp_mpz_powm_curve.log"));
 
         BENCHMARK(bench_type, BENCH_TYPE_POW_RANDOM,
             bench_mpz_powm((void *)bench_mpz_size_256_random_mod_args,
-                "exponentiation (random)", LOG_PATH_F "/gmp_mpz_powm_random.log"));
+                "exponentiation (random)", LOG_PATH_GMP "/gmp_mpz_powm_random.log"));
 
         BENCHMARK(bench_type, BENCH_TYPE_IS_ODD,
             bench_mpz_cmp_si((void *)bench_mpz_size_256_args,
-                "check if zero", LOG_PATH_F "/gmp_mpz_cmp_si.log"));
+                "check if zero", LOG_PATH_GMP "/gmp_mpz_cmp_si.log"));
 
         BENCHMARK(bench_type, BENCH_TYPE_IS_ODD,
             bench_mpz_divisible_2exp_p((void *)bench_mpz_size_256_args,
-                "check if odd", LOG_PATH_F "/gmp_mpz_divisible_2exp_p.log"));
+                "check if odd", LOG_PATH_GMP "/gmp_mpz_divisible_2exp_p.log"));
 
         BENCHMARK(bench_type, BENCH_TYPE_COMPARE,
             bench_mpz_cmp((void *)bench_mpz_size_256_args,
-                "comparison", LOG_PATH_F "/gmp_mpz_cmp.log"));
+                "comparison", LOG_PATH_GMP "/gmp_mpz_cmp.log"));
 
         BENCHMARK(bench_type, BENCH_TYPE_EGCD,
             bench_mpz_gcdext((void *)bench_mpz_size_256_args,
-                "extended Euclidean algorithm", LOG_PATH_F "/gmp_mpz_gcdext.log"));
+                "extended Euclidean algorithm", LOG_PATH_GMP "/gmp_mpz_gcdext.log"));
     }
 
     return EXIT_SUCCESS;
