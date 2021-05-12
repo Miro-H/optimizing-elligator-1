@@ -8,10 +8,11 @@
 // To work with 4 chunk integers (256 bits) we internally need 9 chunk integers.
 // The reason is that intermediate products can be 8 chunks and division performs
 // a scaling that may require an additional chunk.
-#define BIGINT_METADATA_SIZE ((uint64_t) 1)
-#define BIGINT_FIXED_SIZE ((uint64_t) 17)
-#define BIGINT_CHUNK_HEX_SIZE (sizeof(chunk_size_t) * 2)
-#define BIGINT_CHUNK_BIT_SIZE (sizeof(chunk_size_t) * 8)
+#define BIGINT_METADATA_SIZE ((uint32_t) sizeof(uint32_t))
+#define BIGINT_FIXED_SIZE ((uint32_t) 17)
+#define BIGINT_CHUNK_BYTE_SIZE ((uint32_t) sizeof(chunk_size_t))
+#define BIGINT_CHUNK_HEX_SIZE ((uint32_t) sizeof(chunk_size_t) * 2)
+#define BIGINT_CHUNK_BIT_SIZE ((uint32_t) sizeof(chunk_size_t) * 8)
 
 // Change if larger chunks are used
 #define STR_TO_CHUNK strtol
@@ -34,17 +35,21 @@ typedef uint64_t dbl_chunk_size_t;
  *        Stores integer a_n * (2^64)^n + a_(n-1) * (2^64)^(n-1) + a_0
  *        as chunks (a_n, a_(n-1), ..., a_0), where chunk[0] = a_0.
  */
+
 // NOTE: For efficiency, we assume size <= 4, i.e., only 256 bit integers.
 // We do not reallocate, every BigInt has BIGINT_FIXED_SIZE chunks allocated.
 // Internally, larger BigInts are possible for intermediate results.
-typedef struct BigInt
+
+// Attributes:
+// - packed: makes sure that the struct has the minimal size (no padding)
+// - aligned: makes sure the struct is aligned to 4 bytes
+typedef struct __attribute__((packed, aligned(4))) BigInt
 {
-    uint64_t sign : 1;          // O: positive, 1: negative
-    uint64_t overflow : 1;      // 1 if operation overflowed (only supported for add/sub)
-    uint64_t size : 62;         // Number of chunks used in the BigInt
+    uint32_t sign : 1;          // O: positive, 1: negative
+    uint32_t overflow : 1;      // 1 if operation overflowed (only supported for add/sub)
+    uint32_t size : 30;         // Number of chunks used in the BigInt
     dbl_chunk_size_t chunks[BIGINT_FIXED_SIZE];// Chunks of size chunk_size_t in reverse order
 } BigInt;
-// TODO: use __atttribute__((packed)) and/or aligned?
 
 /**
  * Struct for the results of g := gcd(a, b) = xa + yb

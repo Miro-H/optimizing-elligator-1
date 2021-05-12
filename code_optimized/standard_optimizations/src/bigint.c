@@ -140,11 +140,6 @@ BigInt *big_int_create_from_hex(BigInt *r, char* s)
     // chunk_size = ceil(s_len/BIGINT_CHUNK_HEX_SIZE)
     chunk_size = (s_len + BIGINT_CHUNK_HEX_SIZE - 1) / BIGINT_CHUNK_HEX_SIZE;
 
-    // Check if the given string is too large for our BigInts
-    if (chunk_size > BIGINT_FIXED_SIZE)
-        FATAL("Integer %s is larger than %" PRIu64 " bytes and currently not supported.\n",
-            s, BIGINT_FIXED_SIZE * sizeof(chunk_size_t));
-
     r->overflow  = 0;
     r->size      = chunk_size;
 
@@ -218,7 +213,7 @@ BigInt *big_int_copy(BigInt *a, BigInt *b)
     ADD_STAT_COLLECTION(BIGINT_TYPE_BIG_INT_COPY);
 
     // Copy exactly as many bits as we need and not a single one more
-    memcpy((void *) a, (void *) b, BIGINT_METADATA_SIZE + b->size);
+    memcpy((void *) a, (void *) b, BIGINT_METADATA_SIZE + (b->size) * BIGINT_CHUNK_BYTE_SIZE);
     return a;
 }
 
