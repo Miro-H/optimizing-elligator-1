@@ -20,6 +20,7 @@
 #include "benchmark_helpers.h"
 #include "gmp_benchmark.h"
 #include "benchmark_types.h"
+#include "debug.h"
 
 //--- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
 
@@ -168,7 +169,7 @@ void bench_GMP_small_prep(void *argptr)
 
     mpz_array = (mpz_t *)malloc(array_size * sizeof(mpz_t));
     mpz_array_1 = (mpz_t *)malloc(array_size * sizeof(mpz_t));
-    
+
     gmp_randstate_t state;
     gmp_randinit_default(state);
 
@@ -186,7 +187,7 @@ void bench_GMP_small_prep_with_init(void *argptr)
 
     mpz_array = (mpz_t *)malloc(array_size * sizeof(mpz_t));
     mpz_array_1 = (mpz_t *)malloc(array_size * sizeof(mpz_t));
-    
+
     gmp_randstate_t state;
     gmp_randinit_default(state);
 
@@ -223,7 +224,7 @@ void bench_mpz_clear_prep(void *argptr)
     mpz_size_ = ((int *)argptr)[0];
     int64_t array_size = ((int *)argptr)[1];
 
-    mpz_array = (mpz_t *)malloc(array_size * sizeof(mpz_t *));
+    mpz_array = (mpz_t *)malloc(array_size * sizeof(mpz_t));
     for (uint64_t i = 0; i < array_size; i++)
     {
         mpz_init(mpz_array[i]);
@@ -326,7 +327,7 @@ void bench_mpz_set_si(void *bench_args, char *bench_name, char *path)
 void bench_mpz_set_str_fn(void *arg)
 {
     int64_t i = *((int64_t *) arg);
-    mpz_set_str(mpz_array[i], 
+    mpz_set_str(mpz_array[i],
         "FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF",
         16);
 }
@@ -556,7 +557,7 @@ void bench_mpz_mul_mod(void *bench_args, char *bench_name, char *path)
 void bench_mpz_tdiv_qr_fn(void *arg)
 {
     int64_t i = *((int64_t *) arg);
-    mpz_tdiv_qr(mpz_array_1[i], mpz_array_2[i], mpz_array_3[i], 
+    mpz_tdiv_qr(mpz_array_1[i], mpz_array_2[i], mpz_array_3[i],
         mpz_array_q[i]);
 }
 
@@ -806,11 +807,11 @@ int main(int argc, char const *argv[])
     int bench_type;
     for (int i = 1; i < argc; ++i) {
         bench_type = atoi(argv[i]);
-        
+
         BENCHMARK(bench_type, BENCH_TYPE_ALLOC,
             bench_mpz_init((void *)bench_mpz_size_256_args, "init",
                 LOG_PATH_GMP "/gmp_mpz_init.log"));
-        
+
         BENCHMARK(bench_type, BENCH_TYPE_DESTROY,
             bench_mpz_clear((void *)bench_mpz_size_256_args, "clear",
                 LOG_PATH_GMP "/gmp_mpz_clear.log"));
@@ -842,14 +843,14 @@ int main(int argc, char const *argv[])
         BENCHMARK(bench_type, BENCH_TYPE_ABS,
             bench_mpz_abs((void *)bench_mpz_size_256_args,
                 "absolute value", LOG_PATH_GMP "/gmp_mpz_abs.log"));
-        
+
         BENCHMARK(bench_type, BENCH_TYPE_ADD,
             bench_mpz_add((void *)bench_mpz_size_256_args,
                 "addition", LOG_PATH_GMP "/gmp_mpz_add.log"));
-            
+
         BENCHMARK(bench_type, BENCH_TYPE_ADD_MOD_RANDOM,
             bench_mpz_add_mod((void *)bench_mpz_size_256_random_mod_args,
-                "addition with modulo (random)", 
+                "addition with modulo (random)",
                     LOG_PATH_GMP "/gmp_mpz_add_mod_random.log"));
 
         BENCHMARK(bench_type, BENCH_TYPE_ADD_MOD_CURVE,
