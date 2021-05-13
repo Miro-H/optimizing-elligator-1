@@ -149,10 +149,11 @@ void benchmark_runner(BenchmarkClosure bench_closure, char *bench_name,
     }
 #endif
 
-    fclose(out_fp);
-
     if (!do_write_to_stdout)
+    {
         printf("Wrote benchmark results to log file: '%s'\n", log_fname);
+        fclose(out_fp);
+    }
 }
 
 /*
