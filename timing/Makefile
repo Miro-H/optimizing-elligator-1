@@ -53,18 +53,15 @@ endif
 CFLAGS += -DSETS=$(SETS) -DREPS=$(REPS)
 
 # Forward COLLECT_STATS env variable to compiled binaries
-LOG_PATH := $(abspath $(LOG_DIR))
+LOG_BASE_PATH := $(abspath $(LOG_DIR))
 ifneq ($(COLLECT_STATS),)
-	LOG_PATH := $(LOG_PATH)/stats
+	LOG_SUBDIRS = stats
 	CFLAGS += -DCOLLECT_STATS=${COLLECT_STATS}
 else
-	LOG_PATH := $(LOG_PATH)/runtime
+	LOG_SUBDIRS = runtime
 endif
 
-LOG_PATH := $(LOG_PATH)/$(shell date "+%Y-%m-%d_%H-%M-%S")
-
-# Add macros for compiled C files
-CFLAGS += -DLOG_PATH=\"$(LOG_PATH)\"
+LOG_SUBDIRS := $(LOG_SUBDIRS)/$(shell date "+%Y-%m-%d_%H-%M-%S")
 
 # Assume that the executable depends on all header files.
 DEPS = $(wildcard $(IDIR)/*.h)
@@ -74,14 +71,10 @@ LIBS =
 # Main target, building all benchmarks
 all: compile-runtime-benchmark compile-gmp-benchmark
 
-.PHONY: prepare-logs
-prepare-logs:
-	mkdir -p $(LOG_PATH)
-
 # Stats can only be collected for our BigInt library
 .PHONY: run-all
 ifeq ($(COLLECT_STATS),)
-run-all: run-runtime-benchmark run-gmp-benchmark
+run-all: run-gmp-benchmark run-runtime-benchmark
 else
 run-all: run-runtime-benchmark
 endif
@@ -117,12 +110,26 @@ gen-bench-types:
 		--src_file ${SDIR}/runtime_benchmark.c \
 		--tar_file ${IDIR}/benchmark_types.h
 
+.PHONY: prepare-logs-runtime-benchmark
+prepare-logs-runtime-benchmark:
+	mkdir -p $(LOG_PATH)
+
 .PHONY: compile-runtime-benchmark
-compile-runtime-benchmark: prepare-logs all-benched gen-bench-types runtime-benchmark
+compile-runtime-benchmark: OUT_SUB_PATH = V$(VERSION)/$(LOG_SUBDIRS)
+compile-runtime-benchmark: LOG_PATH = $(LOG_BASE_PATH)/$(OUT_SUB_PATH)
+compile-runtime-benchmark: CFLAGS += -DLOG_PATH=\"$(LOG_PATH)\"
+compile-runtime-benchmark: prepare-logs-runtime-benchmark all-benched gen-bench-types runtime-benchmark
 
 .PHONY: run-runtime-benchmark
+run-runtime-benchmark: OUT_SUB_PATH = V$(VERSION)/$(LOG_SUBDIRS)
+run-runtime-benchmark: LOG_PATH = $(LOG_BASE_PATH)/$(OUT_SUB_PATH)
 run-runtime-benchmark: compile-runtime-benchmark
 	./$(BDIR)/runtime-benchmark $(BENCHMARKS)
+
+.PHONY: plot-runtime-benchmark
+plot-runtime-benchmark: OUT_SUB_PATH = V$(VERSION)/$(LOG_SUBDIRS)
+plot-runtime-benchmark: LOG_PATH = $(LOG_BASE_PATH)/$(OUT_SUB_PATH)
+plot-runtime-benchmark: clean run-runtime-benchmark plot-run
 
 runtime-benchmark: $(OBJ_BENCHED) $(OBJ)
 	$(CC) -o $(BDIR)/$@ $^ $(CFLAGS) $(LIBS)
@@ -136,20 +143,38 @@ OBJ 	= $(patsubst %,$(ODIR)/%,$(_OBJ))
 _OBJ_BENCHED 	=
 OBJ_BENCHED		= $(patsubst %,$(ODIR_BENCHED)/%,$(_OBJ_BENCHED))
 
+.PHONY: prepare-logs-gmp-benchmark
+prepare-logs-gmp-benchmark:
+	mkdir -p $(LOG_PATH)
+
 .PHONY: compile-gmp-benchmark
-compile-gmp-benchmark: gmp-benchmark
+compile-gmp-benchmark: OUT_SUB_PATH = gmp/$(LOG_SUBDIRS)
+compile-gmp-benchmark: LOG_PATH = $(LOG_BASE_PATH)/$(OUT_SUB_PATH)
+compile-gmp-benchmark: CFLAGS += -DLOG_PATH=\"$(LOG_PATH)\"
+compile-gmp-benchmark: prepare-logs-gmp-benchmark gmp-benchmark
 
 .PHONY: run-gmp-benchmark
+run-gmp-benchmark: OUT_SUB_PATH = gmp/$(LOG_SUBDIRS)
+run-gmp-benchmark: LOG_PATH = $(LOG_BASE_PATH)/$(OUT_SUB_PATH)
 run-gmp-benchmark: compile-gmp-benchmark
 	./$(BDIR)/gmp-benchmark -1
+
+.PHONY: plot-gmp-benchmark
+plot-gmp-benchmark: OUT_SUB_PATH = gmp/$(LOG_SUBDIRS)
+plot-gmp-benchmark: LOG_PATH = $(LOG_BASE_PATH)/$(OUT_SUB_PATH)
+plot-gmp-benchmark: clean run-gmp-benchmark plot-run
+
+.PHONY: plot-run
+plot-run:
+	PUBLISH=$(PUBLISH)  COLLECT_STATS=$(COLLECT_STATS) SETS=$(SETS) \
+	REPS=$(REPS) LOGS_DIR=$(LOG_PATH) OUT_SUB_PATH=$(OUT_SUB_PATH) \
+	$(SCRIPTS_DIR)/make_all_plots.sh
 
 gmp-benchmark: $(OBJ_BENCHED) $(OBJ)
 	$(CC) -o $(BDIR)/$@ $^ $(CFLAGS) $(LIBS) -lgmp
 
 .PHONY: plots
-plots: run-all
-	PUBLISH=$(PUBLISH) COLLECT_STATS=$(COLLECT_STATS) LOGS_DIR=$(LOG_PATH) SETS=$(SETS) \
-	REPS=$(REPS) $(SCRIPTS_DIR)/make_all_plots.sh
+plots: plot-gmp-benchmark plot-runtime-benchmark
 
 .PHONY: clean
 clean:

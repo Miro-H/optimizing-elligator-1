@@ -1,8 +1,8 @@
 #ifndef GMP_BENCHMARK_H_ /* Include guard */
 #define GMP_BENCHMARK_H_
 
-#ifndef LOG_PATH_GMP
-#define LOG_PATH_GMP "./logs/gmp"
+#ifndef LOG_PATH
+#define LOG_PATH "./logs/gmp/runtime"
 #endif
 
 #ifndef INTSIZE
