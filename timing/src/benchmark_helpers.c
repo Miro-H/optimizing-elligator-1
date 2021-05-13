@@ -70,7 +70,7 @@ void bench_warmup(BenchmarkClosure bench_closure, uint64_t num_sets,
 
     if (num_sets_local > num_sets) {
         WARNING("Current benchmark uses less than %d cycles. It's recommended "
-            "to increase the number of reps to %" PRIu64,
+            "to increase the number of reps to %" PRIu64 "\n",
             WARMUP_CYCLES, (num_reps * (num_sets_local - num_sets)) / num_sets);
     }
 }
