@@ -4,3 +4,6 @@ runtime/*
 
 stats/*
 !stats/.keep
+
+gmp/*
+!gmp/.keep

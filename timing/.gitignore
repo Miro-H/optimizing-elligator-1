@@ -8,6 +8,7 @@ logs/*
 !logs/.gitignore
 !logs/runtime
 !logs/stats
+!logs/gmp
 
 # Ignore plots generated locally, move plots from plots/local to plots/ to upload
 # them.
