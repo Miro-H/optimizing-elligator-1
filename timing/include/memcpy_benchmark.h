@@ -2,7 +2,7 @@
 #define MEMCPY_BENCHMARK_H_
 
 #ifndef LOG_PATH
-#define LOG_PATH "../logs/runtime"
+#define LOG_PATH "../logs/memcpy"
 #endif
 
 #ifndef BIGINTSIZE
@@ -11,7 +11,7 @@
 #endif
 
 #ifndef SETS
-#define SETS 10
+#define SETS 100
 #endif
 
 #ifndef REPS
