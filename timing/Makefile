@@ -124,12 +124,8 @@ runtime-benchmark: $(OBJ_BENCHED) $(OBJ)
 
 .PHONY: plots
 plots: run-all
-	COLLECT_STATS=$(COLLECT_STATS) LOGS_DIR=$(LOG_PATH) SETS=$(SETS) \
+	PUBLISH=$(PUBLISH) COLLECT_STATS=$(COLLECT_STATS) LOGS_DIR=$(LOG_PATH) SETS=$(SETS) \
 	REPS=$(REPS) $(SCRIPTS_DIR)/make_all_plots.sh
-
-.PHONY: publish-plots
-publish-plots: run-all
-	PUBLISH=1 ${SCRIPTS_DIR}/make_all_plots.sh
 
 .PHONY: clean
 clean:

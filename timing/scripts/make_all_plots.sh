@@ -19,6 +19,8 @@ SUBFOLDER=""
 if [[ -z "${PUBLISH}" ]]; then
     PLOTS_DIR=${PLOTS_DIR}/local
     SUBFOLDER="/$(date "+%Y-%m-%d_%H-%M-%S")"
+else
+    PLOTS_DIR=${PLOTS_DIR}/${PUBLISH}
 fi
 
 if [[ -z "${COLLECT_STATS}" ]]; then
@@ -52,6 +54,23 @@ if [[ -z "${COLLECT_STATS}" ]]; then
         --logs_dir "${LOGS_DIR}"                                                   \
         --bar_plot                                                                 \
         --log_yaxis
+
+    if [[ ! -z "${PUBLISH}" ]]; then
+        echo "#####################################################################"
+        echo "#        Generate comparison plots for runtime measurements         #"
+        echo "#####################################################################"
+
+        if [[ -z "${LOGS_DIRS}" ]]; then
+            echo "Set the variable LOGS_DIRS for the log files that should be compared."
+        else
+            ${SCRIPTS_DIR}/gen_runtime_plots.py                                             \
+                --title "Median Runtime Comparison (log scale, ${SETS} sets, ${REPS} reps)" \
+                --plot_fname "${PLOTS_DIR}/comparison_bar_log_scale.png"                    \
+                --logs_dir ${LOGS_DIRS}                                                     \
+                --bar_plot                                                                  \
+                --log_yaxis
+        fi
+    fi
 
     # echo "#####################################################################"
     # echo "#             Generate line plots of runtime measurements           #"
