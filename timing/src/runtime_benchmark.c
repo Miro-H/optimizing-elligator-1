@@ -20,15 +20,19 @@
 
 #define BENCHMARK_BIG_INT_DEFINE(v) BigInt *v = big_int_create_from_chunk(NULL, 0, 0)
 #define BENCHMARK_BIG_INT_DESTROY(v) big_int_destroy(v)
+#define BENCHMARK_BIG_INT_CREATE_RANDOM(v, w) BigInt *v = big_int_create_random(NULL, w)
 #define BENCHMARK_BIG_INT_EGCD(a, b) big_int_egcd(a, b)
+#define BENCHMARK_BIG_INT_CREATE_FROM_DBL_CHUNK(v) *v = big_int_create_from_dbl_chunk(NULL, 1, 1);
+#define BENCHMARK_BIG_INT_CREATE_FROM_HEX(v, w) *v = big_int_create_from_hex(v, w);
 
 #else
 
-//#define BENCHMARK_BIG_INT_DEFINE(v) BIG_INT_DEFINE_FROM_CHUNK(v, 0, 0)
-#define BENCHMARK_BIG_INT_DEFINE(v) big_int_create_from_chunk(v, 0, 0)
+#define BENCHMARK_BIG_INT_DEFINE(v) BIG_INT_DEFINE_FROM_CHUNK(v, 0, 0)
 #define BENCHMARK_BIG_INT_DESTROY(v)
-//#define BENCHMARK_BIG_INT_CREATE_RANDOM(v) big_int_create_random
+#define BENCHMARK_BIG_INT_CREATE_RANDOM(v, w) big_int_create_random(v, w)
 #define BENCHMARK_BIG_INT_EGCD(a, b) big_int_egcd(NULL, a, b)
+#define BENCHMARK_BIG_INT_CREATE_FROM_DBL_CHUNK(v) big_int_create_from_dbl_chunk(v, 1, 1);
+#define BENCHMARK_BIG_INT_CREATE_FROM_HEX(v, w) big_int_create_from_hex(v, w);
 
 #endif
 
@@ -53,22 +57,36 @@ void bench_big_int_prep(void *argptr)
 
     for (uint64_t i = 0; i < array_size; i++)
     {
-        //BIG_INT_DEFINE(big_int_array_1[i]);
-        //BIG_INT_DEFINE(big_int_array_2[i]);
-        //BIG_INT_DEFINE(big_int_array_3[i]);
-        //BIG_INT_DEFINE(big_int_array_4[i]);
-        big_int_array_1[i] = big_int_create_random(NULL, big_int_size_);
-        big_int_array_2[i] = big_int_create_random(NULL, big_int_size_);
-        big_int_array_3[i] = big_int_create_random(NULL, big_int_size_);
-        big_int_array_4[i] = big_int_create_random(NULL, big_int_size_);
+        BENCHMARK_BIG_INT_DEFINE(a);
+        BENCHMARK_BIG_INT_DEFINE(b);
+        BENCHMARK_BIG_INT_DEFINE(c);
+        BENCHMARK_BIG_INT_DEFINE(d);
+        BENCHMARK_BIG_INT_CREATE_RANDOM(a, big_int_size_);
+        BENCHMARK_BIG_INT_CREATE_RANDOM(b, big_int_size_);
+        BENCHMARK_BIG_INT_CREATE_RANDOM(c, big_int_size_);
+        BENCHMARK_BIG_INT_CREATE_RANDOM(d, big_int_size_);
+        big_int_array_1[i] = a;
+        big_int_array_2[i] = b;
+        big_int_array_3[i] = c;
+        big_int_array_4[i] = d;
+        //big_int_array_1[i] = big_int_create_random(NULL, big_int_size_);
+        //big_int_array_2[i] = big_int_create_random(NULL, big_int_size_);
+        //big_int_array_3[i] = big_int_create_random(NULL, big_int_size_);
+        //big_int_array_4[i] = big_int_create_random(NULL, big_int_size_);
 
         if (random_q)
         {
-            big_int_array_q[i] = big_int_create_random(NULL, big_int_size_);
+            BENCHMARK_BIG_INT_DEFINE(q);
+            BENCHMARK_BIG_INT_CREATE_RANDOM(q, big_int_size_);
+            big_int_array_q[i] = q;
+            //big_int_array_q[i] = big_int_create_random(NULL, big_int_size_);
         }
         else
         {
-            big_int_array_q[i] = big_int_create_from_hex(NULL, "7FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF7");
+            BENCHMARK_BIG_INT_DEFINE(q);
+            BENCHMARK_BIG_INT_CREATE_FROM_HEX(q, "7FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF7");
+            big_int_array_q[i] = q;
+            //big_int_array_q[i] = big_int_create_from_hex(NULL, "7FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF7");
         }
 
         uint64_t_array_1[i] = rand() % 256;
@@ -83,7 +101,7 @@ void bench_big_int_cleanup(void *argptr)
 
     for (uint64_t i = 0; i < array_size; i++)
     {
-        BENCHMARK_BIG_INT_DESTROY(big_int_array[i]);
+        BENCHMARK_BIG_INT_DESTROY(big_int_array_1[i]);
         BENCHMARK_BIG_INT_DESTROY(big_int_array_2[i]);
         BENCHMARK_BIG_INT_DESTROY(big_int_array_3[i]);
         BENCHMARK_BIG_INT_DESTROY(big_int_array_4[i]);
@@ -121,7 +139,10 @@ void bench_big_int_small_prep(void *argptr)
     big_int_array_1 = (BigInt **)malloc(array_size * sizeof(BigInt *));
     for (uint64_t i = 0; i < array_size; i++)
     {
-        big_int_array_1[i] = big_int_create_random(NULL, big_int_size_);
+        BENCHMARK_BIG_INT_DEFINE(a);
+        BENCHMARK_BIG_INT_CREATE_RANDOM(a, big_int_size_);
+        big_int_array_1[i] = a;
+        //big_int_array_1[i] = big_int_create_random(NULL, big_int_size_);
     }
 }
 
@@ -376,9 +397,11 @@ void bench_big_int_prune(void *bench_args, char *bench_name, char *path)
 void bench_big_int_create_fn(void *arg)
 {
     int64_t i = *((int64_t *) arg);
-    BENCHMARK_BIG_INT_DEFINE(big_int_array[i]);
+    BENCHMARK_BIG_INT_DEFINE(a);
+    big_int_array[i] = a;
     //big_int_array[i] = big_int_create_from_chunk(NULL, 1);
 }
+
 
 void bench_big_int_create_from_chunk(void *bench_args, char *bench_name, char *path)
 {
@@ -396,7 +419,10 @@ void bench_big_int_create_from_chunk(void *bench_args, char *bench_name, char *p
 void bench_big_int_create_from_dbl_chunk_fn(void *arg)
 {
     int64_t i = *((int64_t *) arg);
-    big_int_array[i] = big_int_create_from_dbl_chunk(NULL, 1, 1);
+    BENCHMARK_BIG_INT_DEFINE(a);
+    BENCHMARK_BIG_INT_CREATE_FROM_DBL_CHUNK(a);
+    big_int_array[i] = a;
+    //big_int_array[i] = big_int_create_from_dbl_chunk(NULL, 1, 1);
 }
 
 void bench_big_int_create_from_dbl_chunk(void *bench_args, char *bench_name, char *path)
@@ -415,8 +441,12 @@ void bench_big_int_create_from_dbl_chunk(void *bench_args, char *bench_name, cha
 void bench_big_int_create_from_hex_fn(void *arg)
 {
     int64_t i = *((int64_t *) arg);
-    big_int_array[i] = big_int_create_from_hex(NULL,
+    BENCHMARK_BIG_INT_DEFINE(a);
+    BENCHMARK_BIG_INT_CREATE_FROM_HEX(a, 
         "FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF");
+    big_int_array[i] = a;
+    //big_int_array[i] = big_int_create_from_hex(NULL,
+        //"FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF");
 }
 
 void bench_big_int_create_from_hex(void *bench_args, char *bench_name, char *path)
@@ -435,7 +465,10 @@ void bench_big_int_create_from_hex(void *bench_args, char *bench_name, char *pat
 void bench_big_int_create_random_fn(void *arg)
 {
     int64_t i = *((int64_t *) arg);
-    big_int_array[i] = big_int_create_random(NULL, big_int_size_);
+    BENCHMARK_BIG_INT_DEFINE(a);
+    BENCHMARK_BIG_INT_CREATE_RANDOM(a, big_int_size_);
+    big_int_array[i] = a;
+    //big_int_array[i] = big_int_create_random(NULL, big_int_size_);
 }
 
 void bench_big_int_create_random(void *bench_args, char *bench_name, char *path)
