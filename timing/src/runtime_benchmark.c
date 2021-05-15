@@ -20,10 +20,12 @@
 
 #define BENCHMARK_BIG_INT_DEFINE(v) BigInt *v = big_int_create_from_chunk(NULL, 0, 0)
 #define BENCHMARK_BIG_INT_DESTROY(v) big_int_destroy(v)
-#define BENCHMARK_BIG_INT_CREATE_RANDOM(v, w) BigInt *v = big_int_create_random(NULL, w)
+//#define BENCHMARK_BIG_INT_CREATE_RANDOM(v, w) BigInt *v = big_int_create_random(NULL, w)
+#define BENCHMARK_BIG_INT_CREATE_RANDOM(v, w) v = big_int_create_random(NULL, w)
 #define BENCHMARK_BIG_INT_EGCD(a, b) big_int_egcd(a, b)
 #define BENCHMARK_BIG_INT_CREATE_FROM_DBL_CHUNK(v) *v = big_int_create_from_dbl_chunk(NULL, 1, 1);
-#define BENCHMARK_BIG_INT_CREATE_FROM_HEX(v, w) *v = big_int_create_from_hex(v, w);
+//#define BENCHMARK_BIG_INT_CREATE_FROM_HEX(v, w) *v = big_int_create_from_hex(v, w);
+#define BENCHMARK_BIG_INT_CREATE_FROM_HEX(v, w) v = big_int_create_from_hex(v, w);
 
 #else
 
@@ -37,7 +39,257 @@
 #endif
 
 
+
+//=== === === === === === === === === === === === === === ===
+
+void bench_big_int_prep(void *argptr)
+{
+    big_int_size_ = ((int *)argptr)[0];
+    int64_t array_size = ((int *)argptr)[1];
+    int random_q = ((int *)argptr)[2];
+
+    #if VERSION == 1
+    big_int_array = (BigInt **)malloc(array_size * sizeof(BigInt *));
+    big_int_array_1 = (BigInt **)malloc(array_size * sizeof(BigInt *));
+    big_int_array_2 = (BigInt **)malloc(array_size * sizeof(BigInt *));
+    big_int_array_3 = (BigInt **)malloc(array_size * sizeof(BigInt *));
+    big_int_array_4 = (BigInt **)malloc(array_size * sizeof(BigInt *));
+    big_int_array_q = (BigInt **)malloc(array_size * sizeof(BigInt *));
+    #else
+    big_int_array = (BigInt *)malloc(array_size * sizeof(BigInt));
+    big_int_array_1 = (BigInt *)malloc(array_size * sizeof(BigInt));
+    big_int_array_2 = (BigInt *)malloc(array_size * sizeof(BigInt));
+    big_int_array_3 = (BigInt *)malloc(array_size * sizeof(BigInt));
+    big_int_array_4 = (BigInt *)malloc(array_size * sizeof(BigInt));
+    big_int_array_q = (BigInt *)malloc(array_size * sizeof(BigInt));
+    #endif
+
+    int8_t_array_1 = (int8_t *)malloc(array_size * sizeof(int8_t));
+    uint64_t_array_1 = (uint64_t *)malloc(array_size * sizeof(uint64_t));
+
+    for (uint64_t i = 0; i < array_size; i++)
+    {
+        
+        BENCHMARK_BIG_INT_CREATE_RANDOM(big_int_array_1[i], big_int_size_)
+        BENCHMARK_BIG_INT_CREATE_RANDOM(big_int_array_2[i], big_int_size_)
+        BENCHMARK_BIG_INT_CREATE_RANDOM(big_int_array_3[i], big_int_size_)
+        BENCHMARK_BIG_INT_CREATE_RANDOM(big_int_array_4[i], big_int_size_)
+
+        if (random_q)
+        {
+            BENCHMARK_BIG_INT_CREATE_RANDOM(big_int_array_q[i], big_int_size_)
+        }
+        else
+        {
+            BENCHMARK_BIG_INT_CREATE_FROM_HEX(big_int_array_q[i], "7FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF7")
+        }
+
+        uint64_t_array_1[i] = rand() % 256;
+    }
+}
+
+// Run after benchmark
+void bench_big_int_cleanup(void *argptr)
+{
+    int64_t used_values = ((int64_t *) argptr)[0];
+    int64_t array_size  = ((int64_t *) argptr)[1];
+
+    for (uint64_t i = 0; i < array_size; i++)
+    {
+        BENCHMARK_BIG_INT_DESTROY(big_int_array_1[i]);
+        BENCHMARK_BIG_INT_DESTROY(big_int_array_2[i]);
+        BENCHMARK_BIG_INT_DESTROY(big_int_array_3[i]);
+        BENCHMARK_BIG_INT_DESTROY(big_int_array_4[i]);
+        BENCHMARK_BIG_INT_DESTROY(big_int_array_q[i]);
+    }
+
+    for (uint64_t i = 0; i < used_values; i++)
+    {
+        BENCHMARK_BIG_INT_DESTROY(big_int_array[i]);
+    }
+    free(big_int_array);
+    free(big_int_array_1);
+    free(big_int_array_2);
+    free(big_int_array_3);
+    free(big_int_array_4);
+    free(big_int_array_q);
+
+    free(int8_t_array_1);
+    free(uint64_t_array_1);
+}
+
+//=== === === === === === === === === === === === === === ===
+
+void bench_big_int_small_prep(void *argptr)
+{
+    big_int_size_ = ((int *)argptr)[0];
+    int64_t array_size = ((int *)argptr)[1];
+
+    #if VERSION == 1
+    big_int_array = (BigInt **)malloc(array_size * sizeof(BigInt *));
+    big_int_array_1 = (BigInt **)malloc(array_size * sizeof(BigInt *));
+    #else
+    big_int_array = (BigInt *)malloc(array_size * sizeof(BigInt));
+    big_int_array_1 = (BigInt *)malloc(array_size * sizeof(BigInt));
+    #endif
+
+
+    for (uint64_t i = 0; i < array_size; i++)
+    {
+        BENCHMARK_BIG_INT_CREATE_RANDOM(big_int_array_1[i], big_int_size_);
+    }
+}
+
+// Run after benchmark
+void bench_big_int_small_cleanup(void *argptr)
+{
+    int64_t used_values = ((int64_t *) argptr)[0];
+    int64_t array_size  = ((int64_t *) argptr)[1];
+
+    for (uint64_t i = 0; i < array_size; i++)
+    {
+        BENCHMARK_BIG_INT_DESTROY(big_int_array_1[i]);
+    }
+
+    for (uint64_t i = 0; i < used_values; i++)
+    {
+        BENCHMARK_BIG_INT_DESTROY(big_int_array[i]);
+    }
+    free(big_int_array);
+    free(big_int_array_1);
+}
+
+//=== === === === === === === === === === === === === === ===
+
+#if VERSION == 1
+void bench_big_int_destroy_prep(void *argptr)
+{
+    big_int_size_ = ((int *)argptr)[0];
+    int64_t array_size = ((int *)argptr)[1];
+
+    big_int_array = (BigInt **)malloc(array_size * sizeof(BigInt *));
+    for (uint64_t i = 0; i < array_size; i++)
+    {
+        #if VERSION == 1
+            big_int_array[i] = big_int_alloc(big_int_size_);
+        #endif
+    }
+}
+
+void bench_big_int_destroy_cleanup(void *argptr)
+{
+    free(big_int_array);
+}
+#endif
+
+//=== === === === === === === === === === === === === === ===
+
+
+void bench_elligator_1_string_to_point_prep(void *argptr)
+{
+    big_int_size_ = ((int *)argptr)[0];
+    int64_t array_size = ((int *)argptr)[1];
+
+    #if VERSION == 1
+    big_int_array_1 = (BigInt **)malloc(array_size * sizeof(BigInt *));
+    #else
+    big_int_array_1 = (BigInt *)malloc(array_size * sizeof(BigInt));
+    #endif
+
+    init_curve1174(&bench_curve);
+    curve_point_array = (CurvePoint *)malloc(array_size * sizeof(CurvePoint));
+
+    for (uint64_t i = 0; i < array_size; i++)
+    {
+        BENCHMARK_BIG_INT_CREATE_RANDOM(big_int_array_1[i], big_int_size_);
+    }
+}
+
+
+// Run after benchmark
+void bench_elligator_1_string_to_point_cleanup(void *argptr)
+{
+    int64_t used_values = ((int64_t *) argptr)[0];
+    int64_t array_size = ((int *)argptr)[1];
+
+    for (uint64_t i = 0; i < array_size; i++)
+    {
+        BIG_INT_DESTROY(big_int_array_1[i]);
+    }
+
+    for (uint64_t i = 0; i < used_values; i++)
+    {
+        free_curve_point(curve_point_array + i);
+    }
+
+    free(curve_point_array);
+    free(big_int_array_1);
+    free_curve(&bench_curve);
+}
+
+
+
+void bench_elligator_1_point_to_string_prep(void *argptr)
+{
+    big_int_size_ = ((int *)argptr)[0];
+    int64_t array_size = ((int *)argptr)[1];
+
+    #if VERSION == 1
+    big_int_array_1 = (BigInt **)malloc(array_size * sizeof(BigInt *));
+    #else
+    big_int_array_1 = (BigInt *)malloc(array_size * sizeof(BigInt));
+    #endif
+
+    init_curve1174(&bench_curve);
+    curve_point_array = (CurvePoint *)malloc(array_size * sizeof(CurvePoint));
+
+
+    for (uint64_t i = 0; i < array_size; i++)
+    {
+        BENCHMARK_BIG_INT_CREATE_RANDOM(big_int_array_1[i], big_int_size_);
+        #if VERSION == 1
+        curve_point_array[i] = elligator_1_string_to_point(big_int_array_1[i], bench_curve);
+        #else
+        curve_point_array[i] = elligator_1_string_to_point(big_int_array_1 + 1, bench_curve);
+        #endif
+        
+    }
+}
+
+
+// Run after benchmark
+
+void bench_elligator_1_point_to_string_cleanup(void *argptr)
+{
+    int64_t used_values = ((int64_t *) argptr)[0];
+    int64_t array_size = ((int *)argptr)[1];
+
+    for (uint64_t i = 0; i < array_size; i++)
+    {
+        BIG_INT_DESTROY(big_int_array_1[i]);
+        free_curve_point(curve_point_array + i);
+    }
+
+    for (uint64_t i = 0; i < used_values; i++)
+    {
+        big_int_destroy(big_int_array[i]);
+    }
+    free(curve_point_array);
+    free(big_int_array_1);
+    free_curve(&bench_curve);
+}
+
+
+
+
+
+
+//=== === === === === === === === === === === === === === ===
+
+
+
 //--- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
+/*
 #if VERSION == 1
 void bench_big_int_prep(void *argptr)
 {
@@ -161,6 +413,7 @@ void bench_big_int_cleanup(void *argptr)
     free(uint64_t_array_1);
 }
 
+
 #if VERSION == 1
 void bench_big_int_small_prep(void *argptr)
 {
@@ -233,7 +486,7 @@ void bench_big_int_destroy_cleanup(void *argptr)
     free(big_int_array);
 }
 #endif
-
+*/
 /*
 void bench_elligator_1_string_to_point_prep(void *argptr)
 {
