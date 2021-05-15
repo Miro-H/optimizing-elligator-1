@@ -46,6 +46,7 @@ START_TEST(test_curve1174)
 
     free_curve(&curve);
 }
+END_TEST
 
 /**
 * \brief Test mapping a number to the curve and back

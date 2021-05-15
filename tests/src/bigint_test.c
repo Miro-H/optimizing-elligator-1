@@ -140,6 +140,7 @@ START_TEST(test_negate)
     TEST_BIG_INT_DESTROY(a);
     TEST_BIG_INT_DESTROY(a_neg);
 }
+END_TEST
 
 
 /**
@@ -278,6 +279,7 @@ START_TEST(test_addition)
     TEST_BIG_INT_DESTROY(b);
     TEST_BIG_INT_DESTROY(r);
 }
+END_TEST
 
 /**
 * \brief Test subtractions of BigInts
@@ -346,6 +348,7 @@ START_TEST(test_subtraction)
     TEST_BIG_INT_DESTROY(b);
     TEST_BIG_INT_DESTROY(r);
 }
+END_TEST
 
 /**
 * \brief Test comparison of BigInts
@@ -418,6 +421,7 @@ START_TEST(test_comparison)
     TEST_BIG_INT_DESTROY(a);
     TEST_BIG_INT_DESTROY(b);
 }
+END_TEST
 
 /**
 * \brief Test multiplication of BigInts
@@ -501,6 +505,7 @@ START_TEST(test_multiplication)
     TEST_BIG_INT_DESTROY(b);
     TEST_BIG_INT_DESTROY(r);
 }
+END_TEST
 
 /**
 * \brief Test division of BigInts
@@ -651,6 +656,7 @@ START_TEST(test_division)
     TEST_BIG_INT_DESTROY(r_exp);
     TEST_BIG_INT_DESTROY(q_exp);
 }
+END_TEST
 
 /**
 * \brief Test left shift of BigInts
@@ -691,6 +697,7 @@ START_TEST(test_sll_small)
     TEST_BIG_INT_DESTROY(a);
     TEST_BIG_INT_DESTROY(r);
 }
+END_TEST
 
 /**
 * \brief Test right shift of BigInts
@@ -771,6 +778,7 @@ START_TEST(test_srl_small)
     TEST_BIG_INT_DESTROY(a);
     TEST_BIG_INT_DESTROY(r);
 }
+END_TEST
 
 /**
 * \brief Test modulo operation on BigInts
@@ -832,6 +840,7 @@ START_TEST(test_modulo_operation)
     TEST_BIG_INT_DESTROY(q);
     TEST_BIG_INT_DESTROY(r);
 }
+END_TEST
 
 /**
 * \brief Test addition of BigInts modulo q
@@ -891,6 +900,7 @@ START_TEST(test_add_mod)
     TEST_BIG_INT_DESTROY(q);
     TEST_BIG_INT_DESTROY(r);
 }
+END_TEST
 
 /**
 * \brief Test subtraction of BigInts modulo q
@@ -950,6 +960,7 @@ START_TEST(test_sub_mod)
     TEST_BIG_INT_DESTROY(q);
     TEST_BIG_INT_DESTROY(r);
 }
+END_TEST
 
 /**
 * \brief Test multiplication of BigInts modulo q
@@ -1022,6 +1033,7 @@ START_TEST(test_mul_mod)
     TEST_BIG_INT_DESTROY(q);
     TEST_BIG_INT_DESTROY(r);
 }
+END_TEST
 
 /**
 * \brief Test division of BigInts modulo q
@@ -1077,6 +1089,7 @@ START_TEST(test_div_mod)
     TEST_BIG_INT_DESTROY(r);
     TEST_BIG_INT_DESTROY(x);
 }
+END_TEST
 
 /**
 * \brief Test finding the modular inverse of BigInts
@@ -1147,6 +1160,7 @@ START_TEST(test_modulo_inverse)
     TEST_BIG_INT_DESTROY(q);
     TEST_BIG_INT_DESTROY(ainv_exp);
 }
+END_TEST
 
 /**
 * \brief Test raising BigInts to a (BigInt) power
@@ -1219,6 +1233,7 @@ START_TEST(test_power)
     TEST_BIG_INT_DESTROY(q);
     TEST_BIG_INT_DESTROY(r);
 }
+END_TEST
 
 /**
 * \brief Test finding the greatest common divisor of BigInts
@@ -1297,6 +1312,7 @@ START_TEST(test_gcd)
     TEST_BIG_INT_DESTROY(x_exp);
     TEST_BIG_INT_DESTROY(y_exp);
 }
+END_TEST
 
 /**
 * \brief Test chi function on BigInts
@@ -1506,6 +1522,7 @@ START_TEST(test_chi)
     TEST_BIG_INT_DESTROY(u);
     TEST_BIG_INT_DESTROY(v);
 }
+END_TEST
 
 
 Suite *bigints_suite(void)
