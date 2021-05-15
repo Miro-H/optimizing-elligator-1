@@ -1065,10 +1065,9 @@ void bench_big_int_egcd_fn(void *arg)
     #if VERSION == 1
         big_int_egcd(big_int_array_1[i], big_int_array_2[i]);
     #else
-        EgcdResult* r = NULL;
-        big_int_egcd(r, &(big_int_array_1[i]), 
+        EgcdResult res;
+        big_int_egcd(&res, &(big_int_array_1[i]), 
             &(big_int_array_2[i]));
-        free(r);
     #endif
 }
 
