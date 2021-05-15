@@ -24,12 +24,21 @@
 /*
  * Global BigInt variables
  */
-BigInt **big_int_array;
-BigInt **big_int_array_1;
-BigInt **big_int_array_2;
-BigInt **big_int_array_3;
-BigInt **big_int_array_4;
-BigInt **big_int_array_q;
+#if VERSION == 1
+    BigInt **big_int_array;
+    BigInt **big_int_array_1;
+    BigInt **big_int_array_2;
+    BigInt **big_int_array_3;
+    BigInt **big_int_array_4;
+    BigInt **big_int_array_q;
+#else
+    BigInt *big_int_array;
+    BigInt *big_int_array_1;
+    BigInt *big_int_array_2;
+    BigInt *big_int_array_3;
+    BigInt *big_int_array_4;
+    BigInt *big_int_array_q;
+#endif
 
 Curve bench_curve;
 CurvePoint *curve_point_array;

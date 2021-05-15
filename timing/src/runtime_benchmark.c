@@ -38,7 +38,7 @@
 
 
 //--- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
-
+#if VERSION == 1
 void bench_big_int_prep(void *argptr)
 {
     big_int_size_ = ((int *)argptr)[0];
@@ -57,41 +57,73 @@ void bench_big_int_prep(void *argptr)
 
     for (uint64_t i = 0; i < array_size; i++)
     {
-        BENCHMARK_BIG_INT_DEFINE(a);
-        BENCHMARK_BIG_INT_DEFINE(b);
-        BENCHMARK_BIG_INT_DEFINE(c);
-        BENCHMARK_BIG_INT_DEFINE(d);
-        BENCHMARK_BIG_INT_CREATE_RANDOM(a, big_int_size_);
-        BENCHMARK_BIG_INT_CREATE_RANDOM(b, big_int_size_);
-        BENCHMARK_BIG_INT_CREATE_RANDOM(c, big_int_size_);
-        BENCHMARK_BIG_INT_CREATE_RANDOM(d, big_int_size_);
-        big_int_array_1[i] = a;
-        big_int_array_2[i] = b;
-        big_int_array_3[i] = c;
-        big_int_array_4[i] = d;
-        //big_int_array_1[i] = big_int_create_random(NULL, big_int_size_);
-        //big_int_array_2[i] = big_int_create_random(NULL, big_int_size_);
-        //big_int_array_3[i] = big_int_create_random(NULL, big_int_size_);
-        //big_int_array_4[i] = big_int_create_random(NULL, big_int_size_);
+        big_int_array_1[i] = big_int_create_random(NULL, big_int_size_);
+        big_int_array_2[i] = big_int_create_random(NULL, big_int_size_);
+        big_int_array_3[i] = big_int_create_random(NULL, big_int_size_);
+        big_int_array_4[i] = big_int_create_random(NULL, big_int_size_);
 
         if (random_q)
         {
-            BENCHMARK_BIG_INT_DEFINE(q);
-            BENCHMARK_BIG_INT_CREATE_RANDOM(q, big_int_size_);
-            big_int_array_q[i] = q;
-            //big_int_array_q[i] = big_int_create_random(NULL, big_int_size_);
+            big_int_array_q[i] = big_int_create_random(NULL, big_int_size_);
         }
         else
         {
-            BENCHMARK_BIG_INT_DEFINE(q);
-            BENCHMARK_BIG_INT_CREATE_FROM_HEX(q, "7FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF7");
-            big_int_array_q[i] = q;
-            //big_int_array_q[i] = big_int_create_from_hex(NULL, "7FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF7");
+            big_int_array_q[i] = big_int_create_from_hex(NULL, "7FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF7");
         }
 
         uint64_t_array_1[i] = rand() % 256;
     }
 }
+#else
+void bench_big_int_prep(void *argptr)
+{
+    big_int_size_ = ((int *)argptr)[0];
+    int64_t array_size = ((int *)argptr)[1];
+    int random_q = ((int *)argptr)[2];
+
+    big_int_array = (BigInt *)malloc(array_size * sizeof(BigInt));
+    big_int_array_1 = (BigInt *)malloc(array_size * sizeof(BigInt));
+    big_int_array_2 = (BigInt *)malloc(array_size * sizeof(BigInt));
+    big_int_array_3 = (BigInt *)malloc(array_size * sizeof(BigInt));
+    big_int_array_4 = (BigInt *)malloc(array_size * sizeof(BigInt));
+    big_int_array_q = (BigInt *)malloc(array_size * sizeof(BigInt));
+
+    int8_t_array_1 = (int8_t *)malloc(array_size * sizeof(int8_t));
+    uint64_t_array_1 = (uint64_t *)malloc(array_size * sizeof(uint64_t));
+
+    BENCHMARK_BIG_INT_DEFINE(a);
+    BENCHMARK_BIG_INT_DEFINE(b);
+    BENCHMARK_BIG_INT_DEFINE(c);
+    BENCHMARK_BIG_INT_DEFINE(d);
+    BENCHMARK_BIG_INT_DEFINE(q);
+    for (uint64_t i = 0; i < array_size; i++)
+    {
+        
+        BENCHMARK_BIG_INT_CREATE_RANDOM(a, big_int_size_);
+        BENCHMARK_BIG_INT_CREATE_RANDOM(b, big_int_size_);
+        BENCHMARK_BIG_INT_CREATE_RANDOM(c, big_int_size_);
+        BENCHMARK_BIG_INT_CREATE_RANDOM(d, big_int_size_);
+        big_int_array_1[i] = *a;
+        big_int_array_2[i] = *b;
+        big_int_array_3[i] = *c;
+        big_int_array_4[i] = *d;
+
+        if (random_q)
+        {
+            BENCHMARK_BIG_INT_CREATE_RANDOM(q, big_int_size_);
+            big_int_array_q[i] = *q;
+        }
+        else
+        {
+            BENCHMARK_BIG_INT_CREATE_FROM_HEX(q, 
+                "7FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF7");
+            big_int_array_q[i] = *q;
+        }
+
+        uint64_t_array_1[i] = rand() % 256;
+    }
+}
+#endif
 
 // Run after benchmark
 void bench_big_int_cleanup(void *argptr)
@@ -129,7 +161,7 @@ void bench_big_int_cleanup(void *argptr)
     free(uint64_t_array_1);
 }
 
-
+#if VERSION == 1
 void bench_big_int_small_prep(void *argptr)
 {
     big_int_size_ = ((int *)argptr)[0];
@@ -139,12 +171,26 @@ void bench_big_int_small_prep(void *argptr)
     big_int_array_1 = (BigInt **)malloc(array_size * sizeof(BigInt *));
     for (uint64_t i = 0; i < array_size; i++)
     {
-        BENCHMARK_BIG_INT_DEFINE(a);
-        BENCHMARK_BIG_INT_CREATE_RANDOM(a, big_int_size_);
-        big_int_array_1[i] = a;
-        //big_int_array_1[i] = big_int_create_random(NULL, big_int_size_);
+        big_int_array_1[i] = big_int_create_random(NULL, big_int_size_);
     }
 }
+#else
+void bench_big_int_small_prep(void *argptr)
+{
+    big_int_size_ = ((int *)argptr)[0];
+    int64_t array_size = ((int *)argptr)[1];
+
+    big_int_array = (BigInt *)malloc(array_size * sizeof(BigInt));
+    big_int_array_1 = (BigInt *)malloc(array_size * sizeof(BigInt));
+
+    BENCHMARK_BIG_INT_DEFINE(a);
+    for (uint64_t i = 0; i < array_size; i++)
+    {
+        BENCHMARK_BIG_INT_CREATE_RANDOM(a, big_int_size_);
+        big_int_array_1[i] = *a;
+    }
+}
+#endif
 
 // Run after benchmark
 void bench_big_int_small_cleanup(void *argptr)
@@ -167,7 +213,7 @@ void bench_big_int_small_cleanup(void *argptr)
     free(big_int_array_1);
 }
 
-
+#if VERSION == 1
 void bench_big_int_destroy_prep(void *argptr)
 {
     big_int_size_ = ((int *)argptr)[0];
@@ -186,6 +232,7 @@ void bench_big_int_destroy_cleanup(void *argptr)
 {
     free(big_int_array);
 }
+#endif
 
 /*
 void bench_elligator_1_string_to_point_prep(void *argptr)
@@ -359,7 +406,11 @@ void bench_big_int_destroy(void *bench_args, char *bench_name, char *path)
 void bench_big_int_copy_fn(void *arg)
 {
     int64_t i = *((int64_t *) arg);
-    big_int_copy(big_int_array_1[i], big_int_array_2[i]);
+    #if VERSION == 1
+        big_int_copy(big_int_array_1[i], big_int_array_2[i]);
+    #else
+        big_int_copy(&(big_int_array[i]), &(big_int_array[i]));
+    #endif
 }
 
 void bench_big_int_copy(void *bench_args, char *bench_name, char *path)
@@ -378,7 +429,11 @@ void bench_big_int_copy(void *bench_args, char *bench_name, char *path)
 void bench_big_int_prune_fn(void *arg)
 {
     int64_t i = *((int64_t *) arg);
-    big_int_prune_leading_zeros(big_int_array_1[i], big_int_array_1[i]);
+    #if VERSION == 1
+        big_int_prune_leading_zeros(big_int_array_1[i], big_int_array_1[i]);
+    #else
+        big_int_prune_leading_zeros(&(big_int_array_1[i]), &(big_int_array_1[i]));
+    #endif
 }
 
 void bench_big_int_prune(void *bench_args, char *bench_name, char *path)
@@ -397,9 +452,12 @@ void bench_big_int_prune(void *bench_args, char *bench_name, char *path)
 void bench_big_int_create_fn(void *arg)
 {
     int64_t i = *((int64_t *) arg);
-    BENCHMARK_BIG_INT_DEFINE(a);
-    big_int_array[i] = a;
-    //big_int_array[i] = big_int_create_from_chunk(NULL, 1);
+    #if VERSION == 1
+        big_int_array[i] = big_int_create_from_chunk(NULL, 1);
+    #else
+        BENCHMARK_BIG_INT_DEFINE(a);
+        big_int_array[i] = *a;
+    #endif
 }
 
 
@@ -419,10 +477,14 @@ void bench_big_int_create_from_chunk(void *bench_args, char *bench_name, char *p
 void bench_big_int_create_from_dbl_chunk_fn(void *arg)
 {
     int64_t i = *((int64_t *) arg);
-    BENCHMARK_BIG_INT_DEFINE(a);
-    BENCHMARK_BIG_INT_CREATE_FROM_DBL_CHUNK(a);
-    big_int_array[i] = a;
-    //big_int_array[i] = big_int_create_from_dbl_chunk(NULL, 1, 1);
+
+    #if VERSION == 1
+        big_int_array[i] = big_int_create_from_dbl_chunk(NULL, 1, 1);
+    #else
+        BENCHMARK_BIG_INT_DEFINE(a);
+        BENCHMARK_BIG_INT_CREATE_FROM_DBL_CHUNK(a);
+        big_int_array[i] = *a;
+    #endif
 }
 
 void bench_big_int_create_from_dbl_chunk(void *bench_args, char *bench_name, char *path)
@@ -441,12 +503,16 @@ void bench_big_int_create_from_dbl_chunk(void *bench_args, char *bench_name, cha
 void bench_big_int_create_from_hex_fn(void *arg)
 {
     int64_t i = *((int64_t *) arg);
-    BENCHMARK_BIG_INT_DEFINE(a);
-    BENCHMARK_BIG_INT_CREATE_FROM_HEX(a, 
-        "FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF");
-    big_int_array[i] = a;
-    //big_int_array[i] = big_int_create_from_hex(NULL,
-        //"FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF");
+
+    #if VERSION == 1
+        big_int_array[i] = big_int_create_from_hex(NULL,
+            "FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF");
+    #else
+        BENCHMARK_BIG_INT_DEFINE(a);
+        BENCHMARK_BIG_INT_CREATE_FROM_HEX(a, 
+            "FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF");
+        big_int_array[i] = *a;
+    #endif
 }
 
 void bench_big_int_create_from_hex(void *bench_args, char *bench_name, char *path)
@@ -465,10 +531,14 @@ void bench_big_int_create_from_hex(void *bench_args, char *bench_name, char *pat
 void bench_big_int_create_random_fn(void *arg)
 {
     int64_t i = *((int64_t *) arg);
-    BENCHMARK_BIG_INT_DEFINE(a);
-    BENCHMARK_BIG_INT_CREATE_RANDOM(a, big_int_size_);
-    big_int_array[i] = a;
-    //big_int_array[i] = big_int_create_random(NULL, big_int_size_);
+
+    #if VERSION == 1
+        big_int_array[i] = big_int_create_random(NULL, big_int_size_);
+    #else
+        BENCHMARK_BIG_INT_DEFINE(a);
+        BENCHMARK_BIG_INT_CREATE_RANDOM(a, big_int_size_);
+        big_int_array[i] = *a;
+    #endif
 }
 
 void bench_big_int_create_random(void *bench_args, char *bench_name, char *path)
@@ -508,7 +578,12 @@ void bench_big_int_duplicate(void *bench_args, char *bench_name, char *path)
 void bench_big_int_neg_fn(void *arg)
 {
     int64_t i = *((int64_t *) arg);
-    big_int_neg(big_int_array_1[i], big_int_array_1[i]);
+
+    #if VERSION == 1
+        big_int_neg(big_int_array_1[i], big_int_array_1[i]);
+    #else
+        big_int_neg(&(big_int_array_1[i]), &(big_int_array[i]));
+    #endif
 }
 
 void bench_big_int_neg(void *bench_args, char *bench_name, char *path)
@@ -527,7 +602,12 @@ void bench_big_int_neg(void *bench_args, char *bench_name, char *path)
 void bench_big_int_abs_fn(void *arg)
 {
     int64_t i = *((int64_t *) arg);
-    big_int_abs(big_int_array_1[i], big_int_array_1[i]);
+
+    #if VERSION == 1
+        big_int_abs(big_int_array_1[i], big_int_array_1[i]);
+    #else
+        big_int_abs(&(big_int_array_1[i]), &(big_int_array_1[i]));
+    #endif
 }
 
 void bench_big_int_abs(void *bench_args, char *bench_name, char *path)
@@ -546,7 +626,12 @@ void bench_big_int_abs(void *bench_args, char *bench_name, char *path)
 void bench_big_int_add_fn(void *arg)
 {
     int64_t i = *((int64_t *) arg);
-    big_int_add(big_int_array_1[i], big_int_array_2[i], big_int_array_3[i]);
+
+    #if VERSION == 1
+        big_int_add(big_int_array_1[i], big_int_array_2[i], big_int_array_3[i]);
+    #else
+        big_int_add(&(big_int_array_1[i]), &(big_int_array_2[i]), &(big_int_array_3[i]));
+    #endif
 }
 
 void bench_big_int_add(void *bench_args, char *bench_name, char *path)
@@ -565,8 +650,14 @@ void bench_big_int_add(void *bench_args, char *bench_name, char *path)
 void bench_big_int_add_mod_fn(void *arg)
 {
     int64_t i = *((int64_t *) arg);
-    big_int_add_mod(big_int_array_1[i], big_int_array_2[i], big_int_array_3[i],
-        big_int_array_q[i]);
+
+    #if VERSION == 1
+        big_int_add_mod(big_int_array_1[i], big_int_array_2[i], big_int_array_3[i],
+            big_int_array_q[i]);
+    #else
+        big_int_add_mod(&(big_int_array_1[i]), &(big_int_array_2[i]), 
+            &(big_int_array_3[i]), &(big_int_array_q[i]));
+    #endif
 }
 
 void bench_big_int_add_mod(void *bench_args, char *bench_name, char *path)
@@ -585,7 +676,12 @@ void bench_big_int_add_mod(void *bench_args, char *bench_name, char *path)
 void bench_big_int_sub_fn(void *arg)
 {
     int64_t i = *((int64_t *) arg);
-    big_int_sub(big_int_array_1[i], big_int_array_2[i], big_int_array_3[i]);
+
+    #if VERSION == 1
+        big_int_sub(big_int_array_1[i], big_int_array_2[i], big_int_array_3[i]);
+    #else
+        big_int_sub(&(big_int_array_1[i]), &(big_int_array_2[i]), &(big_int_array_3[i]));
+    #endif
 }
 
 void bench_big_int_sub(void *bench_args, char *bench_name, char *path)
@@ -604,8 +700,14 @@ void bench_big_int_sub(void *bench_args, char *bench_name, char *path)
 void bench_big_int_sub_mod_fn(void *arg)
 {
     int64_t i = *((int64_t *) arg);
-    big_int_sub_mod(big_int_array_1[i], big_int_array_2[i], big_int_array_3[i],
-        big_int_array_q[i]);
+
+    #if version == 1
+        big_int_sub_mod(big_int_array_1[i], big_int_array_2[i], 
+            big_int_array_3[i], big_int_array_q[i]);
+    #else
+        big_int_sub_mod(&(big_int_array_1[i]), &(big_int_array_2[i]), 
+            &(big_int_array_3[i]), &(big_int_array_q[i]));
+    #endif
 }
 
 void bench_big_int_sub_mod(void *bench_args, char *bench_name, char *path)
@@ -624,7 +726,14 @@ void bench_big_int_sub_mod(void *bench_args, char *bench_name, char *path)
 void bench_big_int_mul_fn(void *arg)
 {
     int64_t i = *((int64_t *) arg);
-    big_int_mul(big_int_array_1[i], big_int_array_2[i], big_int_array_3[i]);
+
+    #if VERSION == 1
+        big_int_mul(big_int_array_1[i], big_int_array_2[i], 
+            big_int_array_3[i]);
+    #else
+        big_int_mul(&(big_int_array_1[i]), &(big_int_array_2[i]), 
+            &(big_int_array_3[i]));
+    #endif
 }
 
 void bench_big_int_mul(void *bench_args, char *bench_name, char *path)
@@ -643,8 +752,14 @@ void bench_big_int_mul(void *bench_args, char *bench_name, char *path)
 void bench_big_int_mul_mod_fn(void *arg)
 {
     int64_t i = *((int64_t *) arg);
-    big_int_mul_mod(big_int_array_1[i], big_int_array_2[i], big_int_array_3[i],
-        big_int_array_q[i]);
+
+    #if VERSION == 1
+        big_int_mul_mod(big_int_array_1[i], big_int_array_2[i], 
+            big_int_array_3[i], big_int_array_q[i]);
+    #else
+        big_int_mul_mod(&(big_int_array_1[i]), &(big_int_array_2[i]), 
+            &(big_int_array_3[i]), &(big_int_array_q[i]));
+    #endif
 }
 
 void bench_big_int_mul_mod(void *bench_args, char *bench_name, char *path)
@@ -663,8 +778,14 @@ void bench_big_int_mul_mod(void *bench_args, char *bench_name, char *path)
 void bench_big_int_div_rem_fn(void *arg)
 {
     int64_t i = *((int64_t *) arg);
-    big_int_div_rem(big_int_array_1[i], big_int_array_2[i], big_int_array_3[i],
-        big_int_array_q[i]);
+
+    #if VERSION == 1
+        big_int_div_rem(big_int_array_1[i], big_int_array_2[i], 
+            big_int_array_3[i], big_int_array_q[i]);
+    #else
+        big_int_div_rem(&(big_int_array_1[i]), &(big_int_array_2[i]), 
+            &(big_int_array_3[i]), &(big_int_array_q[i]));
+    #endif
 }
 
 void bench_big_int_div_rem(void *bench_args, char *bench_name, char *path)
@@ -683,7 +804,14 @@ void bench_big_int_div_rem(void *bench_args, char *bench_name, char *path)
 void bench_big_int_div_fn(void *arg)
 {
     int64_t i = *((int64_t *) arg);
-    big_int_div(big_int_array_1[i], big_int_array_2[i], big_int_array_3[i]);
+
+    #if VERSION == 1
+        big_int_div(big_int_array_1[i], big_int_array_2[i], 
+            big_int_array_3[i]);
+    #else
+        big_int_div(&(big_int_array_1[i]), &(big_int_array_2[i]), 
+            &(big_int_array_3[i]));
+    #endif
 }
 
 void bench_big_int_div(void *bench_args, char *bench_name, char *path)
@@ -702,8 +830,14 @@ void bench_big_int_div(void *bench_args, char *bench_name, char *path)
 void bench_big_int_div_mod_fn(void *arg)
 {
     int64_t i = *((int64_t *) arg);
-    big_int_div_mod(big_int_array_1[i], big_int_array_2[i], big_int_array_3[i],
-        big_int_array_q[i]);
+
+    #if VERSION == 1
+        big_int_div_mod(big_int_array_1[i], big_int_array_2[i], 
+            big_int_array_3[i], big_int_array_q[i]);
+    #else
+        big_int_div_mod(&(big_int_array_1[i]), &(big_int_array_2[i]), 
+            &(big_int_array_3[i]), &(big_int_array_q[i]));
+    #endif
 }
 
 void bench_big_int_div_mod(void *bench_args, char *bench_name, char *path)
@@ -722,7 +856,14 @@ void bench_big_int_div_mod(void *bench_args, char *bench_name, char *path)
 void bench_big_int_sll_small_fn(void *arg)
 {
     int64_t i = *((int64_t *) arg);
-    big_int_sll_small(big_int_array_1[i], big_int_array_2[i], uint64_t_array_1[i]);
+
+    #if VERSION == 1
+        big_int_sll_small(big_int_array_1[i], big_int_array_2[i], 
+            uint64_t_array_1[i]);
+    #else
+        big_int_sll_small(&(big_int_array_1[i]), &(big_int_array_2[i]), 
+            uint64_t_array_1[i]);
+    #endif
 }
 
 void bench_big_int_sll_small(void *bench_args, char *bench_name, char *path)
@@ -742,7 +883,14 @@ void bench_big_int_sll_small(void *bench_args, char *bench_name, char *path)
 void bench_big_int_srl_small_fn(void *arg)
 {
     int64_t i = *((int64_t *) arg);
-    big_int_srl_small(big_int_array_1[i], big_int_array_2[i], uint64_t_array_1[i]);
+
+    #if VERSION == 1
+        big_int_srl_small(big_int_array_1[i], big_int_array_2[i], 
+            uint64_t_array_1[i]);
+    #else
+        big_int_srl_small(&(big_int_array[i]), &(big_int_array_2[i]), 
+            uint64_t_array_1[i]);
+    #endif
 }
 
 void bench_big_int_srl_small(void *bench_args, char *bench_name, char *path)
@@ -761,7 +909,14 @@ void bench_big_int_srl_small(void *bench_args, char *bench_name, char *path)
 void bench_big_int_mod_fn(void *arg)
 {
     int64_t i = *((int64_t *) arg);
-    big_int_mod(big_int_array_1[i], big_int_array_2[i], big_int_array_q[i]);
+
+    #if VERSION == 1
+        big_int_mod(big_int_array_1[i], big_int_array_2[i], 
+            big_int_array_q[i]);
+    #else
+        big_int_mod(&(big_int_array_1[i]), &(big_int_array_2[i]), 
+            &(big_int_array_q[i]));
+    #endif
 }
 
 void bench_big_int_mod(void *bench_args, char *bench_name, char *path)
@@ -780,7 +935,14 @@ void bench_big_int_mod(void *bench_args, char *bench_name, char *path)
 void bench_big_int_inv_fn(void *arg)
 {
     int64_t i = *((int64_t *) arg);
-    big_int_inv(big_int_array_1[i], big_int_array_2[i], big_int_array_q[i]);
+
+    #if VERSION == 1
+        big_int_inv(big_int_array_1[i], big_int_array_2[i], 
+            big_int_array_q[i]);
+    #else
+        big_int_inv(&(big_int_array_1[i]), &(big_int_array_2[i]), 
+            &(big_int_array_q[i]));
+    #endif
 }
 
 void bench_big_int_inv(void *bench_args, char *bench_name, char *path)
@@ -799,8 +961,14 @@ void bench_big_int_inv(void *bench_args, char *bench_name, char *path)
 void bench_big_int_pow_fn(void *arg)
 {
     int64_t i = *((int64_t *) arg);
-    big_int_pow(big_int_array_1[i], big_int_array_2[i], big_int_array_3[i],
-        big_int_array_q[i]);
+
+    #if VERSION == 1
+        big_int_pow(big_int_array_1[i], big_int_array_2[i], big_int_array_3[i],
+            big_int_array_q[i]);
+    #else
+        big_int_pow(&(big_int_array_1[i]), &(big_int_array_2[i]), 
+            &(big_int_array_3[i]), &(big_int_array_q[i]));
+    #endif
 }
 
 void bench_big_int_pow(void *bench_args, char *bench_name, char *path)
@@ -819,7 +987,12 @@ void bench_big_int_pow(void *bench_args, char *bench_name, char *path)
 void bench_big_int_is_zero_fn(void *arg)
 {
     int64_t i = *((int64_t *) arg);
-    int8_t_array_1[i] = big_int_is_zero(big_int_array_1[i]);
+
+    #if VERSION == 1
+        int8_t_array_1[i] = big_int_is_zero(big_int_array_1[i]);
+    #else
+        int8_t_array_1[i] = big_int_is_zero(&(big_int_array_1[i]));
+    #endif
 }
 
 void bench_big_int_is_zero(void *bench_args, char *bench_name, char *path)
@@ -838,7 +1011,12 @@ void bench_big_int_is_zero(void *bench_args, char *bench_name, char *path)
 void bench_big_int_is_odd_fn(void *arg)
 {
     int64_t i = *((int64_t *) arg);
-    int8_t_array_1[i] = big_int_is_odd(big_int_array_1[i]);
+
+    #if VERSION == 1
+        int8_t_array_1[i] = big_int_is_odd(big_int_array_1[i]);
+    #else 
+        int8_t_array_1[i] = big_int_is_odd(&(big_int_array_1[i]));
+    #endif
 }
 
 void bench_big_int_is_odd(void *bench_args, char *bench_name, char *path)
@@ -857,7 +1035,14 @@ void bench_big_int_is_odd(void *bench_args, char *bench_name, char *path)
 void bench_big_int_compare_fn(void *arg)
 {
     int64_t i = *((int64_t *) arg);
-    int8_t_array_1[i] = big_int_compare(big_int_array_1[i], big_int_array_2[i]);
+
+    #if VERSION == 1
+        int8_t_array_1[i] = big_int_compare(big_int_array_1[i], 
+            big_int_array_2[i]);
+    #else
+        int8_t_array_1[i] = big_int_compare(&(big_int_array_1[i]), 
+            &(big_int_array_2[i]));
+    #endif
 }
 
 void bench_big_int_compare(void *bench_args, char *bench_name, char *path)
@@ -876,8 +1061,15 @@ void bench_big_int_compare(void *bench_args, char *bench_name, char *path)
 void bench_big_int_egcd_fn(void *arg)
 {
     int64_t i = *((int64_t *) arg);
-    BENCHMARK_BIG_INT_EGCD(big_int_array_1[i], big_int_array_2[i]);
-    //big_int_egcd(big_int_array_1[i], big_int_array_2[i]);
+
+    #if VERSION == 1
+        big_int_egcd(big_int_array_1[i], big_int_array_2[i]);
+    #else
+        EgcdResult* r = NULL;
+        big_int_egcd(r, &(big_int_array_1[i]), 
+            &(big_int_array_2[i]));
+        free(r);
+    #endif
 }
 
 void bench_big_int_egcd(void *bench_args, char *bench_name, char *path)
@@ -896,7 +1088,14 @@ void bench_big_int_egcd(void *bench_args, char *bench_name, char *path)
 void bench_big_int_chi_fn(void *arg)
 {
     int64_t i = *((int64_t *) arg);
-    big_int_chi(big_int_array_1[i], big_int_array_2[i], big_int_array_q[i]);
+
+    #if VERSION == 1
+        big_int_chi(big_int_array_1[i], big_int_array_2[i], 
+            big_int_array_q[i]);
+    #else
+        big_int_chi(&(big_int_array_1[i]), &(big_int_array_2[i]), 
+            &(big_int_array_q[i]));
+    #endif
 }
 
 void bench_big_int_chi(void *bench_args, char *bench_name, char *path)
