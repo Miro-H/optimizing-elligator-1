@@ -1363,13 +1363,18 @@ void bench_big_int_chi(void *bench_args, char *bench_name, char *path)
 
 //--- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
 
-/*
+
 void bench_elligator_1_string_to_point_fn(void *arg)
 {
 
     int64_t i = *((int64_t *) arg);
-    curve_point_array[i] = elligator_1_string_to_point(big_int_array_1[i],
-        bench_curve);
+
+    #if VERSION == 1
+        curve_point_array[i] = elligator_1_string_to_point(big_int_array_1[i], bench_curve);
+    #else
+        curve_point_array[i] = elligator_1_string_to_point(&(big_int_array_1[i]), bench_curve);
+    #endif
+    
 }
 
 
@@ -1387,7 +1392,7 @@ void bench_elligator_1_string_to_point(void *bench_args, char *bench_name, char 
 
 //--- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
 
-/*
+
 void bench_elligator_1_point_to_string_fn(void *arg)
 {
     int64_t i = *((int64_t *) arg);
@@ -1405,7 +1410,7 @@ void bench_elligator_1_point_to_string(void *bench_args, char *bench_name, char 
     };
     benchmark_runner(bench_closure, bench_name, path, SETS, REPS, REPS);
 }
-*/
+
 
 int main(int argc, char const *argv[])
 {
@@ -1575,7 +1580,7 @@ int main(int argc, char const *argv[])
             bench_big_int_chi((void *)bench_big_int_size_256_curve_mod_args, "chi",
                 LOG_PATH "/runtime_big_int_chi_curve.log"));
 
-        /*
+        
         BENCHMARK(bench_type, BENCH_TYPE_ELLIGATOR1_STR2PNT,
             bench_elligator_1_string_to_point((void *)bench_big_int_size_256_args,
                 "Elligator str2pnt",
@@ -1585,7 +1590,7 @@ int main(int argc, char const *argv[])
             bench_elligator_1_point_to_string((void *)bench_big_int_size_256_args,
                 "Elligator pnt2str",
                 LOG_PATH "/runtime_elligator_1_point_to_string.log"));
-        */
+        
     }
 
     return EXIT_SUCCESS;
