@@ -25,7 +25,7 @@ LIBS    =
 
 LIB_NAME 	= $(LDIR)/elligator.a
 # Add the name of every .c file that you want to compile here
-_LIB_SRCS		= elligator.c bigint.c
+_LIB_SRCS		= bigint.c elligator.c 
 LIB_SRCS 		= $(patsubst %,$(SDIR)/%,$(_LIB_SRCS))
 # This assumes the library depends on all header files in IDIR
 LIB_HEADERS = $(wildcard $(IDIR)/*.h)

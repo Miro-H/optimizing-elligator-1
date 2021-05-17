@@ -26,11 +26,7 @@
 /*
  * Function prototypes (for internal use)
  */
-BigInt *big_int_alloc(uint64_t size);
-BigInt *big_int_calloc(uint64_t size);
 BigInt *big_int_get_res(BigInt *r, BigInt *a);
-BigInt *big_int_create_from_dbl_chunk(BigInt *r, dbl_chunk_size_t chunk,
-    uint8_t sign);
 BigInt *big_int_prune_leading_zeros(BigInt *r, BigInt *a);
 
 /**
@@ -39,63 +35,15 @@ BigInt *big_int_prune_leading_zeros(BigInt *r, BigInt *a);
 uint8_t do_seed_rand = 1;
 
 /**
- * \brief Allocate a BigInt of the given size
- */
-BigInt *big_int_alloc(uint64_t size)
-{
-    ADD_STAT_COLLECTION(BIGINT_TYPE_BIG_INT_ALLOC);
-
-    BigInt *a;
-
-    a = (BigInt *) malloc(sizeof(BigInt));
-    if (!a)
-        FATAL("Failed to malloc BigInt.\n");
-
-    a->chunks = (dbl_chunk_size_t *) malloc(size * sizeof(dbl_chunk_size_t));
-    if (!a->chunks) {
-        free(a);
-        FATAL("Failed to malloc %" PRIu64 " chunks for malloc.\n", size);
-    }
-    a->alloc_size = size;
-
-    return a;
-}
-
-/**
- * \brief Allocate a BigInt of the given size
- */
-BigInt *big_int_calloc(uint64_t size)
-{
-    ADD_STAT_COLLECTION(BIGINT_TYPE_BIG_INT_CALLOC);
-
-    BigInt *a;
-
-    a = (BigInt *) calloc(1, sizeof(BigInt));
-    if (!a)
-        FATAL("Failed to calloc BigInt.\n");
-
-    a->chunks = (dbl_chunk_size_t *) calloc(size, sizeof(dbl_chunk_size_t));
-    if (!a->chunks) {
-        free(a);
-        FATAL("Failed to calloc %" PRIu64 " chunks for malloc.\n", size);
-    }
-    a->alloc_size = size;
-
-    return a;
-}
-
-
-/**
- * \brief if r = NULL:  allocate new BigInt, return pointer to new BigInt
- *        if r = a:     return pointer to a; this is an in-place modification.
+ * \brief if r = a:     return pointer to a; this is an in-place modification.
  *        otherwise:    copy a to r, return pointer to r
+ *
+ * \assumption r, a != NULL
  */
 BigInt *big_int_get_res(BigInt *r, BigInt *a)
 {
     ADD_STAT_COLLECTION(BIGINT_TYPE_BIG_INT_GET_RES);
 
-    if (!r)
-        return big_int_duplicate(a);
     if (r == a)
         return r;
     return big_int_copy(r, a);
@@ -104,6 +52,8 @@ BigInt *big_int_get_res(BigInt *r, BigInt *a)
 
 /**
  * \brief Remove leading zeros and adjust size of a BigInt
+ *
+ * \assumption r, a != NULL
  */
 BigInt *big_int_prune_leading_zeros(BigInt *r, BigInt *a)
 {
@@ -121,42 +71,31 @@ BigInt *big_int_prune_leading_zeros(BigInt *r, BigInt *a)
     return r;
 }
 
-
 /**
- * \brief Create BigInt from 64-bit integer
- *        Precondition: x fits into chunk_size_t
+ * \brief Create BigInt from a single chunk and a sign
+ *
+ * \assumption r != NULL
  */
-BigInt *big_int_create(BigInt *r, int64_t x)
+BigInt *big_int_create_from_chunk(BigInt *r, chunk_size_t chunk, uint8_t sign)
 {
-    ADD_STAT_COLLECTION(BIGINT_TYPE_BIG_CREATE);
+    ADD_STAT_COLLECTION(BIGINT_TYPE_BIG_INT_CREATE_FROM_CHUNK);
 
-    if (x > BIGINT_RADIX_SIGNED || x == INT64_MIN || x < -BIGINT_RADIX_SIGNED)
-        FATAL("Integer %" PRId64 " does not fit into a single chunk of %lu bytes\n",
-            x, sizeof(chunk_size_t));
-
-    // NOTE: Currently, all BigInts have size BIGINT_FIXED_SIZE
-    if (!r)
-        r = big_int_alloc(BIGINT_FIXED_SIZE);
-
-    r->chunks[0] = (dbl_chunk_size_t) CHUNK_ABS(x);
-    r->sign      = x < 0;
-    r->overflow  = 0;
-    r->size      = 1;
+    r->sign = sign;
+    r->overflow = 0;
+    r->size = 1;
+    r->chunks[0] = chunk;
 
     return r;
 }
 
-
 /**
- * \brief Create BigInt from a double chunks and a sign
+ * \brief Create BigInt from a double chunk and a sign
+ *
+ * \assumption r != NULL
  */
-BigInt *big_int_create_from_dbl_chunk(BigInt *r, dbl_chunk_size_t chunk,
-    uint8_t sign)
+BigInt *big_int_create_from_dbl_chunk(BigInt *r, dbl_chunk_size_t chunk, uint8_t sign)
 {
     ADD_STAT_COLLECTION(BIGINT_TYPE_BIG_INT_CREATE_FROM_DBL_CHUNK);
-
-    if (!r)
-        r = big_int_alloc(BIGINT_FIXED_SIZE);
 
     r->sign = sign;
 
@@ -176,6 +115,9 @@ BigInt *big_int_create_from_dbl_chunk(BigInt *r, dbl_chunk_size_t chunk,
 
 /**
  * \brief Create BigInt from a hexadecimal string
+ *
+ * \assumption r, s != NULL
+ * \assumption hex string s fits into BIGINT_FIXED_SIZE chunks
  */
 BigInt *big_int_create_from_hex(BigInt *r, char* s)
 {
@@ -197,18 +139,6 @@ BigInt *big_int_create_from_hex(BigInt *r, char* s)
 
     // chunk_size = ceil(s_len/BIGINT_CHUNK_HEX_SIZE)
     chunk_size = (s_len + BIGINT_CHUNK_HEX_SIZE - 1) / BIGINT_CHUNK_HEX_SIZE;
-
-    // Check if the given string is too large for our BigInts
-    if (chunk_size > BIGINT_FIXED_SIZE)
-        FATAL("Integer %s is larger than %" PRIu64 " bytes and currently not supported.\n",
-            s, BIGINT_FIXED_SIZE * sizeof(chunk_size_t));
-
-    // NOTE: Currently, all BigInts have size BIGINT_FIXED_SIZE. For dynamic arbitrary
-    // precision integers, we'd need to check that r has the right size!
-    if (!r)
-        r = big_int_alloc(BIGINT_FIXED_SIZE);
-    else if (r->alloc_size < chunk_size)
-        FATAL("The given output BigInt is not large enough to store %s!\n", s);
 
     r->overflow  = 0;
     r->size      = chunk_size;
@@ -238,6 +168,9 @@ BigInt *big_int_create_from_hex(BigInt *r, char* s)
  *
  * \param r BigInt pointer should be NULL
  * \param nr_of_chunks Number of chunks in the created BigInt
+ *
+ * \assumption r != NULL
+ * \assumption 1 <= nr_of_chunks <= BIGINT_FIXED_SIZE
  */
 BigInt *big_int_create_random(BigInt *r, int64_t nr_of_chunks)
 {
@@ -245,16 +178,12 @@ BigInt *big_int_create_random(BigInt *r, int64_t nr_of_chunks)
 
     int64_t i, offset;
 
-    // NOTE: For arbitrary sized BigInts, this would allocate at least nr_of_chunks
-    if (!r)
-        r = big_int_alloc(BIGINT_FIXED_SIZE);
-
     if (do_seed_rand) {
         srand(time(NULL));
         do_seed_rand = 0;
     }
 
-    r->sign = rand() % 2;
+    r->sign      = rand() % 2;
     r->overflow  = 0;
     r->size      = nr_of_chunks;
 
@@ -273,56 +202,25 @@ BigInt *big_int_create_random(BigInt *r, int64_t nr_of_chunks)
 }
 
 
-
-/**
- * \brief Free a BigInt
- */
-void big_int_destroy(BigInt *a)
-{
-    ADD_STAT_COLLECTION(BIGINT_TYPE_BIG_INT_DESTROY);
-
-    if (a->alloc_size > 0)
-        free(a->chunks);
-    free(a);
-}
-
-
 /**
  * \brief Copy BigInt b to BigInt a, i.e., a := b
+ *
+ * \assumption a, b != NULL
+ * \assumption b fits into a (always the case for fixed-size BigInts)
  */
 BigInt *big_int_copy(BigInt *a, BigInt *b)
 {
     ADD_STAT_COLLECTION(BIGINT_TYPE_BIG_INT_COPY);
 
-    // NOTE: For arbitrary sizes, we'd need a realloc here
-    if (a->alloc_size < b->size)
-        FATAL("Cannot copy larger BigInt into smaller one!\n");
-
-    a->sign     = b->sign;
-    a->overflow = b->overflow;
-    a->size     = b->size;
-
-    memcpy((void *) a->chunks, (void *) b->chunks, b->size * sizeof(dbl_chunk_size_t));
+    // Copy exactly as many bits as we need and not a single one more
+    memcpy((void *) a, (void *) b, BIGINT_METADATA_SIZE + (b->size) * BIGINT_INTERNAL_CHUNK_BYTE);
     return a;
 }
 
 /**
- * \brief Duplicate a BigInt
- */
-BigInt *big_int_duplicate(BigInt *a)
-{
-    ADD_STAT_COLLECTION(BIGINT_TYPE_BIG_INT_DUPLICATE);
-
-    BigInt *b;
-
-    b = big_int_alloc(a->alloc_size);
-
-    return big_int_copy(b, a);
-}
-
-
-/**
  * \brief Print a BigInt to stdout
+ *
+ * \assumption a != NULL
  */
 void big_int_print(BigInt *a)
 {
@@ -337,7 +235,8 @@ void big_int_print(BigInt *a)
 
 /**
  * \brief Calculate r = -a
- * \param r Result value, see big_int_get_res.
+ *
+ * \assumption r, a != NULL
  */
 BigInt *big_int_neg(BigInt *r, BigInt *a)
 {
@@ -352,7 +251,8 @@ BigInt *big_int_neg(BigInt *r, BigInt *a)
 
 /**
  * \brief Calculate r = |a|
- * \param r Result value, see big_int_get_res.
+ *
+ * \assumption r, a != NULL
  */
 BigInt *big_int_abs(BigInt *r, BigInt *a)
 {
@@ -367,13 +267,18 @@ BigInt *big_int_abs(BigInt *r, BigInt *a)
 
 /**
  * \brief Calculate r = a + b
- * \param r Result value, see big_int_get_res.
+ *
+ * \assumption r, a, b != NULL
  */
 BigInt *big_int_add(BigInt *r, BigInt *a, BigInt *b)
 {
     ADD_STAT_COLLECTION(BIGINT_TYPE_BIG_INT_ADD);
 
-    BigInt *aa, *bb, *neg;
+    // Pointer used to point to a or b depending on which is larger
+    BigInt *aa, *bb;
+
+    BIG_INT_DEFINE_PTR(neg);
+
     uint8_t carry;
     int64_t i;
     dbl_chunk_size_t sum;
@@ -382,14 +287,13 @@ BigInt *big_int_add(BigInt *r, BigInt *a, BigInt *b)
     // Use subtractions when adequate
     if (a->sign != b->sign) {
         if (a->sign == 0) {
-            neg = big_int_neg(NULL, b);
-            r = big_int_sub(r, a, neg);
+            big_int_neg(neg, b);
+            big_int_sub(r, a, neg);
         }
         else {
-            neg = big_int_neg(NULL, a);
-            r = big_int_sub(r, b, neg);
+            big_int_neg(neg, a);
+            big_int_sub(r, b, neg);
         }
-        big_int_destroy(neg);
         return r;
     }
 
@@ -410,11 +314,6 @@ BigInt *big_int_add(BigInt *r, BigInt *a, BigInt *b)
     }
 
     // Assertion: aa->size >= bb->size
-
-    // NOTE: for non-fixed BigInts we would need to make sure that r is at least
-    // of size aa->size + 1
-    if (!r)
-        r = big_int_alloc(BIGINT_FIXED_SIZE);
 
     // First, add chunks where both have entries
     carry = 0;
@@ -443,7 +342,7 @@ BigInt *big_int_add(BigInt *r, BigInt *a, BigInt *b)
 
     r->sign = aa->sign;
     if (carry) {
-        if (i < r->alloc_size) {
+        if (i < BIGINT_FIXED_SIZE) {
             r->chunks[i] = 1;
             r_size++;
         }
@@ -461,12 +360,19 @@ BigInt *big_int_add(BigInt *r, BigInt *a, BigInt *b)
 
 /**
  * \brief Calculate r = a - b
+ *
+ * \assumption r, a, b != NULL
  */
 BigInt *big_int_sub(BigInt *r, BigInt *a, BigInt *b)
 {
     ADD_STAT_COLLECTION(BIGINT_TYPE_BIG_INT_SUB);
 
-    BigInt *b_neg, *a_abs, *b_abs, *aa_abs, *bb_abs;
+    BIG_INT_DEFINE_PTR(b_neg);
+    BIG_INT_DEFINE_PTR(a_abs);
+    BIG_INT_DEFINE_PTR(b_abs);
+    BIG_INT_DEFINE_PTR(aa_abs);
+    BIG_INT_DEFINE_PTR(bb_abs);
+
     int borrow;
     int64_t i;
     dbl_chunk_size_t diff;
@@ -475,16 +381,15 @@ BigInt *big_int_sub(BigInt *r, BigInt *a, BigInt *b)
 
     // Use addition operations depending on signs
     if (a->sign != b->sign) {
-        b_neg = big_int_neg(NULL, b);
+        big_int_neg(b_neg, b);
         r = big_int_add(r, a, b_neg);
-        big_int_destroy(b_neg);
         return r;
     }
 
     // If a, b < 0; calculate -(|a| - |b|) instead
     if (a->sign == 1) {
-        a_abs = big_int_abs(NULL, a);
-        b_abs = big_int_abs(NULL, b);
+        big_int_abs(a_abs, a);
+        big_int_abs(b_abs, b);
         do_sign_switch = 1;
     }
     else {
@@ -511,10 +416,6 @@ BigInt *big_int_sub(BigInt *r, BigInt *a, BigInt *b)
     }
 
     // Assertion: aa_abs >= bb_abs
-
-    // NOTE: for arbitrary size BigInts, r has to be at least of size aa_abs->size
-    if (!r)
-        r = big_int_alloc(BIGINT_FIXED_SIZE);
 
     // Note an underflow sets the 1 bit at position MSB+1 of the chunk:
     // 0x0000000000000000 - 1 = 0xffffffff00000000
@@ -548,17 +449,15 @@ BigInt *big_int_sub(BigInt *r, BigInt *a, BigInt *b)
     r->sign = 0;
     r->size = r_size + 1;
 
-    if (a->sign == 1) {
-        big_int_destroy(a_abs);
-        big_int_destroy(b_abs);
-    }
-
     return (do_sign_switch) ? big_int_neg(r, r) : r;
 }
 
 
 /**
- * \brief Calculate a * b
+ * \brief Calculate r = a * b
+ *
+ * \assumption r, a, b != NULL
+ * \assumption a->size + b->size <= BIGINT_FIXED_SIZE
  */
 BigInt *big_int_mul(BigInt *r, BigInt *a, BigInt *b)
 {
@@ -566,22 +465,10 @@ BigInt *big_int_mul(BigInt *r, BigInt *a, BigInt *b)
 
     int64_t i, j;
     dbl_chunk_size_t carry;
-    BigInt *r_loc;
 
-    // NOTE: for arbitrary sized BigInts, this would define the alloc/realloc
-    // size and not throw an error.
-    if (a->size + b->size > BIGINT_FIXED_SIZE)
-        FATAL("Product requires %" PRIu64 " > %" PRIu64 " bytes to be stored!\n",
-            (uint64_t) a->size + b->size, BIGINT_FIXED_SIZE);
-    if (r && r->alloc_size < a->size + b->size)
-        FATAL("Result array for product is too small, requires %" PRIu64 " > %" PRIu64 " bytes\n",
-            (uint64_t) a->size + b->size, BIGINT_FIXED_SIZE);
+    BIG_INT_DEFINE_PTR_ZEROED(r_loc);
 
     // For MUL, we we have aliasing and a separate BigInt for r is necessary
-
-    // zero out r_loc
-    r_loc = big_int_calloc(BIGINT_FIXED_SIZE);
-
     r_loc->size = a->size + b->size;
     r_loc->sign = a->sign ^ b->sign;
 
@@ -602,21 +489,19 @@ BigInt *big_int_mul(BigInt *r, BigInt *a, BigInt *b)
     }
     big_int_prune_leading_zeros(r_loc, r_loc);
 
-    if (r) {
-        big_int_copy(r, r_loc);
-        big_int_destroy(r_loc);
-        return r;
-    }
-
-    return r_loc;
+    // TODO: copy could be saved if we assume no aliasing
+    return big_int_copy(r, r_loc);
 }
 
 
 /**
  * \brief Calculate quotient q and remainder r, such that: a = q * b + r
  *        We round numbers towards 0, e.g., -13/8 = (-1, -5)
+ *
  * \param r if r is not NULL, it will be set to the remainder.
  * \returns pointer to q
+ *
+ * \assumption q, a, b != NULL
  */
 BigInt *big_int_div_rem(BigInt *q, BigInt *r, BigInt *a, BigInt *b)
 {
@@ -626,9 +511,17 @@ BigInt *big_int_div_rem(BigInt *q, BigInt *r, BigInt *a, BigInt *b)
     uint8_t q_sign;
     uint64_t factor;
     int64_t q_idx, a_idx, i;
-    BigInt *a_abs, *b_abs, *a_loc, *b_loc, *a_part,
-           *q_c_bigint, *qb, *radix_pow;
-    BigInt *r_loc = NULL;
+
+    BIG_INT_DEFINE_PTR(a_abs);
+    BIG_INT_DEFINE_PTR(b_abs);
+    BIG_INT_DEFINE_PTR(a_loc);
+    BIG_INT_DEFINE_PTR(b_loc);
+    BIG_INT_DEFINE_PTR(a_part);
+    BIG_INT_DEFINE_PTR(q_c_bigint);
+    BIG_INT_DEFINE_PTR(qb);
+    BIG_INT_DEFINE_PTR(r_loc);
+
+    BIG_INT_DEFINE_PTR_ZEROED(radix_pow);
 
     if (big_int_is_zero(b))
         FATAL("Division by zero!\n");
@@ -639,28 +532,28 @@ BigInt *big_int_div_rem(BigInt *q, BigInt *r, BigInt *a, BigInt *b)
     /*
      * Special cases
      */
-    a_abs = big_int_abs(NULL, a);
-    b_abs = big_int_abs(NULL, b);
+    big_int_abs(a_abs, a);
+    big_int_abs(b_abs, b);
 
     // zero dividend
     if (big_int_is_zero(a)) {
-        q = big_int_create(q, 0);
-        r_loc = big_int_create(NULL, 0);
+        big_int_create_from_chunk(q, 0, 0);
+        big_int_create_from_chunk(r_loc, 0, 0);
     }
     // divisor larger than dividend
     else if (big_int_compare(b_abs, a_abs) == 1) {
-        q = big_int_create(q, 0);
+        big_int_create_from_chunk(q, 0, 0);
 
         // Save unsigned rest, account for signs later
-        r_loc = big_int_duplicate(a);
+        big_int_copy(r_loc, a);
         big_int_abs(r_loc, r_loc);
     }
     // Simple case for small BigInts, just use normal C division (but round
     // towards -inf at the end)
     else if (a->size == 1) {
-        q = big_int_create(q, a->chunks[0] / b->chunks[0]);
+        big_int_create_from_chunk(q, a->chunks[0] / b->chunks[0], 0);
         q->sign = a->sign ^ b->sign;
-        r_loc = big_int_create(r_loc, a->chunks[0] % b->chunks[0]);
+        big_int_create_from_chunk(r_loc, a->chunks[0] % b->chunks[0], 0);
     }
     // Since we do operations on double chunks, we can also do the shortcut for length 2
     else if (a->size == 2) {
@@ -676,16 +569,12 @@ BigInt *big_int_div_rem(BigInt *q, BigInt *r, BigInt *a, BigInt *b)
     else {
         // Below: Division for a->size > 2
 
-        // NOTE: for arbitrary sized BigInts, this size would be a->size - b->size + 1
-        if (!q)
-            q = big_int_alloc(BIGINT_FIXED_SIZE);
-
         q->sign = a->sign ^ b->sign;
         q->size = a->size - b->size + 1;
 
         // Preserve values of a, b
-        a_loc = big_int_duplicate(a);
-        b_loc = big_int_duplicate(b);
+        big_int_copy(a_loc, a);
+        big_int_copy(b_loc, b);
 
         // Operate on absolute values, account for signs at the end
         big_int_abs(a_loc, a_loc);
@@ -711,15 +600,6 @@ BigInt *big_int_div_rem(BigInt *q, BigInt *r, BigInt *a, BigInt *b)
             a_loc->size += 1;
         }
 
-        // Prepare for intermediate BigInts
-        // NOTE: for arbitrary sized BigInts, this really only needs to be of size b->size
-        a_part = big_int_alloc(BIGINT_FIXED_SIZE);
-        // NOTE: for arbitrary sized BigInts, this really only needs to be of size 1
-        q_c_bigint = big_int_alloc(BIGINT_FIXED_SIZE);
-        // NOTE: for arbitrary sized BigInts, this really only needs to be of size b->size+1
-        qb = big_int_alloc(BIGINT_FIXED_SIZE);
-        // NOTE: for arbitrary sized BigInts, this really only needs to be of size b->size+1
-        radix_pow = big_int_calloc(BIGINT_FIXED_SIZE);
         radix_pow->chunks[b->size] = 1;
         radix_pow->size = b->size + 1;
 
@@ -758,7 +638,7 @@ BigInt *big_int_div_rem(BigInt *q, BigInt *r, BigInt *a, BigInt *b)
             a_part->size = i;
             a_part->sign = 0;
 
-            big_int_create(q_c_bigint, q_c);
+            big_int_create_from_chunk(q_c_bigint, q_c, 0);
             big_int_sub(qb, a_part, big_int_mul(qb, q_c_bigint, b_loc));
 
             // TODO: test this case specifically, apparently this is a very unlikely
@@ -791,28 +671,19 @@ BigInt *big_int_div_rem(BigInt *q, BigInt *r, BigInt *a, BigInt *b)
 
         // Unnormalize
         a_loc->size = b->size;
-        r_loc = big_int_duplicate(a_loc);
+        r_loc = big_int_copy(r_loc, a_loc);
         big_int_srl_small(r_loc, r_loc, factor);
         big_int_prune_leading_zeros(r_loc, r_loc);
 
         big_int_prune_leading_zeros(q, q);
-
-        // Cleanup intermediate BigInts specific to this case
-        big_int_destroy(a_part);
-        big_int_destroy(a_loc);
-        big_int_destroy(b_loc);
-        big_int_destroy(q_c_bigint);
-        big_int_destroy(radix_pow);
-        big_int_destroy(qb);
     }
 
     // Round towards -inf if either operand is negative
     if (a->sign ^ b->sign && !big_int_is_zero(r_loc)) {
         big_int_sub(q, q, big_int_one);
 
-        b_loc = big_int_abs(NULL, b);
+        big_int_abs(b_loc, b);
         big_int_sub(r_loc, b_loc, r_loc);
-        big_int_destroy(b_loc);
     }
     // If b is negative, flip the sign of the remainder to maintain the
     // invariant q * b + r = a
@@ -822,17 +693,14 @@ BigInt *big_int_div_rem(BigInt *q, BigInt *r, BigInt *a, BigInt *b)
     if (r)
         big_int_copy(r, r_loc);
 
-    // Cleanup intermediate BigInts
-    big_int_destroy(a_abs);
-    big_int_destroy(b_abs);
-    big_int_destroy(r_loc);
-
     return q;
 }
 
 
 /**
  * \brief Calculate r = a // b (integer division)
+ *
+ * \assumption r, a, b != NULL
  */
 BigInt *big_int_div(BigInt *q, BigInt *a, BigInt *b)
 {
@@ -844,24 +712,18 @@ BigInt *big_int_div(BigInt *q, BigInt *a, BigInt *b)
 
 /**
  * \brief Calculate r = a << shift for "small" shifts (not BigInt shifts)
+ *
+ * \assumption r, a != NULL
+ * \assumption a->size + shift / BIGINT_CHUNK_BIT_SIZE < BIGINT_FIXED_SIZE
  */
 BigInt *big_int_sll_small(BigInt *r, BigInt *a, uint64_t shift)
 {
     ADD_STAT_COLLECTION(BIGINT_TYPE_BIG_INT_SLL_SMALL);
 
-    BigInt *r_loc;
+    BIG_INT_DEFINE_PTR(r_loc);
 
     dbl_chunk_size_t carry;
-    uint64_t r_size;
     int64_t i, r_idx;
-
-    r_size = a->size + shift / BIGINT_CHUNK_BIT_SIZE;
-    // NOTE: for arbitrary sized BigInts, this would cause define the new/realloc
-    // size for r!
-    if (r_size > BIGINT_FIXED_SIZE)
-        FATAL("Shift creates too large BigInt (%" PRIu64 " chunks)!\n", r_size);
-
-    r_loc = big_int_alloc(BIGINT_FIXED_SIZE);
 
     // Set the lowest chunks to zero
     for (r_idx = 0; r_idx < (int64_t) (shift / BIGINT_CHUNK_BIT_SIZE); ++r_idx) {
@@ -884,7 +746,7 @@ BigInt *big_int_sll_small(BigInt *r, BigInt *a, uint64_t shift)
 
     // Add the last block if there is a carry from the MSB block
     if (carry) {
-        if (r_idx < r->alloc_size) {
+        if (r_idx < BIGINT_FIXED_SIZE) {
             r_loc->chunks[r_idx] = carry;
             ++r_idx;
         }
@@ -896,41 +758,35 @@ BigInt *big_int_sll_small(BigInt *r, BigInt *a, uint64_t shift)
 
     r_loc->size = r_idx;
 
-    if (r) {
-        big_int_copy(r, r_loc);
-        big_int_destroy(r_loc);
-        return r;
-    }
-
-    return r_loc;
+    // TODO: copy could be saved if we assume no aliasing
+    return big_int_copy(r, r_loc);
 }
 
 
 /**
  * \brief Calculate r = a >> shift for "small" shifts (not BigInt shifts)
+ *
+ * \assumption r, a != NULL
  */
 BigInt *big_int_srl_small(BigInt *r, BigInt *a, uint64_t shift)
 {
     ADD_STAT_COLLECTION(BIGINT_TYPE_BIG_INT_SRL_SMALL);
 
-    BigInt *last_bit_bigint;
+    BIG_INT_DEFINE_PTR(last_bit_bigint);
+
     dbl_chunk_size_t carry, last_bit;
     int64_t i, a_idx;
-
-    // NOTE: for arbitrary sized BigInts, r would only need to be of size
-    // a->size - shift / BIGINT_CHUNK_BIT_SIZE
-    if (!r)
-        r = big_int_alloc(BIGINT_FIXED_SIZE);
 
     // Special case where we shift away all bits
     if (shift / BIGINT_CHUNK_BIT_SIZE >= a->size) {
         // Special case for rounding towards -inf
         if (a->sign && (shift - 1) / BIGINT_CHUNK_BIT_SIZE < a->size) {
-            big_int_create(r, a->chunks[a->size - 1] >> (((shift - 1) % BIGINT_CHUNK_BIT_SIZE)));
-            r->sign = 1;
+            big_int_create_from_chunk(r,
+                a->chunks[a->size - 1] >> (((shift - 1) % BIGINT_CHUNK_BIT_SIZE)),
+                1);
         }
         else {
-            big_int_create(r, 0);
+            big_int_create_from_chunk(r, 0, 0);
         }
         return r;
     }
@@ -956,9 +812,8 @@ BigInt *big_int_srl_small(BigInt *r, BigInt *a, uint64_t shift)
 
     // Add last bit (round towards -inf)
     if (a->sign && last_bit) {
-        last_bit_bigint = big_int_create(NULL, last_bit);
+        big_int_create_from_chunk(last_bit_bigint, last_bit, 0);
         big_int_sub(r, r, last_bit_bigint);
-        big_int_destroy(last_bit_bigint);
     }
 
     r->overflow = 0;
@@ -970,23 +825,19 @@ BigInt *big_int_srl_small(BigInt *r, BigInt *a, uint64_t shift)
 
 /**
  * \brief Calculate r := a mod q
+ *
+ * \assumption r, a, q != NULL
  */
 BigInt *big_int_mod(BigInt *r, BigInt *a, BigInt *q)
 {
     ADD_STAT_COLLECTION(BIGINT_TYPE_BIG_INT_MOD);
 
-    BigInt *tmp;
-
-    // NOTE: for arbitrary sized BigInts, r would only need to be of size q->size
-    if (!r)
-        r = big_int_alloc(BIGINT_FIXED_SIZE);
+    BIG_INT_DEFINE_PTR(tmp);
 
     // TODO: this can be optimized for special cases. We need to check if
     // q (for the mapping) is close to a power of two. In that case, we might
     // be able to avoid using division here!
-    tmp = big_int_div_rem(NULL, r, a, q);
-
-    big_int_destroy(tmp);
+    big_int_div_rem(tmp, r, a, q);
 
     return r;
 }
@@ -999,17 +850,17 @@ BigInt *big_int_mod(BigInt *r, BigInt *a, BigInt *q)
 
 /**
  * \brief Calculate r := (a + b) mod q
+ *
+ * \assumption r, a, b, q != NULL
  */
 BigInt *big_int_add_mod(BigInt *r, BigInt *a, BigInt *b, BigInt *q)
 {
     ADD_STAT_COLLECTION(BIGINT_TYPE_BIG_INT_ADD_MOD);
 
-    BigInt *r_loc;
+    BIG_INT_DEFINE_PTR(r_loc);
 
-    r_loc = big_int_add(NULL, a, b);
-    r = big_int_mod(r, r_loc, q);
-
-    big_int_destroy(r_loc);
+    big_int_add(r_loc, a, b);
+    big_int_mod(r, r_loc, q);
 
     return r;
 }
@@ -1017,17 +868,17 @@ BigInt *big_int_add_mod(BigInt *r, BigInt *a, BigInt *b, BigInt *q)
 
 /**
  * \brief Calculate r := (a - b) mod q
+ *
+ * \assumption r, a, b, q != NULL
  */
 BigInt *big_int_sub_mod(BigInt *r, BigInt *a, BigInt *b, BigInt *q)
 {
     ADD_STAT_COLLECTION(BIGINT_TYPE_BIG_INT_SUB_MOD);
 
-    BigInt *r_loc;
+    BIG_INT_DEFINE_PTR(r_loc);
 
-    r_loc = big_int_sub(NULL, a, b);
+    big_int_sub(r_loc, a, b);
     big_int_mod(r, r_loc, q);
-
-    big_int_destroy(r_loc);
 
     return r;
 }
@@ -1035,17 +886,17 @@ BigInt *big_int_sub_mod(BigInt *r, BigInt *a, BigInt *b, BigInt *q)
 
 /**
  * \brief Calculate r := (a * b) mod q
+ *
+ * \assumption r, a, b, q != NULL
  */
 BigInt *big_int_mul_mod(BigInt *r, BigInt *a, BigInt *b, BigInt *q)
 {
     ADD_STAT_COLLECTION(BIGINT_TYPE_BIG_INT_MUL_MOD);
 
-    BigInt *r_loc;
+    BIG_INT_DEFINE_PTR(r_loc);
 
-    r_loc = big_int_mul(NULL, a, b);
-    r = big_int_mod(r, r_loc, q);
-
-    big_int_destroy(r_loc);
+    big_int_mul(r_loc, a, b);
+    big_int_mod(r, r_loc, q);
 
     return r;
 }
@@ -1053,18 +904,18 @@ BigInt *big_int_mul_mod(BigInt *r, BigInt *a, BigInt *b, BigInt *q)
 
 /**
  * \brief Calculate r := (a * b^-1) mod q
+ *
+ * \assumption r, a, b, q != NULL
  */
 BigInt *big_int_div_mod(BigInt *r, BigInt *a, BigInt *b, BigInt *q)
 {
     ADD_STAT_COLLECTION(BIGINT_TYPE_BIG_INT_DIV_MOD);
 
-    BigInt *r_loc;
+     BIG_INT_DEFINE_PTR(r_loc);
 
     // Write to local copy to be save against pointer reuse
-    r_loc = big_int_inv(NULL, b, q);
-    r = big_int_mul_mod(r, a, r_loc, q);
-
-    big_int_destroy(r_loc);
+    big_int_inv(r_loc, b, q);
+    big_int_mul_mod(r, a, r_loc, q);
 
     return r;
 }
@@ -1072,6 +923,9 @@ BigInt *big_int_div_mod(BigInt *r, BigInt *a, BigInt *b, BigInt *q)
 
 /**
  * \brief Calculate r := a^-1 mod q (the inverse of a)
+ *
+ * \assumption r, a, q != NULL
+ * \assumption a is invertible mod q, i.e. res.g = 1
  */
 BigInt *big_int_inv(BigInt *r, BigInt *a, BigInt *q)
 {
@@ -1079,24 +933,10 @@ BigInt *big_int_inv(BigInt *r, BigInt *a, BigInt *q)
 
     EgcdResult res;
 
-    if (!r)
-        r = big_int_alloc(BIGINT_FIXED_SIZE);
-
-    res = big_int_egcd(a, q);
-    if (big_int_compare(res.g, big_int_one) != 0) {
-        big_int_destroy(res.g);
-        big_int_destroy(res.x);
-        big_int_destroy(res.y);
-        FATAL("Non-invertible number given as argument to big_int_inv!\n");
-        return NULL;
-    }
+    big_int_egcd(&res, a, q);
 
     // set r = x mod q
-    big_int_mod(r, res.x, q);
-
-    big_int_destroy(res.g);
-    big_int_destroy(res.x);
-    big_int_destroy(res.y);
+    big_int_mod(r, &res.x, q);
 
     return r;
 }
@@ -1104,18 +944,20 @@ BigInt *big_int_inv(BigInt *r, BigInt *a, BigInt *q)
 
 /**
  * \brief Calculate r := (b^e) mod q
+ *
+ * \assumption r, b, e, q != NULL
  */
 BigInt *big_int_pow(BigInt *r, BigInt *b, BigInt *e, BigInt *q)
 {
     ADD_STAT_COLLECTION(BIGINT_TYPE_BIG_INT_POW);
 
-    BigInt *b_loc, *e_loc, *r_loc;
+    BIG_INT_DEFINE_PTR(e_loc);
+    BIG_INT_DEFINE_PTR(b_loc);
 
-    // NOTE: for arbitrary sized BigInts, we'd need to figure out some good size
-    //       to allocate for the first r. For now, this implicitly use the fixed size.
-    r_loc = big_int_create(NULL, 1);
-    e_loc = big_int_duplicate(e);
-    b_loc = big_int_duplicate(b);
+    BIG_INT_DEFINE_FROM_CHUNK(r_loc, 0, 1);
+
+    big_int_copy(e_loc, e);
+    big_int_copy(b_loc, b);
 
     while (big_int_compare(e_loc, big_int_zero) > 0) {
         // If power is odd
@@ -1126,22 +968,15 @@ BigInt *big_int_pow(BigInt *r, BigInt *b, BigInt *e, BigInt *q)
         big_int_mul_mod(b_loc, b_loc, b_loc, q);
     }
 
-    big_int_destroy(e_loc);
-    big_int_destroy(b_loc);
-
-    if (r) {
-        big_int_copy(r, r_loc);
-        big_int_destroy(r_loc);
-        return r;
-    }
-    else {
-        return r_loc;
-    }
+    // TODO: copy could be saved if we assume no aliasing
+    return big_int_copy(r, r_loc);
 }
 
 
 /**
  * \brief Returns true if the BigInt is zero
+ *
+ * \assumption a != NULL
  */
 int8_t big_int_is_zero(BigInt *a)
 {
@@ -1153,6 +988,8 @@ int8_t big_int_is_zero(BigInt *a)
 
 /**
  * \brief Returns true if the BigInt is an odd number
+ *
+ * \assumption a != NULL
  */
 int8_t big_int_is_odd(BigInt *a)
 {
@@ -1165,6 +1002,8 @@ int8_t big_int_is_odd(BigInt *a)
 /**
  * \brief Calculate a == b.
  * \returns r, where a==b: r=0, a<b: r<0, a>b: r>0
+ *
+ * \assumption a, b != NULL
  */
 int8_t big_int_compare(BigInt *a, BigInt *b)
 {
@@ -1211,36 +1050,45 @@ int8_t big_int_compare(BigInt *a, BigInt *b)
 /**
  * \brief Calculate the greatest common divisor using the extended Euclidean
  *        algorithm (iterative version).
- * \returns EgcdResult (x, y, g), where x * a + y * b = g
+ * \returns Pointer to EgcdResult (x, y, g), where x * a + y * b = g
  *          and g is the GCD.
+ *
+ * \assumption r, a, b != NULL
  */
-EgcdResult big_int_egcd(BigInt *a, BigInt *b)
+EgcdResult *big_int_egcd(EgcdResult *r, BigInt *a, BigInt *b)
 {
     ADD_STAT_COLLECTION(BIGINT_TYPE_BIG_INT_EGCD);
 
-    BigInt *q, *a_loc, *b_loc, *x0, *x1, *y0, *y1, *tmp;
-    EgcdResult res;
+    BIG_INT_DEFINE_PTR(q);
+    BIG_INT_DEFINE_PTR(a_loc);
+    BIG_INT_DEFINE_PTR(x1);
+    BIG_INT_DEFINE_PTR(y1);
+    BIG_INT_DEFINE_PTR(tmp);
+
+    // Avoid copying intermediate results to final result by using the latter
+    // from the start
+    BigInt *b_loc = &(r->g);
+    BigInt *x0 = &(r->x);
+    BigInt *y0 = &(r->y);
 
     if (big_int_is_zero(a) && big_int_is_zero(b)) {
-        res.x = big_int_create(NULL, 0);
-        res.y = big_int_create(NULL, 0);
-        res.g = big_int_create(NULL, 0);
-        return res;
+        big_int_create_from_chunk(x0, 0, 0);
+        big_int_create_from_chunk(y0, 0, 0);
+        big_int_create_from_chunk(b_loc, 0, 0);
+        return r;
     }
 
-    q = big_int_alloc(BIGINT_FIXED_SIZE);
-    tmp = big_int_alloc(BIGINT_FIXED_SIZE);
-    a_loc = big_int_duplicate(a);
-    b_loc = big_int_duplicate(b);
+    big_int_create_from_chunk(x0, 0, 0);
+    big_int_create_from_chunk(x1, 1, 0);
+    big_int_create_from_chunk(y0, 1, 0);
+    big_int_create_from_chunk(y1, 0, 0);
+
+    big_int_copy(a_loc, a);
+    big_int_copy(b_loc, b);
 
     // Take the GCD of positive numbers, then just flig the signs of x, y at the end
     big_int_abs(a_loc, a_loc);
     big_int_abs(b_loc, b_loc);
-
-    x0 = big_int_create(NULL, 0);
-    x1 = big_int_create(NULL, 1);
-    y0 = big_int_create(NULL, 1);
-    y1 = big_int_create(NULL, 0);
 
     while (big_int_compare(a_loc, big_int_zero) != 0)
     {
@@ -1255,58 +1103,46 @@ EgcdResult big_int_egcd(BigInt *a, BigInt *b)
         big_int_copy(tmp, x1);
         big_int_sub(x1, x0, big_int_mul(x1, x1, q));
         big_int_copy(x0, tmp);
-
     }
 
     // Account for signs of a and b
     x0->sign ^= a->sign;
     y0->sign ^= b->sign;
 
-    res.g = b_loc;
-    res.x = x0;
-    res.y = y0;
-
-    big_int_destroy(tmp);
-    big_int_destroy(q);
-    big_int_destroy(x1);
-    big_int_destroy(y1);
-    big_int_destroy(a_loc);
-
-    return res;
+    return r;
 }
 
 
 /**
  * \brief Calculate the Chi function chi(t) = t**((q-1)/2) mod q
  * \returns 0 if t = 0, 1 if t is a non-zero square, -1 otherwise
+ *
+ * \assumption r, t, q != NULL
+ * \assumption q is prime
  */
 BigInt *big_int_chi(BigInt *r, BigInt *t, BigInt *q)
 {
     ADD_STAT_COLLECTION(BIGINT_TYPE_BIG_INT_CHI);
 
-    BigInt *e;
+    BIG_INT_DEFINE_PTR(e);
 
-    // Check assumption that q is odd (otherwise our chi function might need to
-    // be changed)
-    if (!big_int_is_odd(q))
-        FATAL("Chi function implementation only supports odd q (actually prime q)!");
+    if (big_int_compare(t, big_int_zero) == 0) {
+        // TODO: [Optimization] change return value to int8_t
+        big_int_create_from_chunk(r, 0, 0);
+        return r;
+    }
 
-    if (!r)
-        r = big_int_alloc(BIGINT_FIXED_SIZE);
-
-    if (big_int_compare(t, big_int_zero) == 0)
-        return big_int_create(r, 0);
-
-    e = big_int_duplicate(q);
+    big_int_copy(e, q);
     big_int_srl_small(e, big_int_sub(e, e, big_int_one), 1);
 
     big_int_pow(r, t, e, q);
 
-    big_int_destroy(e);
-
     if (!big_int_compare(r, big_int_zero) || !big_int_compare(r, big_int_one))
         return r;
-    return big_int_create(r, -1);
+
+    // TODO: [Optimization] change return value to int8_t
+    big_int_create_from_chunk(r, 1, 1); // r = -1
+    return r;
 
 }
 

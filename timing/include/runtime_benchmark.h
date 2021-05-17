@@ -21,15 +21,23 @@
 #include "bigint.h"
 #include "elligator.h"
 
+#if VERSION == 1
+#define RUNTIME_DECLARE_BIGINT_ARRAY(arr_name) BigInt **arr_name
+#else
+#define RUNTIME_DECLARE_BIGINT_ARRAY(arr_name) BigInt *arr_name
+#endif
+
 /*
  * Global BigInt variables
  */
-BigInt **big_int_array;
-BigInt **big_int_array_1;
-BigInt **big_int_array_2;
-BigInt **big_int_array_3;
-BigInt **big_int_array_4;
-BigInt **big_int_array_q;
+RUNTIME_DECLARE_BIGINT_ARRAY(big_int_array);
+RUNTIME_DECLARE_BIGINT_ARRAY(big_int_array_1);
+RUNTIME_DECLARE_BIGINT_ARRAY(big_int_array_2);
+RUNTIME_DECLARE_BIGINT_ARRAY(big_int_array_3);
+RUNTIME_DECLARE_BIGINT_ARRAY(big_int_array_4);
+RUNTIME_DECLARE_BIGINT_ARRAY(big_int_array_q);
+
+EgcdResult *big_int_egcd_array;
 
 Curve bench_curve;
 CurvePoint *curve_point_array;

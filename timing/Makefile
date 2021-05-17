@@ -14,17 +14,17 @@ endif
 
 #
 # The following versions exist:
-#	- Version 1.0: Straightforward C, unoptimized
-#	- Version 2.0: Uptimized C using standard techniques
-#	- Version 3.0 (in the future): C including AVX optimizations
+#	- Version 1: Straightforward C, unoptimized
+#	- Version 2: Uptimized C using standard techniques
+#	- Version 3 (in the future): C including AVX optimizations
 #
 ifeq ($(VERSION),)
-	VERSION = 2.0
+	VERSION = 2
 endif
 
-ifeq ($(VERSION), 1.0)
+ifeq ($(VERSION), 1)
 	BENCHED_ROOT_DIR = ../code_unoptimized
-else ifeq ($(VERSION), 2.0)
+else ifeq ($(VERSION), 2)
 	BENCHED_ROOT_DIR = ../code_optimized/standard_optimizations
 endif
 
@@ -50,7 +50,7 @@ ifeq ($(REPS),)
 	REPS = 10000
 endif
 
-CFLAGS += -DSETS=$(SETS) -DREPS=$(REPS)
+CFLAGS += -DSETS=$(SETS) -DREPS=$(REPS) -DVERSION=$(VERSION)
 
 # Forward COLLECT_STATS env variable to compiled binaries
 LOG_BASE_PATH := $(abspath $(LOG_DIR))
@@ -101,7 +101,7 @@ $(ODIR)/%.o: $(SDIR)/%.c $(DEPS)
 _OBJ	= benchmark_helpers.o runtime_benchmark.o
 OBJ 	= $(patsubst %,$(ODIR)/%,$(_OBJ))
 # Specify the object files of the benched functions
-_OBJ_BENCHED 	= bigint.o elligator.o
+_OBJ_BENCHED 	= bigint.o #elligator.o
 OBJ_BENCHED		= $(patsubst %,$(ODIR_BENCHED)/%,$(_OBJ_BENCHED))
 
 .PHONY: gen-bench-types

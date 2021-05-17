@@ -8,9 +8,12 @@
 // To work with 4 chunk integers (256 bits) we internally need 9 chunk integers.
 // The reason is that intermediate products can be 8 chunks and division performs
 // a scaling that may require an additional chunk.
-#define BIGINT_FIXED_SIZE ((uint64_t) 17)
-#define BIGINT_CHUNK_HEX_SIZE (sizeof(chunk_size_t) * 2)
-#define BIGINT_CHUNK_BIT_SIZE (sizeof(chunk_size_t) * 8)
+#define BIGINT_FIXED_SIZE ((uint32_t) 17)
+#define BIGINT_METADATA_SIZE ((uint32_t) 2 * sizeof(uint32_t))
+#define BIGINT_INTERNAL_CHUNK_BYTE ((uint32_t) sizeof(dbl_chunk_size_t))
+#define BIGINT_CHUNK_BYTE_SIZE ((uint32_t) sizeof(chunk_size_t))
+#define BIGINT_CHUNK_HEX_SIZE ((uint32_t) sizeof(chunk_size_t) * 2)
+#define BIGINT_CHUNK_BIT_SIZE ((uint32_t) sizeof(chunk_size_t) * 8)
 
 // Change if larger chunks are used
 #define STR_TO_CHUNK strtol
@@ -33,25 +36,30 @@ typedef uint64_t dbl_chunk_size_t;
  *        Stores integer a_n * (2^64)^n + a_(n-1) * (2^64)^(n-1) + a_0
  *        as chunks (a_n, a_(n-1), ..., a_0), where chunk[0] = a_0.
  */
-// NOTE: For now, we assume size <= 4, i.e., only 256 bit integers.
+
+// NOTE: For efficiency, we assume size <= 4, i.e., only 256 bit integers.
 // We do not reallocate, every BigInt has BIGINT_FIXED_SIZE chunks allocated.
-// This would need to be changed for arbitrary sized integer operations!
-typedef struct BigInts
+// Internally, larger BigInts are possible for intermediate results.
+
+// Attributes:
+// - packed: makes sure that the struct has the minimal size (no padding)
+// - aligned: makes sure the struct is aligned to 4 bytes
+typedef struct __attribute__((packed, aligned(4))) BigInt
 {
-    uint64_t sign : 1;          // O: positive, 1: negative
-    uint64_t overflow : 1;      // 1 if operation overflowed (only supported for add/sub)
-    uint64_t size : 62;         // Number of chunks used in the BigInt
-    uint64_t alloc_size : 62;   // Number of chunks allocated for the BigInt (>= size)
-    dbl_chunk_size_t *chunks;   // Chunks of size chunk_size_t in reverse order
+    uint32_t sign : 1;          // O: positive, 1: negative
+    uint32_t overflow : 1;      // 1 if operation overflowed (only supported for add/sub)
+    uint32_t size : 30;         // Number of chunks used in the BigInt
+    uint32_t pad;               // XXX: remove when switching to chunks of 32 bits
+    dbl_chunk_size_t chunks[BIGINT_FIXED_SIZE];// Chunks of size chunk_size_t in reverse order
 } BigInt;
 
 /**
  * Struct for the results of g := gcd(a, b) = xa + yb
  */
 typedef struct EgcdResult {
-    BigInt *g;
-    BigInt *y;
-    BigInt *x;
+    BigInt g;
+    BigInt y;
+    BigInt x;
 } EgcdResult;
 
 /*
@@ -59,45 +67,68 @@ typedef struct EgcdResult {
 */
 uint64_t big_int_stats[BIGINT_TYPE_LAST];
 
-static dbl_chunk_size_t chunk_zero = 0;
-static dbl_chunk_size_t chunk_one = 1;
+// BIG_INT_DEFINE_STRUCT but allowing you to specify the type (e.g., static or
+// normal BigInt)
+#define BIG_INT_DEFINE_STRUCT_GENERAL(type, name, sign_, overflow_, size_, _chunk) \
+    type name##_bigint = ((BigInt) {                                           \
+        .sign = (sign_),                                                       \
+        .overflow = (overflow_),                                               \
+        .size = (size_),                                                       \
+        .chunks = {_chunk},                                                    \
+    })
+
+// Define BigInt of fixed size with given parameters and sets the chunks pointer
+// to 'chunks'
+#define BIG_INT_DEFINE_STRUCT(name, sign, overflow, size, chunks)              \
+    BIG_INT_DEFINE_STRUCT_GENERAL(BigInt, name, sign, overflow, size, chunks)
+
+// Define BigInt of fixed size with given parameters and sets the chunks pointer
+// to 'chunks'. Moreover, define a pointer for name, pointing to the new BigInt
+#define BIG_INT_DEFINE_STRUCT_PTR(name, sign, overflow, size, chunks)          \
+    BIG_INT_DEFINE_STRUCT_GENERAL(BigInt, name, sign, overflow, size, chunks); \
+    BigInt *name = &name##_bigint
+
+// Define BigInt of fixed size based on given chunk and sign
+#define BIG_INT_DEFINE_FROM_CHUNK(name, sign, chunk)                           \
+    BIG_INT_DEFINE_STRUCT_PTR(name, sign, 0, 1, chunk);
+
+// Define BigInt and pointer to it without setting any values
+#define BIG_INT_DEFINE_PTR(name)                                               \
+    BigInt name##_bigint;                                                      \
+    BigInt *name = &name##_bigint
+
+// Define BigInt which is zeroed out and pointer to it
+#define BIG_INT_DEFINE_PTR_ZEROED(name)                                        \
+    BigInt name##_bigint = {0};                                                \
+    BigInt *name = &name##_bigint
+
+// Define BigInt of fixed size with given parameters and sets the chunks pointer
+// to 'chunks'
+#define BIG_INT_DEFINE_STATIC_STRUCT_PTR(name, sign, overflow, size, chunks)   \
+    BIG_INT_DEFINE_STRUCT_GENERAL(static BigInt, name, sign, overflow,         \
+        size, chunks);                                                         \
+    __attribute__((unused))                                                    \
+    static BigInt *name = &name##_bigint
 
 // Special BigInts, never free those! They cannot be copied.
-__attribute__((unused)) static BigInt *big_int_zero = &((BigInt) {
-    .sign = 0,
-    .overflow = 0,
-    .size = 1,
-    .alloc_size = BIGINT_FIXED_SIZE,
-    .chunks = &chunk_zero,
-});
-__attribute__((unused)) static BigInt *big_int_one = &((BigInt) {
-    .sign = 0,
-    .overflow = 0,
-    .size = 1,
-    .alloc_size = BIGINT_FIXED_SIZE,
-    .chunks = &chunk_one,
-});
-__attribute__((unused)) static BigInt *big_int_min_one = &((BigInt) {
-    .sign = 1,
-    .overflow = 0,
-    .size = 1,
-    .alloc_size = BIGINT_FIXED_SIZE,
-    .chunks = &chunk_one,
-});
+__attribute__((unused))
+BIG_INT_DEFINE_STATIC_STRUCT_PTR(big_int_zero, 0, 0, 1, 0);
+
+__attribute__((unused))
+BIG_INT_DEFINE_STATIC_STRUCT_PTR(big_int_one, 0, 0, 1, 1);
+
+__attribute__((unused))
+BIG_INT_DEFINE_STATIC_STRUCT_PTR(big_int_min_one, 1, 0, 1, 1);
 
 //Functions only exposed for Benchmarks
-BigInt *big_int_alloc(uint64_t size);
-BigInt *big_int_calloc(uint64_t size);
 BigInt *big_int_prune_leading_zeros(BigInt *r, BigInt *a);
-BigInt *big_int_create_from_dbl_chunk(BigInt *r, dbl_chunk_size_t chunk, uint8_t sign);
 
 // Meta functions
-BigInt *big_int_create(BigInt *r, int64_t x);
+BigInt *big_int_create_from_dbl_chunk(BigInt *r, dbl_chunk_size_t chunk, uint8_t sign);
+BigInt *big_int_create_from_chunk(BigInt *r, chunk_size_t chunk, uint8_t sign);
 BigInt *big_int_create_from_hex(BigInt *r, char* s);
 BigInt *big_int_create_random(BigInt *r, int64_t nr_of_chunks);
-void big_int_destroy(BigInt *a);
 BigInt *big_int_copy(BigInt *a, BigInt *b);
-BigInt *big_int_duplicate(BigInt *a);
 void big_int_print(BigInt *a);
 
 /**
@@ -136,7 +167,7 @@ int8_t big_int_is_odd(BigInt *a);
 
 // Advanced operations
 BigInt *big_int_pow(BigInt *r, BigInt *b, BigInt *e, BigInt *q);
-EgcdResult big_int_egcd(BigInt *a, BigInt *b);
+EgcdResult *big_int_egcd(EgcdResult *r, BigInt *a, BigInt *b);
 BigInt *big_int_chi(BigInt *r, BigInt *t, BigInt *q);
 
 // Reset stats (use in combination with setting the env variable COLLECT_STATS)
