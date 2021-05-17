@@ -139,6 +139,8 @@ BigInt *big_int_pow(BigInt *r, BigInt *b, BigInt *e, BigInt *q);
 EgcdResult *big_int_egcd(EgcdResult *r, BigInt *a, BigInt *b);
 BigInt *big_int_chi(BigInt *r, BigInt *t, BigInt *q);
 
+void big_int_free_egcd_result(EgcdResult *r);
+
 // Reset stats (use in combination with setting the env variable COLLECT_STATS)
 void reset_stats(void);
 

@@ -1266,6 +1266,15 @@ EgcdResult *big_int_egcd(EgcdResult *r, BigInt *a, BigInt *b)
     return r;
 }
 
+/**
+ * \brief Free BigInts in eGCD result
+ */
+void big_int_free_egcd_result(EgcdResult *r)
+{
+    free(r->g);
+    free(r->x);
+    free(r->y);
+}
 
 /**
  * \brief Calculate the Chi function chi(t) = t**((q-1)/2) mod q
