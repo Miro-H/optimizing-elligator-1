@@ -50,7 +50,7 @@ ifeq ($(REPS),)
 	REPS = 10000
 endif
 
-CFLAGS += -DSETS=$(SETS) -DREPS=$(REPS)
+CFLAGS += -DSETS=$(SETS) -DREPS=$(REPS) -DVERSION=$(VERSION)
 
 # Forward COLLECT_STATS env variable to compiled binaries
 LOG_BASE_PATH := $(abspath $(LOG_DIR))

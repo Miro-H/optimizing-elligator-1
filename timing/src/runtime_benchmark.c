@@ -25,7 +25,6 @@
 #define RUNTIME_BIG_INT_DESTROY(v) big_int_destroy(v)
 #define RUNTIME_BIG_INT_CREATE_RANDOM(v, w) v = big_int_create_random(NULL, w)
 #define RUNTIME_BIG_INT_FREE_EGCD_RES(r) big_int_free_egcd_result(r)
-#define RUNTIME_BIG_INT_CREATE_FROM_DBL_CHUNK(v) *v = big_int_create_from_dbl_chunk(NULL, 1, 1)
 #define RUNTIME_BIG_INT_CREATE_FROM_HEX(v, w) v = big_int_create_from_hex(NULL, w)
 
 #define RUNTIME_FREE_CURVE_POINT(point) free_curve_point((point))
@@ -40,7 +39,6 @@
 #define RUNTIME_BIG_INT_DESTROY(v) ((void) 0)
 #define RUNTIME_BIG_INT_CREATE_RANDOM(v, w) big_int_create_random(v, w)
 #define RUNTIME_BIG_INT_FREE_EGCD_RES(r) ((void) 0)
-#define RUNTIME_BIG_INT_CREATE_FROM_DBL_CHUNK(v) big_int_create_from_dbl_chunk(v, 1, 1)
 #define RUNTIME_BIG_INT_CREATE_FROM_HEX(v, w) big_int_create_from_hex(v, w)
 
 #define RUNTIME_FREE_CURVE_POINT(point) ((void) 0)
@@ -70,7 +68,6 @@ void bench_big_int_prep(void *argptr)
 
     for (uint64_t i = 0; i < array_size; i++)
     {
-
         RUNTIME_BIG_INT_CREATE_RANDOM(RUNTIME_DEREF(big_int_array_1, i), big_int_size_);
         RUNTIME_BIG_INT_CREATE_RANDOM(RUNTIME_DEREF(big_int_array_2, i), big_int_size_);
         RUNTIME_BIG_INT_CREATE_RANDOM(RUNTIME_DEREF(big_int_array_3, i), big_int_size_);
@@ -191,7 +188,7 @@ void bench_big_int_egcd_cleanup(void *argptr)
 
     for (uint64_t i = 0; i < used_values; i++)
     {
-        RUNTIME_BIG_INT_FREE_EGCD_RES(big_int_egcd_array[i]);
+        RUNTIME_BIG_INT_FREE_EGCD_RES(big_int_egcd_array + i);
     }
 
     free(big_int_array_1);
@@ -433,7 +430,7 @@ void bench_big_int_prune(void *bench_args, char *bench_name, char *path)
 void bench_big_int_create_fn(void *arg)
 {
     int64_t i = *((int64_t *) arg);
-    big_int_array[i] = big_int_create_from_chunk(NULL, 1);
+    big_int_array[i] = big_int_create_from_chunk(NULL, 1, 0);
 }
 
 
