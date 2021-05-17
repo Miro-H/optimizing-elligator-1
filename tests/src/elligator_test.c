@@ -20,17 +20,29 @@
 
 // Macros
 #if VERSION == 1
-    #define TEST_BIG_INT_DEFINE(a) BigInt *a
-    #define TEST_BIG_INT_DESTROY(a) big_int_destroy(a)
-    #define TEST_FREE_CURVE(a) free_curve(a)
-    #define TEST_FREE_CURVE_POINT(a) free_curve_point(a)
+
+#define TEST_REF(x) (x)
+#define TEST_BIG_INT_DEFINE(a) BigInt *a
+#define TEST_BIG_INT_DESTROY(a) big_int_destroy(a)
+
+#define TEST_FREE_CURVE(a) free_curve(a)
+#define TEST_FREE_CURVE_POINT(a) free_curve_point(a)
+
 #else
-    #define TEST_BIG_INT_DEFINE(a) BIG_INT_DEFINE_FROM_CHUNK(a, 0, 0)
-    #define TEST_BIG_INT_DESTROY(a)
-    #define TEST_FREE_CURVE(a)
-    #define TEST_FREE_CURVE_POINT(a)
+
+#define TEST_REF(x) (&(x))
+#define TEST_BIG_INT_DEFINE(a) BIG_INT_DEFINE_FROM_CHUNK(a, 0, 0)
+#define TEST_BIG_INT_DESTROY(a) ((void) 0)
+#define TEST_FREE_CURVE(a) ((void) 0)
+#define TEST_FREE_CURVE_POINT(a) ((void) 0)
+
 #endif
 
+#define TEST_CURVE_POINT_CMP(curve, exp_x, exp_y)                              \
+    do {                                                                       \
+        ck_assert_int_eq(big_int_compare(TEST_REF((curve).x), (exp_x)), 0);    \
+        ck_assert_int_eq(big_int_compare(TEST_REF((curve).y), (exp_y)), 0);    \
+    } while (0)
 
 /**
 * \brief Test mapping a number to the curve and back
@@ -44,27 +56,15 @@ START_TEST(test_curve1174)
 
     init_curve1174(&curve);
 
-    #if VERSION == 1
-        c = big_int_create_from_hex(NULL,
-            "4D1A3398ED42CEEB451D20824CA9CB49B69EF546BD7E6546AEF19AF1F9E49E1");
-        d = big_int_create_from_hex(NULL,
-            "7FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFB61");
-        r = big_int_create_from_hex(NULL,
-            "6006FBDA7649C433816B286006FBDA7649C433816B286006FBDA7649C43383");
-        ck_assert_int_eq(big_int_compare(curve.c, c), 0);
-        ck_assert_int_eq(big_int_compare(curve.d, d), 0);
-        ck_assert_int_eq(big_int_compare(curve.r, r), 0);
-    #else
-        big_int_create_from_hex(c, 
-                "4D1A3398ED42CEEB451D20824CA9CB49B69EF546BD7E6546AEF19AF1F9E49E1");
-        big_int_create_from_hex(d, 
-                "7FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFB61");
-        big_int_create_from_hex(r, 
-                "6006FBDA7649C433816B286006FBDA7649C433816B286006FBDA7649C43383");
-        ck_assert_int_eq(big_int_compare(&(curve.c), c), 0);
-        ck_assert_int_eq(big_int_compare(&(curve.d),d), 0);
-        ck_assert_int_eq(big_int_compare(&(curve.r), r), 0);
-    #endif
+    big_int_create_from_hex(c,
+        "4D1A3398ED42CEEB451D20824CA9CB49B69EF546BD7E6546AEF19AF1F9E49E1");
+    big_int_create_from_hex(d,
+        "7FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFB61");
+    big_int_create_from_hex(r,
+        "6006FBDA7649C433816B286006FBDA7649C433816B286006FBDA7649C43383");
+    ck_assert_int_eq(big_int_compare(TEST_REF(curve.c), c), 0);
+    ck_assert_int_eq(big_int_compare(TEST_REF(curve.d), d), 0);
+    ck_assert_int_eq(big_int_compare(TEST_REF(curve.r), r), 0);
 
     TEST_BIG_INT_DESTROY(c);
     TEST_BIG_INT_DESTROY(r);
@@ -89,115 +89,55 @@ START_TEST(test_e2e)
 
     init_curve1174(&curve);
 
-    #if VERSION == 1
-        t = big_int_create_from_chunk(NULL, 7, 0);
-        x = big_int_create_from_hex(NULL,
-            "AB65983CF55A18C0E2C8BB8A156E030566D23767D6C1473ACFCF4D17439AC7");
-        y = big_int_create_from_hex(NULL,
-            "49C01F8D8C86ECB362B3952FA93ABD8CF512B09225BCEE9E76BC5E0C9A6E17E");
-    #else
-        big_int_create_from_chunk(t, 7, 0);
-        big_int_create_from_hex(x, 
-            "AB65983CF55A18C0E2C8BB8A156E030566D23767D6C1473ACFCF4D17439AC7");
-        big_int_create_from_hex(y, 
-            "49C01F8D8C86ECB362B3952FA93ABD8CF512B09225BCEE9E76BC5E0C9A6E17E");
-    #endif
+    big_int_create_from_chunk(t, 7, 0);
+    big_int_create_from_hex(x,
+        "AB65983CF55A18C0E2C8BB8A156E030566D23767D6C1473ACFCF4D17439AC7");
+    big_int_create_from_hex(y,
+        "49C01F8D8C86ECB362B3952FA93ABD8CF512B09225BCEE9E76BC5E0C9A6E17E");
 
     // Map BigInt to curve point
     curve_point = elligator_1_string_to_point(t, curve);
-
-    #if VERSION == 1
-        ck_assert_int_eq(big_int_compare(curve_point.x, x), 0);
-        ck_assert_int_eq(big_int_compare(curve_point.y, y), 0);
-    #else
-        ck_assert_int_eq(big_int_compare(&(curve_point.x), x), 0);
-        ck_assert_int_eq(big_int_compare(&(curve_point.y), y), 0);
-    #endif
+    TEST_CURVE_POINT_CMP(curve_point, x, y);
 
     // Map curve point back to BigInt
     r = elligator_1_point_to_string(curve_point, curve);
     ck_assert_int_eq(big_int_compare(r, t), 0);
 
     // Do the same with more complex inputs
-    #if VERSION == 1
-        t = big_int_create_from_hex(t, "75BCD15");
-        x = big_int_create_from_hex(x,
-            "1A47D90E9F9C19AB846C9E100317F693607A1D16851FD05B40E7DA6FFF5BCF");
-        y = big_int_create_from_hex(y,
-            "5BBE4619CEA4729F94082B429693AC4B565F94CDA5D6D875689DE765C19A461");
-    #else
-        big_int_create_from_hex(t, "75BCD15");
-        big_int_create_from_hex(x, 
-            "1A47D90E9F9C19AB846C9E100317F693607A1D16851FD05B40E7DA6FFF5BCF");
-        big_int_create_from_hex(y, 
-            "5BBE4619CEA4729F94082B429693AC4B565F94CDA5D6D875689DE765C19A461");
-    #endif
-    
-    curve_point = elligator_1_string_to_point(t, curve);
+    big_int_create_from_hex(t, "75BCD15");
+    big_int_create_from_hex(x,
+        "1A47D90E9F9C19AB846C9E100317F693607A1D16851FD05B40E7DA6FFF5BCF");
+    big_int_create_from_hex(y,
+        "5BBE4619CEA4729F94082B429693AC4B565F94CDA5D6D875689DE765C19A461");
 
-    #if VERSION == 1
-        ck_assert_int_eq(big_int_compare(curve_point.x, x), 0);
-        ck_assert_int_eq(big_int_compare(curve_point.y, y), 0);
-    #else
-        ck_assert_int_eq(big_int_compare(&(curve_point.x), x), 0);
-        ck_assert_int_eq(big_int_compare(&(curve_point.y), y), 0);
-    #endif
+    curve_point = elligator_1_string_to_point(t, curve);
+    TEST_CURVE_POINT_CMP(curve_point, x, y);
 
     // Map curve point back to BigInt
     r = elligator_1_point_to_string(curve_point, curve);
     ck_assert_int_eq(big_int_compare(r, t), 0);
 
-    #if VERSION == 1
-        t = big_int_create_from_hex(t, "ABCDEF1234567899987654321ABCABCDEFDEF");
-        x = big_int_create_from_hex(x,
-            "7D4DD83C5E1F4E2DBC79CA0941102DE6376604C9D8A75EB41B6875010211B50");
-        y = big_int_create_from_hex(y,
-            "61C507D563235BEA439C1D53BDDF33E0D87C0041D3228CD0CA00C3D2A59025E");
-    #else
-        big_int_create_from_hex(t, "ABCDEF1234567899987654321ABCABCDEFDEF");
-        big_int_create_from_hex(x, 
-            "7D4DD83C5E1F4E2DBC79CA0941102DE6376604C9D8A75EB41B6875010211B50");
-        big_int_create_from_hex(y,
-            "61C507D563235BEA439C1D53BDDF33E0D87C0041D3228CD0CA00C3D2A59025E");
-    #endif
-    
-    curve_point = elligator_1_string_to_point(t, curve);
+    big_int_create_from_hex(t, "ABCDEF1234567899987654321ABCABCDEFDEF");
+    big_int_create_from_hex(x,
+        "7D4DD83C5E1F4E2DBC79CA0941102DE6376604C9D8A75EB41B6875010211B50");
+    big_int_create_from_hex(y,
+        "61C507D563235BEA439C1D53BDDF33E0D87C0041D3228CD0CA00C3D2A59025E");
 
-    #if VERSION == 1
-        ck_assert_int_eq(big_int_compare(curve_point.x, x), 0);
-        ck_assert_int_eq(big_int_compare(curve_point.y, y), 0);
-    #else
-        ck_assert_int_eq(big_int_compare(&(curve_point.x), x), 0);
-        ck_assert_int_eq(big_int_compare(&(curve_point.y), y), 0);
-    #endif
-    
+    curve_point = elligator_1_string_to_point(t, curve);
+    TEST_CURVE_POINT_CMP(curve_point, x, y);
+
     // Map curve point back to BigInt
     r = elligator_1_point_to_string(curve_point, curve);
     ck_assert_int_eq(big_int_compare(r, t), 0);
 
-    #if VERSION == 1
-        t = big_int_create_from_chunk(t, 2, 0);
-        x = big_int_create_from_hex(x,
-            "6F5374156B145FF8BB3288E0418F513B5D7BBBAB6E252EA1BC2DB6428E1454E");
-        y = big_int_create_from_hex(y,
-            "ED7F6014F111318ED7F6014F111318ED7F6014F111318ED7F6014F111318EC");
-    #else
-        big_int_create_from_chunk(t, 2, 0);
-        big_int_create_from_hex(x,
-            "6F5374156B145FF8BB3288E0418F513B5D7BBBAB6E252EA1BC2DB6428E1454E");
-        big_int_create_from_hex(y, 
-            "ED7F6014F111318ED7F6014F111318ED7F6014F111318ED7F6014F111318EC");
-    #endif
-    
-    curve_point = elligator_1_string_to_point(t, curve);
+    big_int_create_from_chunk(t, 2, 0);
+    big_int_create_from_hex(x,
+        "6F5374156B145FF8BB3288E0418F513B5D7BBBAB6E252EA1BC2DB6428E1454E");
+    big_int_create_from_hex(y,
+        "ED7F6014F111318ED7F6014F111318ED7F6014F111318ED7F6014F111318EC");
 
-    #if VERSION == 1
-        ck_assert_int_eq(big_int_compare(curve_point.x, x), 0);
-        ck_assert_int_eq(big_int_compare(curve_point.y, y), 0);
-    #else
-        ck_assert_int_eq(big_int_compare(&(curve_point.x), x), 0);
-        ck_assert_int_eq(big_int_compare(&(curve_point.y), y), 0);
-    #endif
+    curve_point = elligator_1_string_to_point(t, curve);
+    TEST_CURVE_POINT_CMP(curve_point, x, y);
 
     // Map curve point back to BigInt
     r = elligator_1_point_to_string(curve_point, curve);
@@ -231,25 +171,12 @@ START_TEST(test_edge_cases)
     // t = 1
     init_curve1174(&curve);
 
-    #if VERSION == 1
-        t = big_int_create_from_chunk(NULL, 1, 0);
-        x = big_int_create_from_chunk(NULL, 0, 0);
-        y = big_int_create_from_chunk(NULL, 1, 0);
-    #else
-        big_int_create_from_chunk(t, 1, 0);
-        big_int_create_from_chunk(x, 0, 0);
-        big_int_create_from_chunk(y, 1, 0);
-    #endif
+    big_int_create_from_chunk(t, 1, 0);
+    big_int_create_from_chunk(x, 0, 0);
+    big_int_create_from_chunk(y, 1, 0);
 
     curve_point = elligator_1_string_to_point(t, curve);
-
-    #if VERSION == 1
-        ck_assert_int_eq(big_int_compare(curve_point.x, x), 0);
-        ck_assert_int_eq(big_int_compare(curve_point.y, y), 0);
-    #else
-        ck_assert_int_eq(big_int_compare(&(curve_point.x), x), 0);
-        ck_assert_int_eq(big_int_compare(&(curve_point.y), y), 0);
-    #endif
+    TEST_CURVE_POINT_CMP(curve_point, x, y);
 
     r = elligator_1_point_to_string(curve_point, curve);
     ck_assert_int_eq(big_int_compare(r, t), 0);
@@ -281,18 +208,10 @@ START_TEST(test_advanced_curve1174)
 
     init_curve1174(&curve);
 
-    // q % 4 = 3
-    #if VERSION == 1
-        q_mod4_exp = big_int_create_from_chunk(NULL, 3, 0);
-        q_mod4 = big_int_create_from_chunk(NULL, 0, 0);
-        four = big_int_create_from_chunk(NULL, 4, 0);
-        q_mod4 = big_int_mod(q_mod4, curve.q, four);
-    #else
-        big_int_create_from_chunk(q_mod4_exp, 3, 0);
-        big_int_create_from_chunk(q_mod4, 0, 0);
-        big_int_create_from_chunk(four, 4, 0);
-        big_int_mod(q_mod4, &(curve.q), four);
-    #endif
+    big_int_create_from_chunk(q_mod4_exp, 3, 0);
+    big_int_create_from_chunk(q_mod4, 0, 0);
+    big_int_create_from_chunk(four, 4, 0);
+    big_int_mod(q_mod4, TEST_REF(curve.q), four);
 
     ck_assert_int_eq(big_int_compare(q_mod4, q_mod4_exp), 0);
 
@@ -300,92 +219,41 @@ START_TEST(test_advanced_curve1174)
      * Actually calculating this with BigInts requires too many bits,
      * so I will just check that each part != 0 instead.
      */
-    #if VERSION == 1
-        temp1 = big_int_create_from_chunk(NULL, 0, 0);
-        temp2 = big_int_create_from_chunk(NULL, 0, 0);
-        ck_assert_int_ne(big_int_compare(curve.c, big_int_zero), 0);
+    big_int_create_from_chunk(temp1, 0, 0);
+    big_int_create_from_chunk(temp2, 0, 0);
+    ck_assert_int_ne(big_int_compare(TEST_REF(curve.c), big_int_zero), 0);
 
-        big_int_sub(temp1, curve.c, big_int_one); // temp1 = curve.c - 1
-    #else
-        big_int_create_from_chunk(temp1, 0, 0);
-        big_int_create_from_chunk(temp2, 0, 0);
-        ck_assert_int_ne(big_int_compare(&(curve.c), big_int_zero), 0);
-
-        big_int_sub(temp1, &(curve.c), big_int_one); // temp1 = curve.c - 1
-    #endif
-
+    big_int_sub(temp1, TEST_REF(curve.c), big_int_one); // temp1 = curve.c - 1
     ck_assert_int_ne(big_int_compare(temp1, big_int_zero), 0);
 
-    #if VERSION == 1
-        big_int_add(temp2, curve.c, big_int_one); // temp2 = curve.c + 1
-    #else
-        big_int_add(temp2, &(curve.c), big_int_one); // temp2 = curve.c + 1
-    #endif
-
+    big_int_add(temp2, TEST_REF(curve.c), big_int_one); // temp2 = curve.c + 1
     ck_assert_int_ne(big_int_compare(temp2, big_int_zero), 0);
 
     /*
      * Check that d = -1174 mod q
      */
-    #if VERSION == 1
-        temp1 = big_int_create_from_chunk(temp1, 1174, 1);
-        big_int_mod(temp1, temp1, curve.q);
-        ck_assert_int_eq(big_int_compare(temp1, curve.d), 0);
-    #else
-        big_int_create_from_chunk(temp1, 1174, 1);
-        big_int_mod(temp1, temp1, &(curve.q));
-        ck_assert_int_eq(big_int_compare(temp1, &(curve.d)), 0);
-    #endif
+    big_int_create_from_chunk(temp1, 1174, 1);
+    big_int_mod(temp1, temp1, TEST_REF(curve.q));
+    ck_assert_int_eq(big_int_compare(temp1, TEST_REF(curve.d)), 0);
 
     // Check that d = -(c + 1)^2 / (c - 1)^2 mod q
-    #if VERSION == 1
-        big_int_copy(temp1, curve.c);
-    #else
-        big_int_copy(temp1, &(curve.c));
-    #endif
-
+    big_int_copy(temp1, TEST_REF(curve.c));
     big_int_add(temp1, temp1, big_int_one);
-
-    #if VERSION == 1
-        big_int_mul_mod(temp1, temp1, temp1, curve.q);
-    #else
-        big_int_mul_mod(temp1, temp1, temp1, &(curve.q));
-    #endif
-
+    big_int_mul_mod(temp1, temp1, temp1, TEST_REF(curve.q));
     big_int_neg(temp1, temp1); // temp1 = -(c + 1)^2
 
-    #if VERSION == 1
-        big_int_copy(temp2, curve.c);
-    #else
-        big_int_copy(temp2, &(curve.c));
-    #endif
-
+    big_int_copy(temp2, TEST_REF(curve.c));
     big_int_sub(temp2, temp2, big_int_one);
 
-    #if VERSION == 1
-        big_int_mul_mod(temp2, temp2, temp2, curve.q); // temp1 = (c - 1)^2
-        big_int_div_mod(temp1, temp1, temp2, curve.q); // temp1 = -(c + 1)^2 / (c - 1)^2 mod q
-        ck_assert_int_eq(big_int_compare(temp1, curve.d), 0);
-    #else
-        big_int_mul_mod(temp2, temp2, temp2, &(curve.q)); // temp1 = (c - 1)^2
-        big_int_div_mod(temp1, temp1, temp2, &(curve.q));
-        ck_assert_int_eq(big_int_compare(temp1, &(curve.d)), 0);
-    #endif
+    big_int_mul_mod(temp2, temp2, temp2, TEST_REF(curve.q)); // temp1 = (c - 1)^2
+    big_int_div_mod(temp1, temp1, temp2, TEST_REF(curve.q)); // temp1 = -(c + 1)^2 / (c - 1)^2 mod q
+    ck_assert_int_eq(big_int_compare(temp1, TEST_REF(curve.d)), 0);
 
     // r != 0
-    #if VERSION == 1
-        ck_assert_int_ne(big_int_compare(curve.r, big_int_zero), 0);
-    #else
-        ck_assert_int_ne(big_int_compare(&(curve.r), big_int_zero), 0);
-    #endif
+    ck_assert_int_ne(big_int_compare(TEST_REF(curve.r), big_int_zero), 0);
 
     // d is not square
-    #if VERSION == 1
-        big_int_chi(temp1, curve.d, curve.q);
-    #else
-        big_int_chi(temp1, &(curve.d), &(curve.q));
-    #endif
-
+    big_int_chi(temp1, TEST_REF(curve.d), TEST_REF(curve.q));
     ck_assert_int_eq(big_int_compare(temp1, big_int_min_one), 0);
 
     TEST_BIG_INT_DESTROY(q_mod4_exp);
@@ -413,70 +281,44 @@ START_TEST(test_advanced_string_to_point)
 
     init_curve1174(&curve);
 
-    #if VERSION == 1
-        t = big_int_create_from_hex(NULL, "ABCDEF1234567899987654321ABCABCDEFDEF");
-    #else
-        big_int_create_from_hex(t, "ABCDEF1234567899987654321ABCABCDEFDEF");
-    #endif
+    big_int_create_from_hex(t, "ABCDEF1234567899987654321ABCABCDEFDEF");
 
     curve_point = elligator_1_string_to_point(t, curve);
 
     // x^2 + y^2 = 1 + d * x^2 * y^2 (mod q)
-    #if VERSION == 1
-        temp1 = big_int_create_from_chunk(NULL, 0, 0);
-        temp2 = big_int_create_from_chunk(NULL, 0, 0);
-        temp3 = big_int_create_from_chunk(NULL, 0, 0);
-        big_int_mul_mod(temp1, curve_point.x, curve_point.x, curve.q); // temp1 = x^2
-        big_int_mul_mod(temp2, curve_point.y, curve_point.y, curve.q); // temp2 = y^2
-        big_int_mul_mod(temp3, temp1, temp2, curve.q); // temp3 = x^2 * y^2
-        big_int_add_mod(temp1, temp1, temp2, curve.q); // temp1 = x^2 + y^2
-        big_int_mul_mod(temp3, curve.d, temp3, curve.q); // temp3 = d * x^2 * y^2
-        big_int_add_mod(temp3, big_int_one, temp3, curve.q); // temp3 = 1 + d * x^2 * x^2
-    #else
-        big_int_create_from_chunk(temp1, 0, 0);
-        big_int_create_from_chunk(temp2, 0, 0);
-        big_int_create_from_chunk(temp3, 0, 0);
-        big_int_mul_mod(temp1, &(curve_point.x), &(curve_point.x), &(curve.q));
-        big_int_mul_mod(temp2, &(curve_point.y), &(curve_point.y), &(curve.q));
-        big_int_mul_mod(temp3, temp1, temp2, &(curve.q));
-        big_int_add_mod(temp1, temp1, temp2, &(curve.q));
-        big_int_mul_mod(temp3, &(curve.d), temp3, &(curve.q));
-        big_int_add_mod(temp3, big_int_one, temp3, &(curve.q));
-    #endif
-    
+    big_int_create_from_chunk(temp1, 0, 0);
+    big_int_create_from_chunk(temp2, 0, 0);
+    big_int_create_from_chunk(temp3, 0, 0);
+    big_int_mul_mod(temp1, TEST_REF(curve_point.x), TEST_REF(curve_point.x),
+        TEST_REF(curve.q)); // temp1 = x^2
+    big_int_mul_mod(temp2, TEST_REF(curve_point.y), TEST_REF(curve_point.y),
+        TEST_REF(curve.q)); // temp2 = y^2
+    big_int_mul_mod(temp3, temp1, temp2, TEST_REF(curve.q)); // temp3 = x^2 * y^2
+    big_int_add_mod(temp1, temp1, temp2, TEST_REF(curve.q)); // temp1 = x^2 + y^2
+    big_int_mul_mod(temp3, TEST_REF(curve.d), temp3,
+        TEST_REF(curve.q)); // temp3 = d * x^2 * y^2
+    big_int_add_mod(temp3, big_int_one, temp3,
+        TEST_REF(curve.q)); // temp3 = 1 + d * x^2 * x^2
+
     ck_assert_int_eq(big_int_compare(temp1, temp3), 0);
 
     // Same test with t = 1
-    #if VERSION == 1
-        t = big_int_create_from_chunk(t, 1, 0);
-    #else
-        big_int_create_from_chunk(t, 1, 0);
-    #endif
-    
+    big_int_create_from_chunk(t, 1, 0);
+
     curve_point = elligator_1_string_to_point(t, curve);
 
-    #if VERSION == 1
-        temp1 = big_int_create_from_chunk(NULL, 0, 0);
-        temp2 = big_int_create_from_chunk(NULL, 0, 0);
-        temp3 = big_int_create_from_chunk(NULL, 0, 0);
-        big_int_mul_mod(temp1, curve_point.x, curve_point.x, curve.q); // temp1 = x^2
-        big_int_mul_mod(temp2, curve_point.y, curve_point.y, curve.q); // temp2 = y^2
-        big_int_mul_mod(temp3, temp1, temp2, curve.q); // temp3 = x^2 * y^2
-        big_int_add_mod(temp1, temp1, temp2, curve.q); // temp1 = x^2 + y^2
-        big_int_mul_mod(temp3, curve.d, temp3, curve.q); // temp3 = d * x^2 * y^2
-        big_int_add_mod(temp3, big_int_one, temp3, curve.q); // temp3 = 1 + d * x^2 * x^2
-    #else
-       big_int_create_from_chunk(temp1, 0, 0);
-       big_int_create_from_chunk(temp2, 0, 0);
-       big_int_create_from_chunk(temp3, 0, 0);
-       big_int_mul_mod(temp1, &(curve_point.x), &(curve_point.x), &(curve.q));
-       big_int_mul_mod(temp2, &(curve_point.y), &(curve_point.y), &(curve.q));
-       big_int_mul_mod(temp3, temp1, temp2, &(curve.q));
-       big_int_add_mod(temp1, temp1, temp2, &(curve.q));
-       big_int_mul_mod(temp3, &(curve.d), temp3, &(curve.q));
-       big_int_add_mod(temp3, big_int_one, temp3, &(curve.q));
-    #endif
-    
+    big_int_create_from_chunk(temp1, 0, 0);
+    big_int_create_from_chunk(temp2, 0, 0);
+    big_int_create_from_chunk(temp3, 0, 0);
+    big_int_mul_mod(temp1, TEST_REF(curve_point.x), TEST_REF(curve_point.x),
+        TEST_REF(curve.q)); // temp1 = x^2
+    big_int_mul_mod(temp2, TEST_REF(curve_point.y), TEST_REF(curve_point.y),
+        TEST_REF(curve.q)); // temp2 = y^2
+    big_int_mul_mod(temp3, temp1, temp2, TEST_REF(curve.q)); // temp3 = x^2 * y^2
+    big_int_add_mod(temp1, temp1, temp2, TEST_REF(curve.q)); // temp1 = x^2 + y^2
+    big_int_mul_mod(temp3, TEST_REF(curve.d), temp3, TEST_REF(curve.q)); // temp3 = d * x^2 * y^2
+    big_int_add_mod(temp3, big_int_one, temp3, TEST_REF(curve.q)); // temp3 = 1 + d * x^2 * x^2
+
     ck_assert_int_eq(big_int_compare(temp1, temp3), 0);
 
     // u * v * X * Y * x * (y + 1) != 0 (requires intermediate results)

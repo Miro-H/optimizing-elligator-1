@@ -37,7 +37,7 @@
 #else
 
 #define TEST_BIG_INT_DEFINE(v) BIG_INT_DEFINE_FROM_CHUNK(v, 0, 0)
-#define TEST_BIG_INT_DESTROY(v) ((void)0)
+#define TEST_BIG_INT_DESTROY(v) ((void) 0)
 #define TEST_BIG_INT_CMP_GCD_RES(res, g_exp, x_exp, y_exp)                     \
     do {                                                                       \
         ck_assert_int_eq(big_int_compare(&(res).g, (g_exp)), 0);               \
