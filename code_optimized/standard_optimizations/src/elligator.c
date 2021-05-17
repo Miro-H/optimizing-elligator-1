@@ -51,32 +51,26 @@ void init_curve1174(Curve *curve)
  */
 CurvePoint elligator_1_string_to_point(BigInt *t, Curve curve)
 {
+    BIG_INT_DEFINE_PTR(q_half);
+    BIG_INT_DEFINE_PTR(u);
+    BIG_INT_DEFINE_PTR(v);
+    BIG_INT_DEFINE_PTR(CHIV);
 
-    BIG_INT_DEFINE_PTR_ZEROED(q_half); //used
+    BIG_INT_DEFINE_PTR(X);
+    BIG_INT_DEFINE_PTR(X_plus_1);
+    BIG_INT_DEFINE_PTR(X_plus_1_squared);
 
-    BIG_INT_DEFINE_PTR_ZEROED(u); //used
+    BIG_INT_DEFINE_PTR(rX);
+    BIG_INT_DEFINE_PTR(Y);
 
-    BIG_INT_DEFINE_PTR_ZEROED(v); //used
-    
-    BIG_INT_DEFINE_PTR_ZEROED(CHIV); //used
+    BIG_INT_DEFINE_PTR(x);
+    BIG_INT_DEFINE_PTR(y);
 
-    BIG_INT_DEFINE_PTR_ZEROED(X); //used
-    BIG_INT_DEFINE_PTR_ZEROED(X_plus_1); //used
-    BIG_INT_DEFINE_PTR_ZEROED(X_plus_1_squared); //used
-
-    BIG_INT_DEFINE_PTR_ZEROED(rX); //used
-
-    BIG_INT_DEFINE_PTR_ZEROED(Y); //used
-
-    BIG_INT_DEFINE_FROM_CHUNK(x, 0, 0); //used
-    
-    BIG_INT_DEFINE_FROM_CHUNK(y, 0, 1); //used
-
-    BIG_INT_DEFINE_PTR_ZEROED(tmp_0); //used
-    BIG_INT_DEFINE_PTR_ZEROED(tmp_1); //used
-    BIG_INT_DEFINE_PTR_ZEROED(tmp_2); //used
-    BIG_INT_DEFINE_PTR_ZEROED(tmp_3); //used
-    BIG_INT_DEFINE_PTR_ZEROED(tmp_4); //used
+    BIG_INT_DEFINE_PTR(tmp_0);
+    BIG_INT_DEFINE_PTR(tmp_1);
+    BIG_INT_DEFINE_PTR(tmp_2);
+    BIG_INT_DEFINE_PTR(tmp_3);
+    BIG_INT_DEFINE_PTR(tmp_4);
 
     // Enforce correct input range
     big_int_sub(tmp_0, &(curve.q), big_int_one);
@@ -87,8 +81,8 @@ CurvePoint elligator_1_string_to_point(BigInt *t, Curve curve)
 
     if (big_int_compare(t, big_int_one) == 0)
     {
-        //x = big_int_create_from_chunk(NULL, 0, 0);
-        //y = big_int_create_from_chunk(NULL, 1, 0);
+        big_int_create_from_chunk(x, 0, 0);
+        big_int_create_from_chunk(y, 1, 0);
     }
     else {
 
@@ -98,7 +92,7 @@ CurvePoint elligator_1_string_to_point(BigInt *t, Curve curve)
 
         // TODO: Optimization potential; reuse partial results for powers, instead
         // of doing it from scratch each time
-        
+
         big_int_pow(tmp_0, u, big_int_five, &(curve.q));
         big_int_pow(tmp_1, &(curve.r), big_int_two, &(curve.q));
         big_int_sub(tmp_2, tmp_1, big_int_two);
@@ -158,22 +152,17 @@ CurvePoint elligator_1_string_to_point(BigInt *t, Curve curve)
  * \param curve Curve satisfying the properties needed for Elligator one (e.g. Curve1174)
  */
 BigInt *elligator_1_point_to_string(CurvePoint p, Curve curve)
-{  
-    BIG_INT_DEFINE_PTR_ZEROED(X); //used
+{
+    BIG_INT_DEFINE_PTR(X);
+    BIG_INT_DEFINE_PTR(z);
+    BIG_INT_DEFINE_PTR(u);
+    BIG_INT_DEFINE_PTR(t);
+    BIG_INT_DEFINE_PTR(q_half);
 
-    BIG_INT_DEFINE_PTR_ZEROED(z); //used
-
-    BIG_INT_DEFINE_PTR_ZEROED(u); //used
-
-    BIG_INT_DEFINE_PTR_ZEROED(t); //used
-    
-    BIG_INT_DEFINE_PTR_ZEROED(q_half); //used
-
-    BIG_INT_DEFINE_PTR_ZEROED(tmp_0); //used
-    BIG_INT_DEFINE_PTR_ZEROED(tmp_1); //used
-    BIG_INT_DEFINE_PTR_ZEROED(tmp_2); //used
-    BIG_INT_DEFINE_PTR_ZEROED(tmp_3); //used
-
+    BIG_INT_DEFINE_PTR(tmp_0);
+    BIG_INT_DEFINE_PTR(tmp_1);
+    BIG_INT_DEFINE_PTR(tmp_2);
+    BIG_INT_DEFINE_PTR(tmp_3);
 
     big_int_sub(tmp_0, &(p.y), big_int_one);
     big_int_add(tmp_1, &(p.y), big_int_one);
