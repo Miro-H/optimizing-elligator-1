@@ -78,7 +78,7 @@ rebuild: clean all
 
 # Run all tests
 .PHONY: run-tests
-run-tests: all
+run-tests: clean all
 	$(SCRIPTS_DIR)/run_all_tests.sh
 
 $(ODIR)/%.o: $(SDIR)/%.c $(DEPS)

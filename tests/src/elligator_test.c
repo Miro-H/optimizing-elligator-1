@@ -22,7 +22,7 @@
 #if VERSION == 1
 
 #define TEST_REF(x) (x)
-#define TEST_BIG_INT_DEFINE(a) BigInt *a
+#define TEST_BIG_INT_DEFINE(a) BigInt *a = big_int_create_from_chunk(NULL, 0, 0)
 #define TEST_BIG_INT_DESTROY(a) big_int_destroy(a)
 
 #define TEST_FREE_CURVE(a) free_curve(a)
