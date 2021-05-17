@@ -60,8 +60,7 @@ void init_curve1174(Curve *curve);
 void free_curve(Curve *curve);
 void free_curve_point(CurvePoint *point);
 
-CurvePoint elligator_1_string_to_point(BigInt *t, Curve curve);
-BigInt* elligator_1_point_to_string(CurvePoint p, Curve curve);
-
+CurvePoint *elligator_1_string_to_point(CurvePoint *curve_point, BigInt *t, Curve curve);
+BigInt *elligator_1_point_to_string(BigInt *t, CurvePoint p, Curve curve);
 
 #endif // ELLIGATOR_H_

@@ -96,11 +96,11 @@ START_TEST(test_e2e)
         "49C01F8D8C86ECB362B3952FA93ABD8CF512B09225BCEE9E76BC5E0C9A6E17E");
 
     // Map BigInt to curve point
-    curve_point = elligator_1_string_to_point(t, curve);
+    elligator_1_string_to_point(&curve_point, t, curve);
     TEST_CURVE_POINT_CMP(curve_point, x, y);
 
     // Map curve point back to BigInt
-    r = elligator_1_point_to_string(curve_point, curve);
+    elligator_1_point_to_string(r, curve_point, curve);
     ck_assert_int_eq(big_int_compare(r, t), 0);
 
     // Do the same with more complex inputs
@@ -110,11 +110,11 @@ START_TEST(test_e2e)
     big_int_create_from_hex(y,
         "5BBE4619CEA4729F94082B429693AC4B565F94CDA5D6D875689DE765C19A461");
 
-    curve_point = elligator_1_string_to_point(t, curve);
+    elligator_1_string_to_point(&curve_point, t, curve);
     TEST_CURVE_POINT_CMP(curve_point, x, y);
 
     // Map curve point back to BigInt
-    r = elligator_1_point_to_string(curve_point, curve);
+    elligator_1_point_to_string(r, curve_point, curve);
     ck_assert_int_eq(big_int_compare(r, t), 0);
 
     big_int_create_from_hex(t, "ABCDEF1234567899987654321ABCABCDEFDEF");
@@ -123,11 +123,11 @@ START_TEST(test_e2e)
     big_int_create_from_hex(y,
         "61C507D563235BEA439C1D53BDDF33E0D87C0041D3228CD0CA00C3D2A59025E");
 
-    curve_point = elligator_1_string_to_point(t, curve);
+    elligator_1_string_to_point(&curve_point, t, curve);
     TEST_CURVE_POINT_CMP(curve_point, x, y);
 
     // Map curve point back to BigInt
-    r = elligator_1_point_to_string(curve_point, curve);
+    elligator_1_point_to_string(r, curve_point, curve);
     ck_assert_int_eq(big_int_compare(r, t), 0);
 
     big_int_create_from_chunk(t, 2, 0);
@@ -136,11 +136,11 @@ START_TEST(test_e2e)
     big_int_create_from_hex(y,
         "ED7F6014F111318ED7F6014F111318ED7F6014F111318ED7F6014F111318EC");
 
-    curve_point = elligator_1_string_to_point(t, curve);
+    elligator_1_string_to_point(&curve_point, t, curve);
     TEST_CURVE_POINT_CMP(curve_point, x, y);
 
     // Map curve point back to BigInt
-    r = elligator_1_point_to_string(curve_point, curve);
+    elligator_1_point_to_string(r, curve_point, curve);
     ck_assert_int_eq(big_int_compare(r, t), 0);
 
     // Negative t is not valid input for Elligator 1
@@ -175,10 +175,10 @@ START_TEST(test_edge_cases)
     big_int_create_from_chunk(x, 0, 0);
     big_int_create_from_chunk(y, 1, 0);
 
-    curve_point = elligator_1_string_to_point(t, curve);
+    elligator_1_string_to_point(&curve_point, t, curve);
     TEST_CURVE_POINT_CMP(curve_point, x, y);
 
-    r = elligator_1_point_to_string(curve_point, curve);
+    elligator_1_point_to_string(r, curve_point, curve);
     ck_assert_int_eq(big_int_compare(r, t), 0);
 
     // t = -1 is not a valid input for the Elligator mapping
@@ -283,7 +283,7 @@ START_TEST(test_advanced_string_to_point)
 
     big_int_create_from_hex(t, "ABCDEF1234567899987654321ABCABCDEFDEF");
 
-    curve_point = elligator_1_string_to_point(t, curve);
+    elligator_1_string_to_point(&curve_point, t, curve);
 
     // x^2 + y^2 = 1 + d * x^2 * y^2 (mod q)
     big_int_create_from_chunk(temp1, 0, 0);
@@ -305,7 +305,7 @@ START_TEST(test_advanced_string_to_point)
     // Same test with t = 1
     big_int_create_from_chunk(t, 1, 0);
 
-    curve_point = elligator_1_string_to_point(t, curve);
+    elligator_1_string_to_point(&curve_point, t, curve);
 
     big_int_create_from_chunk(temp1, 0, 0);
     big_int_create_from_chunk(temp2, 0, 0);

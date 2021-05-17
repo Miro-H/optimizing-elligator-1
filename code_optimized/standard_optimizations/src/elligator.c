@@ -49,7 +49,7 @@ void init_curve1174(Curve *curve)
  * \param t Integer in range [0, (q-1)/2]
  * \param curve Curve satisfying the properties needed for Elligator one (e.g. Curve1174)
  */
-CurvePoint elligator_1_string_to_point(BigInt *t, Curve curve)
+CurvePoint *elligator_1_string_to_point(CurvePoint *r, BigInt *t, Curve curve)
 {
     BIG_INT_DEFINE_PTR(q_half);
     BIG_INT_DEFINE_PTR(u);
@@ -137,7 +137,8 @@ CurvePoint elligator_1_string_to_point(BigInt *t, Curve curve)
 
     }
 
-    CurvePoint r = {*x, *y};
+    big_int_copy(&(r->x), x);
+    big_int_copy(&(r->y), y);
     return r;
 }
 
@@ -151,12 +152,11 @@ CurvePoint elligator_1_string_to_point(BigInt *t, Curve curve)
  * \param p Point on the given curve (with x, y coordinates)
  * \param curve Curve satisfying the properties needed for Elligator one (e.g. Curve1174)
  */
-BigInt *elligator_1_point_to_string(CurvePoint p, Curve curve)
+BigInt *elligator_1_point_to_string(BigInt *t, CurvePoint p, Curve curve)
 {
     BIG_INT_DEFINE_PTR(X);
     BIG_INT_DEFINE_PTR(z);
     BIG_INT_DEFINE_PTR(u);
-    BIG_INT_DEFINE_PTR(t);
     BIG_INT_DEFINE_PTR(q_half);
 
     BIG_INT_DEFINE_PTR(tmp_0);
