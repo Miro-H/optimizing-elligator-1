@@ -67,7 +67,7 @@ START_TEST(test_curve1174)
     ck_assert_int_eq(big_int_compare(TEST_REF(curve.r), r), 0);
 
     TEST_BIG_INT_DESTROY(c);
-    TEST_BIG_INT_DESTROY(r);
+    TEST_BIG_INT_DESTROY(d);
     TEST_BIG_INT_DESTROY(r);
 
     TEST_FREE_CURVE(&curve);
