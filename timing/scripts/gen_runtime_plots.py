@@ -52,9 +52,6 @@ def plot(plot_title, plot_fname, log_xaxis, log_yaxis, bar_plot, logs_dirs):
     is_first_data_set = True
     fig, ax = plt.subplots()
 
-    if log_yaxis:
-        ax.set_yscale("log")
-
     color_idx = 0
 
     first = True
@@ -116,8 +113,12 @@ def plot(plot_title, plot_fname, log_xaxis, log_yaxis, bar_plot, logs_dirs):
     x_off = -bar_width * len(versions) / 2
     for i, version in enumerate(versions):
         if bar_plot:
-            ax.bar(xs + x_off, ys[version], bar_width, label=version,
-                   align="edge", color=colors, hatch=hatches[i])
+            if nr_of_versions > 1:
+                ax.bar(xs + x_off, ys[version], bar_width, label=version,
+                       align="edge", color=colors, hatch=hatches[i])
+            else:
+                ax.bar(xs + x_off, ys[version], bar_width, label=version,
+                       align="edge", color=colors)
             x_off += bar_width
         else:
             ax.scatter(xs, ys, marker='x', c=colors)
@@ -141,6 +142,12 @@ def plot(plot_title, plot_fname, log_xaxis, log_yaxis, bar_plot, logs_dirs):
     ax.spines['left'].set_visible(False)
     ax.spines['right'].set_visible(False)
     ax.spines['top'].set_visible(False)
+
+    if log_yaxis:
+        ax.set_yscale("log")
+    if log_xaxis:
+        ax.set_xscale("log")
+
     fig.tight_layout()
 
     fig.savefig(plot_fname, dpi=600)

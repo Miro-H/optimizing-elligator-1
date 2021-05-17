@@ -37,12 +37,12 @@ if [[ -z "${COLLECT_STATS}" ]]; then
     #     --plot_fname "${PLOTS_DIR}/overview_log_scale.png"                         \
     #     --logs_dir "${LOGS_DIR}"                                                   \
     #     --log_yaxis
-    #
-    # ${SCRIPTS_DIR}/gen_runtime_plots.py                                            \
-    #     --title "Overview Median Runtime (${SETS} sets, ${REPS} reps)"             \
-    #     --plot_fname "${PLOTS_DIR}/overview_bar.png"                               \
-    #     --logs_dir "${LOGS_DIR}"                                                   \
-    #     --bar_plot
+
+    ${SCRIPTS_DIR}/gen_runtime_plots.py                                            \
+        --title "Overview Median Runtime (${SETS} sets, ${REPS} reps)"             \
+        --plot_fname "${PLOTS_DIR}/overview_bar.png"                               \
+        --logs_dir "${LOGS_DIR}"                                                   \
+        --bar_plot
 
     ${SCRIPTS_DIR}/gen_runtime_plots.py                                            \
         --title "Overview Median Runtime (log scale, ${SETS} sets, ${REPS} reps)"  \

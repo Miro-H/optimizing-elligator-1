@@ -3,6 +3,9 @@
 ## Profiling
 Intel VTune is not available on MacOS. Instead, Apple's Instruments (the binary is called `xcrun xctrace`) is the recommended way to measure performance.
 
+## BigInt Refactoring
+- Benchmark `memcpy` to see if the more dense 32-bit representation would be beneficial.
+
 ### Time Profiler
 #### BENCH\_TYPE\_ADD\_RANDOM
 Number: 12
