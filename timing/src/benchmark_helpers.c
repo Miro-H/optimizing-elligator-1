@@ -52,17 +52,17 @@ void bench_warmup(BenchmarkClosure bench_closure, uint64_t num_sets,
 
     do
     {
-        bench_closure.bench_prep_fn(bench_closure.bench_prep_args);
-
-        start = start_tsc();
+        cycles = 0;
         for (j = 0; j < num_sets_local; ++j)
         {
+            bench_closure.bench_prep_fn(bench_closure.bench_prep_args);
+            start = start_tsc();
             for (i = 0; i < num_reps; ++i)
             {
                 bench_closure.bench_fn((void *) &i);
             }
+            cycles += stop_tsc(start);
         }
-        cycles = stop_tsc(start);
         bench_closure.bench_cleanup_fn((void *) cleanup_args);
 
         num_sets_local <<= 1;
