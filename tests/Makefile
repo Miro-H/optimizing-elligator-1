@@ -60,7 +60,7 @@ else
 endif
 
 # Main target, building all tests
-all: compile-bigint-test # compile-elligator-test
+all: compile-bigint-test compile-elligator-test
 
 .PHONY: all-tested
 all-tested:
