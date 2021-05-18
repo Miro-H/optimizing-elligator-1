@@ -21,6 +21,7 @@
 #define RUNTIME_DEREF(b, i) ((b)[(i)])
 #define RUNTIME_REF(b) (b)
 #define RUNTIME_BIG_INT_DEFINE(v) BigInt *v = big_int_create_from_chunk(NULL, 0, 0)
+#define RUNTIME_BIG_INT_INIT(v) v = big_int_create_from_chunk(NULL, 0, 0)
 #define RUNTIME_BIG_INT_ALLOC_ARR(a, arr_size) a = (BigInt **) malloc((arr_size) * sizeof(BigInt *))
 #define RUNTIME_BIG_INT_DESTROY(v) big_int_destroy(v)
 #define RUNTIME_BIG_INT_CREATE_RANDOM(v, w) v = big_int_create_random(NULL, w)
@@ -35,6 +36,7 @@
 #define RUNTIME_DEREF(b, i) ((b)+(i))
 #define RUNTIME_REF(b) (&b)
 #define RUNTIME_BIG_INT_DEFINE(v) BIG_INT_DEFINE_FROM_CHUNK(v, 0, 0)
+#define RUNTIME_BIG_INT_INIT(v) ((void) 0)
 #define RUNTIME_BIG_INT_ALLOC_ARR(a, arr_size) a = (BigInt *) malloc((arr_size) * sizeof(BigInt))
 #define RUNTIME_BIG_INT_DESTROY(v) ((void) 0)
 #define RUNTIME_BIG_INT_CREATE_RANDOM(v, w) big_int_create_random(v, w)
@@ -285,6 +287,8 @@ void bench_elligator_1_point_to_string_prep(void *argptr)
 
     for (uint64_t i = 0; i < array_size; i++)
     {
+        RUNTIME_BIG_INT_INIT(RUNTIME_DEREF(big_int_array, i));
+
         // t \in [0, (q-1)/2)
         RUNTIME_BIG_INT_CREATE_RANDOM(RUNTIME_DEREF(big_int_array_1, i), big_int_size_);
         big_int_mod(RUNTIME_DEREF(big_int_array_1, i),
@@ -306,11 +310,11 @@ void bench_elligator_1_point_to_string_cleanup(void *argptr)
     for (uint64_t i = 0; i < array_size; i++)
     {
         RUNTIME_BIG_INT_DESTROY(RUNTIME_DEREF(big_int_array_1, i));
-        RUNTIME_FREE_CURVE_POINT(curve_point_array + i);
     }
 
     for (uint64_t i = 0; i < used_values; i++)
     {
+        RUNTIME_FREE_CURVE_POINT(curve_point_array + i);
         RUNTIME_BIG_INT_DESTROY(RUNTIME_DEREF(big_int_array, i));
     }
 
