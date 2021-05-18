@@ -235,7 +235,7 @@ BigInt *elligator_1_point_to_string(BigInt *t, CurvePoint p, Curve curve)
 
     t0 = big_int_sub(NULL, big_int_one, u);
     t1 = big_int_add(NULL, big_int_one, u);
-    t = big_int_div_mod(t0, t0, t1, curve.q); // t = (1 − u)/(1 + u)
+    t = big_int_div_mod(t, t0, t1, curve.q); // t = (1 − u)/(1 + u)
 
     // TODO: Optimization potential, subtraction is not necessary. Use SRL and
     //       shift those bits away!
@@ -262,6 +262,7 @@ BigInt *elligator_1_point_to_string(BigInt *t, CurvePoint p, Curve curve)
 
     big_int_destroy(u);
 
+    big_int_destroy(t0);
     big_int_destroy(t1);
 
     return t;
