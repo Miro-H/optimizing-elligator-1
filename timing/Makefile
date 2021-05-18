@@ -134,7 +134,11 @@ run-runtime-benchmark: compile-runtime-benchmark
 .PHONY: plot-runtime-benchmark
 plot-runtime-benchmark: OUT_SUB_PATH = V$(VERSION)/$(LOG_SUBDIRS)
 plot-runtime-benchmark: LOG_PATH = $(LOG_BASE_PATH)/$(OUT_SUB_PATH)
-plot-runtime-benchmark: clean run-runtime-benchmark plot-run
+plot-runtime-benchmark: clean run-runtime-benchmark
+	# Needs to be repeated to execute multiple times in same make call
+	PUBLISH=$(PUBLISH) COLLECT_STATS=$(COLLECT_STATS) SETS=$(SETS) \
+	REPS=$(REPS) LOGS_DIR=$(LOG_PATH) OUT_SUB_PATH=$(OUT_SUB_PATH) \
+	$(SCRIPTS_DIR)/make_all_plots.sh
 
 runtime-benchmark: $(OBJ_BENCHED) $(OBJ)
 	$(CC) -o $(BDIR)/$@ $^ $(CFLAGS) $(LIBS)
@@ -172,7 +176,11 @@ run-gmp-benchmark: compile-gmp-benchmark
 .PHONY: plot-gmp-benchmark
 plot-gmp-benchmark: OUT_SUB_PATH = gmp/$(LOG_SUBDIRS)
 plot-gmp-benchmark: LOG_PATH = $(LOG_BASE_PATH)/$(OUT_SUB_PATH)
-plot-gmp-benchmark: clean run-gmp-benchmark plot-run
+plot-gmp-benchmark: clean run-gmp-benchmark
+	# Needs to be repeated to execute multiple times in same make call
+	PUBLISH=$(PUBLISH) COLLECT_STATS=$(COLLECT_STATS) SETS=$(SETS) \
+	REPS=$(REPS) LOGS_DIR=$(LOG_PATH) OUT_SUB_PATH=$(OUT_SUB_PATH) \
+	$(SCRIPTS_DIR)/make_all_plots.sh
 
 gmp-benchmark: $(OBJ_BENCHED) $(OBJ)
 	$(CC) -o $(BDIR)/$@ $^ $(CFLAGS) $(LIBS)
@@ -208,17 +216,14 @@ run-memcpy-benchmark: compile-memcpy-benchmark
 .PHONY: plot-memcpy-benchmark
 plot-memcpy-benchmark: OUT_SUB_PATH = memcpy/$(LOG_SUBDIRS)
 plot-memcpy-benchmark: LOG_PATH = $(LOG_BASE_PATH)/$(OUT_SUB_PATH)
-plot-memcpy-benchmark: clean run-memcpy-benchmark plot-run
+plot-memcpy-benchmark: clean run-memcpy-benchmark
+	# Needs to be repeated to execute multiple times in same make call
+	PUBLISH=$(PUBLISH) COLLECT_STATS=$(COLLECT_STATS) SETS=$(SETS) \
+	REPS=$(REPS) LOGS_DIR=$(LOG_PATH) OUT_SUB_PATH=$(OUT_SUB_PATH) \
+	$(SCRIPTS_DIR)/make_all_plots.sh
 
 memcpy-benchmark: $(OBJ_BENCHED) $(OBJ)
 	$(CC) -o $(BDIR)/$@ $^ $(CFLAGS) $(LIBS)
-
-
-.PHONY: plot-run
-plot-run:
-	PUBLISH=$(PUBLISH)  COLLECT_STATS=$(COLLECT_STATS) SETS=$(SETS) \
-	REPS=$(REPS) LOGS_DIR=$(LOG_PATH) OUT_SUB_PATH=$(OUT_SUB_PATH) \
-	$(SCRIPTS_DIR)/make_all_plots.sh
 
 .PHONY: plots
 plots: plot-gmp-benchmark plot-memcpy-benchmark plot-runtime-benchmark
