@@ -45,12 +45,15 @@ TITLE_FONT_SIZE = 20
 LABEL_FONT_SIZE = 12
 
 
-def plot(plot_title, plot_fname, log_xaxis, log_yaxis, bar_plot, logs_dirs):
+def plot(plot_title, plot_fname, log_xaxis, log_yaxis, bar_plot, logs_dirs, logs_names):
     plt.rcParams["figure.figsize"] = (14,8)
 
     x_label, y_label = "", ""
     is_first_data_set = True
     fig, ax = plt.subplots()
+
+    if not logs_names:
+        logs_names = ["tmp"]
 
     color_idx = 0
 
@@ -58,10 +61,10 @@ def plot(plot_title, plot_fname, log_xaxis, log_yaxis, bar_plot, logs_dirs):
     x_labels = []
     versions = []
     ys = dict()
-    for logs_dir in logs_dirs:
-        version = logs_dir.split("/")[-1].replace("_", " ")
+    for i, logs_dir in enumerate(logs_dirs):
+        version = logs_names[i]
         versions.append(version)
-        ys[version] = []
+        ys[version] = dict()
 
         for i, in_file in enumerate(os.listdir(logs_dir)):
             with open(os.path.join(logs_dir, in_file), "r") as in_fp:
@@ -86,19 +89,27 @@ def plot(plot_title, plot_fname, log_xaxis, log_yaxis, bar_plot, logs_dirs):
                     cycles.append(literal_eval(line.split(", ")[1]))
 
                 cycles_median = median(cycles)
+                ys[version][data_label] = cycles_median
 
-                ys[version].append(cycles_median)
-                if first:
-                    x_labels.append(data_label)
-                elif x_labels[i] != data_label:
-                    print("ERROR: parsing error, all folders are required to " \
-                          "have the same log files (in the same order) and for " \
-                          "the same data labels! " \
-                          f"Offending labels {x_labels[i]} != {data_label}")
-                    exit(1)
         first = False
 
-    xs = np.arange(len(ys[version]))
+    # Gather all data labels
+    x_labels = set()
+    for version in versions:
+        x_labels = x_labels.union(set(ys[version].keys()))
+    x_labels = sorted(list(x_labels))
+
+    # Normalize data and add zero values for non-existant data
+    ys_norm = dict()
+    for version in versions:
+        ys_norm[version] = []
+        for x_label in x_labels:
+            if x_label not in ys[version]:
+                ys_norm[version].append(0)
+            else:
+                ys_norm[version].append(ys[version][x_label])
+
+    xs = np.arange(len(x_labels))
     nr_of_versions = len(versions)
     colors = [next(colors_iter) for i in range(len(ys[version]))]
     hatches = [next(hatches_iter) for i in range(nr_of_versions)]
@@ -114,14 +125,14 @@ def plot(plot_title, plot_fname, log_xaxis, log_yaxis, bar_plot, logs_dirs):
     for i, version in enumerate(versions):
         if bar_plot:
             if nr_of_versions > 1:
-                ax.bar(xs + x_off, ys[version], bar_width, label=version,
+                ax.bar(xs + x_off, ys_norm[version], bar_width, label=version,
                        align="edge", color=colors, hatch=hatches[i])
             else:
-                ax.bar(xs + x_off, ys[version], bar_width, label=version,
+                ax.bar(xs + x_off, ys_norm[version], bar_width, label=version,
                        align="edge", color=colors)
             x_off += bar_width
         else:
-            ax.scatter(xs, ys, marker='x', c=colors)
+            ax.scatter(xs, ys_norm[version], marker='x', c=colors)
 
     plt.xticks(ticks=xs, labels=x_labels, rotation='vertical')
     plt.grid(linestyle="-", axis="y", color="white")
@@ -164,6 +175,9 @@ if __name__ == "__main__":
                         "directories are given, this expects multiple log files " \
                         "with the same data name and will do a comparison for them.",
                         default=LOGS_DIR_DEFAULT_PATH)
+    parser.add_argument("--logs_names", nargs="*",
+                        help="Specify the names of the data sets stored in the "\
+                        "different log folders.")
     parser.add_argument("--log_xaxis", help="Toggle x-axis to have a log scale.",
                         action="store_true")
     parser.add_argument("--log_yaxis", help="Toggle y-axis to have a log scale.",
@@ -176,12 +190,17 @@ if __name__ == "__main__":
     title       = args.title
     plot_fname  = args.plot_fname
     logs_dirs   = args.logs_dirs
+    logs_names  = args.logs_names
     log_xaxis   = args.log_xaxis
     log_yaxis   = args.log_yaxis
     bar_plot    = args.bar_plot
+
+    if logs_names and len(logs_names) != len(logs_dirs):
+        print("ERROR: need to name all log folders!")
+        exit(1)
 
     if len(logs_dirs) > 1 and not bar_plot:
         print("ERROR: comparison plots are only supported for bar plots.")
         exit(1)
 
-    plot(title, plot_fname, log_xaxis, log_yaxis, bar_plot, logs_dirs)
+    plot(title, plot_fname, log_xaxis, log_yaxis, bar_plot, logs_dirs, logs_names)

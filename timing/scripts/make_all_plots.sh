@@ -19,10 +19,24 @@ if [[ -z "${PUBLISH}" ]]; then
     PLOTS_DIR=${PLOTS_DIR}/local
 fi
 
-if [[ -z "${COLLECT_STATS}" ]]; then
-    PLOTS_DIR="${PLOTS_DIR}/${OUT_SUB_PATH}"
-    mkdir -p ${PLOTS_DIR}
+PLOTS_DIR="${PLOTS_DIR}/${OUT_SUB_PATH}"
+mkdir -p ${PLOTS_DIR}
 
+if [[ ! -z "${LOGS_DIRS}" ]]; then
+
+    echo "#####################################################################"
+    echo "#        Generate comparison plots for runtime measurements         #"
+    echo "#####################################################################"
+
+    ${SCRIPTS_DIR}/gen_runtime_plots.py                                             \
+        --title "Median Runtime Comparison (log scale, ${SETS} sets, ${REPS} reps)" \
+        --plot_fname "${PLOTS_DIR}/comparison_bar_log_scale.png"                    \
+        --logs_dir ${LOGS_DIRS}                                                     \
+        --logs_names ${LOGS_NAMES}                                                  \
+        --bar_plot                                                                  \
+        --log_yaxis
+
+elif [[ -z "${COLLECT_STATS}" ]]; then
     echo "#####################################################################"
     echo "#             Generate bar plots of runtime measurements            #"
     echo "#####################################################################"
@@ -51,23 +65,6 @@ if [[ -z "${COLLECT_STATS}" ]]; then
         --bar_plot                                                                 \
         --log_yaxis
 
-    if [[ ! -z "${PUBLISH}" ]]; then
-        echo "#####################################################################"
-        echo "#        Generate comparison plots for runtime measurements         #"
-        echo "#####################################################################"
-
-        if [[ -z "${LOGS_DIRS}" ]]; then
-            echo "Set the variable LOGS_DIRS for the log files that should be compared."
-        else
-            ${SCRIPTS_DIR}/gen_runtime_plots.py                                             \
-                --title "Median Runtime Comparison (log scale, ${SETS} sets, ${REPS} reps)" \
-                --plot_fname "${PLOTS_DIR}/comparison_bar_log_scale.png"                    \
-                --logs_dir ${LOGS_DIRS}                                                     \
-                --bar_plot                                                                  \
-                --log_yaxis
-        fi
-    fi
-
     # echo "#####################################################################"
     # echo "#             Generate line plots of runtime measurements           #"
     # echo "#####################################################################"
@@ -78,8 +75,6 @@ if [[ -z "${COLLECT_STATS}" ]]; then
     #     ${LOGS_DIR}/bench_big_int_abs.log
 
 else
-    PLOTS_DIR="${PLOTS_DIR}/${OUT_SUB_PATH}"
-    mkdir -p ${PLOTS_DIR}
 
     echo "#####################################################################"
     echo "#                    Generate plots for stats                       #"
@@ -90,4 +85,5 @@ else
         --logs_dir "${LOGS_DIR}"                                               \
         --bar_plot                                                             \
         --log_yaxis
+
 fi

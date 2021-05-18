@@ -66,8 +66,6 @@ LOG_SUBDIRS := $(LOG_SUBDIRS)/$(shell date "+%Y-%m-%d_%H-%M-%S")
 # Assume that the executable depends on all header files.
 DEPS = $(wildcard $(IDIR)/*.h)
 
-LIBS =
-
 # Main target, building all benchmarks
 all: compile-runtime-benchmark compile-gmp-benchmark
 
@@ -102,6 +100,8 @@ $(ODIR)/%.o: $(SDIR)/%.c $(DEPS)
 #							Runtime Benchmarks								   #
 ################################################################################
 
+RUNTIME_SUB_PATH = V$(VERSION)/$(LOG_SUBDIRS)
+
 # Specify the object files constituting the test
 _OBJ	= benchmark_helpers.o runtime_benchmark.o
 OBJ 	= $(patsubst %,$(ODIR)/%,$(_OBJ))
@@ -120,19 +120,19 @@ prepare-logs-runtime-benchmark:
 	mkdir -p $(LOG_PATH)
 
 .PHONY: compile-runtime-benchmark
-compile-runtime-benchmark: OUT_SUB_PATH = V$(VERSION)/$(LOG_SUBDIRS)
+compile-runtime-benchmark: OUT_SUB_PATH = $(RUNTIME_SUB_PATH)
 compile-runtime-benchmark: LOG_PATH = $(LOG_BASE_PATH)/$(OUT_SUB_PATH)
 compile-runtime-benchmark: CFLAGS += -DLOG_PATH=\"$(LOG_PATH)\"
 compile-runtime-benchmark: prepare-logs-runtime-benchmark all-benched gen-bench-types runtime-benchmark
 
 .PHONY: run-runtime-benchmark
-run-runtime-benchmark: OUT_SUB_PATH = V$(VERSION)/$(LOG_SUBDIRS)
+run-runtime-benchmark: OUT_SUB_PATH = $(RUNTIME_SUB_PATH)
 run-runtime-benchmark: LOG_PATH = $(LOG_BASE_PATH)/$(OUT_SUB_PATH)
 run-runtime-benchmark: compile-runtime-benchmark
 	./$(BDIR)/runtime-benchmark $(BENCHMARKS)
 
 .PHONY: plot-runtime-benchmark
-plot-runtime-benchmark: OUT_SUB_PATH = V$(VERSION)/$(LOG_SUBDIRS)
+plot-runtime-benchmark: OUT_SUB_PATH = $(RUNTIME_SUB_PATH)
 plot-runtime-benchmark: LOG_PATH = $(LOG_BASE_PATH)/$(OUT_SUB_PATH)
 plot-runtime-benchmark: clean run-runtime-benchmark
 	# Needs to be repeated to execute multiple times in same make call
@@ -147,7 +147,7 @@ runtime-benchmark: $(OBJ_BENCHED) $(OBJ)
 #						   		GMP Benchmarks								   #
 ################################################################################
 
-LIBS 	= -lgmp
+GMP_SUB_PATH = gmp/$(LOG_SUBDIRS)
 
 # Specify the object files constituting the test
 _OBJ	= benchmark_helpers.o gmp_benchmark.o
@@ -162,19 +162,20 @@ prepare-logs-gmp-benchmark:
 	mkdir -p $(LOG_PATH)
 
 .PHONY: compile-gmp-benchmark
-compile-gmp-benchmark: OUT_SUB_PATH = gmp/$(LOG_SUBDIRS)
+compile-gmp-benchmark: OUT_SUB_PATH = $(GMP_SUB_PATH)
 compile-gmp-benchmark: LOG_PATH = $(LOG_BASE_PATH)/$(OUT_SUB_PATH)
+compile-gmp-benchmark: LIBS = -lgmp
 compile-gmp-benchmark: CFLAGS += -DLOG_PATH=\"$(LOG_PATH)\"
 compile-gmp-benchmark: prepare-logs-gmp-benchmark gmp-benchmark
 
 .PHONY: run-gmp-benchmark
-run-gmp-benchmark: OUT_SUB_PATH = gmp/$(LOG_SUBDIRS)
+run-gmp-benchmark: OUT_SUB_PATH = $(GMP_SUB_PATH)
 run-gmp-benchmark: LOG_PATH = $(LOG_BASE_PATH)/$(OUT_SUB_PATH)
 run-gmp-benchmark: compile-gmp-benchmark
 	./$(BDIR)/gmp-benchmark -1
 
 .PHONY: plot-gmp-benchmark
-plot-gmp-benchmark: OUT_SUB_PATH = gmp/$(LOG_SUBDIRS)
+plot-gmp-benchmark: OUT_SUB_PATH = $(GMP_SUB_PATH)
 plot-gmp-benchmark: LOG_PATH = $(LOG_BASE_PATH)/$(OUT_SUB_PATH)
 plot-gmp-benchmark: clean run-gmp-benchmark
 	# Needs to be repeated to execute multiple times in same make call
@@ -189,6 +190,8 @@ gmp-benchmark: $(OBJ_BENCHED) $(OBJ)
 #						   	Memcpy Benchmarks								   #
 ################################################################################
 
+MEMCPY_SUB_PATH = memcpy/$(LOG_SUBDIRS)
+
 # Specify the object files constituting the test
 _OBJ	= benchmark_helpers.o memcpy_benchmark.o
 OBJ 	= $(patsubst %,$(ODIR)/%,$(_OBJ))
@@ -202,19 +205,19 @@ prepare-logs-memcpy-benchmark:
 	mkdir -p $(LOG_PATH)
 
 .PHONY: compile-memcpy-benchmark
-compile-memcpy-benchmark: OUT_SUB_PATH = memcpy/$(LOG_SUBDIRS)
+compile-memcpy-benchmark: OUT_SUB_PATH = $(MEMCPY_SUB_PATH)
 compile-memcpy-benchmark: LOG_PATH = $(LOG_BASE_PATH)/$(OUT_SUB_PATH)
 compile-memcpy-benchmark: CFLAGS += -DLOG_PATH=\"$(LOG_PATH)\"
 compile-memcpy-benchmark: prepare-logs-memcpy-benchmark memcpy-benchmark
 
 .PHONY: run-memcpy-benchmark
-run-memcpy-benchmark: OUT_SUB_PATH = memcpy/$(LOG_SUBDIRS)
+run-memcpy-benchmark: OUT_SUB_PATH = $(MEMCPY_SUB_PATH)
 run-memcpy-benchmark: LOG_PATH = $(LOG_BASE_PATH)/$(OUT_SUB_PATH)
 run-memcpy-benchmark: compile-memcpy-benchmark
 	./$(BDIR)/memcpy-benchmark -1
 
 .PHONY: plot-memcpy-benchmark
-plot-memcpy-benchmark: OUT_SUB_PATH = memcpy/$(LOG_SUBDIRS)
+plot-memcpy-benchmark: OUT_SUB_PATH = $(MEMCPY_SUB_PATH)
 plot-memcpy-benchmark: LOG_PATH = $(LOG_BASE_PATH)/$(OUT_SUB_PATH)
 plot-memcpy-benchmark: clean run-memcpy-benchmark
 	# Needs to be repeated to execute multiple times in same make call
@@ -225,8 +228,20 @@ plot-memcpy-benchmark: clean run-memcpy-benchmark
 memcpy-benchmark: $(OBJ_BENCHED) $(OBJ)
 	$(CC) -o $(BDIR)/$@ $^ $(CFLAGS) $(LIBS)
 
+ifeq ($(LOGS_DIRS),)
+	LOGS_DIRS 	= $(RUNTIME_SUB_PATH) $(GMP_SUB_PATH)
+	LOGS_NAMES 	= V$(VERSION) gmp
+endif
+
+.PHONY: plot-comparison
+plot-comparison:
+	LOGS_DIRS="${LOGS_DIRS}" LOGS_NAMES="${LOGS_NAMES}" PUBLISH=$(PUBLISH) \
+	COLLECT_STATS=$(COLLECT_STATS) SETS=$(SETS) REPS=$(REPS) \
+	OUT_SUB_PATH=comparison/$(LOG_SUBDIRS) \
+	$(SCRIPTS_DIR)/make_all_plots.sh
+
 .PHONY: plots
-plots: plot-gmp-benchmark plot-memcpy-benchmark plot-runtime-benchmark
+plots: plot-gmp-benchmark plot-memcpy-benchmark plot-runtime-benchmark plot-comparison
 
 .PHONY: clean
 clean:
