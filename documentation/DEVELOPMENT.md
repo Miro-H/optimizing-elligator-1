@@ -160,9 +160,9 @@ pip3 install --user -r pip_requirements.txt
 ```
 
 #### Comparison Plots
-Rename the folders with the logs you want to compare to have useful names. The folder name will be used as name of the data set. E.g., rename the logs for the straightforward C implementation to `V1` and the one of the sage runtime measurements to `sage`. Then run the following command, where you need to set the `SETS` and `REPS` to the correct values that were used when generating the logs.
+To make comparisons plots, you can give multiple logs dirs to the `timing/scripts/gen_runtime_plots.py` script. Or even easier, use the `make plot-comparison` target. Gather the paths to the log folders that should be compared and put them in a environment variable called `LOGS_DIRS`. Next, name those data sets with a short name by setting the variable `LOGS_NAMES` in the same order. Don't forget to use the same `SETS` and `REPS` for generating all log files and also specify them for the comparison plot.
 ```
-PUBLISH=comparison LOGS_DIRS="../logs/runtime/V1 ../logs/runtime/sage" SETS=10 REPS=10 ./make_all_plots.sh
+LOGS_NAMES="gmp V1 V2" LOGS_DIRS="./logs/gmp/<etc> ./logs/V1/<etc> ./logs/V2/<etc>" SETS=10 REPS=1000 make plot-comparison
 ```
 
 #### Help Pages
