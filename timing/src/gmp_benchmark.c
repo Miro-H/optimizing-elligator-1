@@ -903,157 +903,181 @@ int main(int argc, char const *argv[])
     for (int i = 1; i < argc; ++i) {
         bench_type = atoi(argv[i]);
 
+        // init on MPZ should correspond to BigInt alloc
         BENCHMARK(bench_type, BENCH_TYPE_ALLOC,
-            bench_mpz_init((void *)bench_mpz_size_256_args, "init",
+            bench_mpz_init((void *)bench_mpz_size_256_args, "alloc",
                 LOG_PATH "/gmp_mpz_init.log"));
 
+        // clear on MPZ should correspond to BigInt destroy
         BENCHMARK(bench_type, BENCH_TYPE_DESTROY,
-            bench_mpz_clear((void *)bench_mpz_size_256_args, "clear",
+            bench_mpz_clear((void *)bench_mpz_size_256_args, "destroy",
                 LOG_PATH "/gmp_mpz_clear.log"));
 
+        // set on MPZ should correspond to BigInt copy
         BENCHMARK(bench_type, BENCH_TYPE_COPY,
-            bench_mpz_set((void *)bench_mpz_size_256_args, "set",
+            bench_mpz_set((void *)bench_mpz_size_256_args, "copy",
                 LOG_PATH "/gmp_mpz_set.log"));
 
         BENCHMARK(bench_type, BENCH_TYPE_CREATE,
             bench_mpz_set_si((void*)bench_mpz_size_256_args,
                 "set from signed int", LOG_PATH "/gmp_mpz_set_si.log"));
 
+        // "set from string" on MPZ should roughly correspond to BigInt "create from hex"
         BENCHMARK(bench_type, BENCH_TYPE_CREATE_HEX,
             bench_mpz_set_str((void *)bench_mpz_size_256_args,
-                "set from string", LOG_PATH "/gmp_mpz_set_str.log"));
+                "create from hex", LOG_PATH "/gmp_mpz_set_str.log"));
 
+        // urandomb from MPZ should roughly correspond to BigInt create random
         BENCHMARK(bench_type, BENCH_TYPE_CREATE_RANDOM,
             bench_mpz_urandomb((void *)bench_mpz_size_256_args,
-                "set to random", LOG_PATH "/gmp_mpz_urandomb.log"));
+                "create random", LOG_PATH "/gmp_mpz_urandomb.log"));
 
+        // duplicate from MPZ should correspond to BigInt duplicate
         BENCHMARK(bench_type, BENCH_TYPE_DUPLICATE,
             bench_mpz_duplicate((void *)bench_mpz_size_256_args, "duplicate",
                 LOG_PATH "/gmp_mpz_duplicate.log"));
 
+        // neg from MPZ should correspond to BigInt negation
         BENCHMARK(bench_type, BENCH_TYPE_NEG,
             bench_mpz_neg((void *)bench_mpz_size_256_args,
                 "negate", LOG_PATH "/gmp_mpz_neg.log"));
 
+        // abs from MPZ should correspond to BigInt abs
         BENCHMARK(bench_type, BENCH_TYPE_ABS,
             bench_mpz_abs((void *)bench_mpz_size_256_args,
-                "absolute value", LOG_PATH "/gmp_mpz_abs.log"));
+                "abs", LOG_PATH "/gmp_mpz_abs.log"));
 
+        // add from MPZ should correspond to BigInt add
         BENCHMARK(bench_type, BENCH_TYPE_ADD,
             bench_mpz_add((void *)bench_mpz_size_256_args,
-                "addition", LOG_PATH "/gmp_mpz_add.log"));
+                "add", LOG_PATH "/gmp_mpz_add.log"));
 
-        BENCHMARK(bench_type, BENCH_TYPE_ADD_MOD_RANDOM,
-            bench_mpz_add_mod((void *)bench_mpz_size_256_random_mod_args,
-                "addition with modulo (random)",
-                    LOG_PATH "/gmp_mpz_add_mod_random.log"));
-
+        // add from MPZ should correspond to BigInt add
         BENCHMARK(bench_type, BENCH_TYPE_ADD_MOD_CURVE,
             bench_mpz_add_mod((void *)bench_mpz_size_256_curve_mod_args,
-                "addition with modulo (curve)",
-                LOG_PATH "/gmp_mpz_add_mod_curve.log"))
+                "add mod (curve)",
+                LOG_PATH "/gmp_mpz_add_mod_curve.log"));
 
+        // add from MPZ should correspond to BigInt add
+        BENCHMARK(bench_type, BENCH_TYPE_ADD_MOD_RANDOM,
+            bench_mpz_add_mod((void *)bench_mpz_size_256_random_mod_args,
+                "add mod (random)",
+                    LOG_PATH "/gmp_mpz_add_mod_random.log"));
+
+        // sub from MPZ should correspond to BigInt sub
         BENCHMARK(bench_type, BENCH_TYPE_SUB,
             bench_mpz_sub((void *)bench_mpz_size_256_args,
-                "subtraction", LOG_PATH "/gmp_mpz_sub.log"));
+                "sub", LOG_PATH "/gmp_mpz_sub.log"));
 
-        BENCHMARK(bench_type, BENCH_TYPE_SUB_MOD_RANDOM,
-            bench_mpz_sub_mod((void *)bench_mpz_size_256_random_mod_args,
-                "subtraction with modulo (random)",
-                LOG_PATH "/gmp_mpz_sub_mod_random.log"));
-
+        // sub from MPZ should correspond to BigInt sub
         BENCHMARK(bench_type, BENCH_TYPE_SUB_MOD_CURVE,
             bench_mpz_sub_mod((void *)bench_mpz_size_256_curve_mod_args,
-                "subtraction with modulo (curve)",
-                LOG_PATH "/gmp_mpz_sub_mod_curve.log"));
+                "sub mod (curve)", LOG_PATH "/gmp_mpz_sub_mod_curve.log"));
 
+        // sub from MPZ should correspond to BigInt sub
+        BENCHMARK(bench_type, BENCH_TYPE_SUB_MOD_RANDOM,
+            bench_mpz_sub_mod((void *)bench_mpz_size_256_random_mod_args,
+                "sub mod (random)", LOG_PATH "/gmp_mpz_sub_mod_random.log"));
+
+        // mul from MPZ should correspond to BigInt mul
         BENCHMARK(bench_type, BENCH_TYPE_MUL,
             bench_mpz_mul((void *)bench_mpz_size_256_args,
-                "multiplication", LOG_PATH "/gmp_mpz_mul.log"));
+                "mul", LOG_PATH "/gmp_mpz_mul.log"));
 
-        BENCHMARK(bench_type, BENCH_TYPE_MUL_MOD_RANDOM,
-            bench_mpz_mul_mod((void *)bench_mpz_size_256_random_mod_args,
-                "multiplication with modulo (random)",
-                LOG_PATH "/gmp_mpz_mul_mod_random.log"));
-
+        // mul from MPZ should correspond to BigInt mul
         BENCHMARK(bench_type, BENCH_TYPE_MUL_CURVE,
             bench_mpz_mul_mod((void *)bench_mpz_size_256_curve_mod_args,
-                "multiplication with modulo (random)",
-                LOG_PATH "/gmp_mpz_mul_mod_curve.log"));
+                "mul mod (curve)", LOG_PATH "/gmp_mpz_mul_mod_curve.log"));
 
+        // mul from MPZ should correspond to BigInt mul
+        BENCHMARK(bench_type, BENCH_TYPE_MUL_MOD_RANDOM,
+            bench_mpz_mul_mod((void *)bench_mpz_size_256_random_mod_args,
+                "mul mod (random)", LOG_PATH "/gmp_mpz_mul_mod_random.log"));
+
+        // tdiv_qr from MPZ should correspond to BigInt divrem
         BENCHMARK(bench_type, BENCH_TYPE_DIVREM,
             bench_mpz_tdiv_qr((void *)bench_mpz_size_256_random_mod_args,
-                "division with remainder", LOG_PATH "/gmp_mpz_tdiv_qr.log"));
+                "divrem", LOG_PATH "/gmp_mpz_tdiv_qr.log"));
 
-        BENCHMARK(bench_type, BENCH_TYPE_DIVREM_RANDOM,
-            bench_mpz_tdiv_qr((void *)bench_mpz_size_256_random_mod_args,
-                "division with remainder (random)",
-                LOG_PATH "/gmp_mpz_tdiv_qr_random.log"));
-
+        // tdiv_qr from MPZ should correspond to BigInt divrem
         BENCHMARK(bench_type, BENCH_TYPE_DIVREM_CURVE,
             bench_mpz_tdiv_qr((void *)bench_mpz_size_256_curve_mod_args,
-                "division with remainder (curve)",
-                LOG_PATH "/gmp_mpz_tdiv_qr_curve.log"));
+                "divrem (curve)", LOG_PATH "/gmp_mpz_tdiv_qr_curve.log"));
 
+        // tdiv_qr from MPZ should correspond to BigInt divrem
+        BENCHMARK(bench_type, BENCH_TYPE_DIVREM_RANDOM,
+            bench_mpz_tdiv_qr((void *)bench_mpz_size_256_random_mod_args,
+                "divrem (random)", LOG_PATH "/gmp_mpz_tdiv_qr_random.log"));
+
+        // tdiv_q from MPZ should correspond to BigInt div
         BENCHMARK(bench_type, BENCH_TYPE_DIV,
             bench_mpz_tdiv_q((void *)bench_mpz_size_256_args,
-                "division", LOG_PATH "/gmp_mpz_tdiv_q.log"));
+                "div", LOG_PATH "/gmp_mpz_tdiv_q.log"));
 
-        BENCHMARK(bench_type, BENCH_TYPE_DIV_RANDOM,
-            bench_mpz_tdiv_q_mod((void *)bench_mpz_size_256_random_mod_args,
-                "division with modulo (random)",
-                LOG_PATH "/gmp_mpz_tdiv_q_mod_random.log"));
-
+        // tdiv_q from MPZ should correspond to BigInt div
         BENCHMARK(bench_type, BENCH_TYPE_DIV_CURVE,
             bench_mpz_tdiv_q_mod((void *)bench_mpz_size_256_curve_mod_args,
-                "division with modulo (curve)",
-                LOG_PATH "/gmp_mpz_tdiv_q_mod_curve.log"));
+                "div (curve)", LOG_PATH "/gmp_mpz_tdiv_q_mod_curve.log"));
 
+        // tdiv_q from MPZ should correspond to BigInt div
+        BENCHMARK(bench_type, BENCH_TYPE_DIV_RANDOM,
+            bench_mpz_tdiv_q_mod((void *)bench_mpz_size_256_random_mod_args,
+                "div (random)", LOG_PATH "/gmp_mpz_tdiv_q_mod_random.log"));
+
+        // mul_2exp from MPZ should correspond to BigInt sll
         BENCHMARK(bench_type, BENCH_TYPE_SLL,
-            bench_mpz_mul_2exp((void *)bench_mpz_size_256_args, "left shift",
-                LOG_PATH "/gmp_mpz_mul_2exp.log"));
+            bench_mpz_mul_2exp((void *)bench_mpz_size_256_args,
+                "sll", LOG_PATH "/gmp_mpz_mul_2exp.log"));
 
+        // tdiv_q_2exp from MPZ should correspond to BigInt srl
         BENCHMARK(bench_type, BENCH_TYPE_SRL,
             bench_mpz_tdiv_q_2exp((void *)bench_mpz_size_256_args,
-                "right shift", LOG_PATH "/gmp_mpz_tdiv_q_2exp.log"));
+                "srl", LOG_PATH "/gmp_mpz_tdiv_q_2exp.log"));
 
+        // mod from MPZ should correspond to BigInt mod
         BENCHMARK(bench_type, BENCH_TYPE_MOD_CURVE,
             bench_mpz_mod((void *)bench_mpz_size_256_curve_mod_args,
-                "modulo (curve)", LOG_PATH "/gmp_mpz_mod_curve.log"));
+                "mod (curve)", LOG_PATH "/gmp_mpz_mod_curve.log"));
 
+        // mod from MPZ should correspond to BigInt mod
         BENCHMARK(bench_type, BENCH_TYPE_MOD_RANDOM,
             bench_mpz_mod((void *)bench_mpz_size_256_random_mod_args,
-                "modulo (random)", LOG_PATH "/gmp_mpz_mod_random.log"));
+                "mod (random)", LOG_PATH "/gmp_mpz_mod_random.log"));
 
+        // invert from MPZ should correspond to BigInt inv
         BENCHMARK(bench_type, BENCH_TYPE_INV,
             bench_mpz_invert((void *)bench_mpz_size_256_args,
-                "modular inversion", LOG_PATH "/gmp_mpz_invert.log"));
+                "inv", LOG_PATH "/gmp_mpz_invert.log"));
 
+        // powm from MPZ should correspond to BigInt pow
         BENCHMARK(bench_type, BENCH_TYPE_POW_CURVE,
             bench_mpz_powm((void *)bench_mpz_size_256_curve_mod_args,
-            "exponentation (curve)", LOG_PATH "/gmp_mpz_powm_curve.log"));
+            "pow (curve)", LOG_PATH "/gmp_mpz_powm_curve.log"));
 
+        // powm from MPZ should correspond to BigInt pow
         BENCHMARK(bench_type, BENCH_TYPE_POW_RANDOM,
             bench_mpz_powm((void *)bench_mpz_size_256_random_mod_args,
-                "exponentiation (random)",
-                LOG_PATH "/gmp_mpz_powm_random.log"));
+                "pow (random)", LOG_PATH "/gmp_mpz_powm_random.log"));
 
+        // cmp_si from MPZ should correspond to BigInt is_zero
         BENCHMARK(bench_type, BENCH_TYPE_IS_ODD,
             bench_mpz_cmp_si((void *)bench_mpz_size_256_args,
                 "check if zero", LOG_PATH "/gmp_mpz_cmp_si.log"));
 
+        // divisible_2exp_p benchmark should roughly correspond to BigInt is_odd
         BENCHMARK(bench_type, BENCH_TYPE_IS_ODD,
             bench_mpz_divisible_2exp_p((void *)bench_mpz_size_256_args,
                 "check if odd", LOG_PATH "/gmp_mpz_divisible_2exp_p.log"));
 
+        // cmp from MPZ should correspond to BigInt cmp
         BENCHMARK(bench_type, BENCH_TYPE_COMPARE,
             bench_mpz_cmp((void *)bench_mpz_size_256_args,
-                "comparison", LOG_PATH "/gmp_mpz_cmp.log"));
+                "compare", LOG_PATH "/gmp_mpz_cmp.log"));
 
+        // gcdext from MPZ should correspond to BigInt egcd
         BENCHMARK(bench_type, BENCH_TYPE_EGCD,
             bench_mpz_gcdext((void *)bench_mpz_size_256_args,
-                "extended Euclidean algorithm",
-                LOG_PATH "/gmp_mpz_gcdext.log"));
+                "eGCD", LOG_PATH "/gmp_mpz_gcdext.log"));
     }
 
     return EXIT_SUCCESS;
