@@ -70,7 +70,7 @@ void free_curve_point(CurvePoint *point)
  * \param t Integer in range [0, (q-1)/2]
  * \param curve Curve satisfying the properties needed for Elligator one (e.g. Curve1174)
  */
-CurvePoint elligator_1_string_to_point(BigInt *t, Curve curve)
+CurvePoint *elligator_1_string_to_point(CurvePoint *r, BigInt *t, Curve curve)
 {
     BigInt *q_half,
            *u, *u0, *u1,
@@ -172,7 +172,8 @@ CurvePoint elligator_1_string_to_point(BigInt *t, Curve curve)
 
     big_int_destroy(q_half);
 
-    CurvePoint r = {x, y};
+    r->x = x;
+    r->y = y;
     return r;
 }
 
@@ -186,14 +187,14 @@ CurvePoint elligator_1_string_to_point(BigInt *t, Curve curve)
  * \param p Point on the given curve (with x, y coordinates)
  * \param curve Curve satisfying the properties needed for Elligator one (e.g. Curve1174)
  */
-BigInt *elligator_1_point_to_string(CurvePoint p, Curve curve)
+BigInt *elligator_1_point_to_string(BigInt *t, CurvePoint p, Curve curve)
 {
     BigInt *eta, *eta0, *eta1,
            *eta_r, *q_exp,
            *X, *X0,
            *z, *z0, *z1, *z2, *z3,
            *u,
-           *t, *t0, *t1,
+           *t0, *t1,
            *q_half;
 
     eta0 = big_int_sub(NULL, p.y, big_int_one);
@@ -234,7 +235,7 @@ BigInt *elligator_1_point_to_string(CurvePoint p, Curve curve)
 
     t0 = big_int_sub(NULL, big_int_one, u);
     t1 = big_int_add(NULL, big_int_one, u);
-    t = big_int_div_mod(t0, t0, t1, curve.q); // t = (1 − u)/(1 + u)
+    t = big_int_div_mod(t, t0, t1, curve.q); // t = (1 − u)/(1 + u)
 
     // TODO: Optimization potential, subtraction is not necessary. Use SRL and
     //       shift those bits away!
@@ -261,6 +262,7 @@ BigInt *elligator_1_point_to_string(CurvePoint p, Curve curve)
 
     big_int_destroy(u);
 
+    big_int_destroy(t0);
     big_int_destroy(t1);
 
     return t;
