@@ -333,32 +333,20 @@ BigInt *big_int_curve1174_pow_q_p1_d4(BigInt *r, BigInt *b)
  *
  * \assumption r, t != NULL
  */
-BigInt *big_int_curve1174_chi(BigInt *r, BigInt *t)
+int8_t big_int_curve1174_chi(BigInt *t)
 {
     ADD_STAT_COLLECTION(BIGINT_CURVE1174_TYPE_BIG_INT_CHI);
-    FATAL("Not yet optimized!");
 
-    // TODO
-    // BIG_INT_DEFINE_PTR(e);
-    //
-    // if (big_int_compare(t, big_int_zero) == 0) {
-    //     // TODO: [Optimization] change return value to int8_t
-    //     big_int_create_from_chunk(r, 0, 0);
-    //     return r;
-    // }
-    //
-    // big_int_copy(e, q);
-    // big_int_srl_small(e, big_int_sub(e, e, big_int_one), 1);
-    //
-    // big_int_pow(r, t, e, q);
-    //
-    // if (!big_int_compare(r, big_int_zero) || !big_int_compare(r, big_int_one))
-    //     return r;
-    //
-    // // TODO: [Optimization] change return value to int8_t
-    // big_int_create_from_chunk(r, 1, 1); // r = -1
-    return r;
+    BIG_INT_DEFINE_PTR(r_loc);
 
+    if (big_int_is_zero(t))
+        return 0;
+
+    big_int_curve1174_pow_q_m1_d2(r_loc, t);
+
+    // assumption: r = 1 or -1 after squaring (i.e., always a single chunk)
+    // Note that -1 mod q is larger than one chunk.
+    return (r_loc->size == 1) ? 1 : -1;
 }
 
 /**

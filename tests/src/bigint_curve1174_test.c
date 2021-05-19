@@ -527,50 +527,46 @@ END_TEST
 */
 START_TEST(test_chi)
 {
-    BIG_INT_DEFINE_PTR(r);
-    BIG_INT_DEFINE_PTR(t);
+    int8_t r, r1, r2;
     BIG_INT_DEFINE_PTR(s);
+    BIG_INT_DEFINE_PTR(t);
     BIG_INT_DEFINE_PTR(u);
-    BIG_INT_DEFINE_PTR(v);
 
-    // Tests on bigger numbers: q = 2^61 - 1
+    // Test special case t = 0
     big_int_create_from_chunk(t, 0, 0);
-    big_int_create_from_chunk(r, 0, 0);
 
-    big_int_curve1174_chi(t, t);
-    ck_assert_int_eq(big_int_compare(t, r), 0);
+    r = big_int_curve1174_chi(t);
+    ck_assert_int_eq(r, 0);
 
     // Is square
     big_int_create_from_hex(t,
         "64548488BB3F9FBD9A0A0878BD075651BCA8692167A6D40095CBF9EC4465CC8");
-    big_int_create_from_chunk(r, 1, 0);
 
-    big_int_curve1174_chi(t, t);
-    ck_assert_int_eq(big_int_compare(t, r), 0);
+    r = big_int_curve1174_chi(t);
+    ck_assert_int_eq(r, 1);
 
-    // Special case 1 (always square)
+    // 1 (is square)
+    big_int_create_from_chunk(t, 1, 0);
+
+    r = big_int_curve1174_chi(t);
+    ck_assert_int_eq(r, 1);
+
+    // -1 (is not square)
     big_int_create_from_chunk(t, 1, 1);
-    big_int_create_from_chunk(r, 1, 1);
 
-    big_int_curve1174_chi(t, t);
-    ck_assert_int_eq(big_int_compare(t, r), 0);
+    r = big_int_curve1174_chi(t);
+    ck_assert_int_eq(r, -1);
+
+    // Is not square
+    big_int_create_from_hex(t,
+        "20C828BF4E9A6412E714AE859C028B2E509F8418F797CE3E6BD91A9CF4A117E");
+
+    r = big_int_curve1174_chi(t);
+    ck_assert_int_eq(r, -1);
 
     /* Advanced tests (as specified in the paper).
      * Most of these are actually pretty trivial.
      */
-
-    // chi(chi(t)) = chi(t)
-    big_int_create_from_hex(t, "3626229738A3B8");
-
-    big_int_curve1174_chi(t, t);
-    big_int_curve1174_chi(s, t);
-    ck_assert_int_eq(big_int_compare(t, s), 0);
-
-    // 0 is not a square
-    big_int_create_from_chunk(t, 0, 0);
-    big_int_create_from_chunk(r, 0, 0);
-
-    ck_assert_int_eq(big_int_compare(t, r), 0);
 
     // chi(st) = chi(s) * chi(t)
     // s and t both square
@@ -579,14 +575,13 @@ START_TEST(test_chi)
     big_int_create_from_hex(t,
         "242FBB0B3EDCBC352EF808A0BE30889985443B61BB5D2BDD2472741ED26D875");
 
-    big_int_curve1174_mul_mod(r, s, t);
-    big_int_curve1174_chi(r, r); // chi(st)
+    big_int_curve1174_mul_mod(u, s, t);
+    r = big_int_curve1174_chi(u); // chi(st)
 
-    big_int_curve1174_chi(u, s); // chi(s)
-    big_int_curve1174_chi(v, t); // chi(t)
-    big_int_curve1174_mul_mod(u, u, v); // chi(s) * chi(t);
+    r1 = big_int_curve1174_chi(s); // chi(s)
+    r2 = big_int_curve1174_chi(t); // chi(t)
 
-    ck_assert_int_eq(big_int_compare(r, u), 0);
+    ck_assert_int_eq(r, r1 * r2);
 
     // s square, t non-square
     big_int_create_from_hex(s,
@@ -594,30 +589,23 @@ START_TEST(test_chi)
     big_int_create_from_hex(t,
         "6C4BE8460BE7FC0E1F92C249742356CF46817EB808E865689F8198183374CD6");
 
-    big_int_curve1174_mul_mod(r, s, t);
-    big_int_curve1174_chi(r, r); // chi(st)
+    big_int_curve1174_mul_mod(u, s, t);
+    r = big_int_curve1174_chi(u); // chi(st)
 
-    big_int_curve1174_chi(u, s); // chi(s)
-    big_int_curve1174_chi(v, t); // chi(t)
-    big_int_curve1174_mul_mod(u, u, v); // chi(s) * chi(t);
+    r1 = big_int_curve1174_chi(s); // chi(s)
+    r2 = big_int_curve1174_chi(t); // chi(t)
 
-    ck_assert_int_eq(big_int_compare(r, u), 0);
-
-    // chi(st) = chi(s) * chi(t) for s or t = 0 is trivial.
+    ck_assert_int_eq(r, r1 * r2);
 
     // chi(1/t) = chi(t) = 1/chi(t) if t != 0
-    // NOTE: I don't really understand the chi(1/t) part since chi is defined for integers only?
     big_int_create_from_hex(t, "3626229738A3B9");
 
-    big_int_curve1174_chi(r, t); // chi(t)
-
-    BIG_INT_CURVE1174_INV(s, r); // 1/chi(t)
+    r1 = big_int_curve1174_chi(t); // chi(t)
 
     BIG_INT_CURVE1174_INV(t, t);
-    big_int_curve1174_chi(t, t); // chi(1/t)
+    r2 = big_int_curve1174_chi(t); // chi(1/t)
 
-    ck_assert_int_eq(big_int_compare(r, s), 0);
-    ck_assert_int_eq(big_int_compare(r, t), 0);
+    ck_assert_int_eq(r1, r2);
 }
 END_TEST
 
