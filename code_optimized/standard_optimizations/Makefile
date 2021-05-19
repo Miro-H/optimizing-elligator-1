@@ -51,7 +51,7 @@ build-lib:
 .PHONY: gen-bigint-types
 gen-bigint-types:
 	${ROOT_SCRIPTS_DIR}/gen_types.py \
-		--src_file ${SDIR}/bigint.c \
+		--src_files ${SDIR}/bigint_curve1174.c ${SDIR}/bigint.c \
 		--tar_file ${IDIR}/bigint_types.h \
 		--add_translation \
 		--array_name "big_int_type_names" \
