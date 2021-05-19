@@ -21,15 +21,55 @@
  * \brief Calculate r := a mod q
  *
  * \assumption r, a != NULL
+ * \assumption a->size <= 16 (at most 512 bits)
  */
 BigInt *big_int_curve1174_mod(BigInt *r, BigInt *a)
 {
     ADD_STAT_COLLECTION(BIGINT_CURVE1174_TYPE_BIG_INT_MOD);
-    FATAL("Not yet optimized!");
 
-    // TODO
-    // BIG_INT_DEFINE_PTR(tmp);
-    // big_int_div_rem(tmp, r, a, q);
+    BIG_INT_DEFINE_PTR(div_res);
+    BIG_INT_DEFINE_PTR(a_upper);
+    BigInt *a_lower;
+    uint8_t a_sign;
+
+    // TODO: Copy could be avoided if inplace modifications were allowed
+    if (r != a)
+        big_int_copy(r, a);
+
+    // Preserve sign in case it is overwritten
+    a_sign = a->sign;
+    // Operate on absolute value afterwards
+    r->sign = 0;
+
+    // If a > 256 bits, use the special curve prime property:
+    // 2^251 - 9 = 0 (mod q) => 2^251 = 9 (mod q) => 2^256 = 288 (mod q)
+    // Thus, we can simplify:
+    // a1 * 2^256 + a0 = a1 * 288 + a0 (mod q)
+    if (a->size > Q_CHUNKS) {
+        // TODO: maybe we could further optimize this multiplication by directly
+        // doing it here or in general create an optimized "multiply with
+        // single chunk" function
+        big_int_srl_small(a_upper, r, 256);
+        // Intentionally no mod reduction, since we do one later
+        big_int_mul(a_upper, a_upper, big_int_288); // a1 * 288
+
+        a_lower = r;
+        a_lower->size = 8;
+        big_int_curve1174_add_mod(r, a_lower, a_upper); // r = a1 * 288 + a0 (mod q)
+    }
+    // Case: q <= |a| < 2^256
+    else if (big_int_curve1174_compare_to_q(r) != -1) {
+        // TODO: could do subtractions instead of divrem. Since 2^256 / q < 33,
+        // we have to do between `1` and `33` subtractions. Depends on optimized
+        // subtraction whether this is beneficial. Or precompute a*q values
+        // and do binary search.
+        big_int_div_rem(div_res, r, r, q);
+    }
+    // else: case |a| < q: do nothing!
+
+    // if a < 0, then a % q = q - (|a| % q)
+    if (a_sign)
+        big_int_sub(r, q, r);
 
     return r;
 }
@@ -43,15 +83,10 @@ BigInt *big_int_curve1174_mod(BigInt *r, BigInt *a)
 BigInt *big_int_curve1174_add_mod(BigInt *r, BigInt *a, BigInt *b)
 {
     ADD_STAT_COLLECTION(BIGINT_CURVE1774_TYPE_BIG_INT_ADD_MOD);
-    FATAL("Not yet optimized!");
 
-    // TODO
-    // BIG_INT_DEFINE_PTR(r_loc);
-    //
-    // big_int_add(r_loc, a, b);
-    // big_int_mod(r, r_loc, q);
-    //
-    // return r;
+    big_int_add(r, a, b);
+    big_int_curve1174_mod(r, r);
+    return r;
 }
 
 
@@ -63,14 +98,9 @@ BigInt *big_int_curve1174_add_mod(BigInt *r, BigInt *a, BigInt *b)
 BigInt *big_int_curve1174_sub_mod(BigInt *r, BigInt *a, BigInt *b)
 {
     ADD_STAT_COLLECTION(BIGINT_CURVE1774_TYPE_BIG_INT_SUB_MOD);
-    FATAL("Not yet optimized!");
 
-    // TODO
-    // BIG_INT_DEFINE_PTR(r_loc);
-    //
-    // big_int_sub(r_loc, a, b);
-    // big_int_mod(r, r_loc, q);
-
+    big_int_sub(r, a, b);
+    big_int_curve1174_mod(r, r);
     return r;
 }
 
@@ -83,14 +113,14 @@ BigInt *big_int_curve1174_sub_mod(BigInt *r, BigInt *a, BigInt *b)
 BigInt *big_int_curve1174_mul_mod(BigInt *r, BigInt *a, BigInt *b)
 {
     ADD_STAT_COLLECTION(BIGINT_CURVE1774_TYPE_BIG_INT_MUL_MOD);
-    FATAL("Not yet optimized!");
 
-    // TODO
-    // BIG_INT_DEFINE_PTR(r_loc);
-    //
-    // big_int_mul(r_loc, a, b);
-    // big_int_mod(r, r_loc, q);
+    // a, b are usually not larger than q, thus it is not worth it to perform a
+    // mod operation on the operands before multiplying.
+    // TODO: verify that even a check whether the operands are larger than q is
+    // not worth it.
 
+    big_int_mul(r, a, b);
+    big_int_curve1174_mod(r, r);
     return r;
 }
 
@@ -103,15 +133,12 @@ BigInt *big_int_curve1174_mul_mod(BigInt *r, BigInt *a, BigInt *b)
 BigInt *big_int_curve1174_div_mod(BigInt *r, BigInt *a, BigInt *b)
 {
     ADD_STAT_COLLECTION(BIGINT_CURVE1774_TYPE_BIG_INT_DIV_MOD);
-    FATAL("Not yet optimized!");
 
-    // TODO
-    // BIG_INT_DEFINE_PTR(r_loc);
-    //
-    // // Write to local copy to be save against pointer reuse
-    // big_int_inv(r_loc, b, q);
-    // big_int_mul_mod(r, a, r_loc, q);
+    BIG_INT_DEFINE_PTR(r_loc);
 
+    // Write to local copy to be save against pointer reuse
+    big_int_curve1174_inv(r_loc, b);
+    big_int_curve1174_mul_mod(r, a, r_loc);
     return r;
 }
 
@@ -275,4 +302,29 @@ BigInt *big_int_curve1174_chi(BigInt *r, BigInt *t)
     // big_int_create_from_chunk(r, 1, 1); // r = -1
     return r;
 
+}
+
+/**
+ * \brief Compare a to q.
+ *
+ * \returns 1 if a > q, -1 if a < q, otherwise 0
+ *
+ * \assumption a != NULL
+ */
+int8_t big_int_curve1174_compare_to_q(BigInt *a)
+{
+    // Easy cases where a is clearly larger/smaller
+    if (a->size > Q_CHUNKS)
+        return 1;
+    if (a->size < Q_CHUNKS || a->sign)
+        return -1;
+
+    // Remaining case: a->size == Q_CHUNKS and a is positive
+
+    // Compare to highest chunk of Q only
+    if (a->chunks[Q_CHUNKS-1] < Q_MSB_CHUNK)
+        return -1;
+    if (a->chunks[Q_CHUNKS-1] > Q_MSB_CHUNK)
+        return 1;
+    return 0;
 }
