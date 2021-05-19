@@ -117,7 +117,7 @@ BigInt *big_int_create_from_dbl_chunk(BigInt *r, dbl_chunk_size_t chunk, uint8_t
  * \brief Create BigInt from a hexadecimal string
  *
  * \assumption r, s != NULL
- * \assumption hex string s fits into BIGINT_FIXED_SIZE chunks
+ * \assumption hex string s fits into BIGINT_FIXED_SIZE_INTERNAL chunks
  */
 BigInt *big_int_create_from_hex(BigInt *r, char* s)
 {
@@ -170,7 +170,7 @@ BigInt *big_int_create_from_hex(BigInt *r, char* s)
  * \param nr_of_chunks Number of chunks in the created BigInt
  *
  * \assumption r != NULL
- * \assumption 1 <= nr_of_chunks <= BIGINT_FIXED_SIZE
+ * \assumption 1 <= nr_of_chunks <= BIGINT_FIXED_SIZE_INTERNAL
  */
 BigInt *big_int_create_random(BigInt *r, int64_t nr_of_chunks)
 {
@@ -342,7 +342,7 @@ BigInt *big_int_add(BigInt *r, BigInt *a, BigInt *b)
 
     r->sign = aa->sign;
     if (carry) {
-        if (i < BIGINT_FIXED_SIZE) {
+        if (i < BIGINT_FIXED_SIZE_INTERNAL) {
             r->chunks[i] = 1;
             r_size++;
         }
@@ -457,7 +457,7 @@ BigInt *big_int_sub(BigInt *r, BigInt *a, BigInt *b)
  * \brief Calculate r = a * b
  *
  * \assumption r, a, b != NULL
- * \assumption a->size + b->size <= BIGINT_FIXED_SIZE
+ * \assumption a->size + b->size <= BIGINT_FIXED_SIZE_INTERNAL
  */
 BigInt *big_int_mul(BigInt *r, BigInt *a, BigInt *b)
 {
@@ -714,7 +714,7 @@ BigInt *big_int_div(BigInt *q, BigInt *a, BigInt *b)
  * \brief Calculate r = a << shift for "small" shifts (not BigInt shifts)
  *
  * \assumption r, a != NULL
- * \assumption a->size + shift / BIGINT_CHUNK_BIT_SIZE < BIGINT_FIXED_SIZE
+ * \assumption a->size + shift / BIGINT_CHUNK_BIT_SIZE < BIGINT_FIXED_SIZE_INTERNAL
  */
 BigInt *big_int_sll_small(BigInt *r, BigInt *a, uint64_t shift)
 {
@@ -746,7 +746,7 @@ BigInt *big_int_sll_small(BigInt *r, BigInt *a, uint64_t shift)
 
     // Add the last block if there is a carry from the MSB block
     if (carry) {
-        if (r_idx < BIGINT_FIXED_SIZE) {
+        if (r_idx < BIGINT_FIXED_SIZE_INTERNAL) {
             r_loc->chunks[r_idx] = carry;
             ++r_idx;
         }
