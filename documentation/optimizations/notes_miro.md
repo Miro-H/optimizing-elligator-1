@@ -70,6 +70,12 @@ Since `q` is prime, there are alternatives to using the normal GCD algorithm for
 Observations:
 1. Many power operations are to the power of small integers. Thus, add a function that only takes exponents of at most 64 bits in size.
 2. We don't need to shift the entire exponent `e`, we can just operate on it chunk by chunk! This enables us to use much cheaper integer shifts!
+3. We have some special exponents (`(q-1)/2` and `(q+1)/4`) that have a lot of one bits set. We can add special exponentiation functions for them with way less branching (add more AVX potential!).
+
+## Chi
+Switch to use the special exponentiation function described above.
+
+Also, I changed the return value to `int8_t` instead of a BigInt.
 
 ## Function Inlining
 ```
