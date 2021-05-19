@@ -60,3 +60,9 @@ For numbers `q < X < 2^256` we cannot use the above trick. However, we can use r
 
 This could also be **parallelized**: we could precompute `a_i * q` for `a_i \in [1, 33]` and then compute `X - a_i` in parallel.
 We could also do **binary search** for the correct `a_i`: the first one where the result is not negative.
+
+## Function Inlining
+```
+TODO
+```
+Look into compiler attributes to force inlining.
