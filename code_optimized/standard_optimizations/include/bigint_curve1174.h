@@ -55,6 +55,8 @@ int8_t big_int_curve1174_compare_to_q(BigInt *a);
 // Advanced operations
 BigInt *big_int_curve1174_pow_small(BigInt *r, BigInt *b, uint64_t e);
 BigInt *big_int_curve1174_pow(BigInt *r, BigInt *b, BigInt *e);
+BigInt *big_int_curve1174_pow_q_m1_d2(BigInt *r, BigInt *b);
+BigInt *big_int_curve1174_pow_q_p1_d4(BigInt *r, BigInt *b);
 BigInt *big_int_curve1174_chi(BigInt *r, BigInt *t);
 
 #endif // BIGINT_CURVE1174_H_

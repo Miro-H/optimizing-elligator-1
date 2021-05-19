@@ -179,7 +179,7 @@ BigInt *big_int_curve1174_pow_small(BigInt *r, BigInt *b, uint64_t e)
     if (r == b)
         r_loc = r_one;
     else
-        big_int_create_from_chunk(r, 1, 0);
+        r_loc = big_int_create_from_chunk(r, 1, 0);
 
     big_int_copy(b_loc, b);
 
@@ -217,7 +217,7 @@ BigInt *big_int_curve1174_pow(BigInt *r, BigInt *b, BigInt *e)
     if (r == b)
         r_loc = r_one;
     else
-        big_int_create_from_chunk(r, 1, 0);
+        r_loc = big_int_create_from_chunk(r, 1, 0);
 
     big_int_copy(b_loc, b);
 
@@ -242,6 +242,90 @@ BigInt *big_int_curve1174_pow(BigInt *r, BigInt *b, BigInt *e)
 
     return r;
 }
+
+
+/**
+ * \brief Calculate r := (b^((q-1)/2)) mod q
+ *
+ * \assumption r, b != NULL
+ */
+BigInt *big_int_curve1174_pow_q_m1_d2(BigInt *r, BigInt *b)
+{
+    ADD_STAT_COLLECTION(BIGINT_CURVE1174_TYPE_BIG_INT_POW_1_2);
+
+    BIG_INT_DEFINE_PTR(b_loc);
+    BIG_INT_DEFINE_FROM_CHUNK(r_one, 0, 1);
+    BigInt *r_loc;
+
+    if (r == b)
+        r_loc = r_one;
+    else
+        r_loc = big_int_create_from_chunk(r, 1, 0);
+
+    big_int_copy(b_loc, b);
+
+    // (q-1)/2 = 0b1111...11111011 (there are 247 ones before the suffix 011)
+
+    // Ensure suffix
+    // e = 1
+    big_int_curve1174_mul_mod(r_loc, r_loc, b_loc);
+
+    // e = 11
+    big_int_curve1174_mul_mod(b_loc, b_loc, b_loc);
+    big_int_curve1174_mul_mod(r_loc, r_loc, b_loc);
+
+    // e = 011
+    big_int_curve1174_mul_mod(b_loc, b_loc, b_loc);
+
+    // All the remaining bits are set to one, so we add all of them
+    for (uint32_t i = 0; i < 247; ++i) {
+        big_int_curve1174_mul_mod(b_loc, b_loc, b_loc);
+        big_int_curve1174_mul_mod(r_loc, r_loc, b_loc);
+    }
+
+    if (r == b)
+        big_int_copy(r, r_loc);
+
+    return r;
+}
+
+
+
+/**
+ * \brief Calculate r := (b^((q+1)/4)) mod q
+ *
+ * \assumption r, b != NULL
+ */
+BigInt *big_int_curve1174_pow_q_p1_d4(BigInt *r, BigInt *b)
+{
+    ADD_STAT_COLLECTION(BIGINT_CURVE1174_TYPE_BIG_INT_POW_1_2);
+
+    BIG_INT_DEFINE_PTR(b_loc);
+    BIG_INT_DEFINE_FROM_CHUNK(r_one, 0, 1);
+    BigInt *r_loc;
+
+    if (r == b)
+        r_loc = r_one;
+    else
+        r_loc = big_int_create_from_chunk(r, 1, 0);
+
+    big_int_copy(b_loc, b);
+
+    // (q+1)/4 = 0b111111...111110 (there are 248 ones)
+
+    // The first bit of the exponent is zero, because we start with doubling b.
+    // All the remaining bits are set to one, so we add all of them.
+    for (uint32_t i = 0; i < 248; ++i) {
+        big_int_curve1174_mul_mod(b_loc, b_loc, b_loc);
+        big_int_curve1174_mul_mod(r_loc, r_loc, b_loc);
+    }
+
+    if (r == b)
+        big_int_copy(r, r_loc);
+
+    return r;
+}
+
 
 /**
  * \brief Calculate the Chi function chi(t) = t**((q-1)/2) mod q
