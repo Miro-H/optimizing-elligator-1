@@ -1024,7 +1024,7 @@ int main(int argc, char const *argv[])
 
         BENCHMARK(bench_type, BENCH_TYPE_CREATE,
             bench_big_int_create_from_chunk((void *)bench_big_int_size_256_args, "create",
-                LOG_PATH "/runtime_big_int_create.log"););
+                LOG_PATH "/runtime_big_int_create.log"));
 
         BENCHMARK(bench_type, BENCH_TYPE_CREATE_DBL_CHUNK,
             bench_big_int_create_from_dbl_chunk((void *)bench_big_int_size_256_args,
@@ -1088,7 +1088,7 @@ int main(int argc, char const *argv[])
             bench_big_int_mul((void *)bench_big_int_size_256_args, "mul",
                 LOG_PATH "/runtime_big_int_mul.log"));
 
-        BENCHMARK(bench_type, BENCH_TYPE_MUL_CURVE,
+        BENCHMARK(bench_type, BENCH_TYPE_MUL_MOD_CURVE,
             bench_big_int_mul_mod((void *)bench_big_int_size_256_curve_mod_args,
                 "mul mod (curve)", LOG_PATH "/runtime_big_int_mul_mod_curve.log"));
 
@@ -1100,13 +1100,9 @@ int main(int argc, char const *argv[])
             bench_big_int_div_rem((void *)bench_big_int_size_256_random_mod_args,
                 "divrem", LOG_PATH "/runtime_big_int_div_rem_random.log"));
 
-        BENCHMARK(bench_type, BENCH_TYPE_DIVREM_CURVE,
-            bench_big_int_div_rem((void *)bench_big_int_size_256_curve_mod_args,
-                "divrem (curve)", LOG_PATH "/runtime_big_int_div_rem_curve.log"));
-
-        BENCHMARK(bench_type, BENCH_TYPE_DIVREM_RANDOM,
-            bench_big_int_div_rem((void *)bench_big_int_size_256_random_mod_args,
-                "divrem (random)", LOG_PATH "/runtime_big_int_div_rem_random.log"));
+        BENCHMARK(bench_type, BENCH_TYPE_DIV_MOD_CURVE,
+            bench_big_int_div_mod((void *)bench_big_int_size_256_curve_mod_args,
+                "div mod (curve)", LOG_PATH "/runtime_big_int_div_mod_curve.log"));
 
         BENCHMARK(bench_type, BENCH_TYPE_DIV,
             bench_big_int_div((void *)bench_big_int_size_256_args, "div",
@@ -1130,7 +1126,7 @@ int main(int argc, char const *argv[])
 
         BENCHMARK(bench_type, BENCH_TYPE_MOD_CURVE,
             bench_big_int_mod((void *)bench_big_int_size_256_curve_mod_args,
-            "mod (curve)", LOG_PATH "/runtime_big_int_mod_curve.log"););
+            "mod (curve)", LOG_PATH "/runtime_big_int_mod_curve.log"));
 
         BENCHMARK(bench_type, BENCH_TYPE_MOD_RANDOM,
             bench_big_int_mod((void *)bench_big_int_size_256_random_mod_args,

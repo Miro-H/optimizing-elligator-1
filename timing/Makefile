@@ -96,6 +96,12 @@ $(ODIR)/%.o: $(SDIR)/%.c $(DEPS)
 	$(CC) -c -o $@ $< $(CFLAGS)
 
 
+.PHONY: gen-bench-types
+gen-bench-types:
+	${ROOT_SCRIPTS_DIR}/gen_types.py \
+		--src_file ${SDIR}/runtime_benchmark_curve1174.c  ${SDIR}/runtime_benchmark.c \
+		--tar_file ${IDIR}/benchmark_types.h
+
 ################################################################################
 #							Runtime Benchmarks								   #
 ################################################################################
@@ -108,12 +114,6 @@ OBJ 	= $(patsubst %,$(ODIR)/%,$(_OBJ))
 # Specify the object files of the benched functions
 _OBJ_BENCHED 	= bigint.o elligator.o
 OBJ_BENCHED		= $(patsubst %,$(ODIR_BENCHED)/%,$(_OBJ_BENCHED))
-
-.PHONY: gen-bench-types
-gen-bench-types:
-	${ROOT_SCRIPTS_DIR}/gen_types.py \
-		--src_file ${SDIR}/runtime_benchmark.c \
-		--tar_file ${IDIR}/benchmark_types.h
 
 .PHONY: prepare-logs-runtime-benchmark
 prepare-logs-runtime-benchmark:
@@ -142,6 +142,53 @@ plot-runtime-benchmark: clean run-runtime-benchmark
 
 runtime-benchmark: $(OBJ_BENCHED) $(OBJ)
 	$(CC) -o $(BDIR)/$@ $^ $(CFLAGS) $(LIBS)
+
+
+################################################################################
+#						Runtime Curve1174 Benchmarks						   #
+################################################################################
+
+ifneq ($(VERSION), 1)
+
+RUNTIME_CURVE1174_SUB_PATH = V$(VERSION)/$(LOG_SUBDIRS)
+
+# Specify the object files constituting the test
+_OBJ	= benchmark_helpers.o runtime_benchmark_curve1174.o
+OBJ 	= $(patsubst %,$(ODIR)/%,$(_OBJ))
+
+# Specify the object files of the benched functions
+_OBJ_BENCHED 	= bigint.o bigint_curve1174.o
+OBJ_BENCHED		= $(patsubst %,$(ODIR_BENCHED)/%,$(_OBJ_BENCHED))
+
+.PHONY: prepare-logs-runtime-benchmark-curve1174
+prepare-logs-runtime-benchmark-curve1174:
+	mkdir -p $(LOG_PATH)
+
+.PHONY: compile-runtime-benchmark-curve1174
+compile-runtime-benchmark-curve1174: OUT_SUB_PATH = $(RUNTIME_CURVE1174_SUB_PATH)
+compile-runtime-benchmark-curve1174: LOG_PATH = $(LOG_BASE_PATH)/$(OUT_SUB_PATH)
+compile-runtime-benchmark-curve1174: CFLAGS += -DLOG_PATH=\"$(LOG_PATH)\"
+compile-runtime-benchmark-curve1174: prepare-logs-runtime-benchmark-curve1174 all-benched gen-bench-types runtime-benchmark-curve1174
+
+.PHONY: run-runtime-benchmark-curve1174
+run-runtime-benchmark-curve1174: OUT_SUB_PATH = $(RUNTIME_CURVE1174_SUB_PATH)
+run-runtime-benchmark-curve1174: LOG_PATH = $(LOG_BASE_PATH)/$(OUT_SUB_PATH)
+run-runtime-benchmark-curve1174: compile-runtime-benchmark-curve1174
+	./$(BDIR)/runtime-benchmark-curve1174 $(BENCHMARKS)
+
+.PHONY: plot-runtime-benchmark-curve1174
+plot-runtime-benchmark-curve1174: OUT_SUB_PATH = $(RUNTIME_CURVE1174_SUB_PATH)
+plot-runtime-benchmark-curve1174: LOG_PATH = $(LOG_BASE_PATH)/$(OUT_SUB_PATH)
+plot-runtime-benchmark-curve1174: clean run-runtime-benchmark-curve1174
+	# Needs to be repeated to execute multiple times in same make call
+	PUBLISH=$(PUBLISH) COLLECT_STATS=$(COLLECT_STATS) SETS=$(SETS) \
+	REPS=$(REPS) LOGS_DIR=$(LOG_PATH) OUT_SUB_PATH=$(OUT_SUB_PATH) \
+	$(SCRIPTS_DIR)/make_all_plots.sh
+
+runtime-benchmark-curve1174: $(OBJ_BENCHED) $(OBJ)
+	$(CC) -o $(BDIR)/$@ $^ $(CFLAGS) $(LIBS)
+
+endif
 
 ################################################################################
 #						   		GMP Benchmarks								   #
