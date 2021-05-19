@@ -82,7 +82,7 @@ BigInt *big_int_curve1174_mod(BigInt *r, BigInt *a)
  */
 BigInt *big_int_curve1174_add_mod(BigInt *r, BigInt *a, BigInt *b)
 {
-    ADD_STAT_COLLECTION(BIGINT_CURVE1774_TYPE_BIG_INT_ADD_MOD);
+    ADD_STAT_COLLECTION(BIGINT_CURVE1174_TYPE_BIG_INT_ADD_MOD);
 
     big_int_add(r, a, b);
     big_int_curve1174_mod(r, r);
@@ -97,7 +97,7 @@ BigInt *big_int_curve1174_add_mod(BigInt *r, BigInt *a, BigInt *b)
  */
 BigInt *big_int_curve1174_sub_mod(BigInt *r, BigInt *a, BigInt *b)
 {
-    ADD_STAT_COLLECTION(BIGINT_CURVE1774_TYPE_BIG_INT_SUB_MOD);
+    ADD_STAT_COLLECTION(BIGINT_CURVE1174_TYPE_BIG_INT_SUB_MOD);
 
     big_int_sub(r, a, b);
     big_int_curve1174_mod(r, r);
@@ -112,7 +112,7 @@ BigInt *big_int_curve1174_sub_mod(BigInt *r, BigInt *a, BigInt *b)
  */
 BigInt *big_int_curve1174_mul_mod(BigInt *r, BigInt *a, BigInt *b)
 {
-    ADD_STAT_COLLECTION(BIGINT_CURVE1774_TYPE_BIG_INT_MUL_MOD);
+    ADD_STAT_COLLECTION(BIGINT_CURVE1174_TYPE_BIG_INT_MUL_MOD);
 
     // a, b are usually not larger than q, thus it is not worth it to perform a
     // mod operation on the operands before multiplying.
@@ -132,7 +132,7 @@ BigInt *big_int_curve1174_mul_mod(BigInt *r, BigInt *a, BigInt *b)
  */
 BigInt *big_int_curve1174_div_mod(BigInt *r, BigInt *a, BigInt *b)
 {
-    ADD_STAT_COLLECTION(BIGINT_CURVE1774_TYPE_BIG_INT_DIV_MOD);
+    ADD_STAT_COLLECTION(BIGINT_CURVE1174_TYPE_BIG_INT_DIV_MOD);
 
     BIG_INT_DEFINE_PTR(r_loc);
 
@@ -152,7 +152,7 @@ BigInt *big_int_curve1174_div_mod(BigInt *r, BigInt *a, BigInt *b)
  */
 BigInt *big_int_curve1174_inv_fermat(BigInt *r, BigInt *a)
 {
-    ADD_STAT_COLLECTION(BIGINT_CURVE1774_TYPE_BIG_INT_INV);
+    ADD_STAT_COLLECTION(BIGINT_CURVE1174_TYPE_BIG_INT_INV);
 
     big_int_curve1174_pow(r, a, q_min_two);
     return r;
@@ -164,36 +164,83 @@ BigInt *big_int_curve1174_inv_fermat(BigInt *r, BigInt *a)
 
 
 /**
+ * \brief Calculate r := (b^e) mod q for small exponents e < 2^64
+ *
+ * \assumption r, b != NULL
+ */
+BigInt *big_int_curve1174_pow_small(BigInt *r, BigInt *b, uint64_t e)
+{
+    ADD_STAT_COLLECTION(BIGINT_CURVE1174_TYPE_BIG_INT_POW_SMALL);
+
+    BIG_INT_DEFINE_PTR(b_loc);
+    BIG_INT_DEFINE_FROM_CHUNK(r_one, 0, 1);
+    BigInt *r_loc;
+
+    if (r == b)
+        r_loc = r_one;
+    else
+        big_int_create_from_chunk(r, 1, 0);
+
+    big_int_copy(b_loc, b);
+
+    while (e) {
+        // If power is odd
+        if (e & 1)
+            big_int_curve1174_mul_mod(r_loc, r_loc, b_loc);
+
+        e >>= 1;
+        // TODO: compute those in parallel in first step. Those are only 256
+        // results, we could even store them on the stack.
+        big_int_curve1174_mul_mod(b_loc, b_loc, b_loc);
+    }
+
+    if (r == b)
+        big_int_copy(r, r_loc);
+
+    return r;
+}
+
+/**
  * \brief Calculate r := (b^e) mod q
  *
  * \assumption r, b, e != NULL
  */
 BigInt *big_int_curve1174_pow(BigInt *r, BigInt *b, BigInt *e)
 {
-    ADD_STAT_COLLECTION(BIGINT_CURVE1774_TYPE_BIG_INT_POW);
-    FATAL("Not yet optimized!");
+    ADD_STAT_COLLECTION(BIGINT_CURVE1174_TYPE_BIG_INT_POW);
 
-    // TODO
-    // BIG_INT_DEFINE_PTR(e_loc);
-    // BIG_INT_DEFINE_PTR(b_loc);
-    //
-    // BIG_INT_DEFINE_FROM_CHUNK(r_loc, 0, 1);
-    //
-    // big_int_copy(e_loc, e);
-    // big_int_copy(b_loc, b);
-    //
-    // while (big_int_compare(e_loc, big_int_zero) > 0) {
-    //     // If power is odd
-    //     if (big_int_is_odd(e_loc))
-    //         big_int_mul_mod(r_loc, r_loc, b_loc, q);
-    //
-    //     big_int_srl_small(e_loc, e_loc, 1);
-    //     big_int_mul_mod(b_loc, b_loc, b_loc, q);
-    // }
-    //
-    // // TODO: copy could be saved if we assume no aliasing
-    // return big_int_copy(r, r_loc);
-    return NULL;
+    BIG_INT_DEFINE_PTR(b_loc);
+    BIG_INT_DEFINE_FROM_CHUNK(r_one, 0, 1);
+    BigInt *r_loc;
+    dbl_chunk_size_t e_chunk;
+
+    if (r == b)
+        r_loc = r_one;
+    else
+        big_int_create_from_chunk(r, 1, 0);
+
+    big_int_copy(b_loc, b);
+
+    // Operate on exponent chunk by chunk
+    for (uint32_t i = 0; i < e->size; ++i) {
+        e_chunk = e->chunks[i];
+
+        while (e_chunk) {
+            // If power is odd
+            if (e_chunk & 1)
+                big_int_curve1174_mul_mod(r_loc, r_loc, b_loc);
+
+            e_chunk >>= 1;
+            // TODO: compute those in parallel in first step. Those are only 256
+            // results, we could even store them on the stack.
+            big_int_curve1174_mul_mod(b_loc, b_loc, b_loc);
+        }
+    }
+
+    if (r == b)
+        big_int_copy(r, r_loc);
+
+    return r;
 }
 
 /**
@@ -204,7 +251,7 @@ BigInt *big_int_curve1174_pow(BigInt *r, BigInt *b, BigInt *e)
  */
 BigInt *big_int_curve1174_chi(BigInt *r, BigInt *t)
 {
-    ADD_STAT_COLLECTION(BIGINT_CURVE1774_TYPE_BIG_INT_CHI);
+    ADD_STAT_COLLECTION(BIGINT_CURVE1174_TYPE_BIG_INT_CHI);
     FATAL("Not yet optimized!");
 
     // TODO

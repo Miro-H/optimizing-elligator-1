@@ -64,6 +64,12 @@ We could also do **binary search** for the correct `a_i`: the first one where th
 ## Modular Inverse
 Since `q` is prime, there are alternatives to using the normal GCD algorithm for calculating the inverse:
 - **Fermat's theorem:** for `0 < a < q`, we have `a^(q-1) = 1 (mod q)` by Fermat's theorem. Thus, the inverse is `a^-1 = a^(q-2) (mod q)`. Therefore, we can do `log(q)` multiplications instead of `log(q)` expensive divisions (in expectation).
+- **Right-Shift Algorithm:** Based on work of Penk and using Montgommery inverses. Described [here](https://link.springer.com/content/pdf/10.1007%2F3-540-36400-5_6.pdf). Look also at [this](https://www.researchgate.net/publication/3387259_Improved_Montgomery_modular_inverse_algorithm) and [this](https://ieeexplore.ieee.org/stamp/stamp.jsp?tp=&arnumber=863048).
+
+## Modular Exponentiation
+Observations:
+1. Many power operations are to the power of small integers. Thus, add a function that only takes exponents of at most 64 bits in size.
+2. We don't need to shift the entire exponent `e`, we can just operate on it chunk by chunk! This enables us to use much cheaper integer shifts!
 
 ## Function Inlining
 ```
