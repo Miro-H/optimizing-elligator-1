@@ -38,3 +38,25 @@ Optimizations:
     - Remove corresponding obsolete `free_*` functions
 - Initialize curve parameters in `init_curve1174` directly from hex strings instead of computing them whenever possible
 - Change GCD to return pointer to `EgcdResult`, add `EgcdResult` as argument
+- Refactor tests and benchmarking to new APIs
+
+## Cheap Modulo Operation for Curve1174
+Our curve uses `q = 2^251 - 9` as modulus. This means we have the following equation:
+```
+2^251 - 9 = 0 (mod q)
+=> 2^251 = 9 (mod q)
+=> 2^256 = 288 (mod q)
+```
+
+Thus, we can split a number `X` of 512 bits into two parts: `X1 * 2^256 + X0`, where `X1` are the higher 256 bits and `X0` are the lower 256 bits. Then, we can compute `mod q` as follows:
+```
+X = X1 * 2^256 + X0 = X1 * 288 + X0 (mod q)
+```
+
+This is a lot cheaper than using division to compute the modulus.
+
+### Second Observation
+For numbers `q < X < 2^256` we cannot use the above trick. However, we can use repeated substraction instead of division: since `2^256 / q < 33`, we have to do between `1` and `33` subtractions until `X < q`. Depending on how much we can optimize subtraction in comparison to `divrem`, this could be cheaper.
+
+This could also be **parallelized**: we could precompute `a_i * q` for `a_i \in [1, 33]` and then compute `X - a_i` in parallel.
+We could also do **binary search** for the correct `a_i`: the first one where the result is not negative.
