@@ -319,7 +319,7 @@ START_TEST(test_modulo_inverse)
     big_int_create_from_hex(ainv_exp,
         "6E590E98D1F28843F19A108DF2153AEC5901C39F34D68A1FE43C08B8F2B75DE");
 
-    big_int_curve1174_inv(a, a);
+    BIG_INT_CURVE1174_INV(a, a);
     ck_assert_int_eq(big_int_compare(a, ainv_exp), 0);
 
     // Negative a
@@ -327,7 +327,7 @@ START_TEST(test_modulo_inverse)
     big_int_create_from_hex(ainv_exp,
         "11A6F1672E0D77BC0E65EF720DEAC513A6FE3C60CB2975E01BC3F7470D48A19");
 
-    big_int_curve1174_inv(a, a);
+    BIG_INT_CURVE1174_INV(a, a);
     ck_assert_int_eq(big_int_compare(a, ainv_exp), 0);
 
     // a = 7
@@ -335,7 +335,7 @@ START_TEST(test_modulo_inverse)
     big_int_create_from_hex(ainv_exp,
         "49249249249249249249249249249249249249249249249249249249249248D");
 
-    big_int_curve1174_inv(a, a);
+    BIG_INT_CURVE1174_INV(a, a);
     ck_assert_int_eq(big_int_compare(a, ainv_exp), 0);
 }
 END_TEST
@@ -492,9 +492,9 @@ START_TEST(test_chi)
 
     big_int_curve1174_chi(r, t); // chi(t)
 
-    big_int_curve1174_inv(s, r); // 1/chi(t)
+    BIG_INT_CURVE1174_INV(s, r); // 1/chi(t)
 
-    big_int_curve1174_inv(t, t);
+    BIG_INT_CURVE1174_INV(t, t);
     big_int_curve1174_chi(t, t); // chi(1/t)
 
     ck_assert_int_eq(big_int_compare(r, s), 0);

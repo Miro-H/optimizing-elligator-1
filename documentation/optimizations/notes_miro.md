@@ -61,6 +61,10 @@ For numbers `q < X < 2^256` we cannot use the above trick. However, we can use r
 This could also be **parallelized**: we could precompute `a_i * q` for `a_i \in [1, 33]` and then compute `X - a_i` in parallel.
 We could also do **binary search** for the correct `a_i`: the first one where the result is not negative.
 
+## Modular Inverse
+Since `q` is prime, there are alternatives to using the normal GCD algorithm for calculating the inverse:
+- **Fermat's theorem:** for `0 < a < q`, we have `a^(q-1) = 1 (mod q)` by Fermat's theorem. Thus, the inverse is `a^-1 = a^(q-2) (mod q)`. Therefore, we can do `log(q)` multiplications instead of `log(q)` expensive divisions (in expectation).
+
 ## Function Inlining
 ```
 TODO

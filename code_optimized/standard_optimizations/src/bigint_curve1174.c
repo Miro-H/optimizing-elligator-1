@@ -137,7 +137,7 @@ BigInt *big_int_curve1174_div_mod(BigInt *r, BigInt *a, BigInt *b)
     BIG_INT_DEFINE_PTR(r_loc);
 
     // Write to local copy to be save against pointer reuse
-    big_int_curve1174_inv(r_loc, b);
+    BIG_INT_CURVE1174_INV(r_loc, b);
     big_int_curve1174_mul_mod(r, a, r_loc);
     return r;
 }
@@ -146,24 +146,21 @@ BigInt *big_int_curve1174_div_mod(BigInt *r, BigInt *a, BigInt *b)
 /**
  * \brief Calculate r := a^-1 mod q (the inverse of a)
  *
+ * Compute a^-1 = a^(q-2) (mod q) (a consequence of Fermat's theorem).
+ *
  * \assumption r, a != NULL
- * \assumption a is invertible mod q, i.e., res.g = 1
  */
-BigInt *big_int_curve1174_inv(BigInt *r, BigInt *a)
+BigInt *big_int_curve1174_inv_fermat(BigInt *r, BigInt *a)
 {
     ADD_STAT_COLLECTION(BIGINT_CURVE1774_TYPE_BIG_INT_INV);
-    FATAL("Not yet optimized!");
 
-    // TODO
-    // EgcdResult res;
-    //
-    // big_int_egcd(&res, a, q);
-    //
-    // // set r = x mod q
-    // big_int_mod(r, &res.x, q);
-
+    big_int_curve1174_pow(r, a, q_min_two);
     return r;
 }
+
+
+// TODO: implement Montgommery inverse, which is based on cheaper shifting operations
+// and compare it to fermat.
 
 
 /**
@@ -198,77 +195,6 @@ BigInt *big_int_curve1174_pow(BigInt *r, BigInt *b, BigInt *e)
     // return big_int_copy(r, r_loc);
     return NULL;
 }
-
-
-/**
- * \brief Calculate the greatest common divisor using the extended Euclidean
- *        algorithm (iterative version) for the FIXED second argument q.
- *        This is mainly used for inverting numbers in Z_q.
- *
- * \returns Pointer to EgcdResult (x, y, g), where x * a + y * q = g
- *          and g is the GCD.
- *
- * \assumption r, a != NULL
- */
-EgcdResult *big_int_curve1174_egcd(EgcdResult *r, BigInt *a)
-{
-    ADD_STAT_COLLECTION(BIGINT_CURVE1774_TYPE_BIG_INT_EGCD);
-    FATAL("Not yet optimized!");
-
-    // TODO
-    // BIG_INT_DEFINE_PTR(q);
-    // BIG_INT_DEFINE_PTR(a_loc);
-    // BIG_INT_DEFINE_PTR(x1);
-    // BIG_INT_DEFINE_PTR(y1);
-    // BIG_INT_DEFINE_PTR(tmp);
-    //
-    // // Avoid copying intermediate results to final result by using the latter
-    // // from the start
-    // BigInt *b_loc = &(r->g);
-    // BigInt *x0 = &(r->x);
-    // BigInt *y0 = &(r->y);
-    //
-    // if (big_int_is_zero(a) && big_int_is_zero(b)) {
-    //     big_int_create_from_chunk(x0, 0, 0);
-    //     big_int_create_from_chunk(y0, 0, 0);
-    //     big_int_create_from_chunk(b_loc, 0, 0);
-    //     return r;
-    // }
-    //
-    // big_int_create_from_chunk(x0, 0, 0);
-    // big_int_create_from_chunk(x1, 1, 0);
-    // big_int_create_from_chunk(y0, 1, 0);
-    // big_int_create_from_chunk(y1, 0, 0);
-    //
-    // big_int_copy(a_loc, a);
-    // big_int_copy(b_loc, b);
-    //
-    // // Take the GCD of positive numbers, then just flig the signs of x, y at the end
-    // big_int_abs(a_loc, a_loc);
-    // big_int_abs(b_loc, b_loc);
-    //
-    // while (big_int_compare(a_loc, big_int_zero) != 0)
-    // {
-    //     big_int_div_rem(q, tmp, b_loc, a_loc);
-    //     big_int_copy(b_loc, a_loc);
-    //     big_int_copy(a_loc, tmp);
-    //
-    //     big_int_copy(tmp, y1);
-    //     big_int_sub(y1, y0, big_int_mul(y1, y1, q));
-    //     big_int_copy(y0, tmp);
-    //
-    //     big_int_copy(tmp, x1);
-    //     big_int_sub(x1, x0, big_int_mul(x1, x1, q));
-    //     big_int_copy(x0, tmp);
-    // }
-    //
-    // // Account for signs of a and b
-    // x0->sign ^= a->sign;
-    // y0->sign ^= b->sign;
-
-    return r;
-}
-
 
 /**
  * \brief Calculate the Chi function chi(t) = t**((q-1)/2) mod q

@@ -13,37 +13,36 @@
 #define BIGINT_CURVE1774_TYPE_BIG_INT_DIV_MOD     4
 #define BIGINT_CURVE1774_TYPE_BIG_INT_INV         5
 #define BIGINT_CURVE1774_TYPE_BIG_INT_POW         6
-#define BIGINT_CURVE1774_TYPE_BIG_INT_EGCD        7
-#define BIGINT_CURVE1774_TYPE_BIG_INT_CHI         8
-#define BIGINT_TYPE_BIG_INT_GET_RES               9
-#define BIGINT_TYPE_BIG_INT_PRUNE_LEADING_ZEROS   10
-#define BIGINT_TYPE_BIG_INT_CREATE_FROM_CHUNK     11
-#define BIGINT_TYPE_BIG_INT_CREATE_FROM_DBL_CHUNK 12
-#define BIGINT_TYPE_BIG_INT_CREATE_FROM_HEX       13
-#define BIGINT_TYPE_BIG_INT_CREATE_RANDOM         14
-#define BIGINT_TYPE_BIG_INT_COPY                  15
-#define BIGINT_TYPE_BIG_INT_NEG                   16
-#define BIGINT_TYPE_BIG_INT_ABS                   17
-#define BIGINT_TYPE_BIG_INT_ADD                   18
-#define BIGINT_TYPE_BIG_INT_SUB                   19
-#define BIGINT_TYPE_BIG_INT_MUL                   20
-#define BIGINT_TYPE_BIG_INT_DEV_REM               21
-#define BIGINT_TYPE_BIG_INT_DIV                   22
-#define BIGINT_TYPE_BIG_INT_SLL_SMALL             23
-#define BIGINT_TYPE_BIG_INT_SRL_SMALL             24
-#define BIGINT_TYPE_BIG_INT_MOD                   25
-#define BIGINT_TYPE_BIG_INT_ADD_MOD               26
-#define BIGINT_TYPE_BIG_INT_SUB_MOD               27
-#define BIGINT_TYPE_BIG_INT_MUL_MOD               28
-#define BIGINT_TYPE_BIG_INT_DIV_MOD               29
-#define BIGINT_TYPE_BIG_INT_INV                   30
-#define BIGINT_TYPE_BIG_INT_POW                   31
-#define BIGINT_TYPE_BIG_INT_IS_ZERO               32
-#define BIGINT_TYPE_BIG_INT_IS_ODD                33
-#define BIGINT_TYPE_BIG_INT_COMPARE               34
-#define BIGINT_TYPE_BIG_INT_EGCD                  35
-#define BIGINT_TYPE_BIG_INT_CHI                   36
-#define BIGINT_TYPE_LAST                          37
+#define BIGINT_CURVE1774_TYPE_BIG_INT_CHI         7
+#define BIGINT_TYPE_BIG_INT_GET_RES               8
+#define BIGINT_TYPE_BIG_INT_PRUNE_LEADING_ZEROS   9
+#define BIGINT_TYPE_BIG_INT_CREATE_FROM_CHUNK     10
+#define BIGINT_TYPE_BIG_INT_CREATE_FROM_DBL_CHUNK 11
+#define BIGINT_TYPE_BIG_INT_CREATE_FROM_HEX       12
+#define BIGINT_TYPE_BIG_INT_CREATE_RANDOM         13
+#define BIGINT_TYPE_BIG_INT_COPY                  14
+#define BIGINT_TYPE_BIG_INT_NEG                   15
+#define BIGINT_TYPE_BIG_INT_ABS                   16
+#define BIGINT_TYPE_BIG_INT_ADD                   17
+#define BIGINT_TYPE_BIG_INT_SUB                   18
+#define BIGINT_TYPE_BIG_INT_MUL                   19
+#define BIGINT_TYPE_BIG_INT_DEV_REM               20
+#define BIGINT_TYPE_BIG_INT_DIV                   21
+#define BIGINT_TYPE_BIG_INT_SLL_SMALL             22
+#define BIGINT_TYPE_BIG_INT_SRL_SMALL             23
+#define BIGINT_TYPE_BIG_INT_MOD                   24
+#define BIGINT_TYPE_BIG_INT_ADD_MOD               25
+#define BIGINT_TYPE_BIG_INT_SUB_MOD               26
+#define BIGINT_TYPE_BIG_INT_MUL_MOD               27
+#define BIGINT_TYPE_BIG_INT_DIV_MOD               28
+#define BIGINT_TYPE_BIG_INT_INV                   29
+#define BIGINT_TYPE_BIG_INT_POW                   30
+#define BIGINT_TYPE_BIG_INT_IS_ZERO               31
+#define BIGINT_TYPE_BIG_INT_IS_ODD                32
+#define BIGINT_TYPE_BIG_INT_COMPARE               33
+#define BIGINT_TYPE_BIG_INT_EGCD                  34
+#define BIGINT_TYPE_BIG_INT_CHI                   35
+#define BIGINT_TYPE_LAST                          36
 
 __attribute__((unused))
 static char *big_int_type_names[] = {
@@ -54,7 +53,6 @@ static char *big_int_type_names[] = {
     "bigint_curve1774_type_big_int_div_mod",
     "bigint_curve1774_type_big_int_inv",
     "bigint_curve1774_type_big_int_pow",
-    "bigint_curve1774_type_big_int_egcd",
     "bigint_curve1774_type_big_int_chi",
     "big_int_get_res",
     "big_int_prune_leading_zeros",
