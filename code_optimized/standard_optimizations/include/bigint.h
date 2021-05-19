@@ -148,7 +148,6 @@ BigInt *big_int_div(BigInt *r, BigInt *a, BigInt *b);
 BigInt *big_int_div_rem(BigInt *q, BigInt *r, BigInt *a, BigInt *b);
 
 // Shifts
-// TODO: consider implementing general shifts
 BigInt *big_int_sll_small(BigInt *r, BigInt *a, uint64_t shift);
 BigInt *big_int_srl_small(BigInt *r, BigInt *a, uint64_t shift);
 
