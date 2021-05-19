@@ -198,7 +198,7 @@ START_TEST(test_sub_mod)
     big_int_create_from_hex(b,
         "-5B3C6D6F1A98765606EACDAAE185A65F0B95A94C2B939F8D060DE2079C669E1");
     big_int_create_from_hex(r,
-        "B6789569B16080DF054C3FD5BF76C9893C7508DF62A0BB19665222877E6789");
+        "41E06434D046F4B9FE2A5F531F02B956AAF2A3264D514ACBA280E637B0B3B54");
 
     big_int_curve1174_sub_mod(a, a, b);
     ck_assert_int_eq(big_int_compare(a, r), 0);
