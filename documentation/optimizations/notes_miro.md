@@ -82,3 +82,35 @@ Also, I changed the return value to `int8_t` instead of a BigInt.
 TODO
 ```
 Look into compiler attributes to force inlining.
+
+## Comparison Plot Curve1174 vs. Previous
+Make a comparison plot between those functions as follows.
+
+
+Create logs for the normal BigInt functions.
+
+For this, look at the current `benchmark_types.h` file and find the numbers for the following benchmarks (here are the current numbers, they might have changed!):
+- `BENCH_TYPE_ADD_MOD_CURVE`: 25
+- `BENCH_TYPE_SUB_MOD_CURVE`: 28
+- `BENCH_TYPE_MUL_MOD_CURVE`: 31
+- `BENCH_TYPE_DIV_MOD_CURVE`: 34
+- `BENCH_TYPE_MOD_CURVE`: 38
+- `BENCH_TYPE_INV`: 40
+- `BENCH_TYPE_POW_CURVE`: 41
+- `BENCH_TYPE_COMPARE`: 45
+- `BENCH_TYPE_CHI`: 47
+
+Then create logs for those benchmarks:
+```
+BENCHMARKS="25 28 31 34 38 40 41 45 47" SETS=10 REPS=1000 make run-runtime-benchmark
+```
+
+Create logs for the Curve1174 functions:
+```
+SETS=10 REPS=1000 make run-runtime-benchmark-curve1174
+```
+
+Write down the log folders of the previous make runs and make the comparison plot:
+```
+LOGS_NAMES="general curve1174" LOGS_DIRS="<path/to/general/logs> <path/to/curve1174/logs>" SETS=10 REPS=1000 make plot-comparison
+```
