@@ -1108,14 +1108,6 @@ int main(int argc, char const *argv[])
             bench_big_int_div((void *)bench_big_int_size_256_args, "div",
                 LOG_PATH "/runtime_big_int_div.log"));
 
-        BENCHMARK(bench_type, BENCH_TYPE_DIV_CURVE,
-            bench_big_int_div((void *)bench_big_int_size_256_curve_mod_args,
-                "div (curve)", LOG_PATH "/runtime_big_int_div_curve.log"));
-
-        BENCHMARK(bench_type, BENCH_TYPE_DIV_RANDOM,
-            bench_big_int_div((void *)bench_big_int_size_256_random_mod_args,
-                "div (random)", LOG_PATH "/runtime_big_int_div_random.log"));
-
         BENCHMARK(bench_type, BENCH_TYPE_SLL,
             bench_big_int_sll_small((void *)bench_big_int_size_256_args, "sll",
                 LOG_PATH "/runtime_big_int_sll_small.log"));
