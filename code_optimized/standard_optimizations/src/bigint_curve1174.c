@@ -84,8 +84,33 @@ BigInt *big_int_curve1174_add_mod(BigInt *r, BigInt *a, BigInt *b)
 {
     ADD_STAT_COLLECTION(BIGINT_CURVE1174_TYPE_BIG_INT_ADD_MOD);
 
-    big_int_add(r, a, b);
-    big_int_curve1174_mod(r, r);
+    BIG_INT_DEFINE_PTR(a_mod);
+    BIG_INT_DEFINE_PTR(b_mod);
+    BigInt *a_loc, *b_loc;
+
+    if (a->sign || big_int_curve1174_compare_to_q(r) >= 0) {
+        big_int_curve1174_mod(a_mod, a);
+        a_loc = a_mod;
+    }
+    else {
+        a_loc = a;
+    }
+
+    if (b->sign || big_int_curve1174_compare_to_q(r) >= 0) {
+        big_int_curve1174_mod(b_mod, b);
+        b_loc = b_mod;
+    }
+    else {
+        b_loc = b;
+    }
+
+    big_int_add(r, a_loc, b_loc);
+
+    if (r->sign)
+        big_int_add(r, r, q);
+    else if (big_int_curve1174_compare_to_q(r) >= 0)
+        big_int_sub(r, r, q);
+
     return r;
 }
 
@@ -100,6 +125,11 @@ BigInt *big_int_curve1174_sub_mod(BigInt *r, BigInt *a, BigInt *b)
     ADD_STAT_COLLECTION(BIGINT_CURVE1174_TYPE_BIG_INT_SUB_MOD);
 
     big_int_sub(r, a, b);
+
+    // if (big_int_curve1174_compare_to_q(r) >= 0)
+    //     big_int_sub(r, r, q);
+    // else if (r->sign)
+    //     big_int_add(r, r, q);
     big_int_curve1174_mod(r, r);
     return r;
 }
@@ -366,10 +396,21 @@ int8_t big_int_curve1174_compare_to_q(BigInt *a)
 
     // Remaining case: a->size == Q_CHUNKS and a is positive
 
-    // Compare to highest chunk of Q only
+    // Compare to highest chunk of Q
     if (a->chunks[Q_CHUNKS-1] < Q_MSB_CHUNK)
         return -1;
     if (a->chunks[Q_CHUNKS-1] > Q_MSB_CHUNK)
         return 1;
+    // Compare to lowest chunk of Q
+    if (a->chunks[0] < Q_LSB_CHUNK)
+        return -1;
+    // If the lowest chunk is larger, compare to intermediate chunks
+    if (a->chunks[0] > Q_LSB_CHUNK) {
+        for (uint32_t i = 1; i < Q_CHUNKS-1; ++i) {
+            if (a->chunks[i] < Q_INTERMEDIATE_CHUNK)
+                return -1;
+        }
+        return 1;
+    }
     return 0;
 }

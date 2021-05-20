@@ -60,7 +60,11 @@ else
 endif
 
 # Main target, building all tests
+ifneq ($(VERSION), 1)
+all: compile-bigint-test compile-elligator-test compile-bigint-curve1174-test
+else
 all: compile-bigint-test compile-elligator-test
+endif
 
 .PHONY: all-tested
 all-tested:
@@ -105,8 +109,8 @@ bigint-test: $(OBJ_TESTED) $(OBJ)
 #                       BigInt Curve1774 Tests                                 #
 ################################################################################
 
-# only exists for version 2
-ifeq ($(VERSION), 2)
+# only exists from version 2 onwards
+ifneq ($(VERSION), 1)
 # Specify the object files constituting the test
 _OBJ	= bigint_curve1174_test.o
 OBJ 	= $(patsubst %,$(ODIR)/%,$(_OBJ))

@@ -22,7 +22,7 @@
 
 void bench_big_int_prep(void *argptr)
 {
-    int64_t array_size = ((int *)argptr)[1];
+    int64_t array_size = ((int *)argptr)[0];
 
     RUNTIME_BIG_INT_ALLOC_ARR(big_int_array_1, array_size);
     RUNTIME_BIG_INT_ALLOC_ARR(big_int_array_2, array_size);
@@ -40,7 +40,7 @@ void bench_big_int_prep(void *argptr)
 
         offset = 1;
         uint64_t_array[i] = 0;
-        while (offset < UINT64_MAX) {
+        while (offset < UINT64_MAX / RAND_MAX) {
             uint64_t_array[i] += ((uint64_t) rand()) * offset;
             offset *= RAND_MAX;
         }

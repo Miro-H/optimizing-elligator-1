@@ -150,7 +150,7 @@ runtime-benchmark: $(OBJ_BENCHED) $(OBJ)
 
 ifneq ($(VERSION), 1)
 
-RUNTIME_CURVE1174_SUB_PATH = V$(VERSION)/$(LOG_SUBDIRS)
+RUNTIME_CURVE1174_SUB_PATH = V$(VERSION)/curve1174/$(LOG_SUBDIRS)
 
 # Specify the object files constituting the test
 _OBJ	= benchmark_helpers.o runtime_benchmark_curve1174.o

@@ -7,9 +7,11 @@
 #define Q_CHUNKS 8
 #define Q_MSB_CHUNK 0x07ffffff
 #define Q_LSB_CHUNK 0xfffffff7
+#define Q_INTERMEDIATE_CHUNK 0xffffffff
 
 // This is set to the faster algorithm for computing inverses
-#define BIG_INT_CURVE1174_INV big_int_curve1174_inv_fermat
+// #define BIG_INT_CURVE1174_INV(r, a) big_int_curve1174_inv_fermat((r), (a))
+#define BIG_INT_CURVE1174_INV(r, a) big_int_inv((r), (a), q)
 
 /**
  * Hard coded prime q = 2^251 - 9 of Curve1174
