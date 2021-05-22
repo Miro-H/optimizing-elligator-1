@@ -37,15 +37,15 @@ void init_curve1174(Curve *curve)
     big_int_create_from_hex(&(curve->c),
         "4D1A3398ED42CEEB451D20824CA9CB49B69EF546BD7E6546AEF19AF1F9E49E1");
 
-    // c-1
+    // c - 1
     big_int_create_from_hex(&(curve->c_minus_1),
         "4D1A3398ED42CEEB451D20824CA9CB49B69EF546BD7E6546AEF19AF1F9E49E0");
 
-     // (c-1)*s
+     // (c - 1) * s
     big_int_create_from_hex(&(curve->c_minus_1_s),
         "67897DC1C0CCC95F80AC25CFB7DBA3F085E0A97C32385BA7DC4079961D335B1");
 
-    // c**(-2)
+    // 1 / c^2
     big_int_create_from_hex(&(curve->c_squared_inverse),
         "771F18AED833220B34B0FDADEFE83B1C247BCCD1D7983A9438B412D3C3700BA");
 
@@ -171,26 +171,23 @@ BigInt *elligator_1_point_to_string(BigInt *t, CurvePoint p, Curve curve)
     BIG_INT_DEFINE_PTR(X);
     BIG_INT_DEFINE_PTR(z);
     BIG_INT_DEFINE_PTR(u);
-    BIG_INT_DEFINE_PTR(q_half);
 
     BIG_INT_DEFINE_PTR(tmp_0);
     BIG_INT_DEFINE_PTR(tmp_1);
     BIG_INT_DEFINE_PTR(tmp_2);
     BIG_INT_DEFINE_PTR(tmp_3);
 
-    big_int_sub(tmp_0, &(p.y), big_int_one);
-    big_int_add(tmp_1, &(p.y), big_int_one);
-    big_int_mul_mod(tmp_2, big_int_two, tmp_1, &(curve.q));
+    big_int_sub(tmp_0, &(p.y), big_int_one); // tmp_0 = p.y - 1
+    big_int_add(tmp_1, &(p.y), big_int_one); // tmp_1 = p.y + 1
+    big_int_mul_mod(tmp_2, big_int_two, tmp_1, &(curve.q)); // tmp_2 = 2 * tmp_1
     big_int_div_mod(tmp_1, tmp_0, tmp_2, &(curve.q));  // η = (y-1)/(2(y+1))
 
-    big_int_mul_mod(tmp_0, tmp_1, &(curve.r), &(curve.q));
-    big_int_add(tmp_1, big_int_one, tmp_0);
-    big_int_add(tmp_0, &(curve.q), big_int_one);
-    big_int_div(tmp_2, tmp_0, big_int_four);
+    big_int_mul_mod(tmp_0, tmp_1, &(curve.r), &(curve.q)); // tmp_0 = tmp_1 * curve.r
+    big_int_add(tmp_1, big_int_one, tmp_0); // tmp_1 = 1 + tmp_0
 
-    big_int_pow(tmp_3, tmp_1, big_int_two, &(curve.q));
-    big_int_sub(tmp_0, tmp_3, big_int_one);
-    big_int_pow(tmp_3, tmp_0, tmp_2, &(curve.q));
+    big_int_pow(tmp_3, tmp_1, big_int_two, &(curve.q)); // tmp_3 = tmp_1 ^ 2
+    big_int_sub(tmp_0, tmp_3, big_int_one); // tmp_0 = tmp_3 - 1
+    big_int_pow(tmp_3, tmp_0, &(curve.e), &(curve.q)); // tmp_3 = tmp_0 ^ curve.e
     X = big_int_sub_mod(X, tmp_3, tmp_1, &(curve.q)); // X = −(1 + ηr) + ((1 + ηr)**2 − 1)**((q+1)/4)
 
     // TODO: We might want to consider the case where ηr == -2, where we have:
@@ -198,32 +195,27 @@ BigInt *elligator_1_point_to_string(BigInt *t, CurvePoint p, Curve curve)
     //       But as long as we don't compress points, it's anyway much cheaper
     //       to just use the given x from the point.
 
-    big_int_sub(tmp_0, &(curve.c), big_int_one);
-    big_int_mul_mod(tmp_1, tmp_0, &(curve.s), &(curve.q));
-    big_int_mul_mod(tmp_0, tmp_1, X, &(curve.q));
-    big_int_add(tmp_1, big_int_one, X);
-    big_int_mul_mod(tmp_2, tmp_0, tmp_1, &(curve.q));
-    big_int_mul_mod(tmp_0, tmp_2, &(p.x), &(curve.q));
-    big_int_pow(tmp_1, X, big_int_two, &(curve.q));
-    big_int_pow(tmp_2, &(curve.c), big_int_two, &(curve.q));
-    big_int_inv(tmp_3, tmp_2, &(curve.q));
-    big_int_add(tmp_2, tmp_1, tmp_3);
-    big_int_mul_mod(tmp_1, tmp_0, tmp_2, &(curve.q));
-    big_int_chi(tmp_0, tmp_1, &(curve.q));
+    big_int_mul_mod(tmp_0, &(curve.s_times_c_min_one), X, &(curve.q));
+    big_int_add(tmp_1, big_int_one, X); // tmp_1 = 1 + X
+    big_int_mul_mod(tmp_2, tmp_0, tmp_1, &(curve.q)); // tmp_2 = tmp_0 * tmp_1
+    big_int_mul_mod(tmp_0, tmp_2, &(p.x), &(curve.q)); // tmp_0 = tmp_2 * p.x
+    big_int_pow(tmp_1, X, big_int_two, &(curve.q)); // tmp_1 = X ^ 2
+
+    //big_int_pow(tmp_2, &(curve.c), big_int_two, &(curve.q)); // tmp_2 = curve.c ^ 2
+    //big_int_inv(tmp_3, tmp_2, &(curve.q)); // tmp_3 = tmp_2 ^ -1
+
+    big_int_add(tmp_2, tmp_1, &(curve.one_over_c_squared));
+    big_int_mul_mod(tmp_1, tmp_0, tmp_2, &(curve.q)); // tmp_1 = tmp_0 * tmp_2
+    big_int_chi(tmp_0, tmp_1, &(curve.q)); // tmp_0 = chi(tmp_1)
     big_int_mod(z, tmp_0, &(curve.q));  // z = χ((c − 1)sX(1 + X)x(X**2 + 1/c**2))
 
     big_int_mul_mod(u, z, X, &(curve.q)); // u = zX
 
-    big_int_sub(tmp_0, big_int_one, u);
-    big_int_add(tmp_1, big_int_one, u);
+    big_int_sub(tmp_0, big_int_one, u); // tmp_0 = 1 - u
+    big_int_add(tmp_1, big_int_one, u); // tmp_1 = 1 + u
     big_int_div_mod(t, tmp_0, tmp_1, &(curve.q)); // t = (1 − u)/(1 + u)
 
-    // TODO: Optimization potential, subtraction is not necessary. Use SRL and
-    //       shift those bits away!
-    big_int_sub(tmp_0, &(curve.q), big_int_one);
-    big_int_div(q_half, tmp_0, big_int_two); // q_half = (q - 1)/2
-
-    if (big_int_compare(t, q_half) == 1) {
+    if (big_int_compare(t, &(curve.q_half)) == 1) {
         big_int_neg(tmp_0, t);
         big_int_mod(t, tmp_0, &(curve.q));
     }
