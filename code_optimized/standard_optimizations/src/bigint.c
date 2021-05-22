@@ -679,6 +679,45 @@ BigInt *big_int_sub_256(BigInt *r, BigInt *a, BigInt *b)
     return r;
 }
 
+/**
+ * \brief Calculate r = a * b
+ *
+ * \assumption r, a, b != NULL
+ * \assumption a->size + b->size <= BIGINT_FIXED_SIZE
+ * \assumption b is a single chunk
+ */
+BigInt *big_int_mul_single_chunk(BigInt *r, BigInt *a, BigInt *b)
+{
+    ADD_STAT_COLLECTION(BIGINT_TYPE_BIG_INT_MUL);
+
+    int64_t j;
+    dbl_chunk_size_t carry;
+
+    BIG_INT_DEFINE_PTR_ZEROED(r_loc);
+
+    // For MUL, we we have aliasing and a separate BigInt for r is necessary
+    r_loc->size = a->size + b->size;
+    r_loc->sign = a->sign ^ b->sign;
+
+    // shortcut for zero chunk
+    if (b->chunks[0] == 0)
+        r_loc->chunks[a->size] = 0;
+    else {
+        // Multiply and add chunks
+        carry = 0;
+        for (j = 0; j < a->size; ++j) {
+            carry += a->chunks[j] * b->chunks[0] + r_loc->chunks[j];
+            r_loc->chunks[j] = carry & BIGINT_RADIX_FOR_MOD;
+            carry /= BIGINT_RADIX;
+        }
+        r_loc->chunks[a->size] = carry;
+    }
+    big_int_prune_leading_zeros(r_loc, r_loc);
+
+    // TODO: copy could be saved if we assume no aliasing
+    return big_int_copy(r, r_loc);
+}
+
 
 /**
  * \brief Calculate r = a * a

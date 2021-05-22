@@ -508,6 +508,77 @@ START_TEST(test_multiplication)
 END_TEST
 
 /**
+ * \brief Test multiplication of BigInts where one input has only one chunk.
+ */
+START_TEST(test_multiplication_single_chunk)
+{
+    TEST_BIG_INT_DEFINE(a);
+    TEST_BIG_INT_DEFINE(b);
+    TEST_BIG_INT_DEFINE(r);
+
+    // single chunk multiplication
+    big_int_create_from_chunk(a, 31180, 0);
+    big_int_create_from_chunk(b, 22299, 0);
+    big_int_create_from_chunk(r, 695282820, 0);
+
+    big_int_mul_single_chunk(a, a, b);
+    ck_assert_int_eq(big_int_compare(a, r), 0);
+
+    // multi-chunk multiplication
+    big_int_create_from_hex(a, "859CC30B50220F05");
+    big_int_create_from_chunk(b, 12345, 0);
+    big_int_create_from_hex(r, "192b24798c8b3a66481d");
+
+    big_int_mul_single_chunk(a, a, b);
+    ck_assert_int_eq(big_int_compare(a, r), 0);
+    ck_assert_uint_eq(a->overflow, 0);
+
+    // Zero multiplication
+    big_int_create_from_chunk(a, 0, 0);
+    big_int_create_from_chunk(b, 152637, 0);
+
+    big_int_mul_single_chunk(a, a, b);
+    ck_assert_int_eq(big_int_compare(a, big_int_zero), 0);
+    ck_assert_uint_eq(a->overflow, 0);
+
+    // Multiplications with zero chunks
+    big_int_create_from_hex(a, "859CC30B00000000");
+    big_int_create_from_chunk(b, 123, 0);
+    big_int_create_from_hex(r, "403251b64900000000");
+
+    // Multiply integers with mixed signs
+    a = big_int_create_from_hex(a, "-98415BFAEFD30E84");
+    b = big_int_create_from_hex(b, "D0AAEA");
+    r = big_int_create_from_hex(r, "-7C1AC14EB5921D29CEECA8");
+
+    big_int_mul_single_chunk(a, a, b);
+    ck_assert_int_eq(big_int_compare(a, r), 0);
+    ck_assert_uint_eq(a->overflow, 0);
+
+    a = big_int_create_from_hex(a, "98415BFAEFD30E84");
+    b = big_int_create_from_hex(b, "-D0AAEA");
+    r = big_int_create_from_hex(r, "-7C1AC14EB5921D29CEECA8");
+
+    big_int_mul_single_chunk(a, a, b);
+    ck_assert_int_eq(big_int_compare(a, r), 0);
+    ck_assert_uint_eq(a->overflow, 0);
+
+    // Multiply two negative integers
+    a = big_int_create_from_hex(a, "-98415BFAEFD30E84");
+    b = big_int_create_from_hex(b, "-D0AAEA");
+    r = big_int_create_from_hex(r, "7C1AC14EB5921D29CEECA8");
+
+    big_int_mul_single_chunk(a, a, b);
+    ck_assert_int_eq(big_int_compare(a, r), 0);
+    ck_assert_uint_eq(a->overflow, 0);
+
+    TEST_BIG_INT_DESTROY(a);
+    TEST_BIG_INT_DESTROY(b);
+    TEST_BIG_INT_DESTROY(r);
+}
+END_TEST
+
+/**
 * \brief Test division of BigInts
 */
 START_TEST(test_division)
@@ -1546,6 +1617,7 @@ Suite *bigints_suite(void)
     tcase_add_test(tc_basic_arith, test_addition);
     tcase_add_test(tc_basic_arith, test_subtraction);
     tcase_add_test(tc_basic_arith, test_multiplication);
+    tcase_add_test(tc_basic_arith, test_multiplication_single_chunk);
     tcase_add_test(tc_basic_arith, test_division);
 
     tcase_add_test(tc_shifts, test_sll_small);
