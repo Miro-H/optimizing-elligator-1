@@ -25,6 +25,7 @@ START_TEST(test_modulo_operation)
 {
     BIG_INT_DEFINE_PTR(a);
     BIG_INT_DEFINE_PTR(r);
+    BIG_INT_DEFINE_PTR(f);
 
     // q < a < 2^256
     big_int_create_from_hex(a,
@@ -89,10 +90,36 @@ START_TEST(test_modulo_operation)
     big_int_curve1174_mod(a, a);
     ck_assert_int_eq(big_int_compare(a, r), 0);
 
-    // q | a
-    big_int_create_from_hex(a,
-        "9FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF4C"); // a = 20 * q
+    // Test all corner cases where q | a
     big_int_create_from_chunk(r, 0, 0);
+    for (uint32_t i = 2; i <= 32; ++i) {
+        big_int_create_from_chunk(f, i, 0);
+        big_int_mul(a, q, f);
+
+        big_int_curve1174_mod(a, a);
+        ck_assert_int_eq(big_int_compare(a, r), 0);
+    }
+
+    // Test one case for every i * q <= x < (i+1) * q
+    uint32_t rand_val;
+    for (uint32_t i = 1; i < 32; ++i) {
+        big_int_create_from_chunk(f, i, 0);
+        big_int_mul(a, q, f);
+
+        rand_val = rand();
+        big_int_create_from_chunk(r, rand_val, 0);
+        big_int_add(a, a, r);
+
+        big_int_curve1174_mod(a, a);
+        ck_assert_int_eq(big_int_compare(a, r), 0);
+    }
+    // For the last interval, we cannot add more than 287 or we will have an overflow
+    big_int_create_from_chunk(f, 32, 0);
+    big_int_mul(a, q, f);
+
+    rand_val = rand() % 288;
+    big_int_create_from_chunk(r, rand_val, 0);
+    big_int_add(a, a, r);
 
     big_int_curve1174_mod(a, a);
     ck_assert_int_eq(big_int_compare(a, r), 0);

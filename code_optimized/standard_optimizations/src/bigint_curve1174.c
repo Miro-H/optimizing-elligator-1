@@ -14,8 +14,14 @@
 #include <stdlib.h>
 
 // header files
+#include "optimization_flags.h"
 #include "bigint_curve1174.h"
 #include "debug.h"
+
+// True if r is smaller or equal than the compared a_i * q
+#define MOD_BIGINT_COMP_LEQ(r, chunk_7, chunk_0)                    \
+    (r)->chunks[7] < (chunk_7)                                      \
+    || ((r)->chunks[7] == (chunk_7) && r->chunks[0] <= (chunk_0))
 
 /**
  * \brief Calculate r := a mod q
@@ -27,7 +33,6 @@ BigInt *big_int_curve1174_mod(BigInt *r, BigInt *a)
 {
     ADD_STAT_COLLECTION(BIGINT_CURVE1174_TYPE_BIG_INT_MOD);
 
-    BIG_INT_DEFINE_PTR(div_res);
     BIG_INT_DEFINE_PTR(a_upper);
     BigInt *a_lower;
     uint8_t a_sign;
@@ -50,7 +55,8 @@ BigInt *big_int_curve1174_mod(BigInt *r, BigInt *a)
         // doing it here or in general create an optimized "multiply with
         // single chunk" function
         big_int_srl_small(a_upper, r, 256);
-        // Intentionally no mod reduction, since we do one later
+        // Intentionally no mod reduction, since we do one later. We know that
+        // our intermediate values are never larger than (q-1)^2 and 288 * (q-1)^2 < 2^512
         big_int_mul(a_upper, a_upper, big_int_288); // a1 * 288
 
         a_lower = r;
@@ -59,11 +65,249 @@ BigInt *big_int_curve1174_mod(BigInt *r, BigInt *a)
     }
     // Case: q <= |a| < 2^256
     else if (big_int_curve1174_compare_to_q(r) != -1) {
-        // TODO: could do subtractions instead of divrem. Since 2^256 / q < 33,
-        // we have to do between `1` and `33` subtractions. Depends on optimized
-        // subtraction whether this is beneficial. Or precompute a*q values
-        // and do binary search.
-        big_int_div_rem(div_res, r, r, q);
+        // Note that all multiples of q have chunks 1 to 6 as 0xffffffff.
+        // Also note that in all except negligibly few cases, r has 8 chunks, so,
+        // we optimize for that case.
+        // We can only compare chunk 7 and chunk 0: if they are equal
+        // to those of the number, the number is smaller or equal. We build our comparison
+        // such that those cases fall in the same branch.
+
+        if (MOD_BIGINT_COMP_LEQ(r, Q_17_CHUNK_7, Q_17_CHUNK_0)) {
+            if (MOD_BIGINT_COMP_LEQ(r, Q_9_CHUNK_7, Q_9_CHUNK_0)) {
+                if (MOD_BIGINT_COMP_LEQ(r, Q_5_CHUNK_7, Q_5_CHUNK_0)) {
+                    if (MOD_BIGINT_COMP_LEQ(r, Q_3_CHUNK_7, Q_3_CHUNK_0)) {
+                        if (big_int_curve1174_lt_aq(r, q_2)) {
+                            big_int_sub(r, r, q);
+                        }
+                        else {
+                            if (LIKELY(big_int_curve1174_lt_aq(r, q_3))) {
+                                big_int_sub(r, r, q_2);
+                            }
+                            else {
+                                big_int_sub(r, r, q_3);
+                            }
+                        }
+                    }
+                    else {
+                        if (big_int_curve1174_lt_aq(r, q_4)) {
+                            big_int_sub(r, r, q_3);
+                        }
+                        else {
+                            if (LIKELY(big_int_curve1174_lt_aq(r, q_5))) {
+                                big_int_sub(r, r, q_4);
+                            }
+                            else {
+                                big_int_sub(r, r, q_5);
+                            }
+                        }
+                    }
+                }
+                else {
+                    if (MOD_BIGINT_COMP_LEQ(r, Q_7_CHUNK_7, Q_7_CHUNK_0)) {
+                        if (big_int_curve1174_lt_aq(r, q_6)) {
+                            big_int_sub(r, r, q_5);
+                        }
+                        else {
+                            if (LIKELY(big_int_curve1174_lt_aq(r, q_7))) {
+                                big_int_sub(r, r, q_6);
+                            }
+                            else {
+                                big_int_sub(r, r, q_7);
+                            }
+                        }
+                    }
+                    else {
+                        if (big_int_curve1174_lt_aq(r, q_8)) {
+                            big_int_sub(r, r, q_7);
+                        }
+                        else {
+                            if (LIKELY(big_int_curve1174_lt_aq(r, q_9))) {
+                                big_int_sub(r, r, q_8);
+                            }
+                            else {
+                                big_int_sub(r, r, q_9);
+                            }
+                        }
+                    }
+                }
+            }
+            else {
+                if (MOD_BIGINT_COMP_LEQ(r, Q_13_CHUNK_7, Q_13_CHUNK_0)) {
+                    if (MOD_BIGINT_COMP_LEQ(r, Q_11_CHUNK_7, Q_11_CHUNK_0)) {
+                        if (big_int_curve1174_lt_aq(r, q_10)) {
+                            big_int_sub(r, r, q_9);
+                        }
+                        else {
+                            if (LIKELY(big_int_curve1174_lt_aq(r, q_11))) {
+                                big_int_sub(r, r, q_10);
+                            }
+                            else {
+                                big_int_sub(r, r, q_11);
+                            }
+                        }
+                    }
+                    else {
+                        if (big_int_curve1174_lt_aq(r, q_12)) {
+                            big_int_sub(r, r, q_11);
+                        }
+                        else {
+                            if (LIKELY(big_int_curve1174_lt_aq(r, q_13))) {
+                                big_int_sub(r, r, q_12);
+                            }
+                            else {
+                                big_int_sub(r, r, q_13);
+                            }
+                        }
+                    }
+                }
+                else {
+                    if (MOD_BIGINT_COMP_LEQ(r, Q_15_CHUNK_7, Q_15_CHUNK_0)) {
+                        if (big_int_curve1174_lt_aq(r, q_14)) {
+                            big_int_sub(r, r, q_13);
+                        }
+                        else {
+                            if (LIKELY(big_int_curve1174_lt_aq(r, q_15))) {
+                                big_int_sub(r, r, q_14);
+                            }
+                            else {
+                                big_int_sub(r, r, q_15);
+                            }
+                        }
+                    }
+                    else {
+                        if (big_int_curve1174_lt_aq(r, q_16)) {
+                            big_int_sub(r, r, q_15);
+                        }
+                        else {
+                            if (LIKELY(big_int_curve1174_lt_aq(r, q_17))) {
+                                big_int_sub(r, r, q_16);
+                            }
+                            else {
+                                big_int_sub(r, r, q_17);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        else {
+            if (MOD_BIGINT_COMP_LEQ(r, Q_25_CHUNK_7, Q_25_CHUNK_0)) {
+                if (MOD_BIGINT_COMP_LEQ(r, Q_21_CHUNK_7, Q_21_CHUNK_0)) {
+                    if (MOD_BIGINT_COMP_LEQ(r, Q_19_CHUNK_7, Q_19_CHUNK_0)) {
+                        if (big_int_curve1174_lt_aq(r, q_18)) {
+                            big_int_sub(r, r, q_17);
+                        }
+                        else {
+                            if (LIKELY(big_int_curve1174_lt_aq(r, q_19))) {
+                                big_int_sub(r, r, q_18);
+                            }
+                            else {
+                                big_int_sub(r, r, q_19);
+                            }
+                        }
+                    }
+                    else {
+                        if (big_int_curve1174_lt_aq(r, q_20)) {
+                            big_int_sub(r, r, q_19);
+                        }
+                        else {
+                            if (LIKELY(big_int_curve1174_lt_aq(r, q_21))) {
+                                big_int_sub(r, r, q_20);
+                            }
+                            else {
+                                big_int_sub(r, r, q_21);
+                            }
+                        }
+                    }
+                }
+                else {
+                    if (MOD_BIGINT_COMP_LEQ(r, Q_23_CHUNK_7, Q_23_CHUNK_0)) {
+                        if (big_int_curve1174_lt_aq(r, q_22)) {
+                            big_int_sub(r, r, q_21);
+                        }
+                        else {
+                            if (LIKELY(big_int_curve1174_lt_aq(r, q_23))) {
+                                big_int_sub(r, r, q_22);
+                            }
+                            else {
+                                big_int_sub(r, r, q_23);
+                            }
+                        }
+                    }
+                    else {
+                        if (big_int_curve1174_lt_aq(r, q_24)) {
+                            big_int_sub(r, r, q_23);
+                        }
+                        else {
+                            if (LIKELY(big_int_curve1174_lt_aq(r, q_25))) {
+                                big_int_sub(r, r, q_24);
+                            }
+                            else {
+                                big_int_sub(r, r, q_25);
+                            }
+                        }
+                    }
+                }
+            }
+            else {
+                if (MOD_BIGINT_COMP_LEQ(r, Q_29_CHUNK_7, Q_29_CHUNK_0)) {
+                    if (MOD_BIGINT_COMP_LEQ(r, Q_27_CHUNK_7, Q_27_CHUNK_0)) {
+                        if (big_int_curve1174_lt_aq(r, q_26)) {
+                            big_int_sub(r, r, q_25);
+                        }
+                        else {
+                            if (LIKELY(big_int_curve1174_lt_aq(r, q_27))) {
+                                big_int_sub(r, r, q_26);
+                            }
+                            else {
+                                big_int_sub(r, r, q_27);
+                            }
+                        }
+                    }
+                    else {
+                        if (big_int_curve1174_lt_aq(r, q_28)) {
+                            big_int_sub(r, r, q_27);
+                        }
+                        else {
+                            if (LIKELY(big_int_curve1174_lt_aq(r, q_29))) {
+                                big_int_sub(r, r, q_28);
+                            }
+                            else {
+                                big_int_sub(r, r, q_29);
+                            }
+                        }
+                    }
+                }
+                else {
+                    if (MOD_BIGINT_COMP_LEQ(r, Q_31_CHUNK_7, Q_31_CHUNK_0)) {
+                        if (big_int_curve1174_lt_aq(r, q_30)) {
+                            big_int_sub(r, r, q_29);
+                        }
+                        else {
+                            if (LIKELY(big_int_curve1174_lt_aq(r, q_31))) {
+                                big_int_sub(r, r, q_30);
+                            }
+                            else {
+                                big_int_sub(r, r, q_31);
+                            }
+                        }
+                    }
+                    else {
+                        if (big_int_curve1174_lt_aq(r, q_32)) {
+                            big_int_sub(r, r, q_31);
+                        }
+                        else {
+                            if (big_int_curve1174_lt_aq(r, q_33)) {
+                                big_int_sub(r, r, q_32);
+                            }
+                            else {
+                                big_int_sub(r, r, q_33);
+                            }
+                        }
+                    }
+                }
+            }
+        }
     }
     // else: case |a| < q: do nothing!
 
@@ -84,32 +328,8 @@ BigInt *big_int_curve1174_add_mod(BigInt *r, BigInt *a, BigInt *b)
 {
     ADD_STAT_COLLECTION(BIGINT_CURVE1174_TYPE_BIG_INT_ADD_MOD);
 
-    BIG_INT_DEFINE_PTR(a_mod);
-    BIG_INT_DEFINE_PTR(b_mod);
-    BigInt *a_loc, *b_loc;
-
-    if (a->sign || big_int_curve1174_compare_to_q(r) >= 0) {
-        big_int_curve1174_mod(a_mod, a);
-        a_loc = a_mod;
-    }
-    else {
-        a_loc = a;
-    }
-
-    if (b->sign || big_int_curve1174_compare_to_q(r) >= 0) {
-        big_int_curve1174_mod(b_mod, b);
-        b_loc = b_mod;
-    }
-    else {
-        b_loc = b;
-    }
-
-    big_int_add(r, a_loc, b_loc);
-
-    if (r->sign)
-        big_int_add(r, r, q);
-    else if (big_int_curve1174_compare_to_q(r) >= 0)
-        big_int_sub(r, r, q);
+    big_int_add(r, a, b);
+    big_int_curve1174_mod(r, r);
 
     return r;
 }
@@ -125,12 +345,8 @@ BigInt *big_int_curve1174_sub_mod(BigInt *r, BigInt *a, BigInt *b)
     ADD_STAT_COLLECTION(BIGINT_CURVE1174_TYPE_BIG_INT_SUB_MOD);
 
     big_int_sub(r, a, b);
-
-    // if (big_int_curve1174_compare_to_q(r) >= 0)
-    //     big_int_sub(r, r, q);
-    // else if (r->sign)
-    //     big_int_add(r, r, q);
     big_int_curve1174_mod(r, r);
+
     return r;
 }
 
@@ -184,7 +400,7 @@ BigInt *big_int_curve1174_inv_fermat(BigInt *r, BigInt *a)
 {
     ADD_STAT_COLLECTION(BIGINT_CURVE1174_TYPE_BIG_INT_INV);
 
-    big_int_curve1174_pow(r, a, q_min_two);
+    big_int_curve1174_pow(r, a, q_m2);
     return r;
 }
 
@@ -405,13 +621,39 @@ int8_t big_int_curve1174_compare_to_q(BigInt *a)
     // Compare to lowest chunk of Q
     if (a->chunks[0] < Q_LSB_CHUNK)
         return -1;
-    // If the lowest chunk is larger, compare to intermediate chunks
-    if (a->chunks[0] > Q_LSB_CHUNK) {
-        for (uint32_t i = 1; i < Q_CHUNKS-1; ++i) {
-            if (a->chunks[i] < Q_INTERMEDIATE_CHUNK)
-                return -1;
-        }
+
+    // Compare to intermediate chunks
+    for (uint32_t i = Q_CHUNKS - 1; i >= 1; --i) {
+        if (a->chunks[i] < Q_INTERMEDIATE_CHUNK)
+            return -1;
+    }
+    return (a->chunks[0] > Q_LSB_CHUNK) ? 1 : 0;
+}
+
+/**
+ * \brief Compare b to a * q for a \in [2, 33]
+ *
+ * \returns 0 if b >= a * q, 1 if b < a * q
+ *
+ * \assumption b, aq != NULL
+ * \assumption b >= 0
+ */
+int8_t big_int_curve1174_lt_aq(BigInt *b, BigInt *aq)
+{
+    // Compare to highest chunk of a_q
+    if (b->size < aq->size || b->chunks[b->size - 1] < aq->chunks[aq->size - 1])
         return 1;
+    if (b->size > aq->size || b->chunks[b->size - 1] > aq->chunks[aq->size - 1])
+        return 0;
+
+    // Compare to lowest chunk of Q
+    if (b->chunks[0] < aq->chunks[0])
+        return 1;
+
+    // Compare to intermediate chunks
+    for (uint32_t i = aq->size - 2; i >= 1; --i) {
+        if (b->chunks[i] < Q_INTERMEDIATE_CHUNK)
+            return 1;
     }
     return 0;
 }

@@ -59,7 +59,31 @@ This is a lot cheaper than using division to compute the modulus.
 For numbers `q < X < 2^256` we cannot use the above trick. However, we can use repeated substraction instead of division: since `2^256 / q < 33`, we have to do between `1` and `33` subtractions until `X < q`. Depending on how much we can optimize subtraction in comparison to `divrem`, this could be cheaper.
 
 This could also be **parallelized**: we could precompute `a_i * q` for `a_i \in [1, 33]` and then compute `X - a_i` in parallel.
-We could also do **binary search** for the correct `a_i`: the first one where the result is not negative.
+This turns out to not be a good idea: first, we do not need so many subtractions (see below). Second, they all operate on BigInts, so doing them in parallel is not that beneficial, since likely a single operation already keeps all execution units fairly busy.
+
+We could also do **binary search** for the correct `a_i`: the first one where the result is not negative. In a group discussion, we realized that we do not need to perform subtractions in this search: we simply need up to six comparison operations to learn which `a_i * q` is the first one that is smaller than `X` and then subtract only that one!
+
+I generated those precomputed `a_i * q` values with the following script:
+```python
+for a in range(1, 34):
+    h = hex(a * q)[2:]
+    chunks = []
+    size_add = ""
+    for i in range(len(h), 8, -8):
+        chunks.append("0x" + h[i-8:i])
+    if i > 8:
+        chunks.append("0x" + h[:i-8])
+        size_add = "+ 1"
+    print(f"#define Q_{a}_CHUNK_0 {chunks[0]}")
+    print(f"#define Q_{a}_CHUNK_7 {chunks[7]}")
+    chunks[0] = f"Q_{a}_CHUNK_0"
+    chunks[7] = f"Q_{a}_CHUNK_7"
+    s = ", ".join(chunks)
+    print(f"BIG_INT_DEFINE_STATIC_STRUCT_PTR(q_{a}, 0, 0, Q_CHUNKS{size_add}, ({s}));\n")
+
+```
+
+Intentionally no mod reduction in the 288 case for `mul`, since we do one later. We know that our intermediate values are never larger than `(q-1)^2` and `288 * (q-1)^2 < 2^512`. (See code).
 
 ## Modular Inverse
 Since `q` is prime, there are alternatives to using the normal GCD algorithm for calculating the inverse:

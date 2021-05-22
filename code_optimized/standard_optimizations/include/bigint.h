@@ -68,15 +68,18 @@ typedef struct EgcdResult {
 */
 uint64_t big_int_stats[BIGINT_TYPE_LAST];
 
+#define MULT_CHUNKS(...) __VA_ARGS__
+
 // BIG_INT_DEFINE_STRUCT but allowing you to specify the type (e.g., static or
 // normal BigInt)
-#define BIG_INT_DEFINE_STRUCT_GENERAL(type, name, sign_, overflow_, size_, _chunk) \
+#define BIG_INT_DEFINE_STRUCT_GENERAL(type, name, sign_, overflow_, size_, _chunks) \
     type name##_bigint = ((BigInt) {                                           \
         .sign = (sign_),                                                       \
         .overflow = (overflow_),                                               \
         .size = (size_),                                                       \
-        .chunks = {_chunk},                                                    \
+        .chunks = {MULT_CHUNKS _chunks},                                                    \
     })
+
 
 // Define BigInt of fixed size with given parameters and sets the chunks pointer
 // to 'chunks'
@@ -91,7 +94,7 @@ uint64_t big_int_stats[BIGINT_TYPE_LAST];
 
 // Define BigInt of fixed size based on given chunk and sign
 #define BIG_INT_DEFINE_FROM_CHUNK(name, sign, chunk)                           \
-    BIG_INT_DEFINE_STRUCT_PTR(name, sign, 0, 1, chunk);
+    BIG_INT_DEFINE_STRUCT_PTR(name, sign, 0, 1, (chunk));
 
 // Define BigInt and pointer to it without setting any values
 #define BIG_INT_DEFINE_PTR(name)                                               \
@@ -113,13 +116,13 @@ uint64_t big_int_stats[BIGINT_TYPE_LAST];
 
 // Special BigInts, never free those! They cannot be copied.
 __attribute__((unused))
-BIG_INT_DEFINE_STATIC_STRUCT_PTR(big_int_zero, 0, 0, 1, 0);
+BIG_INT_DEFINE_STATIC_STRUCT_PTR(big_int_zero, 0, 0, 1, (0));
 
 __attribute__((unused))
-BIG_INT_DEFINE_STATIC_STRUCT_PTR(big_int_one, 0, 0, 1, 1);
+BIG_INT_DEFINE_STATIC_STRUCT_PTR(big_int_one, 0, 0, 1, (1));
 
 __attribute__((unused))
-BIG_INT_DEFINE_STATIC_STRUCT_PTR(big_int_min_one, 1, 0, 1, 1);
+BIG_INT_DEFINE_STATIC_STRUCT_PTR(big_int_min_one, 1, 0, 1, (1));
 
 //Functions only exposed for Benchmarks
 BigInt *big_int_prune_leading_zeros(BigInt *r, BigInt *a);
