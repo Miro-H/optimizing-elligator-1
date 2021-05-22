@@ -90,6 +90,7 @@ int big_int_array_size_;
 int bench_big_int_size_256_args[] = {BIGINTSIZE, REPS, 1};
 int bench_big_int_size_256_random_mod_args[] = {BIGINTSIZE, REPS, 1};
 int bench_big_int_size_256_curve_mod_args[] = {BIGINTSIZE, REPS, 0};
+int bench_big_int_size_512_curve_mod_args[] = {2 * BIGINTSIZE, REPS, 0};
 
 
 #endif // RUNTIME_BENCHMARK_H_

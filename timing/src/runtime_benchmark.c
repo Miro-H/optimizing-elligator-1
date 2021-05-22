@@ -82,12 +82,17 @@ void bench_big_int_cleanup(void *argptr)
         RUNTIME_BIG_INT_DESTROY(RUNTIME_DEREF(big_int_array_3, i));
         RUNTIME_BIG_INT_DESTROY(RUNTIME_DEREF(big_int_array_4, i));
         RUNTIME_BIG_INT_DESTROY(RUNTIME_DEREF(big_int_array_q, i));
+
+        RUNTIME_BIG_INT_DESTROY(RUNTIME_DEREF(big_int_64_bit_array, i));
     }
 
     for (uint64_t i = 0; i < used_values; i++)
     {
         RUNTIME_BIG_INT_DESTROY(RUNTIME_DEREF(big_int_array, i));
     }
+
+    RUNTIME_BIG_INT_DESTROY(bench_big_int_q_m1_d2);
+    RUNTIME_BIG_INT_DESTROY(bench_big_int_q_p1_d4);
 
     free(big_int_array);
     free(big_int_array_1);
@@ -1162,6 +1167,10 @@ int main(int argc, char const *argv[])
         BENCHMARK(bench_type, BENCH_TYPE_MOD_CURVE,
             bench_big_int_mod((void *)bench_big_int_size_256_curve_mod_args,
             "mod (curve)", LOG_PATH "/runtime_big_int_mod_curve.log"));
+
+        BENCHMARK(bench_type, BENCH_TYPE_MOD_512_CURVE,
+            bench_big_int_mod((void *)bench_big_int_size_512_curve_mod_args,
+            "mod 512-bit (curve)", LOG_PATH "/runtime_big_int_512_mod_curve.log"));
 
         BENCHMARK(bench_type, BENCH_TYPE_MOD_RANDOM,
             bench_big_int_mod((void *)bench_big_int_size_256_random_mod_args,

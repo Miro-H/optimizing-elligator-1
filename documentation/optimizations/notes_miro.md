@@ -114,19 +114,23 @@ Make a comparison plot between those functions as follows.
 Create logs for the normal BigInt functions.
 
 For this, look at the current `benchmark_types.h` file and find the numbers for the following benchmarks (here are the current numbers, they might have changed!):
-- `BENCH_TYPE_ADD_MOD_CURVE`: 25
-- `BENCH_TYPE_SUB_MOD_CURVE`: 28
-- `BENCH_TYPE_MUL_MOD_CURVE`: 31
-- `BENCH_TYPE_DIV_MOD_CURVE`: 34
-- `BENCH_TYPE_MOD_CURVE`: 38
-- `BENCH_TYPE_INV`: 40
-- `BENCH_TYPE_POW_CURVE`: 41
-- `BENCH_TYPE_COMPARE`: 45
-- `BENCH_TYPE_CHI`: 47
+- `BENCH_TYPE_ADD_MOD_CURVE`: 26
+- `BENCH_TYPE_SUB_MOD_CURVE`: 29
+- `BENCH_TYPE_MUL_MOD_CURVE`: 32
+- `BENCH_TYPE_DIV_MOD_CURVE`: 35
+- `BENCH_TYPE_MOD_CURVE`: 39
+- `BENCH_TYPE_MOD_512_CURVE`: 40
+- `BENCH_TYPE_INV`: 42
+- `BENCH_TYPE_POW_CURVE`: 43
+- `BENCH_TYPE_POW_SMALL_CURVE`: 45
+- `BENCH_TYPE_POW_Q_M1_D2_CURVE`: 46
+- `BENCH_TYPE_POW_Q_P1_D4_CURVE`: 47
+- `BENCH_TYPE_COMPARE`: 50
+- `BENCH_TYPE_CHI`: 52
 
 Then create logs for those benchmarks:
 ```
-BENCHMARKS="25 28 31 34 38 40 41 43 44 45 48 50" SETS=10 REPS=1000 make run-runtime-benchmark
+BENCHMARKS="26 29 32 35 39 40 42 43 45 46 47 50 52" SETS=10 REPS=1000 make run-runtime-benchmark
 ```
 
 Create logs for the Curve1174 functions:
