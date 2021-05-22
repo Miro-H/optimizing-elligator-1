@@ -185,6 +185,7 @@ BigInt *elligator_1_point_to_string(BigInt *t, CurvePoint p, Curve curve)
     big_int_mul_mod(tmp_0, tmp_1, &(curve.r), &(curve.q)); // tmp_0 = tmp_1 * curve.r
     big_int_add(tmp_1, big_int_one, tmp_0); // tmp_1 = 1 + tmp_0
 
+    //big_int_mul_mod(tmp_3, tmp_1, tmp_1, &(curve.q)); // mul alternative to pow below
     big_int_pow(tmp_3, tmp_1, big_int_two, &(curve.q)); // tmp_3 = tmp_1 ^ 2
     big_int_sub(tmp_0, tmp_3, big_int_one); // tmp_0 = tmp_3 - 1
     big_int_pow(tmp_3, tmp_0, &(curve.e), &(curve.q)); // tmp_3 = tmp_0 ^ curve.e
@@ -200,6 +201,7 @@ BigInt *elligator_1_point_to_string(BigInt *t, CurvePoint p, Curve curve)
     big_int_mul_mod(tmp_2, tmp_0, tmp_1, &(curve.q)); // tmp_2 = tmp_0 * tmp_1
     big_int_mul_mod(tmp_0, tmp_2, &(p.x), &(curve.q)); // tmp_0 = tmp_2 * p.x
     big_int_pow(tmp_1, X, big_int_two, &(curve.q)); // tmp_1 = X ^ 2
+    //big_int_mul_mod(tmp_1, X, X, &(curve.q)); // mul alternative to pow above
 
     //big_int_pow(tmp_2, &(curve.c), big_int_two, &(curve.q)); // tmp_2 = curve.c ^ 2
     //big_int_inv(tmp_3, tmp_2, &(curve.q)); // tmp_3 = tmp_2 ^ -1
