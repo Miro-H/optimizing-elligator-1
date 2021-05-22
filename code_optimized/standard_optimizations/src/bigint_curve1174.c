@@ -25,24 +25,21 @@
 
 /**
  * \brief Calculate r := a mod q
+ *        NOTE: this performs inplace modifications!
  *
- * \assumption r, a != NULL
+ * \assumption r != NULL
  * \assumption a->size <= 16 (at most 512 bits)
  */
-BigInt *big_int_curve1174_mod(BigInt *r, BigInt *a)
+BigInt *big_int_curve1174_mod(BigInt *r)
 {
     ADD_STAT_COLLECTION(BIGINT_CURVE1174_TYPE_BIG_INT_MOD);
 
-    BIG_INT_DEFINE_PTR(a_upper);
-    BigInt *a_lower;
-    uint8_t a_sign;
-
-    // TODO: Copy could be avoided if inplace modifications were allowed
-    if (r != a)
-        big_int_copy(r, a);
+    BIG_INT_DEFINE_PTR(r_upper);
+    BigInt *r_lower;
+    uint8_t orig_sign;
 
     // Preserve sign in case it is overwritten
-    a_sign = a->sign;
+    orig_sign = r->sign;
     // Operate on absolute value afterwards
     r->sign = 0;
 
@@ -50,18 +47,18 @@ BigInt *big_int_curve1174_mod(BigInt *r, BigInt *a)
     // 2^251 - 9 = 0 (mod q) => 2^251 = 9 (mod q) => 2^256 = 288 (mod q)
     // Thus, we can simplify:
     // a1 * 2^256 + a0 = a1 * 288 + a0 (mod q)
-    if (a->size > Q_CHUNKS) {
+    if (r->size > Q_CHUNKS) {
         // TODO: maybe we could further optimize this multiplication by directly
         // doing it here or in general create an optimized "multiply with
         // single chunk" function
-        big_int_srl_small(a_upper, r, 256);
+        big_int_srl_small(r_upper, r, 256);
         // Intentionally no mod reduction, since we do one later. We know that
         // our intermediate values are never larger than (q-1)^2 and 288 * (q-1)^2 < 2^512
-        big_int_mul(a_upper, a_upper, big_int_288); // a1 * 288
+        big_int_mul(r_upper, r_upper, big_int_288); // a1 * 288
 
-        a_lower = r;
-        a_lower->size = 8;
-        big_int_curve1174_add_mod(r, a_lower, a_upper); // r = a1 * 288 + a0 (mod q)
+        r_lower = r;
+        r_lower->size = 8;
+        big_int_curve1174_add_mod(r, r_lower, r_upper); // r = a1 * 288 + a0 (mod q)
     }
     // Case: q <= |a| < 2^256
     else if (big_int_curve1174_compare_to_q(r) != -1) {
@@ -312,7 +309,7 @@ BigInt *big_int_curve1174_mod(BigInt *r, BigInt *a)
     // else: case |a| < q: do nothing!
 
     // if a < 0, then a % q = q - (|a| % q)
-    if (a_sign)
+    if (orig_sign)
         big_int_sub(r, q, r);
 
     return r;
@@ -329,7 +326,7 @@ BigInt *big_int_curve1174_add_mod(BigInt *r, BigInt *a, BigInt *b)
     ADD_STAT_COLLECTION(BIGINT_CURVE1174_TYPE_BIG_INT_ADD_MOD);
 
     big_int_add(r, a, b);
-    big_int_curve1174_mod(r, r);
+    big_int_curve1174_mod(r);
 
     return r;
 }
@@ -345,9 +342,7 @@ BigInt *big_int_curve1174_sub_mod(BigInt *r, BigInt *a, BigInt *b)
     ADD_STAT_COLLECTION(BIGINT_CURVE1174_TYPE_BIG_INT_SUB_MOD);
 
     big_int_sub(r, a, b);
-    big_int_curve1174_mod(r, r);
-
-    return r;
+    return big_int_curve1174_mod(r);
 }
 
 
@@ -366,8 +361,7 @@ BigInt *big_int_curve1174_mul_mod(BigInt *r, BigInt *a, BigInt *b)
     // not worth it.
 
     big_int_mul(r, a, b);
-    big_int_curve1174_mod(r, r);
-    return r;
+    return big_int_curve1174_mod(r);
 }
 
 

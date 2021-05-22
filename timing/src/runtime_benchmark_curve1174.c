@@ -142,7 +142,7 @@ void bench_big_int_curve1174_div_mod(void *bench_args, char *bench_name, char *p
 void bench_big_int_curve1174_mod_fn(void *arg)
 {
     int64_t i = *((int64_t *) arg);
-    big_int_curve1174_mod(big_int_array_1 + i, big_int_array_2 + i);
+    big_int_curve1174_mod(big_int_array_1 + i);
 }
 
 void bench_big_int_curve1174_mod(void *bench_args, char *bench_name, char *path)

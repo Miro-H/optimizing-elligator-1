@@ -10,7 +10,7 @@
 #define BIG_INT_CURVE1174_INV(r, a) big_int_inv((r), (a), q)
 
 // Modular arithmetic. Note q = 2^251 - 9 is FIXED for all the functions below!
-BigInt *big_int_curve1174_mod(BigInt *r, BigInt *a);
+BigInt *big_int_curve1174_mod(BigInt *r);
 BigInt *big_int_curve1174_add_mod(BigInt *r, BigInt *a, BigInt *b);
 BigInt *big_int_curve1174_sub_mod(BigInt *r, BigInt *a, BigInt *b);
 BigInt *big_int_curve1174_mul_mod(BigInt *r, BigInt *a, BigInt *b);

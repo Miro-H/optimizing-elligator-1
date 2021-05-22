@@ -33,7 +33,7 @@ START_TEST(test_modulo_operation)
     big_int_create_from_hex(r,
         "78E255C938ED477789723C31E7376618974944FD1A3DBD0394BCA5818A16F7E");
 
-    big_int_curve1174_mod(a, a);
+    big_int_curve1174_mod(a);
     ck_assert_int_eq(big_int_compare(a, r), 0);
 
     // a >= 2^256
@@ -43,7 +43,7 @@ START_TEST(test_modulo_operation)
     big_int_create_from_hex(r,
         "2B7C5D05CCA75FE501094CA232C2EE3C62E6B0DF3EA725CE8DDE6644BA335E5");
 
-    big_int_curve1174_mod(a, a);
+    big_int_curve1174_mod(a);
     ck_assert_int_eq(big_int_compare(a, r), 0);
 
     // Negative a < a < 2^256
@@ -52,7 +52,7 @@ START_TEST(test_modulo_operation)
     big_int_create_from_hex(r,
         "71DAA36C712B888768DC3CE18C899E768B6BB02E5C242FC6B435A7E75E9079");
 
-    big_int_curve1174_mod(a, a);
+    big_int_curve1174_mod(a);
     ck_assert_int_eq(big_int_compare(a, r), 0);
 
     // Negative a, a >= 2^256
@@ -62,14 +62,14 @@ START_TEST(test_modulo_operation)
     big_int_create_from_hex(r,
         "5483A2FA3358A01AFEF6B35DCD3D11C39D194F20C158DA31722199BB45CCA12");
 
-    big_int_curve1174_mod(a, a);
+    big_int_curve1174_mod(a);
     ck_assert_int_eq(big_int_compare(a, r), 0);
 
     // a = 0
     big_int_create_from_chunk(a, 0, 0);
     big_int_create_from_chunk(r, 0, 0);
 
-    big_int_curve1174_mod(a, a);
+    big_int_curve1174_mod(a);
     ck_assert_int_eq(big_int_compare(a, r), 0);
 
     // a < q
@@ -78,7 +78,7 @@ START_TEST(test_modulo_operation)
     big_int_create_from_hex(r,
         "74118038E8C893F1033F7C44CEC2B2E7636A2C7275929117FCB8F51459922B9");
 
-    big_int_curve1174_mod(a, a);
+    big_int_curve1174_mod(a);
     ck_assert_int_eq(big_int_compare(a, r), 0);
 
     // a < q; negative a
@@ -87,7 +87,7 @@ START_TEST(test_modulo_operation)
     big_int_create_from_hex(r,
         "BEE7FC717376C0EFCC083BB313D4D189C95D38D8A6D6EE803470AEBA66DD3E");
 
-    big_int_curve1174_mod(a, a);
+    big_int_curve1174_mod(a);
     ck_assert_int_eq(big_int_compare(a, r), 0);
 
     // Test all corner cases where q | a
@@ -96,7 +96,7 @@ START_TEST(test_modulo_operation)
         big_int_create_from_chunk(f, i, 0);
         big_int_mul(a, q, f);
 
-        big_int_curve1174_mod(a, a);
+        big_int_curve1174_mod(a);
         ck_assert_int_eq(big_int_compare(a, r), 0);
     }
 
@@ -110,7 +110,7 @@ START_TEST(test_modulo_operation)
         big_int_create_from_chunk(r, rand_val, 0);
         big_int_add(a, a, r);
 
-        big_int_curve1174_mod(a, a);
+        big_int_curve1174_mod(a);
         ck_assert_int_eq(big_int_compare(a, r), 0);
     }
     // For the last interval, we cannot add more than 287 or we will have an overflow
@@ -121,7 +121,7 @@ START_TEST(test_modulo_operation)
     big_int_create_from_chunk(r, rand_val, 0);
     big_int_add(a, a, r);
 
-    big_int_curve1174_mod(a, a);
+    big_int_curve1174_mod(a);
     ck_assert_int_eq(big_int_compare(a, r), 0);
 }
 END_TEST
