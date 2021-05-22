@@ -532,37 +532,31 @@ START_TEST(test_chi)
     BIG_INT_DEFINE_PTR(t);
     BIG_INT_DEFINE_PTR(u);
 
-    // Test special case t = 0
-    big_int_create_from_chunk(t, 0, 0);
-
-    r = big_int_curve1174_chi(t);
-    ck_assert_int_eq(r, 0);
-
     // Is square
     big_int_create_from_hex(t,
         "64548488BB3F9FBD9A0A0878BD075651BCA8692167A6D40095CBF9EC4465CC8");
 
     r = big_int_curve1174_chi(t);
-    ck_assert_int_eq(r, 1);
+    ck_assert_int_eq(r, 0);
 
     // 1 (is square)
     big_int_create_from_chunk(t, 1, 0);
 
     r = big_int_curve1174_chi(t);
-    ck_assert_int_eq(r, 1);
+    ck_assert_int_eq(r, 0);
 
     // -1 (is not square)
     big_int_create_from_chunk(t, 1, 1);
 
     r = big_int_curve1174_chi(t);
-    ck_assert_int_eq(r, -1);
+    ck_assert_int_eq(r, 1);
 
     // Is not square
     big_int_create_from_hex(t,
         "20C828BF4E9A6412E714AE859C028B2E509F8418F797CE3E6BD91A9CF4A117E");
 
     r = big_int_curve1174_chi(t);
-    ck_assert_int_eq(r, -1);
+    ck_assert_int_eq(r, 1);
 
     /* Advanced tests (as specified in the paper).
      * Most of these are actually pretty trivial.
@@ -590,12 +584,18 @@ START_TEST(test_chi)
         "6C4BE8460BE7FC0E1F92C249742356CF46817EB808E865689F8198183374CD6");
 
     big_int_curve1174_mul_mod(u, s, t);
-    r = big_int_curve1174_chi(u); // chi(st)
+    r = big_int_curve1174_chi(u); // chi'(st)
 
-    r1 = big_int_curve1174_chi(s); // chi(s)
-    r2 = big_int_curve1174_chi(t); // chi(t)
+    r1 = big_int_curve1174_chi(s); // chi'(s)
+    r2 = big_int_curve1174_chi(t); // chi'(t)
 
-    ck_assert_int_eq(r, r1 * r2);
+    big_int_create_from_chunk(s, 1, r1);
+    big_int_create_from_chunk(u, 1, r2);
+    big_int_mul(s, s, u); // chi(s) * chi(t) (for the original def. of chi)
+
+    big_int_create_from_chunk(t, 1, r); // chi(st) (for the original def. of chi)
+
+    ck_assert_int_eq(big_int_compare(s, t), 0);
 
     // chi(1/t) = chi(t) = 1/chi(t) if t != 0
     big_int_create_from_hex(t, "3626229738A3B9");

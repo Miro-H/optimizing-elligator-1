@@ -1,32 +1,31 @@
 # First Optimizations
 
-- Chi function: redefine output to be 0, 1
-    - Assumption that input is never 0
-- Make sure v ≠ 0, check other chi input
-- Maintain correctness
-    - Add case for 1 as input
-- Precompute (c-1)*s
-- Enforce assumption that chunks larger
-    - Or make a case distinction
-        - Check if size = 8
-        - Otherwise use something less optimized
-- Make general add/sub
-    - Don’t check all sign cases
-- Use shift and and instead of div and mod for BIG_INT_RADIX
-- Mod curve
-    - Don’t parallelize, just do binary search
-        - Maybe try 50, 25, and 75% cases if free computational time
-    - Check if 5 subs are faster than divers
-    - Do 5 comparisons, then 1 sub, precompute a*q
-    - Change bench to use 512 bit ops
-- Make assumption that there is no aliasing
-    - Or make it one argument if aliasing is better
-- big\_int\_srl\_small(a\_upper, r, 256);
-    - memcpy instead, just copy chunks down
-- Ina is slower because pow calls mod a lot
-- Low prio: try gcd with right shifts
-- Low pro: compare power with small exponent to biting pow with same powers 
-- Change compilation to not do object files first
-    - If possible
-- Use optimization flags
-
+- [x] Chi function: redefine output to be 0, 1
+    - [x] Assumption that input is never 0
+- [x] Make sure v ≠ 0, check other chi input
+- [ ] Maintain correctness
+    - [ ] Add case for 1 as input to Elligator mapping
+- [ ] Precompute (c-1)*s
+- [ ] Enforce assumption that chunks larger
+    - [ ] Or make a case distinction
+        - [ ] Check if size = 8
+        - [ ] Otherwise use something less optimized
+- [ ] Make general add/sub
+    - [ ] Don’t check all sign cases
+- [ ] Use shift and and instead of div and mod for BIG_INT_RADIX
+- [ ] Mod curve
+    - [ ] Don’t parallelize, just do binary search
+        - [ ] Maybe try 50, 25, and 75% cases if free computational time
+    - [ ] Check if 5 subs are faster than divers
+    - [ ] Do 5 comparisons, then 1 sub, precompute a*q
+    - [ ] Change bench to use 512 bit ops
+- [ ] Make assumption that there is no aliasing
+    - [ ] Or make it one argument if aliasing is better
+- [ ] big\_int\_srl\_small(a\_upper, r, 256);
+    - [ ] memcpy instead, just copy chunks down
+- [ ] Ina is slower because pow calls mod a lot
+- [ ] Low prio: try gcd with right shifts
+- [ ] Low pro: compare power with small exponent to biting pow with same powers
+- [ ] Change compilation to not do object files first
+    - [ ] If possible
+- [ ] Use optimization flags

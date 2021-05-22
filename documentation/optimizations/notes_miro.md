@@ -114,3 +114,6 @@ Write down the log folders of the previous make runs and make the comparison plo
 ```
 LOGS_NAMES="general curve1174" LOGS_DIRS="<path/to/general/logs> <path/to/curve1174/logs>" SETS=10 REPS=1000 make plot-comparison
 ```
+
+## Case Reduction
+- For the `chi` function, we can remove the special case `t = 0`, since for Elligator we are guaranteed to give non-zero arguments to `chi`. This is a consequence of the lemma `XY =/= 0` in the proof of the map in section 3.2 of [the Elligator paper](https://elligator.cr.yp.to/elligator-20130828.pdf). Because all three occurences of `chi` in the map are in a product producing `Y`. If one of the would have input `0`, its output would be `0` and thus the whole product would lead to `Y = 0`.

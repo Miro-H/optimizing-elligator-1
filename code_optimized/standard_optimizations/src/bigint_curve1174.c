@@ -359,24 +359,25 @@ BigInt *big_int_curve1174_pow_q_p1_d4(BigInt *r, BigInt *b)
 
 /**
  * \brief Calculate the Chi function chi(t) = t**((q-1)/2) mod q
- * \returns 0 if t = 0, 1 if t is a non-zero square, -1 otherwise
+ *
+ * \returns 0 if t is a non-zero square, 1 otherwise
+ *          NOTE: this deviates from the normal definition of Chi, but is better
+ *          for our internal BigInt representation.
  *
  * \assumption r, t != NULL
+ * \assumption t =/= 0 (guaranteed by proof in section 3.2 of the Elligator paper)
+ *             as a consequence of XY =/= 0.
  */
 int8_t big_int_curve1174_chi(BigInt *t)
 {
     ADD_STAT_COLLECTION(BIGINT_CURVE1174_TYPE_BIG_INT_CHI);
 
     BIG_INT_DEFINE_PTR(r_loc);
-
-    if (big_int_is_zero(t))
-        return 0;
-
     big_int_curve1174_pow_q_m1_d2(r_loc, t);
 
     // assumption: r = 1 or -1 after squaring (i.e., always a single chunk)
     // Note that -1 mod q is larger than one chunk.
-    return (r_loc->size == 1) ? 1 : -1;
+    return r_loc->size != 1;
 }
 
 /**
