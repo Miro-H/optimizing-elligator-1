@@ -48,17 +48,21 @@ void init_curve1174(Curve *curve)
     big_int_create_from_hex(&(curve->c_minus_1),
         "4D1A3398ED42CEEB451D20824CA9CB49B69EF546BD7E6546AEF19AF1F9E49E0");
 
+     // (c-1)*s
+    big_int_create_from_hex(&(curve->c_minus_1_s),
+        "67897DC1C0CCC95F80AC25CFB7DBA3F085E0A97C32385BA7DC4079961D335B1");
+
     // c**(-2)
     big_int_create_from_hex(&(curve->c_squared_inverse),
-        "0X771F18AED833220B34B0FDADEFE83B1C247BCCD1D7983A9438B412D3C3700BA");
+        "771F18AED833220B34B0FDADEFE83B1C247BCCD1D7983A9438B412D3C3700BA");
 
     // r = c + 1/c
     big_int_create_from_hex(&(curve->r),
         "6006FBDA7649C433816B286006FBDA7649C433816B286006FBDA7649C43383");
 
     // r**2
-    big_int_create_from_hex(&(curve->r_squared),
-        "0X1C9C4399A2B9D9AF7AA044B36AB903EB9E91E21C901E4A392E6E34834A14BEA");
+    big_int_create_from_hex(&(curve->r_squared_minus_two),
+        "1C9C4399A2B9D9AF7AA044B36AB903EB9E91E21C901E4A392E6E34834A14BE8");
 }
 
 
@@ -75,6 +79,13 @@ void init_curve1174(Curve *curve)
  */
 CurvePoint *elligator_1_string_to_point_fast(CurvePoint *r, BigInt *t, Curve curve)
 {
+    if (big_int_compare(t, big_int_one) == 0)
+    {
+        big_int_create_from_chunk(&(r->x), 0, 0);
+        big_int_create_from_chunk(&(r->y), 1, 0);
+        return;
+    }
+    
     BIG_INT_DEFINE_PTR(u);
     BIG_INT_DEFINE_PTR(v);
     BIG_INT_DEFINE_PTR(CHIV);
@@ -114,12 +125,10 @@ CurvePoint *elligator_1_string_to_point_fast(CurvePoint *r, BigInt *t, Curve cur
 
     BIG_INT_DEFINE_PTR(u_5);
     big_int_mul_mod(u_5, u_3, u_2, &(curve.q));
-
-    big_int_add_256_pos(v, u_5, u);
     
-    big_int_sub(tmp_0, &(curve.r_squared), big_int_two);
-    big_int_mul_mod(tmp_1, tmp_0, u_3, &(curve.q));
-
+    big_int_mul_mod(tmp_1, &(curve.r_squared_minus_two), u_3, &(curve.q));
+    
+    big_int_add_256_pos_no_cleanup(v, u_5, u);
     big_int_add_256_pos(tmp_0, v, tmp_1);
     big_int_mod(v, tmp_0, &(curve.q));  // v = u**5 + (r**2 − 2)*u**3 + u
     //Done until here
@@ -157,19 +166,16 @@ CurvePoint *elligator_1_string_to_point_fast(CurvePoint *r, BigInt *t, Curve cur
     //big_int_pow(X_plus_1_squared, X_plus_1, big_int_two, &(curve.q));
 
     //big_int_sub(tmp_0, &(curve.c), big_int_one);
-    big_int_mul_mod(tmp_1, &(curve.c_minus_1), &(curve.s), &(curve.q));
-    big_int_mul_mod(tmp_0, tmp_1, X, &(curve.q));
+    big_int_mul_mod(tmp_0, &(curve.c_minus_1_s), X, &(curve.q));
     big_int_mul_mod(tmp_1, tmp_0, X_plus_1, &(curve.q));
-    big_int_div_mod(x, tmp_1, Y, &(curve.q)); // x = (c − 1)*s*X*(1 + X) / Y
+    big_int_div_mod(&(r->x), tmp_1, Y, &(curve.q)); // x = (c − 1)*s*X*(1 + X) / Y
 
     big_int_mul_mod(rX, &(curve.r), X, &(curve.q));
     big_int_sub(tmp_0, rX, X_plus_1_squared);
 
     big_int_add(tmp_1, rX, X_plus_1_squared);
-    big_int_div_mod(y, tmp_0, tmp_1, &(curve.q)); //  y = (rX − (1 + X)**2) / (rX + (1 + X)**2)
+    big_int_div_mod(&(r->y), tmp_0, tmp_1, &(curve.q)); //  y = (rX − (1 + X)**2) / (rX + (1 + X)**2)
 
-    big_int_copy(&(r->x), x);
-    big_int_copy(&(r->y), y);
     return r;
 }
 
