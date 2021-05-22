@@ -506,34 +506,23 @@ BigInt *big_int_curve1174_pow_q_m1_d2(BigInt *r, BigInt *b)
 /**
  * \brief Calculate r := (b^((q+1)/4)) mod q
  *
+ * \assumption r = 1, i.e., it is already initialized by the caller
+ * \assumption r != b, i.e., NO ALIASING
+ * \assumption b is MODIFIED inplace. The caller MUST NOT rely on its value.
  * \assumption r, b != NULL
  */
 BigInt *big_int_curve1174_pow_q_p1_d4(BigInt *r, BigInt *b)
 {
     ADD_STAT_COLLECTION(BIGINT_CURVE1174_TYPE_BIG_INT_POW_1_2);
 
-    BIG_INT_DEFINE_PTR(b_loc);
-    BIG_INT_DEFINE_FROM_CHUNK(r_one, 0, 1);
-    BigInt *r_loc;
-
-    if (r == b)
-        r_loc = r_one;
-    else
-        r_loc = big_int_create_from_chunk(r, 1, 0);
-
-    big_int_copy(b_loc, b);
-
     // (q+1)/4 = 0b111111...111110 (there are 248 ones)
 
     // The first bit of the exponent is zero, because we start with doubling b.
     // All the remaining bits are set to one, so we add all of them.
     for (uint32_t i = 0; i < 248; ++i) {
-        big_int_curve1174_mul_mod(b_loc, b_loc, b_loc);
-        big_int_curve1174_mul_mod(r_loc, r_loc, b_loc);
+        big_int_curve1174_mul_mod(b, b, b);
+        big_int_curve1174_mul_mod(r, r, b);
     }
-
-    if (r == b)
-        big_int_copy(r, r_loc);
 
     return r;
 }

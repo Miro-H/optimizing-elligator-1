@@ -527,32 +527,36 @@ END_TEST
 */
 START_TEST(test_power_q_p1_d4)
 {
+    BIG_INT_DEFINE_PTR(a);
     BIG_INT_DEFINE_PTR(b);
     BIG_INT_DEFINE_PTR(r);
 
     // small base
+    big_int_create_from_chunk(a, 1, 0);
     big_int_create_from_hex(b, "4F2B8718");
     big_int_create_from_hex(r,
         "6AE28F43FDBF0178DD44753A05BF32117192C2304661D5981D0F0EE2738219");
 
-    big_int_curve1174_pow_q_p1_d4(b, b);
-    ck_assert_int_eq(big_int_compare(b, r), 0);
+    big_int_curve1174_pow_q_p1_d4(a, b);
+    ck_assert_int_eq(big_int_compare(a, r), 0);
 
     // large base
+    big_int_create_from_chunk(a, 1, 0);
     big_int_create_from_hex(b,
         "19D8C8E4B460A43A1E517119780415E4C70941C6C4FBB2BFB1AF15B2273CF96");
     big_int_create_from_hex(r,
         "5A20A5F914B76C8AECDE00797C768C64B767D9DC4053661077CEC3109A69F93");
 
-    big_int_curve1174_pow_q_p1_d4(b, b);
-    ck_assert_int_eq(big_int_compare(b, r), 0);
+    big_int_curve1174_pow_q_p1_d4(a, b);
+    ck_assert_int_eq(big_int_compare(a, r), 0);
 
     // Test base 1
+    big_int_create_from_chunk(a, 1, 0);
     big_int_create_from_chunk(b, 1, 0);
     big_int_create_from_chunk(r, 1, 0);
 
-    big_int_curve1174_pow_q_m1_d2(b, b);
-    ck_assert_int_eq(big_int_compare(b, r), 0);
+    big_int_curve1174_pow_q_p1_d4(a, b);
+    ck_assert_int_eq(big_int_compare(a, r), 0);
 }
 END_TEST
 

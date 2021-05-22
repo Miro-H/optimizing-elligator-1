@@ -144,3 +144,9 @@ LOGS_NAMES="general curve1174" LOGS_DIRS="<path/to/general/logs> <path/to/curve1
 
 ## Redefine API
 Redefine functions to perform inplace modifications where sensible (instead of allowing a different pointer for the result) and **assume no aliasing** for other functions.
+
+For some power functions, I made the assumption that `r` is already initialized to one by the caller. This should be done as follows:
+```
+BIG_INT_DEFINE_FROM_CHUNK(r, 0, 1);
+```
+When `r` is defined. This saves us a call to `big_int_create_from_chunk`, since the macro actually defines `r` directly on initialization (which is certainly not slower, I'm pretty sure it's faster).

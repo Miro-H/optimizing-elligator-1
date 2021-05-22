@@ -243,7 +243,7 @@ void bench_big_int_curve1174_pow_q_m1_d2(void *bench_args, char *bench_name, cha
 void bench_big_int_curve1174_pow_q_p1_d4_fn(void *arg)
 {
     int64_t i = *((int64_t *) arg);
-    big_int_curve1174_pow_q_p1_d4(big_int_array_1 + i, big_int_array_2 + i);
+    big_int_curve1174_pow_q_p1_d4(big_int_array_of_ones + i, big_int_array_2 + i);
 }
 
 void bench_big_int_curve1174_pow_q_p1_d4(void *bench_args, char *bench_name, char *path)
