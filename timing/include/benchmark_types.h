@@ -49,12 +49,15 @@
 #define BENCH_TYPE_INV                    40
 #define BENCH_TYPE_POW_CURVE              41
 #define BENCH_TYPE_POW_RANDOM             42
-#define BENCH_TYPE_IS_ZERO                43
-#define BENCH_TYPE_IS_ODD                 44
-#define BENCH_TYPE_COMPARE                45
-#define BENCH_TYPE_EGCD                   46
-#define BENCH_TYPE_CHI                    47
-#define BENCH_TYPE_ELLIGATOR1_STR2PNT     48
-#define BENCH_TYPE_ELLIGATOR1_PNT2STR     49
+#define BENCH_TYPE_POW_SMALL_CURVE        43
+#define BENCH_TYPE_POW_Q_M1_D2_CURVE      44
+#define BENCH_TYPE_POW_Q_P1_D4_CURVE      45
+#define BENCH_TYPE_IS_ZERO                46
+#define BENCH_TYPE_IS_ODD                 47
+#define BENCH_TYPE_COMPARE                48
+#define BENCH_TYPE_EGCD                   49
+#define BENCH_TYPE_CHI                    50
+#define BENCH_TYPE_ELLIGATOR1_STR2PNT     51
+#define BENCH_TYPE_ELLIGATOR1_PNT2STR     52
 
 #endif // BENCHMARK_TYPES_H_

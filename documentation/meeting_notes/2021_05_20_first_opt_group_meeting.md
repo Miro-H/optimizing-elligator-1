@@ -24,9 +24,9 @@
     - [ ] For other BigInt functions too?
 - [x] big\_int\_srl\_small(a\_upper, r, 256);
     - [x] memcpy instead, just copy chunks down
-- [ ] Ina is slower because pow calls mod a lot
+- [ ] Inv fermat is slower because pow calls mod a lot
 - [ ] Low prio: try gcd with right shifts
-- [ ] Low pro: compare power with small exponent to biting pow with same powers
+- [x] Low pro: compare power with small exponent to BigInt pow with powers of the same size
 - [ ] Change compilation to not do object files first
     - [ ] If possible
 - [ ] Use optimization flags

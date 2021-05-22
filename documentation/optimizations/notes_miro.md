@@ -126,7 +126,7 @@ For this, look at the current `benchmark_types.h` file and find the numbers for 
 
 Then create logs for those benchmarks:
 ```
-BENCHMARKS="25 28 31 34 38 40 41 45 47" SETS=10 REPS=1000 make run-runtime-benchmark
+BENCHMARKS="25 28 31 34 38 40 41 43 44 45 48 50" SETS=10 REPS=1000 make run-runtime-benchmark
 ```
 
 Create logs for the Curve1174 functions:

@@ -14,42 +14,6 @@
 #include "benchmark_helpers.h"
 #include "benchmark_types.h"
 
-// Create macro to define a BigInt chunk according to the different APIs of
-// different versions of our code
-#if VERSION == 1
-
-#define RUNTIME_DEREF(b, i) ((b)[(i)])
-#define RUNTIME_REF(b) (b)
-#define RUNTIME_BIG_INT_DEFINE(v) BigInt *v = big_int_create_from_chunk(NULL, 0, 0)
-#define RUNTIME_BIG_INT_INIT(v) v = big_int_create_from_chunk(NULL, 0, 0)
-#define RUNTIME_BIG_INT_ALLOC_ARR(a, arr_size) a = (BigInt **) malloc((arr_size) * sizeof(BigInt *))
-#define RUNTIME_BIG_INT_DESTROY(v) big_int_destroy(v)
-#define RUNTIME_BIG_INT_CREATE_RANDOM(v, w) v = big_int_create_random(NULL, w)
-#define RUNTIME_BIG_INT_FREE_EGCD_RES(r) big_int_free_egcd_result(r)
-#define RUNTIME_BIG_INT_CREATE_FROM_HEX(v, w) v = big_int_create_from_hex(NULL, w)
-
-#define RUNTIME_FREE_CURVE_POINT(point) free_curve_point((point))
-#define RUNTIME_FREE_CURVE(curve) free_curve((curve));
-
-#else
-
-#define RUNTIME_DEREF(b, i) ((b)+(i))
-#define RUNTIME_REF(b) (&b)
-#define RUNTIME_BIG_INT_DEFINE(v) BIG_INT_DEFINE_FROM_CHUNK(v, 0, 0)
-#define RUNTIME_BIG_INT_INIT(v) ((void) 0)
-#define RUNTIME_BIG_INT_ALLOC_ARR(a, arr_size) a = (BigInt *) malloc((arr_size) * sizeof(BigInt))
-#define RUNTIME_BIG_INT_DESTROY(v) ((void) 0)
-#define RUNTIME_BIG_INT_CREATE_RANDOM(v, w) big_int_create_random(v, w)
-#define RUNTIME_BIG_INT_FREE_EGCD_RES(r) ((void) 0)
-#define RUNTIME_BIG_INT_CREATE_FROM_HEX(v, w) big_int_create_from_hex(v, w)
-
-#define RUNTIME_FREE_CURVE_POINT(point) ((void) 0)
-#define RUNTIME_FREE_CURVE(curve) ((void) 0)
-
-#endif
-
-
-
 //=== === === === === === === === === === === === === === ===
 
 void bench_big_int_prep(void *argptr)
@@ -65,6 +29,19 @@ void bench_big_int_prep(void *argptr)
     RUNTIME_BIG_INT_ALLOC_ARR(big_int_array_4, array_size);
     RUNTIME_BIG_INT_ALLOC_ARR(big_int_array_q, array_size);
 
+    RUNTIME_BIG_INT_ALLOC_ARR(big_int_64_bit_array, array_size);
+
+    // Create (q-1)/2
+    RUNTIME_BIG_INT_CREATE_FROM_HEX(bench_big_int_q_m1_d2,
+        "7FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF7");
+    big_int_srl_small(bench_big_int_q_m1_d2, bench_big_int_q_m1_d2, 1);
+
+    // Create (q+1)/4
+    RUNTIME_BIG_INT_CREATE_FROM_HEX(bench_big_int_q_p1_d4,
+        "7FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF7");
+    big_int_add(bench_big_int_q_p1_d4, bench_big_int_q_p1_d4, big_int_one);
+    big_int_srl_small(bench_big_int_q_p1_d4, bench_big_int_q_p1_d4, 2);
+
     int8_t_array_1 = (int8_t *)malloc(array_size * sizeof(int8_t));
     uint64_t_array_1 = (uint64_t *)malloc(array_size * sizeof(uint64_t));
 
@@ -74,6 +51,9 @@ void bench_big_int_prep(void *argptr)
         RUNTIME_BIG_INT_CREATE_RANDOM(RUNTIME_DEREF(big_int_array_2, i), big_int_size_);
         RUNTIME_BIG_INT_CREATE_RANDOM(RUNTIME_DEREF(big_int_array_3, i), big_int_size_);
         RUNTIME_BIG_INT_CREATE_RANDOM(RUNTIME_DEREF(big_int_array_4, i), big_int_size_);
+
+        // Create random BigInts of max. 64 bits size (2 32-bit chunks)
+        RUNTIME_BIG_INT_CREATE_RANDOM(RUNTIME_DEREF(big_int_64_bit_array, i), 2);
 
         if (random_q)
         {
@@ -862,6 +842,69 @@ void bench_big_int_pow(void *bench_args, char *bench_name, char *path)
 
 //=== === === === === === === === === === === === === === ===
 
+void bench_big_int_pow_small_fn(void *arg)
+{
+    int64_t i = *((int64_t *) arg);
+    big_int_pow(RUNTIME_DEREF(big_int_array_1, i),
+        RUNTIME_DEREF(big_int_array_2, i), RUNTIME_DEREF(big_int_64_bit_array, i),
+        RUNTIME_DEREF(big_int_array_q, i));
+}
+
+void bench_big_int_pow_small(void *bench_args, char *bench_name, char *path)
+{
+    BenchmarkClosure bench_closure = {
+        .bench_prep_args = bench_args,
+        .bench_prep_fn = bench_big_int_prep,
+        .bench_fn = bench_big_int_pow_small_fn,
+        .bench_cleanup_fn = bench_big_int_cleanup,
+    };
+    benchmark_runner(bench_closure, bench_name, path, SETS, REPS, 0);
+}
+
+//=== === === === === === === === === === === === === === ===
+
+void bench_big_int_pow_q_m1_d2_fn(void *arg)
+{
+    int64_t i = *((int64_t *) arg);
+    big_int_pow(RUNTIME_DEREF(big_int_array_1, i),
+        RUNTIME_DEREF(big_int_array_2, i), bench_big_int_q_m1_d2,
+        RUNTIME_DEREF(big_int_array_q, i));
+}
+
+void bench_big_int_pow_q_m1_d2(void *bench_args, char *bench_name, char *path)
+{
+    BenchmarkClosure bench_closure = {
+        .bench_prep_args = bench_args,
+        .bench_prep_fn = bench_big_int_prep,
+        .bench_fn = bench_big_int_pow_q_m1_d2_fn,
+        .bench_cleanup_fn = bench_big_int_cleanup,
+    };
+    benchmark_runner(bench_closure, bench_name, path, SETS, REPS, 0);
+}
+
+//=== === === === === === === === === === === === === === ===
+
+void bench_big_int_pow_q_p1_d4_fn(void *arg)
+{
+    int64_t i = *((int64_t *) arg);
+    big_int_pow(RUNTIME_DEREF(big_int_array_1, i),
+        RUNTIME_DEREF(big_int_array_2, i), bench_big_int_q_p1_d4,
+        RUNTIME_DEREF(big_int_array_q, i));
+}
+
+void bench_big_int_pow_q_p1_d4(void *bench_args, char *bench_name, char *path)
+{
+    BenchmarkClosure bench_closure = {
+        .bench_prep_args = bench_args,
+        .bench_prep_fn = bench_big_int_prep,
+        .bench_fn = bench_big_int_pow_q_p1_d4_fn,
+        .bench_cleanup_fn = bench_big_int_cleanup,
+    };
+    benchmark_runner(bench_closure, bench_name, path, SETS, REPS, 0);
+}
+
+//=== === === === === === === === === === === === === === ===
+
 void bench_big_int_is_zero_fn(void *arg)
 {
     int64_t i = *((int64_t *) arg);
@@ -1135,6 +1178,22 @@ int main(int argc, char const *argv[])
         BENCHMARK(bench_type, BENCH_TYPE_POW_RANDOM,
             bench_big_int_pow((void *)bench_big_int_size_256_random_mod_args,
                 "pow (random)", LOG_PATH "/runtime_big_int_pow_random.log"));
+
+        BENCHMARK(bench_type, BENCH_TYPE_POW_SMALL_CURVE,
+            bench_big_int_pow_small((void *)bench_big_int_size_256_curve_mod_args,
+                "pow, exp: 64-bit (curve)", LOG_PATH "/runtime_big_int_pow_small_curve.log"));
+
+        BENCHMARK(bench_type, BENCH_TYPE_POW_Q_M1_D2_CURVE,
+            bench_big_int_pow_q_m1_d2(
+                (void *) bench_big_int_size_256_curve_mod_args,
+                "pow, exp: (q-1)/2 (curve)",
+                LOG_PATH "/runtime_big_int_pow_q_m1_d2_curve.log"));
+
+        BENCHMARK(bench_type, BENCH_TYPE_POW_Q_P1_D4_CURVE,
+            bench_big_int_pow_q_p1_d4(
+                (void *) bench_big_int_size_256_curve_mod_args,
+                "pow, exp: (q+1)/4 (curve)",
+                LOG_PATH "/runtime_big_int_pow_q_p1_d4_curve.log"));
 
         BENCHMARK(bench_type, BENCH_TYPE_IS_ZERO,
             bench_big_int_is_zero((void *)bench_big_int_size_256_args,
