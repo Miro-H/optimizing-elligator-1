@@ -48,10 +48,13 @@ BigInt *big_int_curve1174_mod(BigInt *r)
     // Thus, we can simplify:
     // a1 * 2^256 + a0 = a1 * 288 + a0 (mod q)
     if (r->size > Q_CHUNKS) {
-        // TODO: maybe we could further optimize this multiplication by directly
-        // doing it here or in general create an optimized "multiply with
-        // single chunk" function
-        big_int_srl_small(r_upper, r, 256);
+        // Do right shift by 256 with a memcpy because this is a special case and
+        // we can save a call to big_int_srl_small this way.
+        r_upper->sign = r->sign;
+        r_upper->size = r->size - Q_CHUNKS;
+        memcpy((void *) r_upper->chunks,
+               (void *) (r->chunks + Q_CHUNKS),
+               r_upper->size * BIGINT_INTERNAL_CHUNK_BYTE);
 
         // Intentionally no mod reduction, since we do one later. We know that
         // our intermediate values are never larger than (q-1)^2 and 288 * (q-1)^2 < 2^512

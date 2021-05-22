@@ -19,10 +19,11 @@
     - ~~[ ] Check if 5 subs are faster than divers~~
     - [x] Do 5 comparisons, then 1 sub, precompute a*q
     - [ ] Change bench to use 512 bit ops
-- [ ] Make assumption that there is no aliasing
-    - [ ] Or make it one argument if aliasing is better
-- [ ] big\_int\_srl\_small(a\_upper, r, 256);
-    - [ ] memcpy instead, just copy chunks down
+- [ ] Make assumption that there is no aliasing or make it one argument if aliasing is better
+    - [x] For Curve1174 functions
+    - [ ] For other BigInt functions too?
+- [x] big\_int\_srl\_small(a\_upper, r, 256);
+    - [x] memcpy instead, just copy chunks down
 - [ ] Ina is slower because pow calls mod a lot
 - [ ] Low prio: try gcd with right shifts
 - [ ] Low pro: compare power with small exponent to biting pow with same powers
