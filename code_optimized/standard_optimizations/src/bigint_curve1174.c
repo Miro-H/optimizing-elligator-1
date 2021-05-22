@@ -406,6 +406,7 @@ BigInt *big_int_curve1174_inv_fermat(BigInt *r, BigInt *a)
 /**
  * \brief Calculate r := (b^e) mod q for small exponents e < 2^64
  *
+ * \assumption r != b, i.e., NO ALIASING
  * \assumption r, b != NULL
  */
 BigInt *big_int_curve1174_pow_small(BigInt *r, BigInt *b, uint64_t e)
@@ -413,29 +414,20 @@ BigInt *big_int_curve1174_pow_small(BigInt *r, BigInt *b, uint64_t e)
     ADD_STAT_COLLECTION(BIGINT_CURVE1174_TYPE_BIG_INT_POW_SMALL);
 
     BIG_INT_DEFINE_PTR(b_loc);
-    BIG_INT_DEFINE_FROM_CHUNK(r_one, 0, 1);
-    BigInt *r_loc;
 
-    if (r == b)
-        r_loc = r_one;
-    else
-        r_loc = big_int_create_from_chunk(r, 1, 0);
-
+    big_int_create_from_chunk(r, 1, 0);
     big_int_copy(b_loc, b);
 
     while (e) {
         // If power is odd
         if (e & 1)
-            big_int_curve1174_mul_mod(r_loc, r_loc, b_loc);
+            big_int_curve1174_mul_mod(r, r, b_loc);
 
         e >>= 1;
         // TODO: compute those in parallel in first step. Those are only 256
         // results, we could even store them on the stack.
         big_int_curve1174_mul_mod(b_loc, b_loc, b_loc);
     }
-
-    if (r == b)
-        big_int_copy(r, r_loc);
 
     return r;
 }

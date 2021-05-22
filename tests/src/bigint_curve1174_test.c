@@ -436,6 +436,7 @@ END_TEST
 */
 START_TEST(test_power_small)
 {
+    BIG_INT_DEFINE_PTR(a);
     BIG_INT_DEFINE_PTR(b);
     BIG_INT_DEFINE_PTR(r);
 
@@ -443,8 +444,8 @@ START_TEST(test_power_small)
     big_int_create_from_hex(r,
         "29CF20A15DB7E64D6A773386D6392402101CAB5BEF9A73BDFD2141DD9745AE2");
 
-    big_int_curve1174_pow_small(b, b, 23);
-    ck_assert_int_eq(big_int_compare(b, r), 0);
+    big_int_curve1174_pow_small(a, b, 23);
+    ck_assert_int_eq(big_int_compare(a, r), 0);
 
     // Base close to max size & trigger rare case in div_rem
     big_int_create_from_hex(b,
@@ -452,31 +453,31 @@ START_TEST(test_power_small)
     big_int_create_from_hex(r,
         "7C9FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF7");
 
-    big_int_curve1174_pow_small(b, b, 5);
-    ck_assert_int_eq(big_int_compare(b, r), 0);
+    big_int_curve1174_pow_small(a, b, 5);
+    ck_assert_int_eq(big_int_compare(a, r), 0);
 
     // Test exponent 0
     big_int_create_from_hex(b, "67AFE4589B");
     big_int_create_from_chunk(r, 1, 0);
 
-    big_int_curve1174_pow_small(b, b, 0);
-    ck_assert_int_eq(big_int_compare(b, r), 0);
+    big_int_curve1174_pow_small(a, b, 0);
+    ck_assert_int_eq(big_int_compare(a, r), 0);
 
     // Odd power
     big_int_create_from_hex(b, "ABCDEF123456789");
     big_int_create_from_hex(r,
         "76E90A95365C24F36ACB354316A91479DC40A224B60B909F81CC9BEC98DBA90");
 
-    big_int_curve1174_pow_small(b, b, 0x89BABC1);
-    ck_assert_int_eq(big_int_compare(b, r), 0);
+    big_int_curve1174_pow_small(a, b, 0x89BABC1);
+    ck_assert_int_eq(big_int_compare(a, r), 0);
 
     // Even power
     big_int_create_from_hex(b, "ABCDEF123456789");
     big_int_create_from_hex(r,
         "6490D135FEA9435C9C06E293824B2C11EC445D5A3387EBE1A70C929E411313E");
 
-    big_int_curve1174_pow_small(b, b, 0x89BABC0);
-    ck_assert_int_eq(big_int_compare(b, r), 0);
+    big_int_curve1174_pow_small(a, b, 0x89BABC0);
+    ck_assert_int_eq(big_int_compare(a, r), 0);
 }
 END_TEST
 
