@@ -19,7 +19,7 @@
 * Look into `big_int_prune`
 
 #### Replace % with &
-Powers of 2 mod n can be calculated as the same power of 2 & (n-1). I created a constant
+x mod powers of 2 can be calculated as x mod (power of 2) - 1. I created a constant
 `BIGINT_RADIX_FOR_MOD = BIGINT_RADIX - 1` in `bigint.h` and used this to replace
 the % with an & in the inner loop of the `big_int_mul` function in `bigint.c`.
 
