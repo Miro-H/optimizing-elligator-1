@@ -22,6 +22,8 @@ BigInt *big_int_array_1;
 BigInt *big_int_array_2;
 BigInt *big_int_array_3;
 
+BigInt *big_int_array_of_ones;
+
 int8_t *int8_t_array;
 uint64_t *uint64_t_array;
 

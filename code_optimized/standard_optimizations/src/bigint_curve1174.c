@@ -52,6 +52,7 @@ BigInt *big_int_curve1174_mod(BigInt *r)
         // doing it here or in general create an optimized "multiply with
         // single chunk" function
         big_int_srl_small(r_upper, r, 256);
+
         // Intentionally no mod reduction, since we do one later. We know that
         // our intermediate values are never larger than (q-1)^2 and 288 * (q-1)^2 < 2^512
         big_int_mul(r_upper, r_upper, big_int_288); // a1 * 288
@@ -469,44 +470,33 @@ BigInt *big_int_curve1174_pow(BigInt *r, BigInt *b, BigInt *e)
 /**
  * \brief Calculate r := (b^((q-1)/2)) mod q
  *
+ * \assumption r = 1, i.e., it is already initialized by the caller
+ * \assumption r != b, i.e., NO ALIASING
+ * \assumption b is MODIFIED inplace. The caller MUST NOT rely on its value.
  * \assumption r, b != NULL
  */
 BigInt *big_int_curve1174_pow_q_m1_d2(BigInt *r, BigInt *b)
 {
     ADD_STAT_COLLECTION(BIGINT_CURVE1174_TYPE_BIG_INT_POW_1_2);
 
-    BIG_INT_DEFINE_PTR(b_loc);
-    BIG_INT_DEFINE_FROM_CHUNK(r_one, 0, 1);
-    BigInt *r_loc;
-
-    if (r == b)
-        r_loc = r_one;
-    else
-        r_loc = big_int_create_from_chunk(r, 1, 0);
-
-    big_int_copy(b_loc, b);
-
     // (q-1)/2 = 0b1111...11111011 (there are 247 ones before the suffix 011)
 
     // Ensure suffix
     // e = 1
-    big_int_curve1174_mul_mod(r_loc, r_loc, b_loc);
+    big_int_curve1174_mul_mod(r, r, b);
 
     // e = 11
-    big_int_curve1174_mul_mod(b_loc, b_loc, b_loc);
-    big_int_curve1174_mul_mod(r_loc, r_loc, b_loc);
+    big_int_curve1174_mul_mod(b, b, b);
+    big_int_curve1174_mul_mod(r, r, b);
 
     // e = 011
-    big_int_curve1174_mul_mod(b_loc, b_loc, b_loc);
+    big_int_curve1174_mul_mod(b, b, b);
 
     // All the remaining bits are set to one, so we add all of them
     for (uint32_t i = 0; i < 247; ++i) {
-        big_int_curve1174_mul_mod(b_loc, b_loc, b_loc);
-        big_int_curve1174_mul_mod(r_loc, r_loc, b_loc);
+        big_int_curve1174_mul_mod(b, b, b);
+        big_int_curve1174_mul_mod(r, r, b);
     }
-
-    if (r == b)
-        big_int_copy(r, r_loc);
 
     return r;
 }
@@ -564,7 +554,8 @@ int8_t big_int_curve1174_chi(BigInt *t)
 {
     ADD_STAT_COLLECTION(BIGINT_CURVE1174_TYPE_BIG_INT_CHI);
 
-    BIG_INT_DEFINE_PTR(r_loc);
+    BIG_INT_DEFINE_FROM_CHUNK(r_loc, 0, 1);
+
     big_int_curve1174_pow_q_m1_d2(r_loc, t);
 
     // assumption: r = 1 or -1 after squaring (i.e., always a single chunk)
@@ -594,12 +585,13 @@ int8_t big_int_curve1174_compare_to_q(BigInt *a)
         return -1;
     if (a->chunks[Q_CHUNKS-1] > Q_MSB_CHUNK)
         return 1;
+
     // Compare to lowest chunk of Q
     if (a->chunks[0] < Q_LSB_CHUNK)
         return -1;
 
     // Compare to intermediate chunks
-    for (uint32_t i = Q_CHUNKS - 1; i >= 1; --i) {
+    for (uint32_t i = Q_CHUNKS - 2; i >= 1; --i) {
         if (a->chunks[i] < Q_INTERMEDIATE_CHUNK)
             return -1;
     }

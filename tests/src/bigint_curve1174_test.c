@@ -488,31 +488,36 @@ END_TEST
 */
 START_TEST(test_power_q_m1_d2)
 {
+    BIG_INT_DEFINE_PTR(a);
     BIG_INT_DEFINE_PTR(b);
     BIG_INT_DEFINE_PTR(r);
 
     // Is square
+    big_int_create_from_chunk(a, 1, 0);
     big_int_create_from_hex(b, "4F2B8718");
     big_int_create_from_chunk(r, 1, 0);
 
-    big_int_curve1174_pow_q_m1_d2(b, b);
-    ck_assert_int_eq(big_int_compare(b, r), 0);
+    big_int_curve1174_pow_q_m1_d2(a, b);
+    ck_assert_int_eq(big_int_compare(a, r), 0);
 
     // Is not square
+    big_int_create_from_chunk(a, 1, 0);
     big_int_create_from_hex(b,
         "20C828BF4E9A6412E714AE859C028B2E509F8418F797CE3E6BD91A9CF4A117E");
     big_int_create_from_hex(r,
         "7FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF6");
 
-    big_int_curve1174_pow_q_m1_d2(b, b);
-    ck_assert_int_eq(big_int_compare(b, r), 0);
+    big_int_create_from_chunk(a, 1, 0);
+    big_int_curve1174_pow_q_m1_d2(a, b);
+    ck_assert_int_eq(big_int_compare(a, r), 0);
 
     // Test base 1
+    big_int_create_from_chunk(a, 1, 0);
     big_int_create_from_chunk(b, 1, 0);
     big_int_create_from_chunk(r, 1, 0);
 
-    big_int_curve1174_pow_q_m1_d2(b, b);
-    ck_assert_int_eq(big_int_compare(b, r), 0);
+    big_int_curve1174_pow_q_m1_d2(a, b);
+    ck_assert_int_eq(big_int_compare(a, r), 0);
 }
 END_TEST
 
@@ -599,12 +604,16 @@ START_TEST(test_chi)
         "242FBB0B3EDCBC352EF808A0BE30889985443B61BB5D2BDD2472741ED26D875");
 
     big_int_curve1174_mul_mod(u, s, t);
-    r = big_int_curve1174_chi(u); // chi(st)
+    r = big_int_curve1174_chi(u); // chi'(st)
 
-    r1 = big_int_curve1174_chi(s); // chi(s)
-    r2 = big_int_curve1174_chi(t); // chi(t)
+    r1 = big_int_curve1174_chi(s); // chi'(s)
+    r2 = big_int_curve1174_chi(t); // chi'(t)
 
-    ck_assert_int_eq(r, r1 * r2);
+    big_int_create_from_chunk(s, 1, r1);
+    big_int_create_from_chunk(u, 1, r2);
+    big_int_mul(s, s, u); // chi(s) * chi(t) (for the original def. of chi)
+
+    big_int_create_from_chunk(t, 1, r); // chi(st) (for the original def. of chi)
 
     // s square, t non-square
     big_int_create_from_hex(s,
