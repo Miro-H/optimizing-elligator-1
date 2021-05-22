@@ -22,16 +22,16 @@ typedef struct Curve // edward curve
 
 // Special BigInts
 __attribute__((unused))
-BIG_INT_DEFINE_STATIC_STRUCT_PTR(big_int_two, 0, 0, 1, 2);
+BIG_INT_DEFINE_STATIC_STRUCT_PTR(big_int_two, 0, 0, 1, (2));
 
 __attribute__((unused))
-BIG_INT_DEFINE_STATIC_STRUCT_PTR(big_int_three, 0, 0, 1, 3);
+BIG_INT_DEFINE_STATIC_STRUCT_PTR(big_int_three, 0, 0, 1, (3));
 
 __attribute__((unused))
-BIG_INT_DEFINE_STATIC_STRUCT_PTR(big_int_four, 0, 0, 1, 4);
+BIG_INT_DEFINE_STATIC_STRUCT_PTR(big_int_four, 0, 0, 1, (4));
 
 __attribute__((unused))
-BIG_INT_DEFINE_STATIC_STRUCT_PTR(big_int_five, 0, 0, 1, 5);
+BIG_INT_DEFINE_STATIC_STRUCT_PTR(big_int_five, 0, 0, 1, (5));
 
 void init_curve1174(Curve *curve);
 

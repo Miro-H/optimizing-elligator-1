@@ -60,7 +60,11 @@ else
 endif
 
 # Main target, building all tests
+ifneq ($(VERSION), 1)
+all: compile-bigint-test compile-elligator-test compile-bigint-curve1174-test
+else
 all: compile-bigint-test compile-elligator-test
+endif
 
 .PHONY: all-tested
 all-tested:
@@ -84,6 +88,10 @@ run-tests: clean all
 $(ODIR)/%.o: $(SDIR)/%.c $(DEPS)
 	$(CC) -c -o $@ $< $(CFLAGS)
 
+################################################################################
+#                             BigInt Tests                                     #
+################################################################################
+
 # Specify the object files constituting the test
 _OBJ	= bigint_test.o
 OBJ 	= $(patsubst %,$(ODIR)/%,$(_OBJ))
@@ -97,6 +105,30 @@ compile-bigint-test: all-tested bigint-test
 bigint-test: $(OBJ_TESTED) $(OBJ)
 	$(CC) -o $(BDIR)/$@ $^ $(CFLAGS) $(LIBS)
 
+################################################################################
+#                       BigInt Curve1774 Tests                                 #
+################################################################################
+
+# only exists from version 2 onwards
+ifneq ($(VERSION), 1)
+# Specify the object files constituting the test
+_OBJ	= bigint_curve1174_test.o
+OBJ 	= $(patsubst %,$(ODIR)/%,$(_OBJ))
+# Specify the object files of the tested functions
+_OBJ_TESTED = bigint_curve1174.o bigint.o
+OBJ_TESTED 	= $(patsubst %,$(ODIR_TESTED)/%,$(_OBJ_TESTED))
+
+.PHONY: compile-bigint-curve1174-test
+compile-bigint-curve1174-test: all-tested bigint-curve1174-test
+
+bigint-curve1174-test: $(OBJ_TESTED) $(OBJ)
+	$(CC) -o $(BDIR)/$@ $^ $(CFLAGS) $(LIBS)
+endif
+
+################################################################################
+#                           Elligator Tests                                    #
+################################################################################
+
 # Specify the object files constituting the test
 _OBJ	= elligator_test.o
 OBJ 	= $(patsubst %,$(ODIR)/%,$(_OBJ))
@@ -109,6 +141,10 @@ compile-elligator-test: all-tested elligator-test
 
 elligator-test: $(OBJ_TESTED) $(OBJ)
 	$(CC) -o $(BDIR)/$@ $^ $(CFLAGS) $(LIBS)
+
+################################################################################
+#                            Other targets                                     #
+################################################################################
 
 .PHONY: clean
 clean:

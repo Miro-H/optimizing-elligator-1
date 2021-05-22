@@ -27,7 +27,8 @@ if __name__ == '__main__':
     # Read arguments
     parser = argparse.ArgumentParser()
 
-    parser.add_argument("--src_file", help="Source file to parse", required=True)
+    parser.add_argument("--src_files", help="Source files to parse",
+                        required=True, nargs="+")
     parser.add_argument("--tar_file", help="Target file to write parsed enum to",
                         required=True)
     parser.add_argument("--pattern", help="Pattern of elements to match",
@@ -40,7 +41,7 @@ if __name__ == '__main__':
 
     args = parser.parse_args()
 
-    src_file        = args.src_file
+    src_files       = args.src_files
     tar_file        = args.tar_file
     pattern         = args.pattern
     add_translation = args.add_translation
@@ -52,9 +53,11 @@ if __name__ == '__main__':
         exit(1)
 
     matches = []
-    with open(src_file, "r") as src_fp:
-        regex   = re.compile(pattern)
-        matches = regex.findall(src_fp.read())
+    for src_file in src_files:
+        with open(src_file, "r") as src_fp:
+            regex   = re.compile(pattern)
+            file_matches = regex.findall(src_fp.read())
+        matches += file_matches
 
     matches = unique_list(matches)
     line_len = max([len(match) for match in matches]) + 1
