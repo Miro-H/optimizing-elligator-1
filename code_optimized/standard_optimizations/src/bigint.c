@@ -748,7 +748,7 @@ BigInt *big_int_mul(BigInt *r, BigInt *a, BigInt *b)
             carry = 0;
             for (j = 0; j < a->size; ++j) {
                 carry += a->chunks[j] * b->chunks[i] + r_loc->chunks[i + j];
-                r_loc->chunks[i + j] = carry % BIGINT_RADIX;
+                r_loc->chunks[i + j] = carry & BIGINT_RADIX_FOR_MOD;
                 carry /= BIGINT_RADIX;
             }
             r_loc->chunks[i + a->size] = carry;
