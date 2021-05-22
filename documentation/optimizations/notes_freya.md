@@ -23,6 +23,14 @@ Powers of 2 mod n can be calculated as the same power of 2 & (n-1). I created a 
 `BIGINT_RADIX_FOR_MOD = BIGINT_RADIX - 1` in `bigint.h` and used this to replace
 the % with an & in the inner loop of the `big_int_mul` function in `bigint.c`.
 
+####
+At Miro's request I created a `big_int_mul_single_chunk` function in `big_int.c` which takes
+a regular BigInt and a BigInt with only one chunk as parameters. Making the assumption that
+the second parameter is only 1 chunk allowed me to remove the outer `for` loop. Based on
+the quick benchmark I ran, this seems to be about 3 times faster than running the regular
+`big_int_mul` function on random BigInts, but I didn't check to see how fast `big_int_mul`
+is if you give it a single chunk input.
+
 ### AVX
 
 #### Ideas from meeting:
