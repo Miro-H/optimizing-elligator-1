@@ -141,3 +141,6 @@ LOGS_NAMES="general curve1174" LOGS_DIRS="<path/to/general/logs> <path/to/curve1
 
 ## Case Reduction
 - For the `chi` function, we can remove the special case `t = 0`, since for Elligator we are guaranteed to give non-zero arguments to `chi`. This is a consequence of the lemma `XY =/= 0` in the proof of the map in section 3.2 of [the Elligator paper](https://elligator.cr.yp.to/elligator-20130828.pdf). Because all three occurences of `chi` in the map are in a product producing `Y`. If one of the would have input `0`, its output would be `0` and thus the whole product would lead to `Y = 0`.
+
+## Redefine API
+Redefine functions to perform inplace modifications where sensible (instead of allowing a different pointer for the result) and **assume no aliasing** for other functions.

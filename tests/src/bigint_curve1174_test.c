@@ -372,6 +372,7 @@ END_TEST
 */
 START_TEST(test_power)
 {
+    BIG_INT_DEFINE_PTR(a);
     BIG_INT_DEFINE_PTR(b);
     BIG_INT_DEFINE_PTR(e);
     BIG_INT_DEFINE_PTR(r);
@@ -381,8 +382,8 @@ START_TEST(test_power)
     big_int_create_from_hex(r,
         "29CF20A15DB7E64D6A773386D6392402101CAB5BEF9A73BDFD2141DD9745AE2");
 
-    big_int_curve1174_pow(b, b, e);
-    ck_assert_int_eq(big_int_compare(b, r), 0);
+    big_int_curve1174_pow(a, b, e);
+    ck_assert_int_eq(big_int_compare(a, r), 0);
 
     // Base close to max size & trigger rare case in div_rem
     big_int_create_from_hex(b,
@@ -391,24 +392,24 @@ START_TEST(test_power)
     big_int_create_from_hex(r,
         "7C9FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF7");
 
-    big_int_curve1174_pow(b, b, e);
-    ck_assert_int_eq(big_int_compare(b, r), 0);
+    big_int_curve1174_pow(a, b, e);
+    ck_assert_int_eq(big_int_compare(a, r), 0);
 
     // Test exponent 0
     big_int_create_from_hex(b, "67AFE4589B");
     big_int_create_from_chunk(e, 0, 0);
     big_int_create_from_chunk(r, 1, 0);
 
-    big_int_curve1174_pow(b, b, e);
-    ck_assert_int_eq(big_int_compare(b, r), 0);
+    big_int_curve1174_pow(a, b, e);
+    ck_assert_int_eq(big_int_compare(a, r), 0);
 
     // Test base 1
     big_int_create_from_chunk(b, 1, 0);
     big_int_create_from_hex(e, "67AFE4589BABCD");
     big_int_create_from_chunk(r, 1, 0);
 
-    big_int_curve1174_pow(b, b, e);
-    ck_assert_int_eq(big_int_compare(b, r), 0);
+    big_int_curve1174_pow(a, b, e);
+    ck_assert_int_eq(big_int_compare(a, r), 0);
 
     // Odd power
     big_int_create_from_hex(b, "ABCDEF123456789");
@@ -416,8 +417,8 @@ START_TEST(test_power)
     big_int_create_from_hex(r,
         "76E90A95365C24F36ACB354316A91479DC40A224B60B909F81CC9BEC98DBA90");
 
-    big_int_curve1174_pow(b, b, e);
-    ck_assert_int_eq(big_int_compare(b, r), 0);
+    big_int_curve1174_pow(a, b, e);
+    ck_assert_int_eq(big_int_compare(a, r), 0);
 
     // Even power
     big_int_create_from_hex(b, "ABCDEF123456789");
@@ -425,8 +426,8 @@ START_TEST(test_power)
     big_int_create_from_hex(r,
         "6490D135FEA9435C9C06E293824B2C11EC445D5A3387EBE1A70C929E411313E");
 
-    big_int_curve1174_pow(b, b, e);
-    ck_assert_int_eq(big_int_compare(b, r), 0);
+    big_int_curve1174_pow(a, b, e);
+    ck_assert_int_eq(big_int_compare(a, r), 0);
 }
 END_TEST
 
