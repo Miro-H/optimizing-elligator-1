@@ -18,6 +18,17 @@
 * Are we accessing consecutively?
 * Look into `big_int_prune`
 
+### AVX
+
+#### Ideas from meeting:
+* Vectorise to perform 4 mults at once
+
+### Cache
+
+## Elligator Point-to-String
+#### Ideas from meeting:
+* Chris pre-computed some curve values
+
 #### Precompute curve values
 Some of the values in the computation only depend on curve values and not on the curve point
 itself. Since the curve we are using is always Curve1174, I added these values as fields in the 
@@ -35,16 +46,5 @@ depend on the curve point.
 I tried replacing two calls to `big_int_pow` where the exponent was `big_int_two` with 
 a call to `big_int_mul_mod` instead as an alternative way to square numbers, but this
 seemed to make the benchmarks run slightly slower so I changed it back.
-
-### AVX
-
-#### Ideas from meeting:
-* Vectorise to perform 4 mults at once
-
-### Cache
-
-## Elligator Point-to-String
-#### Ideas from meeting:
-* Chris pre-computed some curve values
 
 
