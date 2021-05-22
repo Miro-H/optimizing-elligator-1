@@ -20,9 +20,12 @@ typedef struct Curve // edward curve
 
     BigInt c; // c = 2/(s^2)
     BigInt c_minus_1;
+    BigInt c_minus_1_s;
     BigInt c_squared_inverse;
     BigInt r; // r = c + 1/c
-    BigInt r_squared;
+    BigInt r_squared; // r**2
+    BigInt r_squared_minus_two; // r**2 - 2
+
 } Curve;
 
 // Special BigInts

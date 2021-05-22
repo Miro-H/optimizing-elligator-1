@@ -74,16 +74,16 @@ void init_curve1174(Curve *curve)
  * \brief Maps a random string (interpreted as big integer) to a point on the
  *        given curve.
  *
- * \param t Integer in range (1, (q-1)/2] does no longer do sanity checks
+ * \param t Integer in range [1, (q-1)/2] does no longer do sanity checks
  * \param curve Curve satisfying the properties needed for Elligator one (e.g. Curve1174)
  */
 CurvePoint *elligator_1_string_to_point_fast(CurvePoint *r, BigInt *t, Curve curve)
 {
-    if (big_int_compare(t, big_int_one) == 0)
+    if (t->size == 1 && t->chunks[0] == (dbl_chunk_size_t) 0)
     {
         big_int_create_from_chunk(&(r->x), 0, 0);
         big_int_create_from_chunk(&(r->y), 1, 0);
-        return;
+        return r;
     }
     
     BIG_INT_DEFINE_PTR(u);
@@ -97,9 +97,6 @@ CurvePoint *elligator_1_string_to_point_fast(CurvePoint *r, BigInt *t, Curve cur
     BIG_INT_DEFINE_PTR(rX);
     BIG_INT_DEFINE_PTR(Y);
 
-    BIG_INT_DEFINE_PTR(x);
-    BIG_INT_DEFINE_PTR(y);
-
     BIG_INT_DEFINE_PTR(tmp_0);
     BIG_INT_DEFINE_PTR(tmp_1);
     BIG_INT_DEFINE_PTR(tmp_2);
@@ -109,7 +106,7 @@ CurvePoint *elligator_1_string_to_point_fast(CurvePoint *r, BigInt *t, Curve cur
     
     // can only use better functions
     big_int_sub(tmp_0, big_int_one, t);
-    big_int_add_256_pos(tmp_1, big_int_one, t);
+    big_int_add_wrapper(tmp_1, big_int_one, t);
     big_int_mod(tmp_2, tmp_1, &(curve.q));
     big_int_div_mod(u, tmp_0, tmp_2, &(curve.q)); // u = (1 − t) / (1 + t)
 
@@ -128,8 +125,8 @@ CurvePoint *elligator_1_string_to_point_fast(CurvePoint *r, BigInt *t, Curve cur
     
     big_int_mul_mod(tmp_1, &(curve.r_squared_minus_two), u_3, &(curve.q));
     
-    big_int_add_256_pos_no_cleanup(v, u_5, u);
-    big_int_add_256_pos(tmp_0, v, tmp_1);
+    big_int_add_256_no_cleanup(v, u_5, u);
+    big_int_add_wrapper(tmp_0, v, tmp_1);
     big_int_mod(v, tmp_0, &(curve.q));  // v = u**5 + (r**2 − 2)*u**3 + u
     //Done until here
     big_int_chi(CHIV, v, &(curve.q));
@@ -151,13 +148,13 @@ CurvePoint *elligator_1_string_to_point_fast(CurvePoint *r, BigInt *t, Curve cur
 
     //big_int_pow(tmp_1, u, big_int_two, &(curve.q));
     //big_int_add_mod(tmp_2, tmp_1, tmp_3, &(curve.q));
-    big_int_add_256_pos(tmp_2, u_2, &(curve.c_squared_inverse));
+    big_int_add_wrapper(tmp_2, u_2, &(curve.c_squared_inverse));
     big_int_mod(tmp_0, tmp_2, &(curve.q));
 
     big_int_chi(tmp_3, tmp_0, &(curve.q));
     big_int_mul_mod(Y, tmp_1, tmp_3, &(curve.q));  // Y = (χ(v)v)**((q + 1) / 4)χ(v)χ(u**2 + 1 / c**2)
 
-    big_int_add_256_pos(tmp_0, big_int_one, X);
+    big_int_add_wrapper(tmp_0, big_int_one, X);
     big_int_mod(X_plus_1, tmp_0, &(curve.q));
 
     big_int_squared(tmp_0, X_plus_1);

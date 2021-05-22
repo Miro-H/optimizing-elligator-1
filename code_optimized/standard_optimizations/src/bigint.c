@@ -360,7 +360,9 @@ BigInt *big_int_add(BigInt *r, BigInt *a, BigInt *b)
 
 BigInt *big_int_add_wrapper(BigInt *r, BigInt *a, BigInt *b)
 {
+    BIG_INT_DEFINE_PTR(neg);
     if (a->sign != b->sign) {
+
         if (a->sign == 0) {
             big_int_neg(neg, b);
             big_int_fast_sub(r, a, neg);
@@ -371,36 +373,36 @@ BigInt *big_int_add_wrapper(BigInt *r, BigInt *a, BigInt *b)
         }
         return r;
     }
-    big_int_fast_add(r, b, neg);
+    big_int_fast_add(r, a, b);
     return r;
 }
 
 BigInt *big_int_sub_wrapper(BigInt *r, BigInt *a, BigInt *b)
 {
+    BIG_INT_DEFINE_PTR(b_neg);
     if (a->sign != b->sign)
     {
         big_int_neg(b_neg, b);
         big_int_fast_add(r, a, b_neg);
         return r;
     }
-    big_int_fast_sub(r, b, neg);
+    big_int_fast_sub(r, a, b);
     return r;
 }
 
 
-BigInt *big_int_add_fast(BigInt *r, BigInt *a, BigInt *b)
+BigInt *big_int_fast_add(BigInt *r, BigInt *a, BigInt *b)
 {
     ADD_STAT_COLLECTION(BIGINT_TYPE_BIG_INT_ADD);
 
     if(a->size == 8 && b->size == 8)
     {
-        big_int_add_256_pos(r, a, b);
+        big_int_add_256(r, a, b);
+        return r;
     }
 
     // Pointer used to point to a or b depending on which is larger
     BigInt *aa, *bb;
-
-    BIG_INT_DEFINE_PTR(neg);
 
     uint8_t carry;
     int64_t i;
@@ -430,8 +432,8 @@ BigInt *big_int_add_fast(BigInt *r, BigInt *a, BigInt *b)
     r_size = 0;
     for (i = 0; i < bb->size; ++i) {
         sum = aa->chunks[i] + bb->chunks[i] + carry;
-        r->chunks[i] = sum % BIGINT_RADIX;
-        carry = sum / BIGINT_RADIX;
+        r->chunks[i] = sum & MASK;
+        carry = sum >> QUICK_DIV;
 
         if (r->chunks[i] != 0)
             r_size = i;
@@ -440,8 +442,8 @@ BigInt *big_int_add_fast(BigInt *r, BigInt *a, BigInt *b)
     // Second, finish possible remaining chunks of larger integer
     for (; i < aa->size; ++i) {
         sum = aa->chunks[i] + carry;
-        r->chunks[i] = sum % BIGINT_RADIX;
-        carry = sum / BIGINT_RADIX;
+        r->chunks[i] = sum & MASK;
+        carry = sum >> QUICK_DIV;
 
         if (r->chunks[i] != 0)
             r_size = i;
@@ -469,16 +471,10 @@ BigInt *big_int_add_fast(BigInt *r, BigInt *a, BigInt *b)
  *
  * \assumption r, a, b != NULL
  */
-BigInt *big_int_sub(BigInt *r, BigInt *a, BigInt *b)
+BigInt *big_int_fast_sub(BigInt *r, BigInt *a, BigInt *b)
 {
     ADD_STAT_COLLECTION(BIGINT_TYPE_BIG_INT_SUB);
 
-    if(a->size == 8 && b->size == 8)
-    {
-        big_int_sub_256(r, a, b);
-    }
-
-    BIG_INT_DEFINE_PTR(b_neg);
     BIG_INT_DEFINE_PTR(a_abs);
     BIG_INT_DEFINE_PTR(b_abs);
     BIG_INT_DEFINE_PTR(aa_abs);
@@ -519,6 +515,13 @@ BigInt *big_int_sub(BigInt *r, BigInt *a, BigInt *b)
         bb_abs = b_abs;
     }
 
+     if(a->size == 8 && b->size == 8)
+    {
+        big_int_sub_256(r, aa_abs, bb_abs);
+
+        return r;
+    }
+
     // Assertion: aa_abs >= bb_abs
 
     // Note an underflow sets the 1 bit at position MSB+1 of the chunk:
@@ -528,8 +531,8 @@ BigInt *big_int_sub(BigInt *r, BigInt *a, BigInt *b)
     r_size = 0;
     for (i = 0; i < bb_abs->size; ++i) {
         diff = aa_abs->chunks[i] - bb_abs->chunks[i] - borrow;
-        r->chunks[i] = diff % BIGINT_RADIX;
-        borrow = (diff / BIGINT_RADIX) & 1;
+        r->chunks[i] = diff & MASK;
+        borrow = (diff >> QUICK_DIV) & 1;
 
         if (r->chunks[i] != 0)
             r_size = i;
@@ -537,8 +540,8 @@ BigInt *big_int_sub(BigInt *r, BigInt *a, BigInt *b)
 
     for (; i < aa_abs->size; ++i) {
         diff = aa_abs->chunks[i] - borrow;
-        r->chunks[i] = diff % BIGINT_RADIX;
-        borrow = (diff / BIGINT_RADIX) & 1;
+        r->chunks[i] = diff & MASK;
+        borrow = (diff >> QUICK_DIV) & 1;
 
         if (r->chunks[i] != 0)
             r_size = i;
@@ -558,8 +561,98 @@ BigInt *big_int_sub(BigInt *r, BigInt *a, BigInt *b)
 
 
 
+BigInt *big_int_sub_256_no_cleanup(BigInt *r, BigInt *a, BigInt *b)
+{
+
+    dbl_chunk_size_t a_c_0 = a->chunks[0];
+    dbl_chunk_size_t a_c_1 = a->chunks[1];
+    dbl_chunk_size_t a_c_2 = a->chunks[2];
+    dbl_chunk_size_t a_c_3 = a->chunks[3];
+    dbl_chunk_size_t a_c_4 = a->chunks[4];
+    dbl_chunk_size_t a_c_5 = a->chunks[5];
+    dbl_chunk_size_t a_c_6 = a->chunks[6];
+    dbl_chunk_size_t a_c_7 = a->chunks[7];
+
+    dbl_chunk_size_t b_c_0 = b->chunks[0];
+    dbl_chunk_size_t b_c_1 = b->chunks[1];
+    dbl_chunk_size_t b_c_2 = b->chunks[2];
+    dbl_chunk_size_t b_c_3 = b->chunks[3];
+    dbl_chunk_size_t b_c_4 = b->chunks[4];
+    dbl_chunk_size_t b_c_5 = b->chunks[5];
+    dbl_chunk_size_t b_c_6 = b->chunks[6];
+    dbl_chunk_size_t b_c_7 = b->chunks[7];
+
+    dbl_chunk_size_t r_c_0 = a_c_0 - b_c_0;
+    dbl_chunk_size_t r_c_1 = a_c_1 - b_c_1;
+    dbl_chunk_size_t r_c_2 = a_c_2 - b_c_2;
+    dbl_chunk_size_t r_c_3 = a_c_3 - b_c_3;
+    dbl_chunk_size_t r_c_4 = a_c_4 - b_c_4;
+    dbl_chunk_size_t r_c_5 = a_c_5 - b_c_5;
+    dbl_chunk_size_t r_c_6 = a_c_6 - b_c_6;
+    dbl_chunk_size_t r_c_7 = a_c_7 - b_c_7;
+
+    r->chunks[0] = r_c_0;
+    r->chunks[1] = r_c_1;
+    r->chunks[2] = r_c_2;
+    r->chunks[3] = r_c_3;
+    r->chunks[4] = r_c_4;
+    r->chunks[5] = r_c_5;
+    r->chunks[6] = r_c_6;
+    r->chunks[7] = r_c_7;
+
+    r->size = BIGINT_FIXED_SIZE;
+    r->sign = 0;
+
+    return r;
+}
 
 
+BigInt *big_int_sub_256(BigInt *r, BigInt *a, BigInt *b)
+{
+
+    dbl_chunk_size_t a_c_0 = a->chunks[0];
+    dbl_chunk_size_t a_c_1 = a->chunks[1];
+    dbl_chunk_size_t a_c_2 = a->chunks[2];
+    dbl_chunk_size_t a_c_3 = a->chunks[3];
+    dbl_chunk_size_t a_c_4 = a->chunks[4];
+    dbl_chunk_size_t a_c_5 = a->chunks[5];
+    dbl_chunk_size_t a_c_6 = a->chunks[6];
+    dbl_chunk_size_t a_c_7 = a->chunks[7];
+
+    dbl_chunk_size_t b_c_0 = b->chunks[0];
+    dbl_chunk_size_t b_c_1 = b->chunks[1];
+    dbl_chunk_size_t b_c_2 = b->chunks[2];
+    dbl_chunk_size_t b_c_3 = b->chunks[3];
+    dbl_chunk_size_t b_c_4 = b->chunks[4];
+    dbl_chunk_size_t b_c_5 = b->chunks[5];
+    dbl_chunk_size_t b_c_6 = b->chunks[6];
+    dbl_chunk_size_t b_c_7 = b->chunks[7];
+
+    a_c_0 = a_c_0 + b_c_0;
+    a_c_1 = a_c_1 + b_c_1 + ((a_c_0 >> QUICK_DIV) & 1);
+    a_c_2 = a_c_2 + b_c_2 + ((a_c_1 >> QUICK_DIV) & 1);
+    a_c_3 = a_c_3 + b_c_3 + ((a_c_2 >> QUICK_DIV) & 1);
+    a_c_4 = a_c_4 + b_c_4 + ((a_c_3 >> QUICK_DIV) & 1);
+    a_c_5 = a_c_5 + b_c_5 + ((a_c_4 >> QUICK_DIV) & 1);
+    a_c_6 = a_c_6 + b_c_6 + ((a_c_5 >> QUICK_DIV) & 1);
+    a_c_7 = a_c_7 + b_c_7 + ((a_c_6 >> QUICK_DIV) & 1);
+
+    r->chunks[0] = a_c_0 & MASK;
+    r->chunks[1] = a_c_1 & MASK;
+    r->chunks[2] = a_c_2 & MASK;
+    r->chunks[3] = a_c_3 & MASK;
+    r->chunks[4] = a_c_4 & MASK;
+    r->chunks[5] = a_c_5 & MASK;
+    r->chunks[6] = a_c_6 & MASK;
+    r->chunks[7] = a_c_7 & MASK;
+
+    r->size = BIGINT_FIXED_SIZE;
+    r->sign = 0;
+
+    return r;
+
+
+}
 
 
 
@@ -647,16 +740,14 @@ BigInt *big_int_add_256(BigInt *r, BigInt *a, BigInt *b)
     dbl_chunk_size_t b_c_6 = b->chunks[6];
     dbl_chunk_size_t b_c_7 = b->chunks[7];
 
-    a_c_0 += b_c_0;
-    a_c_1 += b_c_1 + a_c_0 >> BIGINT_RADIX;
-    a_c_2 += b_c_2 + a_c_1 >> BIGINT_RADIX;
-    a_c_3 += b_c_3 + a_c_2 >> BIGINT_RADIX;
-    a_c_4 += b_c_4 + a_c_3 >> BIGINT_RADIX;
-    a_c_5 += b_c_5 + a_c_4 >> BIGINT_RADIX;
-    a_c_6 += b_c_6 + a_c_5 >> BIGINT_RADIX;
-    a_c_7 += b_c_7 + a_c_6 >> BIGINT_RADIX;
-
-    #define MASK ((int64_t -1) >> 32)
+    a_c_0 = a_c_0 + b_c_0;
+    a_c_1 = a_c_1 + b_c_1 + (a_c_0 >> QUICK_DIV);
+    a_c_2 = a_c_2 + b_c_2 + (a_c_1 >> QUICK_DIV);
+    a_c_3 = a_c_3 + b_c_3 + (a_c_2 >> QUICK_DIV);
+    a_c_4 = a_c_4 + b_c_4 + (a_c_3 >> QUICK_DIV);
+    a_c_5 = a_c_5 + b_c_5 + (a_c_4 >> QUICK_DIV);
+    a_c_6 = a_c_6 + b_c_6 + (a_c_5 >> QUICK_DIV);
+    a_c_7 = a_c_7 + b_c_7 + (a_c_6 >> QUICK_DIV);
 
     r->chunks[0] = a_c_0 & MASK;
     r->chunks[1] = a_c_1 & MASK;
@@ -667,7 +758,7 @@ BigInt *big_int_add_256(BigInt *r, BigInt *a, BigInt *b)
     r->chunks[6] = a_c_6 & MASK;
     r->chunks[7] = a_c_7 & MASK;
 
-    r->size = BIGINT_NORMAL_USED_SIZE;
+    r->size = BIGINT_FIXED_SIZE;
     r->sign = 0;
 
     return r;

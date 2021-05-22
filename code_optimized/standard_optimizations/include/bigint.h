@@ -16,6 +16,10 @@
 #define BIGINT_CHUNK_HEX_SIZE ((uint32_t) sizeof(chunk_size_t) * 2)
 #define BIGINT_CHUNK_BIT_SIZE ((uint32_t) sizeof(chunk_size_t) * 8)
 
+#define QUICK_DIV ((int64_t) 32)
+#define MASK ((((int64_t) 1) << 33) - 1)
+#define BIGINT_CHUNK_BIT_SIZE ((uint32_t) sizeof(chunk_size_t) * 8)
+
 // Change if larger chunks are used
 #define STR_TO_CHUNK strtol
 #define CHUNK_ABS llabs
@@ -175,8 +179,14 @@ BigInt *big_int_chi(BigInt *r, BigInt *t, BigInt *q);
 
 //New operations
 BigInt *big_int_squared(BigInt *r, BigInt *a);
-BigInt *big_int_add_256_pos(BigInt *r, BigInt *a, BigInt *b);
-BigInt *big_int_add_256_pos_no_cleanup(BigInt *r, BigInt *a, BigInt *b);
+BigInt *big_int_add_256(BigInt *r, BigInt *a, BigInt *b);
+BigInt *big_int_add_256_no_cleanup(BigInt *r, BigInt *a, BigInt *b);
+BigInt *big_int_sub_256(BigInt *r, BigInt *a, BigInt *b);
+BigInt *big_int_sub_256_no_cleanup(BigInt *r, BigInt *a, BigInt *b);
+BigInt *big_int_fast_sub(BigInt *r, BigInt *a, BigInt *b);
+BigInt *big_int_fast_add(BigInt *r, BigInt *a, BigInt *b);
+BigInt *big_int_add_wrapper(BigInt *r, BigInt *a, BigInt *b);
+BigInt *big_int_sub_wrapper(BigInt *r, BigInt *a, BigInt *b);
 
 
 // Reset stats (use in combination with setting the env variable COLLECT_STATS)
