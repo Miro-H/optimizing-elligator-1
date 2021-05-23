@@ -43,19 +43,25 @@ CFLAGS += -DVERSION=$(VERSION)
 # Assume that the executable depends on all header files.
 DEPS = $(wildcard $(IDIR)/*.h)
 
-LIBS = -lcheck -lm -lpthread -lrt -lsubunit
+LIBS = -lcheck -lm
 
 ifeq ($(OS),Windows_NT)
 	# Do something windows specific if necessary
 else
-	UNAME_S := $(shell uname -s)
-	ifeq ($(UNAME_S),Darwin)
-		# Do something specific to MacOS if necessary
+	IS_WIN_SUBSYSTEM = $(shell grep -q Microsoft /proc/version && echo linux_subsys)
+
+	ifeq ($(IS_WIN_SUBSYSTEM),"linux_subsys")
+		LIBS += -lpthread -lrt -lsubunit
 	else
-		# Do something linux specific.
-		# libcheck is installed in /usr/local/lib, which is not checked by
-		# default in gcc (but -L is not used on MacOS)
-		CFLAGS += -L/usr/local/lib
+		UNAME_S := $(shell uname -s)
+		ifeq ($(UNAME_S),Darwin)
+			# Do something specific to MacOS if necessary
+		else
+			# Do something linux specific.
+			# libcheck is installed in /usr/local/lib, which is not checked by
+			# default in gcc (but -L is not used on MacOS)
+			CFLAGS += -L/usr/local/lib
+		endif
 	endif
 endif
 
