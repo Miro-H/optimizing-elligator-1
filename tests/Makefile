@@ -139,7 +139,7 @@ endif
 _OBJ	= elligator_test.o
 OBJ 	= $(patsubst %,$(ODIR)/%,$(_OBJ))
 # Specify the object files of the tested functions
-_OBJ_TESTED = bigint.o elligator.o
+_OBJ_TESTED = bigint_curve1174.o bigint.o elligator.o
 OBJ_TESTED 	= $(patsubst %,$(ODIR_TESTED)/%,$(_OBJ_TESTED))
 
 .PHONY: compile-elligator-test

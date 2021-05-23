@@ -13,6 +13,7 @@
 
 #include "elligator.h"
 #include "bigint.h"
+#include "bigint_curve1174.h"
 #include "debug.h"
 
 
