@@ -180,13 +180,11 @@ BigInt *big_int_chi(BigInt *r, BigInt *t, BigInt *q);
 //New operations
 BigInt *big_int_squared(BigInt *r, BigInt *a);
 BigInt *big_int_add_256(BigInt *r, BigInt *a, BigInt *b);
-BigInt *big_int_add_256_no_cleanup(BigInt *r, BigInt *a, BigInt *b);
+BigInt *big_int_add_upper_bound(BigInt *r, BigInt *a, BigInt *b);
 BigInt *big_int_sub_256(BigInt *r, BigInt *a, BigInt *b);
-BigInt *big_int_sub_256_no_cleanup(BigInt *r, BigInt *a, BigInt *b);
+BigInt *big_int_sub_upper_bound(BigInt *r, BigInt *a, BigInt *b);
 BigInt *big_int_fast_sub(BigInt *r, BigInt *a, BigInt *b);
 BigInt *big_int_fast_add(BigInt *r, BigInt *a, BigInt *b);
-BigInt *big_int_add1(BigInt *r, BigInt *a, BigInt *b);
-BigInt *big_int_sub1(BigInt *r, BigInt *a, BigInt *b);
 
 
 // Reset stats (use in combination with setting the env variable COLLECT_STATS)

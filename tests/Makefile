@@ -43,7 +43,7 @@ CFLAGS += -DVERSION=$(VERSION)
 # Assume that the executable depends on all header files.
 DEPS = $(wildcard $(IDIR)/*.h)
 
-LIBS = -lcheck -lm
+LIBS = -lcheck -lm -lpthread -lrt -lsubunit
 
 ifeq ($(OS),Windows_NT)
 	# Do something windows specific if necessary
