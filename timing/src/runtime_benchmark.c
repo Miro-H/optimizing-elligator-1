@@ -1050,6 +1050,47 @@ void bench_elligator_1_point_to_string(void *bench_args, char *bench_name, char 
 
 //=== === === === === === === === === === === === === === ===
 
+void bench_big_int_add_upper_bound_fn(void *arg)
+{
+    int64_t i = *((int64_t *) arg);
+    big_int_add_upper_bound(RUNTIME_DEREF(big_int_array_1, i),
+        RUNTIME_DEREF(big_int_array_2, i), RUNTIME_DEREF(big_int_array_3, i));
+}
+
+void bench_big_int_add_upper_bound(void *bench_args, char *bench_name, char *path)
+{
+    BenchmarkClosure bench_closure = {
+        .bench_prep_args = bench_args,
+        .bench_prep_fn = bench_big_int_prep,
+        .bench_fn = bench_big_int_add_upper_bound_fn,
+        .bench_cleanup_fn = bench_big_int_cleanup,
+    };
+    benchmark_runner(bench_closure, bench_name, path, SETS, REPS, 0);
+}
+
+//=== === === === === === === === === === === === === === ===
+
+void bench_big_int_sub_upper_bound_fn(void *arg)
+{
+    int64_t i = *((int64_t *) arg);
+    big_int_sub_upper_bound(RUNTIME_DEREF(big_int_array_1, i),
+        RUNTIME_DEREF(big_int_array_2, i), RUNTIME_DEREF(big_int_array_3, i));
+}
+
+void bench_big_int_sub_upper_bound(void *bench_args, char *bench_name, char *path)
+{
+    BenchmarkClosure bench_closure = {
+        .bench_prep_args = bench_args,
+        .bench_prep_fn = bench_big_int_prep,
+        .bench_fn = bench_big_int_sub_upper_bound_fn,
+        .bench_cleanup_fn = bench_big_int_cleanup,
+    };
+    benchmark_runner(bench_closure, bench_name, path, SETS, REPS, 0);
+}
+
+//=== === === === === === === === === === === === === === ===
+
+
 int main(int argc, char const *argv[])
 {
 
@@ -1223,6 +1264,16 @@ int main(int argc, char const *argv[])
         BENCHMARK(bench_type, BENCH_TYPE_CHI,
             bench_big_int_chi((void *)bench_big_int_size_256_curve_mod_args, "chi",
                 LOG_PATH "/runtime_big_int_chi_curve.log"));
+
+
+        BENCHMARK(bench_type, BENCH_TYPE_ADD_UPPER_BOUND,
+            bench_big_int_add_upper_bound((void *)bench_big_int_size_256_args,
+                "add", LOG_PATH "/runtime_big_int_add_upper_bound.log"));
+
+        BENCHMARK(bench_type, BENCH_TYPE_SUB_UPPER_BOUND,
+            bench_big_int_sub_upper_bound((void *)bench_big_int_size_256_args,
+                "sub", LOG_PATH "/runtime_big_int_sub_upper_bound.log"));
+
 
         BENCHMARK(bench_type, BENCH_TYPE_ELLIGATOR1_STR2PNT,
             bench_elligator_1_string_to_point((void *)bench_big_int_size_256_args,
