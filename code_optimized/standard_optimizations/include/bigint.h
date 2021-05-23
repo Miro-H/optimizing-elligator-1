@@ -17,7 +17,7 @@
 #define BIGINT_CHUNK_BIT_SIZE ((uint32_t) sizeof(chunk_size_t) * 8)
 
 #define QUICK_DIV ((int64_t) 32)
-#define MASK ((((int64_t) 1) << 33) - 1)
+#define MASK ((((int64_t) 1) << 32) - 1)
 #define BIGINT_CHUNK_BIT_SIZE ((uint32_t) sizeof(chunk_size_t) * 8)
 
 // Change if larger chunks are used
@@ -185,8 +185,8 @@ BigInt *big_int_sub_256(BigInt *r, BigInt *a, BigInt *b);
 BigInt *big_int_sub_256_no_cleanup(BigInt *r, BigInt *a, BigInt *b);
 BigInt *big_int_fast_sub(BigInt *r, BigInt *a, BigInt *b);
 BigInt *big_int_fast_add(BigInt *r, BigInt *a, BigInt *b);
-BigInt *big_int_add_wrapper(BigInt *r, BigInt *a, BigInt *b);
-BigInt *big_int_sub_wrapper(BigInt *r, BigInt *a, BigInt *b);
+BigInt *big_int_add1(BigInt *r, BigInt *a, BigInt *b);
+BigInt *big_int_sub1(BigInt *r, BigInt *a, BigInt *b);
 
 
 // Reset stats (use in combination with setting the env variable COLLECT_STATS)
