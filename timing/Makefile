@@ -112,7 +112,7 @@ RUNTIME_SUB_PATH = V$(VERSION)/$(LOG_SUBDIRS)
 _OBJ	= benchmark_helpers.o runtime_benchmark.o
 OBJ 	= $(patsubst %,$(ODIR)/%,$(_OBJ))
 # Specify the object files of the benched functions
-_OBJ_BENCHED 	= bigint.o elligator.o
+_OBJ_BENCHED 	= bigint_curve1174.o bigint.o elligator.o
 OBJ_BENCHED		= $(patsubst %,$(ODIR_BENCHED)/%,$(_OBJ_BENCHED))
 
 .PHONY: prepare-logs-runtime-benchmark

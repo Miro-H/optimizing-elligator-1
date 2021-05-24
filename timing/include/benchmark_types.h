@@ -59,7 +59,9 @@
 #define BENCH_TYPE_COMPARE                50
 #define BENCH_TYPE_EGCD                   51
 #define BENCH_TYPE_CHI                    52
-#define BENCH_TYPE_ELLIGATOR1_STR2PNT     53
-#define BENCH_TYPE_ELLIGATOR1_PNT2STR     54
+#define BENCH_TYPE_ADD_UPPER_BOUND        53
+#define BENCH_TYPE_SUB_UPPER_BOUND        54
+#define BENCH_TYPE_ELLIGATOR1_STR2PNT     55
+#define BENCH_TYPE_ELLIGATOR1_PNT2STR     56
 
 #endif // BENCHMARK_TYPES_H_
