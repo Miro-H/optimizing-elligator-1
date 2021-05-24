@@ -20,6 +20,13 @@ BIG_INT_DEFINE_STATIC_STRUCT_PTR(q_m2, 0, 0, Q_CHUNKS,
     (Q_LSB_CHUNK - 2, 0xffffffff, 0xffffffff, 0xffffffff,
      0xffffffff, 0xffffffff, 0xffffffff, Q_MSB_CHUNK));
 
+// (q - 1) / 2
+#define Q_M1_D2_CHUNK_0 0xfffffffb
+#define Q_M1_D2_CHUNK_7 0x3ffffff
+BIG_INT_DEFINE_STATIC_STRUCT_PTR(q_m1_d2, 0, 0, Q_CHUNKS,
+    (Q_M1_D2_CHUNK_0, 0xffffffff, 0xffffffff, 0xffffffff,
+     0xffffffff, 0xffffffff, 0xffffffff, Q_M1_D2_CHUNK_7));
+
 /**
  * The following are q * a for a \in [2, 33]. We need those for a fast mod operation.
  */

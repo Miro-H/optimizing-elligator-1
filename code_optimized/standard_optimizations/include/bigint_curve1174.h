@@ -19,6 +19,7 @@ BigInt *big_int_curve1174_inv_fermat(BigInt *r, BigInt *a);
 
 // Special comparison
 int8_t big_int_curve1174_compare_to_q(BigInt *a);
+int8_t big_int_curve1174_gt_q_m1_d2(BigInt *a);
 int8_t big_int_curve1174_lt_aq(BigInt *b, BigInt *aq);
 
 // Advanced operations

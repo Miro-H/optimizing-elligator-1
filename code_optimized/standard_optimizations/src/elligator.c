@@ -175,25 +175,26 @@ BigInt *elligator_1_point_to_string(BigInt *t, CurvePoint p, Curve curve)
     BIG_INT_DEFINE_PTR(tmp_2);
     BIG_INT_DEFINE_PTR(tmp_3);
 
-    big_int_sub(tmp_0, &(p.y), big_int_one); // tmp_0 = p.y - 1
-    big_int_add(tmp_1, &(p.y), big_int_one); // tmp_1 = p.y + 1
-    big_int_sll_small(tmp_2, tmp_1, 1); // tmp_2 = 2 * tmp_1
-    big_int_div_mod(eta, tmp_0, tmp_2, &(curve.q));  // η = (y-1)/(2(y+1))
+    BIG_INT_DEFINE_FROM_CHUNK(tmp_pow_res, 0, 1);
 
-    big_int_mul_mod(tmp_0, eta, &(curve.r), &(curve.q)); // tmp_0 = eta * curve.r
-    big_int_add(tmp_1, big_int_one, tmp_0); // tmp_1 = 1 + tmp_0
+    big_int_sub(tmp_0, &(p.y), big_int_one); // y - 1
+    big_int_add(tmp_1, &(p.y), big_int_one); // y + 1
+    big_int_sll_small(tmp_2, tmp_1, 1); // 2 * (y + 1)
+    big_int_div_mod(eta, tmp_0, tmp_2, &(curve.q));  // η = (y-1)/(2 * (y + 1))
+
+    big_int_mul_mod(tmp_0, eta, &(curve.r), &(curve.q)); // ηr
+    big_int_add(tmp_1, big_int_one, tmp_0); // 1 + ηr
 
     // TODO: Switch to big_int_square function
-    big_int_pow(tmp_3, tmp_1, big_int_two, &(curve.q)); // tmp_3 = tmp_1 ^ 2
+    big_int_pow(tmp_3, tmp_1, big_int_two, &(curve.q)); // (1 + ηr)^2
 
-    big_int_sub(tmp_0, tmp_3, big_int_one); // tmp_0 = tmp_3 - 1
+    big_int_sub(tmp_0, tmp_3, big_int_one); // (1 + η  * r)^2 - 1
 
-    // TODO: Use big_int_pow_q_p1_d4 instead
-    big_int_pow(tmp_3, tmp_0, &(curve.e), &(curve.q)); // tmp_3 = tmp_0 ^ curve.e
+    big_int_curve1174_pow_q_p1_d4(tmp_pow_res, tmp_0); // ((1 + ηr)^2 - 1)^((q + 1) / 4)
 
-    X = big_int_sub_mod(X, tmp_3, tmp_1, &(curve.q)); // X = −(1 + ηr) + ((1 + ηr)**2 − 1)**((q+1)/4)
+    X = big_int_sub_mod(X, tmp_3, tmp_1, &(curve.q)); // X = −(1 + ηr) + ((1 + ηr)^2 − 1)^((q + 1) / 4)
 
-    big_int_mul_mod(tmp_0, &(curve.s_times_c_min_one), X, &(curve.q));
+    big_int_mul_mod(tmp_0, &(curve.c_minus_1_s), X, &(curve.q));
     big_int_add(tmp_1, big_int_one, X); // tmp_1 = 1 + X
     big_int_mul_mod(tmp_2, tmp_0, tmp_1, &(curve.q)); // tmp_2 = tmp_0 * tmp_1
     big_int_mul_mod(tmp_0, tmp_2, &(p.x), &(curve.q)); // tmp_0 = tmp_2 * p.x
@@ -203,7 +204,7 @@ BigInt *elligator_1_point_to_string(BigInt *t, CurvePoint p, Curve curve)
     //big_int_pow(tmp_2, &(curve.c), big_int_two, &(curve.q)); // tmp_2 = curve.c ^ 2
     //big_int_inv(tmp_3, tmp_2, &(curve.q)); // tmp_3 = tmp_2 ^ -1
 
-    big_int_add(tmp_2, tmp_1, &(curve.one_over_c_squared));
+    big_int_add(tmp_2, tmp_1, &(curve.c_squared_inverse));
     big_int_mul_mod(tmp_1, tmp_0, tmp_2, &(curve.q)); // tmp_1 = tmp_0 * tmp_2
 
     // TODO: New chi function returns an int
@@ -216,10 +217,8 @@ BigInt *elligator_1_point_to_string(BigInt *t, CurvePoint p, Curve curve)
     big_int_add(tmp_1, big_int_one, u); // tmp_1 = 1 + u
     big_int_div_mod(t, tmp_0, tmp_1, &(curve.q)); // t = (1 − u)/(1 + u)
 
-    // TODO: Make faster with a compare_to_q_half function
-    if (big_int_compare(t, &(curve.q_half)) == 1) {
+    if (big_int_curve1174_gt_q_m1_d2(t))
         big_int_sub(t, &(curve.q), t);
-    }
 
     return t;
 }
