@@ -43,14 +43,14 @@ CFLAGS += -DVERSION=$(VERSION)
 # Assume that the executable depends on all header files.
 DEPS = $(wildcard $(IDIR)/*.h)
 
-LIBS = -lcheck -lm -lpthread -lrt -lsubunit
+LIBS = -lcheck -lm
 
 ifeq ($(OS),Windows_NT)
 	# Do something windows specific if necessary
 else
-	IS_WIN_SUBSYSTEM = $(shell grep -q Microsoft /proc/version && echo linux_subsys)
-
-	ifeq ($(IS_WIN_SUBSYSTEM),"linux_subsys")
+	IS_WIN_SUBSYSTEM = "$(shell grep -q Microsoft /proc/version && echo -n linux_subsys)"
+	
+	ifeq ($(IS_WIN_SUBSYSTEM), "linux_subsys")
 		LIBS += -lpthread -lrt -lsubunit
 	else
 		UNAME_S := $(shell uname -s)
@@ -74,6 +74,9 @@ endif
 
 .PHONY: all-tested
 all-tested:
+	echo $(LIBS)
+	echo $(IS_WIN_SUBSYSTEM)
+	
 ifeq ($(TESTED_ROOT_DIR),)
 	$(error Unsupported version $(VERSION) (check Makefile comments))
 endif
@@ -89,6 +92,7 @@ rebuild: clean all
 # Run all tests
 .PHONY: run-tests
 run-tests: clean all
+	
 	$(SCRIPTS_DIR)/run_all_tests.sh
 
 $(ODIR)/%.o: $(SDIR)/%.c $(DEPS)
