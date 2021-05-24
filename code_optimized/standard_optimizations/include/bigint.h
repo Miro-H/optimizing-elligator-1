@@ -16,14 +16,13 @@
 #define BIGINT_CHUNK_HEX_SIZE ((uint32_t) sizeof(chunk_size_t) * 2)
 #define BIGINT_CHUNK_BIT_SIZE ((uint32_t) sizeof(chunk_size_t) * 8)
 
-#define QUICK_DIV ((int64_t) 32)
-#define MASK ((((int64_t) 1) << 32) - 1)
-#define BIGINT_CHUNK_BIT_SIZE ((uint32_t) sizeof(chunk_size_t) * 8)
+#define BIGINT_CHUNK_SHIFT ((uint64_t) BIGINT_CHUNK_BIT_SIZE)
+#define BIGINT_CHUNK_MASK (BIGINT_RADIX - 1)
 
 // Change if larger chunks are used
 #define STR_TO_CHUNK strtol
 #define CHUNK_ABS llabs
-#define BIGINT_RADIX (((dbl_chunk_size_t) 1) << (sizeof(chunk_size_t) * 8))
+#define BIGINT_RADIX (((dbl_chunk_size_t) 1) << BIGINT_CHUNK_BIT_SIZE)
 #define BIGINT_RADIX_SIGNED ((int64_t) BIGINT_RADIX)
 
 // Stats collection

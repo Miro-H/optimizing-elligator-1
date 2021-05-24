@@ -345,8 +345,8 @@ BigInt *big_int_fast_add(BigInt *r, BigInt *a, BigInt *b)
     r_size = 0;
     for (i = 0; i < bb->size; ++i) {
         sum = aa->chunks[i] + bb->chunks[i] + carry;
-        r->chunks[i] = sum & MASK;
-        carry = sum >> QUICK_DIV;
+        r->chunks[i] = sum & BIGINT_CHUNK_MASK;
+        carry = sum >> BIGINT_CHUNK_SHIFT;
 
         if (r->chunks[i] != 0)
             r_size = i;
@@ -355,8 +355,8 @@ BigInt *big_int_fast_add(BigInt *r, BigInt *a, BigInt *b)
     // Second, finish possible remaining chunks of larger integer
     for (; i < aa->size; ++i) {
         sum = aa->chunks[i] + carry;
-        r->chunks[i] = sum & MASK;
-        carry = sum >> QUICK_DIV;
+        r->chunks[i] = sum & BIGINT_CHUNK_MASK;
+        carry = sum >> BIGINT_CHUNK_SHIFT;
 
         if (r->chunks[i] != 0)
             r_size = i;
@@ -400,22 +400,22 @@ BigInt *big_int_add_256(BigInt *r, BigInt *a, BigInt *b)
     dbl_chunk_size_t b_c_7 = b->chunks[7];
 
     r_c_0 = a_c_0 + b_c_0;
-    r_c_1 = a_c_1 + b_c_1 + (r_c_0 >> QUICK_DIV);
-    r_c_2 = a_c_2 + b_c_2 + (r_c_1 >> QUICK_DIV);
-    r_c_3 = a_c_3 + b_c_3 + (r_c_2 >> QUICK_DIV);
-    r_c_4 = a_c_4 + b_c_4 + (r_c_3 >> QUICK_DIV);
-    r_c_5 = a_c_5 + b_c_5 + (r_c_4 >> QUICK_DIV);
-    r_c_6 = a_c_6 + b_c_6 + (r_c_5 >> QUICK_DIV);
-    r_c_7 = a_c_7 + b_c_7 + (r_c_6 >> QUICK_DIV);
+    r_c_1 = a_c_1 + b_c_1 + (r_c_0 >> BIGINT_CHUNK_SHIFT);
+    r_c_2 = a_c_2 + b_c_2 + (r_c_1 >> BIGINT_CHUNK_SHIFT);
+    r_c_3 = a_c_3 + b_c_3 + (r_c_2 >> BIGINT_CHUNK_SHIFT);
+    r_c_4 = a_c_4 + b_c_4 + (r_c_3 >> BIGINT_CHUNK_SHIFT);
+    r_c_5 = a_c_5 + b_c_5 + (r_c_4 >> BIGINT_CHUNK_SHIFT);
+    r_c_6 = a_c_6 + b_c_6 + (r_c_5 >> BIGINT_CHUNK_SHIFT);
+    r_c_7 = a_c_7 + b_c_7 + (r_c_6 >> BIGINT_CHUNK_SHIFT);
 
-    r->chunks[0] = r_c_0 & MASK;
-    r->chunks[1] = r_c_1 & MASK;
-    r->chunks[2] = r_c_2 & MASK;
-    r->chunks[3] = r_c_3 & MASK;
-    r->chunks[4] = r_c_4 & MASK;
-    r->chunks[5] = r_c_5 & MASK;
-    r->chunks[6] = r_c_6 & MASK;
-    r->chunks[7] = r_c_7 & MASK;
+    r->chunks[0] = r_c_0 & BIGINT_CHUNK_MASK;
+    r->chunks[1] = r_c_1 & BIGINT_CHUNK_MASK;
+    r->chunks[2] = r_c_2 & BIGINT_CHUNK_MASK;
+    r->chunks[3] = r_c_3 & BIGINT_CHUNK_MASK;
+    r->chunks[4] = r_c_4 & BIGINT_CHUNK_MASK;
+    r->chunks[5] = r_c_5 & BIGINT_CHUNK_MASK;
+    r->chunks[6] = r_c_6 & BIGINT_CHUNK_MASK;
+    r->chunks[7] = r_c_7 & BIGINT_CHUNK_MASK;
 
 
     r->size = 8;
@@ -545,8 +545,8 @@ BigInt *big_int_fast_sub(BigInt *r, BigInt *a, BigInt *b)
     r_size = 0;
     for (i = 0; i < bb_abs->size; ++i) {
         diff = aa_abs->chunks[i] - bb_abs->chunks[i] - borrow;
-        r->chunks[i] = diff & MASK;
-        borrow = (diff >> QUICK_DIV) & 1;
+        r->chunks[i] = diff & BIGINT_CHUNK_MASK;
+        borrow = (diff >> BIGINT_CHUNK_SHIFT) & 1;
 
         if (r->chunks[i] != 0)
             r_size = i;
@@ -554,8 +554,8 @@ BigInt *big_int_fast_sub(BigInt *r, BigInt *a, BigInt *b)
 
     for (; i < aa_abs->size; ++i) {
         diff = aa_abs->chunks[i] - borrow;
-        r->chunks[i] = diff & MASK;
-        borrow = (diff >> QUICK_DIV) & 1;
+        r->chunks[i] = diff & BIGINT_CHUNK_MASK;
+        borrow = (diff >> BIGINT_CHUNK_SHIFT) & 1;
 
         if (r->chunks[i] != 0)
             r_size = i;
@@ -643,22 +643,22 @@ BigInt *big_int_sub_256(BigInt *r, BigInt *a, BigInt *b)
     dbl_chunk_size_t b_c_7 = b->chunks[7];
 
     a_c_0 = a_c_0 + b_c_0;
-    a_c_1 = a_c_1 + b_c_1 + ((a_c_0 >> QUICK_DIV) & 1);
-    a_c_2 = a_c_2 + b_c_2 + ((a_c_1 >> QUICK_DIV) & 1);
-    a_c_3 = a_c_3 + b_c_3 + ((a_c_2 >> QUICK_DIV) & 1);
-    a_c_4 = a_c_4 + b_c_4 + ((a_c_3 >> QUICK_DIV) & 1);
-    a_c_5 = a_c_5 + b_c_5 + ((a_c_4 >> QUICK_DIV) & 1);
-    a_c_6 = a_c_6 + b_c_6 + ((a_c_5 >> QUICK_DIV) & 1);
-    a_c_7 = a_c_7 + b_c_7 + ((a_c_6 >> QUICK_DIV) & 1);
+    a_c_1 = a_c_1 + b_c_1 + ((a_c_0 >> BIGINT_CHUNK_SHIFT) & 1);
+    a_c_2 = a_c_2 + b_c_2 + ((a_c_1 >> BIGINT_CHUNK_SHIFT) & 1);
+    a_c_3 = a_c_3 + b_c_3 + ((a_c_2 >> BIGINT_CHUNK_SHIFT) & 1);
+    a_c_4 = a_c_4 + b_c_4 + ((a_c_3 >> BIGINT_CHUNK_SHIFT) & 1);
+    a_c_5 = a_c_5 + b_c_5 + ((a_c_4 >> BIGINT_CHUNK_SHIFT) & 1);
+    a_c_6 = a_c_6 + b_c_6 + ((a_c_5 >> BIGINT_CHUNK_SHIFT) & 1);
+    a_c_7 = a_c_7 + b_c_7 + ((a_c_6 >> BIGINT_CHUNK_SHIFT) & 1);
 
-    r->chunks[0] = a_c_0 & MASK;
-    r->chunks[1] = a_c_1 & MASK;
-    r->chunks[2] = a_c_2 & MASK;
-    r->chunks[3] = a_c_3 & MASK;
-    r->chunks[4] = a_c_4 & MASK;
-    r->chunks[5] = a_c_5 & MASK;
-    r->chunks[6] = a_c_6 & MASK;
-    r->chunks[7] = a_c_7 & MASK;
+    r->chunks[0] = a_c_0 & BIGINT_CHUNK_MASK;
+    r->chunks[1] = a_c_1 & BIGINT_CHUNK_MASK;
+    r->chunks[2] = a_c_2 & BIGINT_CHUNK_MASK;
+    r->chunks[3] = a_c_3 & BIGINT_CHUNK_MASK;
+    r->chunks[4] = a_c_4 & BIGINT_CHUNK_MASK;
+    r->chunks[5] = a_c_5 & BIGINT_CHUNK_MASK;
+    r->chunks[6] = a_c_6 & BIGINT_CHUNK_MASK;
+    r->chunks[7] = a_c_7 & BIGINT_CHUNK_MASK;
 
     r->size = BIGINT_FIXED_SIZE;
     r->sign = 0;
