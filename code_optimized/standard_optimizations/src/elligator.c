@@ -67,7 +67,7 @@ void init_curve1174(Curve *curve)
  * \brief Maps a random string (interpreted as big integer) to a point on the
  *        given curve.
  *
- * \param t Integer in range [1, (q-1)/2] does no longer do sanity checks
+ * \param t Integer in range [0, (q-1)/2] does no longer do sanity checks
  * \param curve Curve satisfying the properties needed for Elligator one (e.g. Curve1174)
  */
 CurvePoint *elligator_1_string_to_point(CurvePoint *r, BigInt *t, Curve curve)
