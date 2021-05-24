@@ -664,7 +664,7 @@ void bench_big_int_mul_single_chunk_fn(void *arg)
 {
     int64_t i = *((int64_t *) arg);
     big_int_mul_single_chunk(RUNTIME_DEREF(big_int_array_1, i),
-        RUNTIME_DEREF(big_int_array_2, i), RUNTIME_DEREF(big_int_array_3, i));
+        RUNTIME_DEREF(big_int_array_2, i), *RUNTIME_DEREF(uint64_t_array_1, i));
 }
 
 void bench_big_int_mul_single_chunk(void *bench_args, char *bench_name, char *path)

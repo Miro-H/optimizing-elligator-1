@@ -11,9 +11,11 @@
 
 #### Ideas from meeting:
 * `% BIG_INT_RADIX` could be replaced by `&`
+* `/ BIG_INT_RADIX` could be replaced by shift
 
 #### Freya ideas:
 * Check with Miro: can we remove the final `copy`?
+    * Answer: Yes :)
 * Maybe I can remove the `/` in the innermost `for` loop.
 * Are we accessing consecutively?
 * Look into `big_int_prune`

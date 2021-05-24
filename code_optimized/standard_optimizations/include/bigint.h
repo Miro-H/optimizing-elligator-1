@@ -164,7 +164,7 @@ BigInt *big_int_mod(BigInt *r, BigInt *a, BigInt *q);
 BigInt *big_int_add_mod(BigInt *r, BigInt *a, BigInt *b, BigInt *q);
 BigInt *big_int_sub_mod(BigInt *r, BigInt *a, BigInt *b, BigInt *q);
 BigInt *big_int_mul_mod(BigInt *r, BigInt *a, BigInt *b, BigInt *q);
-BigInt *big_int_mul_single_chunk(BigInt *r, BigInt *a, BigInt *b);
+BigInt *big_int_mul_single_chunk(BigInt *r, BigInt *a, dbl_chunk_size_t b);
 BigInt *big_int_div_mod(BigInt *r, BigInt *a, BigInt *b, BigInt *q);
 BigInt *big_int_inv(BigInt *r, BigInt *a, BigInt *q);
 
