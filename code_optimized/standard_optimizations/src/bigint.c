@@ -282,26 +282,32 @@ BigInt *big_int_add(BigInt *r, BigInt *a, BigInt *b)
             big_int_neg(neg, a);
             big_int_fast_sub(r, b, neg);
         }
-        return r;
     }
-    big_int_fast_add(r, a, b);
+    else {
+        big_int_fast_add(r, a, b);
+    }
     return r;
 }
 
 BigInt *big_int_sub(BigInt *r, BigInt *a, BigInt *b)
 {
     BIG_INT_DEFINE_PTR(b_neg);
+
     if (a->sign != b->sign)
     {
         big_int_neg(b_neg, b);
         big_int_fast_add(r, a, b_neg);
-        return r;
     }
-    big_int_fast_sub(r, a, b);
+    else {
+        big_int_fast_sub(r, a, b);
+    }
     return r;
 }
 
 
+// Assumption: a->sign == b->sign
+// Assumption: no overflow for a + b, i.e., #chunks <= BIGINT_FIXED_SIZE_INTERNAL
+// TODO: Document
 BigInt *big_int_fast_add(BigInt *r, BigInt *a, BigInt *b)
 {
     ADD_STAT_COLLECTION(BIGINT_TYPE_BIG_INT_ADD);
@@ -324,8 +330,6 @@ BigInt *big_int_fast_add(BigInt *r, BigInt *a, BigInt *b)
 
     // Note aliasing is not an issue, since we only read potential shared
     // values _before_ we overwrite them.
-
-    // Assertion: a->sign == b->sign
 
     // Simplify implementation by making sure we know the larger BigInt (in
     // terms of chunks, not numerical value)
@@ -362,12 +366,11 @@ BigInt *big_int_fast_add(BigInt *r, BigInt *a, BigInt *b)
             r_size = i;
     }
 
-    // Since both BigInts have the same sign, the result has the same sign too
-    // except if there was an overflow that flipped it.
+    // Since both BigInts have the same sign, the result has the same sign too.
+    // (ignoring overflows)
 
     r->sign = aa->sign;
     if (carry && i < BIGINT_FIXED_SIZE_INTERNAL) {
-
         r->chunks[i] = 1;
         r_size++;
     }
@@ -376,6 +379,8 @@ BigInt *big_int_fast_add(BigInt *r, BigInt *a, BigInt *b)
     return r;
 }
 
+// TODO: Fix
+// TODO: Document
 BigInt *big_int_add_256(BigInt *r, BigInt *a, BigInt *b)
 {
     dbl_chunk_size_t r_c_0, r_c_1, r_c_2, r_c_3, r_c_4, r_c_5, r_c_6, r_c_7;
@@ -408,6 +413,8 @@ BigInt *big_int_add_256(BigInt *r, BigInt *a, BigInt *b)
     r_c_6 = a_c_6 + b_c_6 + (r_c_5 >> BIGINT_CHUNK_SHIFT);
     r_c_7 = a_c_7 + b_c_7 + (r_c_6 >> BIGINT_CHUNK_SHIFT);
 
+    // TODO: Overflow on last chunk would need carry in r->chunk[8]
+
     r->chunks[0] = r_c_0 & BIGINT_CHUNK_MASK;
     r->chunks[1] = r_c_1 & BIGINT_CHUNK_MASK;
     r->chunks[2] = r_c_2 & BIGINT_CHUNK_MASK;
@@ -417,8 +424,9 @@ BigInt *big_int_add_256(BigInt *r, BigInt *a, BigInt *b)
     r->chunks[6] = r_c_6 & BIGINT_CHUNK_MASK;
     r->chunks[7] = r_c_7 & BIGINT_CHUNK_MASK;
 
-
+    // TODO: Set size dep. on overflow
     r->size = 8;
+    // TODO: set sign correctly
     r->sign = 0;
 
     return r;
@@ -427,7 +435,7 @@ BigInt *big_int_add_256(BigInt *r, BigInt *a, BigInt *b)
 }
 
 /**
- * \brief Calculate r = a + b
+ * \brief Calculate r = a + b without taking carries into account
  *
  * \assumption r, a, b != NULL
  * \assumption a, b positive and has only 256 bits
@@ -435,7 +443,6 @@ BigInt *big_int_add_256(BigInt *r, BigInt *a, BigInt *b)
  */
 BigInt *big_int_add_upper_bound(BigInt *r, BigInt *a, BigInt *b)
 {
-
     dbl_chunk_size_t a_c_0 = a->chunks[0];
     dbl_chunk_size_t a_c_1 = a->chunks[1];
     dbl_chunk_size_t a_c_2 = a->chunks[2];
@@ -479,10 +486,10 @@ BigInt *big_int_add_upper_bound(BigInt *r, BigInt *a, BigInt *b)
 }
 
 
-
 /**
  * \brief Calculate r = a - b
  *
+ * \assumption a->sign == b->sign
  * \assumption r, a, b != NULL
  */
 BigInt *big_int_fast_sub(BigInt *r, BigInt *a, BigInt *b)
@@ -528,6 +535,8 @@ BigInt *big_int_fast_sub(BigInt *r, BigInt *a, BigInt *b)
         aa_abs = a_abs;
         bb_abs = b_abs;
     }
+
+    // TODO: fix this case
     /*
     if(a->size == 8 && b->size == 8)
     {
@@ -536,6 +545,7 @@ BigInt *big_int_fast_sub(BigInt *r, BigInt *a, BigInt *b)
         return r;
     }
     */
+
     // Assertion: aa_abs >= bb_abs
 
     // Note an underflow sets the 1 bit at position MSB+1 of the chunk:
@@ -563,18 +573,20 @@ BigInt *big_int_fast_sub(BigInt *r, BigInt *a, BigInt *b)
 
     // Assertion: borrow = 0, because aa_abs >= bb_abs
 
-    // There is never an overflow, because we subtract two numbers with diff. signs
+    // Because |a| >= |b| and we calculate |a| - |b|, the result is positive
+    // and we never have underflow.
     r->overflow = 0;
-
-    // The sign is zero, because |a| >= |b| and we calculate |a| - |b|
     r->sign = 0;
     r->size = r_size + 1;
 
-    return (do_sign_switch) ? big_int_neg(r, r) : r;
+    if (do_sign_switch)
+        r->sign = !r->sign;
+
+    return r;
 }
 
 
-
+// TODO: document
 BigInt *big_int_sub_upper_bound(BigInt *r, BigInt *a, BigInt *b)
 {
 
@@ -620,7 +632,8 @@ BigInt *big_int_sub_upper_bound(BigInt *r, BigInt *a, BigInt *b)
     return r;
 }
 
-
+// TODO: Fix
+// TODO: Document
 BigInt *big_int_sub_256(BigInt *r, BigInt *a, BigInt *b)
 {
 
@@ -664,8 +677,6 @@ BigInt *big_int_sub_256(BigInt *r, BigInt *a, BigInt *b)
     r->sign = 0;
 
     return r;
-
-
 }
 
 
