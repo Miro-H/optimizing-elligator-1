@@ -26,8 +26,8 @@
 #define BIGINT_TYPE_BIG_INT_NEG                   17
 #define BIGINT_TYPE_BIG_INT_ABS                   18
 #define BIGINT_TYPE_BIG_INT_ADD                   19
-#define BIGINT_TYPE_BIG_INT_MUL                   20
-#define BIGINT_TYPE_BIG_INT_SUB                   21
+#define BIGINT_TYPE_BIG_INT_SUB                   20
+#define BIGINT_TYPE_BIG_INT_MUL                   21
 #define BIGINT_TYPE_BIG_INT_DEV_REM               22
 #define BIGINT_TYPE_BIG_INT_DIV                   23
 #define BIGINT_TYPE_BIG_INT_SLL_SMALL             24
