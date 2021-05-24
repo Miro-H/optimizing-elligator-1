@@ -13,8 +13,6 @@ typedef struct CurvePoint
 typedef struct Curve // edward curve
 {
     BigInt q; // prime field
-    BigInt q_plus_1_half;
-    BigInt q_plus_1_quarter;
     BigInt d; // d of curve
     BigInt s; // s of curve
 

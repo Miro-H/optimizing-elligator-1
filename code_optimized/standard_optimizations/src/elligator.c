@@ -26,14 +26,6 @@ void init_curve1174(Curve *curve)
     big_int_create_from_hex(&(curve->q),
         "7FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF7");
 
-    // q_plus_1_half = (2^251 - 8) / 2
-    big_int_create_from_hex(&(curve->q_plus_1_half),
-        "3FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFC");
-
-    // q_plus_1_half = (2^251 - 8) / 4
-    big_int_create_from_hex(&(curve->q_plus_1_quarter),
-        "1FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFE");
-
     // d = -1174
     big_int_create_from_hex(&(curve->d),
         "7FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFB61");
