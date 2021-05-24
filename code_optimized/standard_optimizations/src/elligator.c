@@ -79,12 +79,14 @@ CurvePoint *elligator_1_string_to_point(CurvePoint *r, BigInt *t, Curve curve)
         return r;
     }
 
-    BigInt * X;
-    BigInt * Y;
-    BigInt * u_3;
-    BigInt * u_5;
+    BigInt *X;
+    BigInt *Y;
+    BigInt *u_3;
+    BigInt *u_5;
 
     BIG_INT_DEFINE_PTR(u);
+    BIG_INT_DEFINE_PTR(u_2);
+
     BIG_INT_DEFINE_PTR(v);
 
     int8_t chiv, chi_2;
@@ -101,25 +103,22 @@ CurvePoint *elligator_1_string_to_point(CurvePoint *r, BigInt *t, Curve curve)
     big_int_add(tmp_1, big_int_one, t);
     big_int_div_mod(u, tmp_0, tmp_1, &(curve.q)); // u = (1 − t) / (1 + t)
 
-
-    BIG_INT_DEFINE_PTR(u_2);
-    big_int_curve1174_mul_mod(u_2, u, u);
-
+    big_int_curve1174_mul_mod(u_2, u, u); // u_2 = u^2
     u_3 = tmp_0;
-    big_int_curve1174_mul_mod(u_3, u_2, u);
+    big_int_curve1174_mul_mod(u_3, u_2, u); // u_3 = u^3
 
     u_5 = tmp_1;
-    big_int_curve1174_mul_mod(u_5, u_3, u_2);
+    big_int_curve1174_mul_mod(u_5, u_3, u_2); // u_5 = u^5
 
-    big_int_curve1174_mul_mod(tmp_0, &(curve.r_squared_minus_two), u_3); // (r**2 − 2)*u**3
+    big_int_curve1174_mul_mod(tmp_0, &(curve.r_squared_minus_two), u_3); // (r^2 − 2)*u^3
 
-    big_int_add(v, u_5, u); // u**5 + u
-    big_int_add(v, v, tmp_0); // v = u**5 + (r**2 − 2)*u**3 + u
+    big_int_add(v, u_5, u); // u^5 + u
+    big_int_add(v, v, tmp_0); // v = u^5 + (r^2 − 2)*u^3 + u
 
     // Preserve value for later
     big_int_copy(tmp_0, v);
 
-    // big_int_curve1174_chi inplace changes v
+    // this call modifies v inplace
     chiv = big_int_curve1174_chi(v);
 
     X = u;
@@ -127,28 +126,28 @@ CurvePoint *elligator_1_string_to_point(CurvePoint *r, BigInt *t, Curve curve)
 
     tmp_0->sign = tmp_0->sign ^ chiv; // χ(v)v
 
-    big_int_curve1174_pow_q_p1_d4(tmp_pow_res, tmp_0); // (χ(v)v)**((q + 1) / 4)
-    tmp_pow_res->sign = tmp_pow_res->sign ^ chiv; // (χ(v)v)**((q + 1) / 4)χ(v)
+    big_int_curve1174_pow_q_p1_d4(tmp_pow_res, tmp_0); // (χ(v)v)^((q + 1) / 4)
+    tmp_pow_res->sign = tmp_pow_res->sign ^ chiv; // (χ(v)v)^((q + 1) / 4)χ(v)
 
-    big_int_add(tmp_2, u_2, &(curve.c_squared_inverse)); // u**2 + 1 / c**2
-    chi_2 = big_int_curve1174_chi(tmp_2); // χ(u**2 + 1 / c**2)
+    big_int_add(tmp_2, u_2, &(curve.c_squared_inverse)); // u^2 + 1 / c^2
+    chi_2 = big_int_curve1174_chi(tmp_2); // χ(u^2 + 1 / c^2)
 
     Y = tmp_pow_res;
-    Y->sign = Y->sign ^ chi_2; // Y = (χ(v)v)**((q + 1) / 4)χ(v)χ(u**2 + 1 / c**2)
+    Y->sign = Y->sign ^ chi_2; // Y = (χ(v)v)^((q + 1) / 4)χ(v)χ(u^2 + 1 / c^2)
 
 
-    big_int_add(tmp_0, big_int_one, X);
-    big_int_curve1174_mul_mod(X_plus_1_squared, tmp_0, tmp_0);
+    big_int_add(tmp_0, big_int_one, X); // X+1
+    big_int_curve1174_mul_mod(X_plus_1_squared, tmp_0, tmp_0); // (X+1)^2
 
-    big_int_curve1174_mul_mod(tmp_1, &(curve.c_minus_1_s), X);
-    big_int_curve1174_mul_mod(tmp_2, tmp_1, tmp_0);
-    big_int_curve1174_div_mod(&(r->x), tmp_2, Y); // x = (c − 1)*s*X*(1 + X) / Y
+    big_int_curve1174_mul_mod(tmp_1, &(curve.c_minus_1_s), X); // (c - 1) * s * X
+    big_int_curve1174_mul_mod(tmp_2, tmp_1, tmp_0); // (c - 1) * s * X * (1+X)
+    big_int_curve1174_div_mod(&(r->x), tmp_2, Y); // x = (c − 1) * s * X * (1 + X) / Y
 
-    big_int_curve1174_mul_mod(tmp_2, &(curve.r), X);
-    big_int_sub(tmp_0, tmp_2, X_plus_1_squared);
+    big_int_curve1174_mul_mod(tmp_2, &(curve.r), X); // rX
+    big_int_sub(tmp_0, tmp_2, X_plus_1_squared); // rX - (1 + X)^2
 
-    big_int_add(tmp_1, tmp_2, X_plus_1_squared);
-    big_int_curve1174_div_mod(&(r->y), tmp_0, tmp_1); //  y = (rX − (1 + X)**2) / (rX + (1 + X)**2)
+    big_int_add(tmp_1, tmp_2, X_plus_1_squared); // rX + (1 + X)^2
+    big_int_curve1174_div_mod(&(r->y), tmp_0, tmp_1); //  y = (rX − (1 + X)^2) / (rX + (1 + X)^2)
 
     return r;
 }
