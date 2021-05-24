@@ -541,6 +541,7 @@ BigInt *big_int_curve1174_pow_q_p1_d4(BigInt *r, BigInt *b)
  * \assumption r, t != NULL
  * \assumption t =/= 0 (guaranteed by proof in section 3.2 of the Elligator paper)
  *             as a consequence of XY =/= 0.
+ * \assumption t is MODIFIED inplace. The caller MUST NOT rely on its value.
  */
 int8_t big_int_curve1174_chi(BigInt *t)
 {
