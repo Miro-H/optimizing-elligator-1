@@ -1161,6 +1161,10 @@ int main(int argc, char const *argv[])
             bench_big_int_add_mod((void *)bench_big_int_size_256_random_mod_args,
                 "add mod (random)", LOG_PATH "/runtime_big_int_add_mod_random.log"));
 
+        BENCHMARK(bench_type, BENCH_TYPE_ADD_UPPER_BOUND,
+            bench_big_int_add_upper_bound((void *)bench_big_int_size_256_args,
+                "add (upper bound)", LOG_PATH "/runtime_big_int_add_upper_bound.log"));
+
         BENCHMARK(bench_type, BENCH_TYPE_SUB,
             bench_big_int_sub((void *)bench_big_int_size_256_args,
                 "sub", LOG_PATH "/runtime_big_int_sub.log"));
@@ -1172,6 +1176,10 @@ int main(int argc, char const *argv[])
         BENCHMARK(bench_type, BENCH_TYPE_SUB_MOD_RANDOM,
             bench_big_int_sub_mod((void *)bench_big_int_size_256_random_mod_args,
                 "sub mod (random)", LOG_PATH "/runtime_big_int_sub_mod_random.log"));
+
+        BENCHMARK(bench_type, BENCH_TYPE_SUB_UPPER_BOUND,
+            bench_big_int_sub_upper_bound((void *)bench_big_int_size_256_args,
+                "sub (upper bound)", LOG_PATH "/runtime_big_int_sub_upper_bound.log"));
 
         BENCHMARK(bench_type, BENCH_TYPE_MUL,
             bench_big_int_mul((void *)bench_big_int_size_256_args, "mul",
@@ -1264,16 +1272,6 @@ int main(int argc, char const *argv[])
         BENCHMARK(bench_type, BENCH_TYPE_CHI,
             bench_big_int_chi((void *)bench_big_int_size_256_curve_mod_args, "chi",
                 LOG_PATH "/runtime_big_int_chi_curve.log"));
-
-
-        BENCHMARK(bench_type, BENCH_TYPE_ADD_UPPER_BOUND,
-            bench_big_int_add_upper_bound((void *)bench_big_int_size_256_args,
-                "add", LOG_PATH "/runtime_big_int_add_upper_bound.log"));
-
-        BENCHMARK(bench_type, BENCH_TYPE_SUB_UPPER_BOUND,
-            bench_big_int_sub_upper_bound((void *)bench_big_int_size_256_args,
-                "sub", LOG_PATH "/runtime_big_int_sub_upper_bound.log"));
-
 
         BENCHMARK(bench_type, BENCH_TYPE_ELLIGATOR1_STR2PNT,
             bench_elligator_1_string_to_point((void *)bench_big_int_size_256_args,
