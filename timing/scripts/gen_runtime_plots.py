@@ -170,14 +170,15 @@ if __name__ == "__main__":
 
     parser.add_argument("--title", help="Title for the generated plot.")
     parser.add_argument("--plot_fname", help="Path of the generated plot.")
-    parser.add_argument("--logs_dirs", nargs="*",
+    parser.add_argument("--logs_dirs",
                         help="Path where the input logs are stored. If multiple " \
                         "directories are given, this expects multiple log files " \
-                        "with the same data name and will do a comparison for them.",
+                        "(separated by semicolon) with the same data name and " \
+                        "will do a comparison for them.",
                         default=LOGS_DIR_DEFAULT_PATH)
-    parser.add_argument("--logs_names", nargs="*",
-                        help="Specify the names of the data sets stored in the "\
-                        "different log folders.")
+    parser.add_argument("--logs_names",
+                        help="Specify the names (separated by semicolon) of the "\
+                        "data sets stored in the different log folders.")
     parser.add_argument("--log_xaxis", help="Toggle x-axis to have a log scale.",
                         action="store_true")
     parser.add_argument("--log_yaxis", help="Toggle y-axis to have a log scale.",
@@ -189,8 +190,8 @@ if __name__ == "__main__":
 
     title       = args.title
     plot_fname  = args.plot_fname
-    logs_dirs   = args.logs_dirs
-    logs_names  = args.logs_names
+    logs_dirs   = args.logs_dirs.split(";")
+    logs_names  = args.logs_names.split(";")
     log_xaxis   = args.log_xaxis
     log_yaxis   = args.log_yaxis
     bar_plot    = args.bar_plot

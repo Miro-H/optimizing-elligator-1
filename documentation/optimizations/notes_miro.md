@@ -154,3 +154,60 @@ For some power functions, I made the assumption that `r` is already initialized 
 BIG_INT_DEFINE_FROM_CHUNK(r, 0, 1);
 ```
 When `r` is defined. This saves us a call to `big_int_create_from_chunk`, since the macro actually defines `r` directly on initialization (which is certainly not slower, I'm pretty sure it's faster).
+
+## Compiler Flags
+Generate comparison plots for different optimization flags as described below.
+
+### Script
+Just execute
+```bash
+VERSION=2 SETS=10 REPS=1000 ./scripts/make_opt_flags_comp.sh
+```
+
+### Manual Way (now deprecated)
+```
+cd timing
+```
+
+the following benchmarks are interesting to compare:
+- `BENCH_TYPE_POW_CURVE`
+- `BENCH_TYPE_CHI`
+- `BENCH_TYPE_CURVE_1174_POW`
+- `BENCH_TYPE_CURVE_1174_CHI`
+- `BENCH_TYPE_ELLIGATOR1_STR2PNT`
+- `BENCH_TYPE_ELLIGATOR1_PNT2STR`
+
+Get their codes as follows:
+```bash
+../scripts/gen_types.py \
+    --src_files \
+        src/runtime_benchmark_curve1174.c \
+        src/runtime_benchmark.c \
+    --strip_prefix \
+        "BIGINT_TYPE_" \
+    --lookup_names \
+        BENCH_TYPE_POW_CURVE \
+        BENCH_TYPE_CHI \
+        BENCH_TYPE_CURVE_1174_POW \
+        BENCH_TYPE_CURVE_1174_CHI \
+        BENCH_TYPE_ELLIGATOR1_STR2PNT \
+        BENCH_TYPE_ELLIGATOR1_PNT2STR
+```
+
+For the followin, choose `SETS` and `REPS` appropriately and then use the same value for all commands!
+
+Create performance measurements using the following command
+- replace `TODO2` with the previous benchmark integers, the types not in one of the benchmark will just be ignore
+- replace `TODO1` with different optimization flags that you want to compare
+
+```bash
+OPT_FLAGS="<TODO1>" BENCHMARKS="<TODO2>" SETS=10 REPS=1000 make run-runtime-benchmark
+OPT_FLAGS="<TODO1>" BENCHMARKS="<TODO2>" SETS=10 REPS=1000 make run-runtime-benchmark-curve1174
+```
+
+Take not of the log folders, and copy together the logs for the same optimization flag into their own folder.
+
+Make a comparison plot as follows:
+```bash
+LOGS_NAMES="<TODO1>" LOGS_DIRS="<path/to/first/TODO1> </path/to/second/TODO1>" SETS=10 REPS=1000 make plot-comparison
+```
