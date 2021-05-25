@@ -24,6 +24,7 @@
 #define CHUNK_ABS llabs
 #define BIGINT_RADIX (((dbl_chunk_size_t) 1) << BIGINT_CHUNK_BIT_SIZE)
 #define BIGINT_RADIX_SIGNED ((int64_t) BIGINT_RADIX)
+#define BIGINT_RADIX_FOR_MOD (BIGINT_RADIX - 1)
 
 // Stats collection
 #ifdef COLLECT_STATS
@@ -163,6 +164,7 @@ BigInt *big_int_mod(BigInt *r, BigInt *a, BigInt *q);
 BigInt *big_int_add_mod(BigInt *r, BigInt *a, BigInt *b, BigInt *q);
 BigInt *big_int_sub_mod(BigInt *r, BigInt *a, BigInt *b, BigInt *q);
 BigInt *big_int_mul_mod(BigInt *r, BigInt *a, BigInt *b, BigInt *q);
+BigInt *big_int_mul_single_chunk(BigInt *r, BigInt *a, dbl_chunk_size_t b);
 BigInt *big_int_div_mod(BigInt *r, BigInt *a, BigInt *b, BigInt *q);
 BigInt *big_int_inv(BigInt *r, BigInt *a, BigInt *q);
 

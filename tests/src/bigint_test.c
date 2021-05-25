@@ -430,6 +430,7 @@ START_TEST(test_multiplication)
 {
     TEST_BIG_INT_DEFINE(a);
     TEST_BIG_INT_DEFINE(b);
+    TEST_BIG_INT_DEFINE(c);
     TEST_BIG_INT_DEFINE(r);
 
     // single chunk multiplication
@@ -437,52 +438,52 @@ START_TEST(test_multiplication)
     big_int_create_from_chunk(b, 22299, 0);
     big_int_create_from_chunk(r, 695282820, 0);
 
-    big_int_mul(a, a, b);
-    ck_assert_int_eq(big_int_compare(a, r), 0);
+    big_int_mul(c, a, b);
+    ck_assert_int_eq(big_int_compare(c, r), 0);
 
     // multi-chunk multiplication
     big_int_create_from_hex(a, "859CC30B50220F05");
     big_int_create_from_hex(b, "-F623FE531DA1D2B3");
     big_int_create_from_hex(r, "-80776C98745C5CEA986DBE62FB479A7F");
 
-    big_int_mul(a, a, b);
-    ck_assert_int_eq(big_int_compare(a, r), 0);
-    ck_assert_uint_eq(a->overflow, 0);
+    big_int_mul(c, a, b);
+    ck_assert_int_eq(big_int_compare(c, r), 0);
+    ck_assert_uint_eq(c->overflow, 0);
 
     // Zero multiplication
     big_int_create_from_chunk(a, 0, 0);
     big_int_create_from_hex(b, "-F623FE531DA1D2B3");
 
-    big_int_mul(a, a, b);
-    ck_assert_int_eq(big_int_compare(a, big_int_zero), 0);
-    ck_assert_uint_eq(a->overflow, 0);
+    big_int_mul(c, a, b);
+    ck_assert_int_eq(big_int_compare(c, big_int_zero), 0);
+    ck_assert_uint_eq(c->overflow, 0);
 
     // Multiplications with zero chunks
     big_int_create_from_hex(a, "859CC30B00000000");
     big_int_create_from_hex(b, "F623FE531DA1D2B3");
     big_int_create_from_hex(r, "80776C9827505E37ED8666B100000000");
 
-    big_int_mul(a, a, b);
-    ck_assert_int_eq(big_int_compare(a, r), 0);
-    ck_assert_uint_eq(a->overflow, 0);
+    big_int_mul(c, a, b);
+    ck_assert_int_eq(big_int_compare(c, r), 0);
+    ck_assert_uint_eq(c->overflow, 0);
 
     // Multiply integers of different sizes
     a = big_int_create_from_hex(a, "98415BFAEFD30E84");
     b = big_int_create_from_hex(b, "D0AAEA");
     r = big_int_create_from_hex(r, "7C1AC14EB5921D29CEECA8");
 
-    big_int_mul(a, a, b);
-    ck_assert_int_eq(big_int_compare(a, r), 0);
-    ck_assert_uint_eq(a->overflow, 0);
+    big_int_mul(c, a, b);
+    ck_assert_int_eq(big_int_compare(c, r), 0);
+    ck_assert_uint_eq(c->overflow, 0);
 
     // Multiply integers with mixed signs
     a = big_int_create_from_hex(a, "-98415BFAEFD30E84");
     b = big_int_create_from_hex(b, "D0AAEA");
     r = big_int_create_from_hex(r, "-7C1AC14EB5921D29CEECA8");
 
-    big_int_mul(a, a, b);
-    ck_assert_int_eq(big_int_compare(a, r), 0);
-    ck_assert_uint_eq(a->overflow, 0);
+    big_int_mul(c, a, b);
+    ck_assert_int_eq(big_int_compare(c, r), 0);
+    ck_assert_uint_eq(c->overflow, 0);
 
     a = big_int_create_from_hex(a, "98415BFAEFD30E84");
     b = big_int_create_from_hex(b, "-D0AAEA");
@@ -497,13 +498,69 @@ START_TEST(test_multiplication)
     b = big_int_create_from_hex(b, "-D0AAEA");
     r = big_int_create_from_hex(r, "7C1AC14EB5921D29CEECA8");
 
-    big_int_mul(a, a, b);
-    ck_assert_int_eq(big_int_compare(a, r), 0);
-    ck_assert_uint_eq(a->overflow, 0);
+    big_int_mul(c, a, b);
+    ck_assert_int_eq(big_int_compare(c, r), 0);
+    ck_assert_uint_eq(c->overflow, 0);
 
     TEST_BIG_INT_DESTROY(a);
     TEST_BIG_INT_DESTROY(b);
+    TEST_BIG_INT_DESTROY(c);
     TEST_BIG_INT_DESTROY(r);
+}
+END_TEST
+
+/**
+ * \brief Test multiplication of BigInts where one input has only one chunk.
+ */
+START_TEST(test_multiplication_single_chunk)
+{
+    TEST_BIG_INT_DEFINE(a);
+    dbl_chunk_size_t b;
+    TEST_BIG_INT_DEFINE(r);
+    TEST_BIG_INT_DEFINE(c);
+
+    // single chunk multiplication
+    big_int_create_from_chunk(a, 31180, 0);
+    b = 22299;
+    big_int_create_from_chunk(r, 695282820, 0);
+
+    big_int_mul_single_chunk(c, a, b);
+    ck_assert_int_eq(big_int_compare(c, r), 0);
+
+    // multi-chunk multiplication
+    big_int_create_from_hex(a, "859CC30B50220F05");
+    b = 12345;
+    big_int_create_from_hex(r, "192b24798c8b3a66481d");
+
+    big_int_mul_single_chunk(c, a, b);
+    ck_assert_int_eq(big_int_compare(c, r), 0);
+    ck_assert_uint_eq(c->overflow, 0);
+
+    // Zero multiplication
+    big_int_create_from_chunk(a, 0, 0);
+    b = 152637;
+
+    big_int_mul_single_chunk(c, a, b);
+    ck_assert_int_eq(big_int_compare(c, big_int_zero), 0);
+    ck_assert_uint_eq(c->overflow, 0);
+
+    // Multiplications with zero chunks
+    big_int_create_from_hex(a, "859CC30B00000000");
+    b = 123;
+    big_int_create_from_hex(r, "403251b64900000000");
+
+    // Multiply integers with mixed signs
+    a = big_int_create_from_hex(a, "-98415BFAEFD30E84");
+    b = 13675242;
+    r = big_int_create_from_hex(r, "-7C1AC14EB5921D29CEECA8");
+
+    big_int_mul_single_chunk(c, a, b);
+    ck_assert_int_eq(big_int_compare(c, r), 0);
+    ck_assert_uint_eq(c->overflow, 0);
+
+    TEST_BIG_INT_DESTROY(a);
+    TEST_BIG_INT_DESTROY(r);
+    TEST_BIG_INT_DESTROY(c);
 }
 END_TEST
 
@@ -1056,33 +1113,6 @@ START_TEST(test_div_mod)
     big_int_div_mod(x, a, b, q);
     ck_assert_int_eq(big_int_compare(x, r), 0);
 
-    // Reuse a
-    big_int_create_from_hex(a, "ABCD4569AB3096134DD");
-    big_int_create_from_hex(b, "56AA098765");
-    big_int_create_from_hex(q, "3450AEE678");
-    big_int_create_from_hex(r, "2DD358AAC1");
-
-    big_int_div_mod(a, a, b, q);
-    ck_assert_int_eq(big_int_compare(a, r), 0);
-
-    // Reuse b
-    big_int_create_from_hex(a, "ABCD4569AB3096134DD");
-    big_int_create_from_hex(b, "56AA098765");
-    big_int_create_from_hex(q, "3450AEE678");
-    big_int_create_from_hex(r, "2DD358AAC1");
-
-    big_int_div_mod(b, a, b, q);
-    ck_assert_int_eq(big_int_compare(b, r), 0);
-
-    // Reuse q
-    big_int_create_from_hex(a, "ABCD4569AB3096134DD");
-    big_int_create_from_hex(b, "56AA098765");
-    big_int_create_from_hex(q, "3450AEE678");
-    big_int_create_from_hex(r, "2DD358AAC1");
-
-    big_int_div_mod(q, a, b, q);
-    ck_assert_int_eq(big_int_compare(q, r), 0);
-
     TEST_BIG_INT_DESTROY(a);
     TEST_BIG_INT_DESTROY(b);
     TEST_BIG_INT_DESTROY(q);
@@ -1097,6 +1127,7 @@ END_TEST
 START_TEST(test_modulo_inverse)
 {
     TEST_BIG_INT_DEFINE(a);
+    TEST_BIG_INT_DEFINE(b);
     TEST_BIG_INT_DEFINE(q);
     TEST_BIG_INT_DEFINE(ainv_exp);
 
@@ -1104,16 +1135,16 @@ START_TEST(test_modulo_inverse)
     big_int_create_from_hex(q, "C18A71D87958DF7154BABA57");
     big_int_create_from_hex(ainv_exp, "6F3BDAB18DB2D458A39A3BEE");
 
-    big_int_inv(a, a, q);
-    ck_assert_int_eq(big_int_compare(a, ainv_exp), 0);
+    big_int_inv(b, a, q);
+    ck_assert_int_eq(big_int_compare(b, ainv_exp), 0);
 
     // Negative a
     big_int_create_from_hex(a, "-76101CAD986E75478DAAD160");
     big_int_create_from_hex(q, "C18A71D87958DF7154BABA57");
     big_int_create_from_hex(ainv_exp, "524E9726EBA60B18B1207E69");
 
-    big_int_inv(a, a, q);
-    ck_assert_int_eq(big_int_compare(a, ainv_exp), 0);
+    big_int_inv(b, a, q);
+    ck_assert_int_eq(big_int_compare(b, ainv_exp), 0);
 
     // Very simple cases
     // a = 7
@@ -1121,42 +1152,43 @@ START_TEST(test_modulo_inverse)
     big_int_create_from_chunk(q, 5, 0);
     big_int_create_from_chunk(ainv_exp, 3, 0);
 
-    big_int_inv(a, a, q);
-    ck_assert_int_eq(big_int_compare(a, ainv_exp), 0);
+    big_int_inv(b, a, q);
+    ck_assert_int_eq(big_int_compare(b, ainv_exp), 0);
 
     // a = 6
     big_int_create_from_chunk(a, 6, 0);
     big_int_create_from_chunk(q, 5, 0);
     big_int_create_from_chunk(ainv_exp, 1, 0);
 
-    big_int_inv(a, a, q);
-    ck_assert_int_eq(big_int_compare(a, ainv_exp), 0);
+    big_int_inv(b, a, q);
+    ck_assert_int_eq(big_int_compare(b, ainv_exp), 0);
 
     // a = 4
     big_int_create_from_chunk(a, 4, 0);
     big_int_create_from_chunk(q, 5, 0);
     big_int_create_from_chunk(ainv_exp, 4, 0);
 
-    big_int_inv(a, a, q);
-    ck_assert_int_eq(big_int_compare(a, ainv_exp), 0);
+    big_int_inv(b, a, q);
+    ck_assert_int_eq(big_int_compare(b, ainv_exp), 0);
 
     // a = 3
     big_int_create_from_chunk(a, 3, 0);
     big_int_create_from_chunk(q, 5, 0);
     big_int_create_from_chunk(ainv_exp, 2, 0);
 
-    big_int_inv(a, a, q);
-    ck_assert_int_eq(big_int_compare(a, ainv_exp), 0);
+    big_int_inv(b, a, q);
+    ck_assert_int_eq(big_int_compare(b, ainv_exp), 0);
 
     // a = 2
     big_int_create_from_chunk(a, 2, 0);
     big_int_create_from_chunk(q, 5, 0);
     big_int_create_from_chunk(ainv_exp, 3, 0);
 
-    big_int_inv(a, a, q);
-    ck_assert_int_eq(big_int_compare(a, ainv_exp), 0);
+    big_int_inv(b, a, q);
+    ck_assert_int_eq(big_int_compare(b, ainv_exp), 0);
 
     TEST_BIG_INT_DESTROY(a);
+    TEST_BIG_INT_DESTROY(b);
     TEST_BIG_INT_DESTROY(q);
     TEST_BIG_INT_DESTROY(ainv_exp);
 }
@@ -1546,6 +1578,7 @@ Suite *bigints_suite(void)
     tcase_add_test(tc_basic_arith, test_addition);
     tcase_add_test(tc_basic_arith, test_subtraction);
     tcase_add_test(tc_basic_arith, test_multiplication);
+    tcase_add_test(tc_basic_arith, test_multiplication_single_chunk);
     tcase_add_test(tc_basic_arith, test_division);
 
     tcase_add_test(tc_shifts, test_sll_small);

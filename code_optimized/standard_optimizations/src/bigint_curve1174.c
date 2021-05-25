@@ -591,6 +591,36 @@ int8_t big_int_curve1174_compare_to_q(BigInt *a)
     return (a->chunks[0] > Q_LSB_CHUNK) ? 1 : 0;
 }
 
+
+/**
+ * \brief Greater than (q - 1) / 2
+ *
+ * \returns 1 if a > (q - 1) / 2, 0 otherwise
+ *
+ * \assumption a != NULL
+ * \assumption a is at most 8 chunks
+ * \assumption a is non-negative
+ */
+int8_t big_int_curve1174_gt_q_m1_d2(BigInt *a)
+{
+    // Compare to highest chunk of Q
+    if (a->size < Q_CHUNKS || a->chunks[Q_CHUNKS-1] < Q_M1_D2_CHUNK_7)
+        return 0;
+    if (a->chunks[Q_CHUNKS-1] > Q_M1_D2_CHUNK_7)
+        return 1;
+
+    // Compare to lowest chunk of Q
+    if (a->chunks[0] <= Q_LSB_CHUNK)
+        return 0;
+
+    // Compare to intermediate chunks
+    for (uint32_t i = Q_CHUNKS - 2; i >= 1; --i) {
+        if (a->chunks[i] < Q_INTERMEDIATE_CHUNK)
+            return 0;
+    }
+    return 1;
+}
+
 /**
  * \brief Compare b to a * q for a \in [2, 33]
  *

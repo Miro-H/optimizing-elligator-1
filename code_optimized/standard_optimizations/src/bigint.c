@@ -679,6 +679,41 @@ BigInt *big_int_sub_256(BigInt *r, BigInt *a, BigInt *b)
     return r;
 }
 
+/**
+ * \brief Calculate r = a * b
+ *
+ * \assumption r, a, b != NULL
+ * \assumption a->size + b->size <= BIGINT_FIXED_SIZE
+ * \assumption b is positive
+ * \assumption no aliasing
+ */
+BigInt *big_int_mul_single_chunk(BigInt *r, BigInt *a, dbl_chunk_size_t b)
+{
+    ADD_STAT_COLLECTION(BIGINT_TYPE_BIG_INT_MUL);
+
+    int64_t j;
+    dbl_chunk_size_t carry;
+
+    r->sign = a->sign ^ 0;
+
+    // Multiply and add chunks
+    carry = 0;
+    for (j = 0; j < a->size; ++j) {
+        carry += a->chunks[j] * b;
+        r->chunks[j] = carry & BIGINT_RADIX_FOR_MOD;
+        carry >>= BIGINT_CHUNK_BIT_SIZE;
+    }
+
+    if (carry > 0) {
+        r->chunks[a->size] = carry;
+        r->size = a->size + 1;
+    }
+    else {
+        r->size = a->size;
+    }
+
+    return r;
+}
 
 /**
  * \brief Calculate r = a * a
@@ -716,8 +751,6 @@ BigInt *big_int_squared(BigInt *r, BigInt *a)
     return r;
 }
 
-
-
 // === === === === === === === === === === === === === === === === === === ===
 
 /**
@@ -725,6 +758,7 @@ BigInt *big_int_squared(BigInt *r, BigInt *a)
  *
  * \assumption r, a, b != NULL
  * \assumption a->size + b->size <= BIGINT_FIXED_SIZE_INTERNAL
+ * \assumption no
  */
 BigInt *big_int_mul(BigInt *r, BigInt *a, BigInt *b)
 {
@@ -742,14 +776,17 @@ BigInt *big_int_mul(BigInt *r, BigInt *a, BigInt *b)
     for (i = 0; i < b->size; ++i) {
         // shortcut for zero chunk
         if (b->chunks[i] == 0)
+        {
             r_loc->chunks[i + a->size] = 0;
+            r->chunks[i + a->size] = 0;
+        }
         else {
             // Multiply and add chunks
             carry = 0;
             for (j = 0; j < a->size; ++j) {
                 carry += a->chunks[j] * b->chunks[i] + r_loc->chunks[i + j];
-                r_loc->chunks[i + j] = carry % BIGINT_RADIX;
-                carry /= BIGINT_RADIX;
+                r_loc->chunks[i + j] = carry & BIGINT_RADIX_FOR_MOD;
+                carry >>= BIGINT_CHUNK_BIT_SIZE;
             }
             r_loc->chunks[i + a->size] = carry;
         }
@@ -1220,6 +1257,7 @@ BigInt *big_int_pow(BigInt *r, BigInt *b, BigInt *e, BigInt *q)
 
     BIG_INT_DEFINE_PTR(e_loc);
     BIG_INT_DEFINE_PTR(b_loc);
+    BIG_INT_DEFINE_PTR(tmp);
 
     BIG_INT_DEFINE_FROM_CHUNK(r_loc, 0, 1);
 
@@ -1229,10 +1267,14 @@ BigInt *big_int_pow(BigInt *r, BigInt *b, BigInt *e, BigInt *q)
     while (big_int_compare(e_loc, big_int_zero) > 0) {
         // If power is odd
         if (big_int_is_odd(e_loc))
-            big_int_mul_mod(r_loc, r_loc, b_loc, q);
+        {
+            big_int_mul_mod(tmp, r_loc, b_loc, q);
+            big_int_copy(r_loc, tmp);
+        }
 
         big_int_srl_small(e_loc, e_loc, 1);
-        big_int_mul_mod(b_loc, b_loc, b_loc, q);
+        big_int_mul_mod(tmp, b_loc, b_loc, q);
+        big_int_copy(b_loc, tmp);
     }
 
     // TODO: copy could be saved if we assume no aliasing
@@ -1331,6 +1373,7 @@ EgcdResult *big_int_egcd(EgcdResult *r, BigInt *a, BigInt *b)
     BIG_INT_DEFINE_PTR(x1);
     BIG_INT_DEFINE_PTR(y1);
     BIG_INT_DEFINE_PTR(tmp);
+    BIG_INT_DEFINE_PTR(tmp2);
 
     // Avoid copying intermediate results to final result by using the latter
     // from the start
@@ -1364,11 +1407,13 @@ EgcdResult *big_int_egcd(EgcdResult *r, BigInt *a, BigInt *b)
         big_int_copy(a_loc, tmp);
 
         big_int_copy(tmp, y1);
-        big_int_sub(y1, y0, big_int_mul(y1, y1, q));
+        big_int_mul(tmp2, y1, q);
+        big_int_sub(y1, y0, tmp2);
         big_int_copy(y0, tmp);
 
         big_int_copy(tmp, x1);
-        big_int_sub(x1, x0, big_int_mul(x1, x1, q));
+        big_int_mul(tmp2, x1, q);
+        big_int_sub(x1, x0, tmp2);
         big_int_copy(x0, tmp);
     }
 
