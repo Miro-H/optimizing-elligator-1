@@ -29,8 +29,9 @@ if __name__ == '__main__':
 
     parser.add_argument("--src_files", help="Source files to parse",
                         required=True, nargs="+")
-    parser.add_argument("--tar_file", help="Target file to write parsed enum to",
-                        required=True)
+    parser.add_argument("--dest_file", help="Destination file to write parsed enum to")
+    parser.add_argument("--lookup_names", nargs="+",
+                        help="Lookup the integer value of the given (text) benchmark types")
     parser.add_argument("--pattern", help="Pattern of elements to match",
                         default=r"([A-Z1-9_]+TYPE_[A-Z1-9_]+)[^A-Z]+")
     parser.add_argument("--add_translation", action="store_true",
@@ -42,15 +43,20 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     src_files       = args.src_files
-    tar_file        = args.tar_file
+    dest_file       = args.dest_file
+    lookup_names    = args.lookup_names
     pattern         = args.pattern
     add_translation = args.add_translation
     array_name      = args.array_name
     strip_prefix    = args.strip_prefix
 
+    if dest_file == None and lookup_names == None:
+        print("ERROR: either --dest_file or --lookup_names must be specified")
+        exit(1)
+
     if add_translation and array_name == None:
         print("ERROR: --array_name must be specified with --add_translation")
-        exit(1)
+        exit(2)
 
     matches = []
     for src_file in src_files:
@@ -62,25 +68,32 @@ if __name__ == '__main__':
     matches = unique_list(matches)
     line_len = max([len(match) for match in matches]) + 1
 
-    with open(tar_file, "w+") as tar_fp:
-        tar_fp.write(HEADER)
+    if dest_file:
+        with open(dest_file, "w+") as tar_fp:
+            tar_fp.write(HEADER)
 
-        # Include guard
-        guard_macro = tar_file.split("/")[-1].split(".")[0].upper() + "_H_"
-        tar_fp.write(f"#ifndef {guard_macro}\n#define {guard_macro}\n\n")
+            # Include guard
+            guard_macro = dest_file.split("/")[-1].split(".")[0].upper() + "_H_"
+            tar_fp.write(f"#ifndef {guard_macro}\n#define {guard_macro}\n\n")
 
-        for idx, match in enumerate(matches):
-            tar_fp.write(LINE_FORMAT.format(match.ljust(line_len), idx))
+            for idx, match in enumerate(matches):
+                tar_fp.write(LINE_FORMAT.format(match.ljust(line_len), idx))
 
-        if add_translation:
-            tar_fp.write("\n__attribute__((unused))")
-            tar_fp.write(f"\nstatic char *{array_name}[] = {{\n")
+            if add_translation:
+                tar_fp.write("\n__attribute__((unused))")
+                tar_fp.write(f"\nstatic char *{array_name}[] = {{\n")
 
-            names = [match.replace(strip_prefix, "").lower() for match in matches]
+                names = [match.replace(strip_prefix, "").lower() for match in matches]
 
-            for name in names[:-1]:
-                tar_fp.write(f"    \"{name}\",\n")
+                for name in names[:-1]:
+                    tar_fp.write(f"    \"{name}\",\n")
 
-            tar_fp.write(f"    \"{names[-1]}\"\n}};\n")
+                tar_fp.write(f"    \"{names[-1]}\"\n}};\n")
 
-        tar_fp.write(f"\n#endif // {guard_macro}")
+            tar_fp.write(f"\n#endif // {guard_macro}\n")
+
+    if lookup_names:
+        print(f"{matches.index(lookup_names[0])}", end="")
+        for lookup_name in lookup_names[1:]:
+            print(f" {matches.index(lookup_name)}", end="")
+        print("")

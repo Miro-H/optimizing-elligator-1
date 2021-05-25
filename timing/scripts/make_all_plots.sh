@@ -31,8 +31,8 @@ if [[ ! -z "${LOGS_DIRS}" ]]; then
     ${SCRIPTS_DIR}/gen_runtime_plots.py                                             \
         --title "Median Runtime Comparison (log scale, ${SETS} sets, ${REPS} reps)" \
         --plot_fname "${PLOTS_DIR}/comparison_bar_log_scale.png"                    \
-        --logs_dir ${LOGS_DIRS}                                                     \
-        --logs_names ${LOGS_NAMES}                                                  \
+        --logs_dir "${LOGS_DIRS}"                                                     \
+        --logs_names "${LOGS_NAMES}"                                                  \
         --bar_plot                                                                  \
         --log_yaxis
 
