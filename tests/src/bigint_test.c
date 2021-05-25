@@ -506,6 +506,7 @@ START_TEST(test_multiplication)
 }
 END_TEST
 
+#if VERSION > 1
 /**
  * \brief Test multiplication of BigInts where one input has only one chunk.
  */
@@ -591,6 +592,7 @@ START_TEST(test_squared)
     TEST_BIG_INT_DESTROY(r);
 }
 END_TEST
+#endif
 
 /**
 * \brief Test division of BigInts
@@ -1597,8 +1599,10 @@ Suite *bigints_suite(void)
     tcase_add_test(tc_basic_arith, test_addition);
     tcase_add_test(tc_basic_arith, test_subtraction);
     tcase_add_test(tc_basic_arith, test_multiplication);
+#if VERSION > 1
     tcase_add_test(tc_basic_arith, test_multiplication_single_chunk);
     tcase_add_test(tc_basic_arith, test_squared);
+#endif
     tcase_add_test(tc_basic_arith, test_division);
 
     tcase_add_test(tc_shifts, test_sll_small);

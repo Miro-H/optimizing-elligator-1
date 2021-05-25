@@ -660,6 +660,7 @@ void bench_big_int_mul(void *bench_args, char *bench_name, char *path)
 
 //=== === === === === === === === === === === === === === ===
 
+#if VERSION > 1
 void bench_big_int_mul_single_chunk_fn(void *arg)
 {
     int64_t i = *((int64_t *) arg);
@@ -677,6 +678,7 @@ void bench_big_int_mul_single_chunk(void *bench_args, char *bench_name, char *pa
     };
     benchmark_runner(bench_closure, bench_name, path, SETS, REPS, 0);
 }
+#endif
 
 //=== === === === === === === === === === === === === === ===
 
@@ -1131,6 +1133,7 @@ void bench_elligator_1_point_to_string(void *bench_args, char *bench_name, char 
 
 //=== === === === === === === === === === === === === === ===
 
+#if VERSION > 1
 void bench_big_int_add_upper_bound_fn(void *arg)
 {
     int64_t i = *((int64_t *) arg);
@@ -1148,9 +1151,11 @@ void bench_big_int_add_upper_bound(void *bench_args, char *bench_name, char *pat
     };
     benchmark_runner(bench_closure, bench_name, path, SETS, REPS, 0);
 }
+#endif
 
 //=== === === === === === === === === === === === === === ===
 
+#if VERSION > 1
 void bench_big_int_sub_upper_bound_fn(void *arg)
 {
     int64_t i = *((int64_t *) arg);
@@ -1168,6 +1173,7 @@ void bench_big_int_sub_upper_bound(void *bench_args, char *bench_name, char *pat
     };
     benchmark_runner(bench_closure, bench_name, path, SETS, REPS, 0);
 }
+#endif
 
 //=== === === === === === === === === === === === === === ===
 
@@ -1204,6 +1210,29 @@ int main(int argc, char const *argv[])
         BENCHMARK(bench_type, BENCH_TYPE_DUPLICATE,
             bench_big_int_duplicate((void *)bench_big_int_size_256_args, "duplicate",
                 LOG_PATH "/runtime_big_int_duplicate.log"));
+
+        #else
+
+        BENCHMARK(bench_type, BENCH_TYPE_ADD_UPPER_BOUND,
+        bench_big_int_add_upper_bound((void *)bench_big_int_size_256_args,
+        "add (upper bound)", LOG_PATH "/runtime_big_int_add_upper_bound.log"));
+
+        BENCHMARK(bench_type, BENCH_TYPE_SUB_UPPER_BOUND,
+            bench_big_int_sub_upper_bound((void *)bench_big_int_size_256_args,
+                "sub (upper bound)", LOG_PATH "/runtime_big_int_sub_upper_bound.log"));
+
+        BENCHMARK(bench_type, BENCH_TYPE_MUL_SINGLE_CHUNK,
+                bench_big_int_mul_single_chunk((void *)bench_big_int_size_256_args,
+                    "mul single chunk", LOG_PATH "/runtime_big_int_mul_single_chunk.log"));
+
+        BENCHMARK(bench_type, BENCH_TYPE_MUL_SQUARE,
+            bench_big_int_mul_squared((void *)bench_big_int_size_256_args,
+                "mul square", LOG_PATH "/runtime_big_int_mul_squared.log"));
+
+        BENCHMARK(bench_type, BENCH_TYPE_SQUARE,
+            bench_big_int_square((void *)bench_big_int_size_256_args,
+            "square", LOG_PATH "/runtime_big_int_square.log"));
+
         #endif
 
         BENCHMARK(bench_type, BENCH_TYPE_COPY,
@@ -1242,10 +1271,6 @@ int main(int argc, char const *argv[])
             bench_big_int_add_mod((void *)bench_big_int_size_256_random_mod_args,
                 "add mod (random)", LOG_PATH "/runtime_big_int_add_mod_random.log"));
 
-        BENCHMARK(bench_type, BENCH_TYPE_ADD_UPPER_BOUND,
-            bench_big_int_add_upper_bound((void *)bench_big_int_size_256_args,
-                "add (upper bound)", LOG_PATH "/runtime_big_int_add_upper_bound.log"));
-
         BENCHMARK(bench_type, BENCH_TYPE_SUB,
             bench_big_int_sub((void *)bench_big_int_size_256_args,
                 "sub", LOG_PATH "/runtime_big_int_sub.log"));
@@ -1258,25 +1283,9 @@ int main(int argc, char const *argv[])
             bench_big_int_sub_mod((void *)bench_big_int_size_256_random_mod_args,
                 "sub mod (random)", LOG_PATH "/runtime_big_int_sub_mod_random.log"));
 
-        BENCHMARK(bench_type, BENCH_TYPE_SUB_UPPER_BOUND,
-            bench_big_int_sub_upper_bound((void *)bench_big_int_size_256_args,
-                "sub (upper bound)", LOG_PATH "/runtime_big_int_sub_upper_bound.log"));
-
         BENCHMARK(bench_type, BENCH_TYPE_MUL,
             bench_big_int_mul((void *)bench_big_int_size_256_args, "mul",
                 LOG_PATH "/runtime_big_int_mul.log"));
-
-        BENCHMARK(bench_type, BENCH_TYPE_MUL,
-                bench_big_int_mul_single_chunk((void *)bench_big_int_size_256_args,
-                    "mul single chunk", LOG_PATH "/runtime_big_int_mul_single_chunk.log"));
-
-        BENCHMARK(bench_type, BENCH_TYPE_MUL_SQUARE,
-            bench_big_int_mul_squared((void *)bench_big_int_size_256_args,
-                "mul square", LOG_PATH "/runtime_big_int_mul_squared.log"));
-
-        BENCHMARK(bench_type, BENCH_TYPE_SQUARE,
-            bench_big_int_square((void *)bench_big_int_size_256_args,
-            "square", LOG_PATH "/runtime_big_int_square.log"));
 
         BENCHMARK(bench_type, BENCH_TYPE_MUL_MOD_CURVE,
             bench_big_int_mul_mod((void *)bench_big_int_size_256_curve_mod_args,

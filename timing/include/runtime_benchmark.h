@@ -29,6 +29,7 @@
 
 #define RUNTIME_DEREF(b, i) ((b)[(i)])
 #define RUNTIME_REF(b) (b)
+#define RUNTIME_BIG_INT_DECLARE(b) BigInt *b
 #define RUNTIME_BIG_INT_DEFINE(v) BigInt *v = big_int_create_from_chunk(NULL, 0, 0)
 #define RUNTIME_BIG_INT_INIT(v) v = big_int_create_from_chunk(NULL, 0, 0)
 #define RUNTIME_BIG_INT_ALLOC_ARR(a, arr_size) a = (BigInt **) malloc((arr_size) * sizeof(BigInt *))
@@ -46,6 +47,7 @@
 
 #define RUNTIME_DEREF(b, i) ((b)+(i))
 #define RUNTIME_REF(b) (&b)
+#define RUNTIME_BIG_INT_DECLARE(b) BIG_INT_DEFINE_PTR(b)
 #define RUNTIME_BIG_INT_DEFINE(v) BIG_INT_DEFINE_FROM_CHUNK(v, 0, 0)
 #define RUNTIME_BIG_INT_INIT(v) ((void) 0)
 #define RUNTIME_BIG_INT_ALLOC_ARR(a, arr_size) a = (BigInt *) malloc((arr_size) * sizeof(BigInt))
@@ -73,8 +75,8 @@ RUNTIME_DECLARE_BIGINT_ARRAY(big_int_array_q);
 
 RUNTIME_DECLARE_BIGINT_ARRAY(big_int_64_bit_array);
 
-RUNTIME_BIG_INT_DEFINE(bench_big_int_q_m1_d2); // (q-1)/2
-RUNTIME_BIG_INT_DEFINE(bench_big_int_q_p1_d4); // (q+1)/4
+RUNTIME_BIG_INT_DECLARE(bench_big_int_q_m1_d2); // (q-1)/2
+RUNTIME_BIG_INT_DECLARE(bench_big_int_q_p1_d4); // (q+1)/4
 
 EgcdResult *big_int_egcd_array;
 

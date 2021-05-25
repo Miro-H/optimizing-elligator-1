@@ -1,5 +1,4 @@
 IDIR    	= include
-ODIR    	= src/obj
 SDIR  		= src
 BDIR		= bin
 SCRIPTS_DIR = scripts
@@ -24,7 +23,6 @@ else ifeq ($(VERSION), 2)
 endif
 
 SRC_TESTED	= $(TESTED_ROOT_DIR)/src
-ODIR_TESTED = $(SRC_TESTED)/obj
 IDIR_TESTED	= $(TESTED_ROOT_DIR)/include
 
 CC      	= gcc
@@ -40,15 +38,12 @@ endif
 # Transfer variables to compiled C files
 CFLAGS += -DVERSION=$(VERSION)
 
-# Assume that the executable depends on all header files.
-DEPS = $(wildcard $(IDIR)/*.h)
-
 LIBS = -lcheck -lm
 
 ifeq ($(OS),Windows_NT)
 	# Do something windows specific if necessary
 else
-	IS_WIN_SUBSYSTEM = "$(shell grep -q Microsoft /proc/version && echo -n linux_subsys)"
+	IS_WIN_SUBSYSTEM = "$(shell grep -q Microsoft /proc/version 2> /dev/null && echo -n linux_subsys)"
 
 	ifeq ($(IS_WIN_SUBSYSTEM), "linux_subsys")
 		LIBS += -lpthread -lrt -lsubunit
@@ -72,15 +67,14 @@ else
 all: compile-bigint-test compile-elligator-test
 endif
 
-.PHONY: all-tested
-all-tested:
+.PHONY: print-compile-msg
+print-compile-msg:
 ifeq ($(TESTED_ROOT_DIR),)
 	$(error Unsupported version $(VERSION) (check Makefile comments))
 endif
 	@echo "\n------------------------------------------------------------------------"
 	@echo "Compile tests for using $(TESTED_ROOT_DIR)"
 	@echo "------------------------------------------------------------------------\n\n"
-	make -C $(TESTED_ROOT_DIR) all
 
 # Fresh build
 .PHONY: rebuild
@@ -91,24 +85,21 @@ rebuild: clean all
 run-tests: clean all
 	$(SCRIPTS_DIR)/run_all_tests.sh
 
-$(ODIR)/%.o: $(SDIR)/%.c $(DEPS)
-	$(CC) -c -o $@ $< $(CFLAGS)
-
 ################################################################################
 #                             BigInt Tests                                     #
 ################################################################################
 
-# Specify the object files constituting the test
-_OBJ	= bigint_test.o
-OBJ 	= $(patsubst %,$(ODIR)/%,$(_OBJ))
-# Specify the object files of the tested functions
-_OBJ_TESTED = bigint.o
-OBJ_TESTED 	= $(patsubst %,$(ODIR_TESTED)/%,$(_OBJ_TESTED))
+# Specify the C files constituting the test
+_BIGINT_SRC	= bigint_test.c
+BIGINT_SRC	= $(patsubst %,$(SDIR)/%,$(_BIGINT_SRC))
+
+_BIGINT_TESTED_SRC	= bigint.c
+BIGINT_TESTED_SRC	= $(patsubst %,$(SRC_TESTED)/%,$(_BIGINT_TESTED_SRC))
 
 .PHONY: compile-bigint-test
-compile-bigint-test: all-tested bigint-test
+compile-bigint-test: print-compile-msg bigint-test
 
-bigint-test: $(OBJ_TESTED) $(OBJ)
+bigint-test: $(BIGINT_SRC) $(BIGINT_TESTED_SRC)
 	$(CC) -o $(BDIR)/$@ $^ $(CFLAGS) $(LIBS)
 
 ################################################################################
@@ -117,35 +108,37 @@ bigint-test: $(OBJ_TESTED) $(OBJ)
 
 # only exists from version 2 onwards
 ifneq ($(VERSION), 1)
-# Specify the object files constituting the test
-_OBJ	= bigint_curve1174_test.o
-OBJ 	= $(patsubst %,$(ODIR)/%,$(_OBJ))
-# Specify the object files of the tested functions
-_OBJ_TESTED = bigint_curve1174.o bigint.o
-OBJ_TESTED 	= $(patsubst %,$(ODIR_TESTED)/%,$(_OBJ_TESTED))
+
+# Specify the C files constituting the test
+_BIGINT_CURVE1174_SRC	= bigint_curve1174_test.c
+BIGINT_CURVE1174_SRC	= $(patsubst %,$(SDIR)/%,$(_BIGINT_CURVE1174_SRC))
+
+_BIGINT_CURVE1174_TESTED_SRC	= bigint_curve1174.c bigint.c
+BIGINT_CURVE1174_TESTED_SRC	= $(patsubst %,$(SRC_TESTED)/%,$(_BIGINT_CURVE1174_TESTED_SRC))
 
 .PHONY: compile-bigint-curve1174-test
-compile-bigint-curve1174-test: all-tested bigint-curve1174-test
+compile-bigint-curve1174-test: print-compile-msg bigint-curve1174-test
 
-bigint-curve1174-test: $(OBJ_TESTED) $(OBJ)
+bigint-curve1174-test: $(BIGINT_CURVE1174_SRC) $(BIGINT_CURVE1174_TESTED_SRC)
 	$(CC) -o $(BDIR)/$@ $^ $(CFLAGS) $(LIBS)
+
 endif
 
 ################################################################################
 #                           Elligator Tests                                    #
 ################################################################################
 
-# Specify the object files constituting the test
-_OBJ	= elligator_test.o
-OBJ 	= $(patsubst %,$(ODIR)/%,$(_OBJ))
-# Specify the object files of the tested functions
-_OBJ_TESTED = bigint_curve1174.o bigint.o elligator.o
-OBJ_TESTED 	= $(patsubst %,$(ODIR_TESTED)/%,$(_OBJ_TESTED))
+# Specify the C files constituting the test
+_ELLIGATOR_SRC	= elligator_test.c
+ELLIGATOR_SRC	= $(patsubst %,$(SDIR)/%,$(_ELLIGATOR_SRC))
+
+_ELLIGATOR_TESTED_SRC	= bigint_curve1174.c bigint.c elligator.c
+ELLIGATOR_TESTED_SRC	= $(patsubst %,$(SRC_TESTED)/%,$(_ELLIGATOR_TESTED_SRC))
 
 .PHONY: compile-elligator-test
-compile-elligator-test: all-tested elligator-test
+compile-elligator-test: print-compile-msg elligator-test
 
-elligator-test: $(OBJ_TESTED) $(OBJ)
+elligator-test: $(ELLIGATOR_SRC) $(ELLIGATOR_TESTED_SRC)
 	$(CC) -o $(BDIR)/$@ $^ $(CFLAGS) $(LIBS)
 
 ################################################################################
@@ -154,4 +147,4 @@ elligator-test: $(OBJ_TESTED) $(OBJ)
 
 .PHONY: clean
 clean:
-	rm -f $(ODIR)/*.o *~ core $(INCDIR)/*~ $(BIN_FILES)
+	rm -f *~ core $(INCDIR)/*~ $(BIN_FILES)
