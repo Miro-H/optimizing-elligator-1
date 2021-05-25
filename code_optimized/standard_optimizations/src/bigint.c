@@ -265,42 +265,71 @@ BigInt *big_int_abs(BigInt *r, BigInt *a)
 }
 
 
-/**
- * \brief Calculate r = a + b
- *
- * \assumption r, a, b != NULL
- */
+ // === === === === === === === === === === === === === === === === === === ===
+
 BigInt *big_int_add(BigInt *r, BigInt *a, BigInt *b)
 {
+
+    BIG_INT_DEFINE_PTR(neg);
+
+    // Use subtractions when adequate
+    if (a->sign != b->sign) {
+        if (a->sign == 0) {
+            big_int_neg(neg, b);
+            big_int_fast_sub(r, a, neg);
+        }
+        else {
+            big_int_neg(neg, a);
+            big_int_fast_sub(r, b, neg);
+        }
+    }
+    else {
+        big_int_fast_add(r, a, b);
+    }
+    return r;
+}
+
+BigInt *big_int_sub(BigInt *r, BigInt *a, BigInt *b)
+{
+    BIG_INT_DEFINE_PTR(b_neg);
+
+    if (a->sign != b->sign)
+    {
+        big_int_neg(b_neg, b);
+        big_int_fast_add(r, a, b_neg);
+    }
+    else {
+        big_int_fast_sub(r, a, b);
+    }
+    return r;
+}
+
+
+// Assumption: a->sign == b->sign
+// Assumption: no overflow for a + b, i.e., #chunks <= BIGINT_FIXED_SIZE_INTERNAL
+// TODO: Document
+BigInt *big_int_fast_add(BigInt *r, BigInt *a, BigInt *b)
+{
     ADD_STAT_COLLECTION(BIGINT_TYPE_BIG_INT_ADD);
+
+    if(a->size == 8 && b->size == 8)
+    {
+        //big_int_add_256(r, a, b);
+        //return r;
+    }
+
 
     // Pointer used to point to a or b depending on which is larger
     BigInt *aa, *bb;
 
-    BIG_INT_DEFINE_PTR(neg);
 
     uint8_t carry;
     int64_t i;
     dbl_chunk_size_t sum;
     uint64_t r_size;
 
-    // Use subtractions when adequate
-    if (a->sign != b->sign) {
-        if (a->sign == 0) {
-            big_int_neg(neg, b);
-            big_int_sub(r, a, neg);
-        }
-        else {
-            big_int_neg(neg, a);
-            big_int_sub(r, b, neg);
-        }
-        return r;
-    }
-
     // Note aliasing is not an issue, since we only read potential shared
     // values _before_ we overwrite them.
-
-    // Assertion: a->sign == b->sign
 
     // Simplify implementation by making sure we know the larger BigInt (in
     // terms of chunks, not numerical value)
@@ -320,8 +349,8 @@ BigInt *big_int_add(BigInt *r, BigInt *a, BigInt *b)
     r_size = 0;
     for (i = 0; i < bb->size; ++i) {
         sum = aa->chunks[i] + bb->chunks[i] + carry;
-        r->chunks[i] = sum % BIGINT_RADIX;
-        carry = sum / BIGINT_RADIX;
+        r->chunks[i] = sum & BIGINT_CHUNK_MASK;
+        carry = sum >> BIGINT_CHUNK_SHIFT;
 
         if (r->chunks[i] != 0)
             r_size = i;
@@ -330,29 +359,128 @@ BigInt *big_int_add(BigInt *r, BigInt *a, BigInt *b)
     // Second, finish possible remaining chunks of larger integer
     for (; i < aa->size; ++i) {
         sum = aa->chunks[i] + carry;
-        r->chunks[i] = sum % BIGINT_RADIX;
-        carry = sum / BIGINT_RADIX;
+        r->chunks[i] = sum & BIGINT_CHUNK_MASK;
+        carry = sum >> BIGINT_CHUNK_SHIFT;
 
         if (r->chunks[i] != 0)
             r_size = i;
     }
 
-    // Since both BigInts have the same sign, the result has the same sign too
-    // except if there was an overflow that flipped it.
+    // Since both BigInts have the same sign, the result has the same sign too.
+    // (ignoring overflows)
 
     r->sign = aa->sign;
-    if (carry) {
-        if (i < BIGINT_FIXED_SIZE_INTERNAL) {
-            r->chunks[i] = 1;
-            r_size++;
-        }
-        else {
-            WARNING("Addition overflow detected. Currently operations are limited to 256 bits.\n");
-            r->overflow = 1;
-            r->sign = !r->sign;
-        }
+    if (carry && i < BIGINT_FIXED_SIZE_INTERNAL) {
+        r->chunks[i] = 1;
+        r_size++;
     }
     r->size = r_size + 1;
+
+    return r;
+}
+
+// TODO: Fix
+// TODO: Document
+BigInt *big_int_add_256(BigInt *r, BigInt *a, BigInt *b)
+{
+    dbl_chunk_size_t r_c_0, r_c_1, r_c_2, r_c_3, r_c_4, r_c_5, r_c_6, r_c_7;
+
+
+    dbl_chunk_size_t a_c_0 = a->chunks[0];
+    dbl_chunk_size_t a_c_1 = a->chunks[1];
+    dbl_chunk_size_t a_c_2 = a->chunks[2];
+    dbl_chunk_size_t a_c_3 = a->chunks[3];
+    dbl_chunk_size_t a_c_4 = a->chunks[4];
+    dbl_chunk_size_t a_c_5 = a->chunks[5];
+    dbl_chunk_size_t a_c_6 = a->chunks[6];
+    dbl_chunk_size_t a_c_7 = a->chunks[7];
+
+    dbl_chunk_size_t b_c_0 = b->chunks[0];
+    dbl_chunk_size_t b_c_1 = b->chunks[1];
+    dbl_chunk_size_t b_c_2 = b->chunks[2];
+    dbl_chunk_size_t b_c_3 = b->chunks[3];
+    dbl_chunk_size_t b_c_4 = b->chunks[4];
+    dbl_chunk_size_t b_c_5 = b->chunks[5];
+    dbl_chunk_size_t b_c_6 = b->chunks[6];
+    dbl_chunk_size_t b_c_7 = b->chunks[7];
+
+    r_c_0 = a_c_0 + b_c_0;
+    r_c_1 = a_c_1 + b_c_1 + (r_c_0 >> BIGINT_CHUNK_SHIFT);
+    r_c_2 = a_c_2 + b_c_2 + (r_c_1 >> BIGINT_CHUNK_SHIFT);
+    r_c_3 = a_c_3 + b_c_3 + (r_c_2 >> BIGINT_CHUNK_SHIFT);
+    r_c_4 = a_c_4 + b_c_4 + (r_c_3 >> BIGINT_CHUNK_SHIFT);
+    r_c_5 = a_c_5 + b_c_5 + (r_c_4 >> BIGINT_CHUNK_SHIFT);
+    r_c_6 = a_c_6 + b_c_6 + (r_c_5 >> BIGINT_CHUNK_SHIFT);
+    r_c_7 = a_c_7 + b_c_7 + (r_c_6 >> BIGINT_CHUNK_SHIFT);
+
+    // TODO: Overflow on last chunk would need carry in r->chunk[8]
+
+    r->chunks[0] = r_c_0 & BIGINT_CHUNK_MASK;
+    r->chunks[1] = r_c_1 & BIGINT_CHUNK_MASK;
+    r->chunks[2] = r_c_2 & BIGINT_CHUNK_MASK;
+    r->chunks[3] = r_c_3 & BIGINT_CHUNK_MASK;
+    r->chunks[4] = r_c_4 & BIGINT_CHUNK_MASK;
+    r->chunks[5] = r_c_5 & BIGINT_CHUNK_MASK;
+    r->chunks[6] = r_c_6 & BIGINT_CHUNK_MASK;
+    r->chunks[7] = r_c_7 & BIGINT_CHUNK_MASK;
+
+    // TODO: Set size dep. on overflow
+    r->size = 8;
+    // TODO: set sign correctly
+    r->sign = 0;
+
+    return r;
+
+
+}
+
+/**
+ * \brief Calculate r = a + b without taking carries into account
+ *
+ * \assumption r, a, b != NULL
+ * \assumption a, b positive and has only 256 bits
+ * \assumption overflow is not cleaned up
+ */
+BigInt *big_int_add_upper_bound(BigInt *r, BigInt *a, BigInt *b)
+{
+    dbl_chunk_size_t a_c_0 = a->chunks[0];
+    dbl_chunk_size_t a_c_1 = a->chunks[1];
+    dbl_chunk_size_t a_c_2 = a->chunks[2];
+    dbl_chunk_size_t a_c_3 = a->chunks[3];
+    dbl_chunk_size_t a_c_4 = a->chunks[4];
+    dbl_chunk_size_t a_c_5 = a->chunks[5];
+    dbl_chunk_size_t a_c_6 = a->chunks[6];
+    dbl_chunk_size_t a_c_7 = a->chunks[7];
+
+    dbl_chunk_size_t b_c_0 = b->chunks[0];
+    dbl_chunk_size_t b_c_1 = b->chunks[1];
+    dbl_chunk_size_t b_c_2 = b->chunks[2];
+    dbl_chunk_size_t b_c_3 = b->chunks[3];
+    dbl_chunk_size_t b_c_4 = b->chunks[4];
+    dbl_chunk_size_t b_c_5 = b->chunks[5];
+    dbl_chunk_size_t b_c_6 = b->chunks[6];
+    dbl_chunk_size_t b_c_7 = b->chunks[7];
+
+    dbl_chunk_size_t r_c_0 = a_c_0 + b_c_0;
+    dbl_chunk_size_t r_c_1 = a_c_1 + b_c_1;
+    dbl_chunk_size_t r_c_2 = a_c_2 + b_c_2;
+    dbl_chunk_size_t r_c_3 = a_c_3 + b_c_3;
+    dbl_chunk_size_t r_c_4 = a_c_4 + b_c_4;
+    dbl_chunk_size_t r_c_5 = a_c_5 + b_c_5;
+    dbl_chunk_size_t r_c_6 = a_c_6 + b_c_6;
+    dbl_chunk_size_t r_c_7 = a_c_7 + b_c_7;
+
+    r->chunks[0] = r_c_0;
+    r->chunks[1] = r_c_1;
+    r->chunks[2] = r_c_2;
+    r->chunks[3] = r_c_3;
+    r->chunks[4] = r_c_4;
+    r->chunks[5] = r_c_5;
+    r->chunks[6] = r_c_6;
+    r->chunks[7] = r_c_7;
+
+    r->size = BIGINT_FIXED_SIZE;
+    r->sign = 0;
 
     return r;
 }
@@ -361,13 +489,13 @@ BigInt *big_int_add(BigInt *r, BigInt *a, BigInt *b)
 /**
  * \brief Calculate r = a - b
  *
+ * \assumption a->sign == b->sign
  * \assumption r, a, b != NULL
  */
-BigInt *big_int_sub(BigInt *r, BigInt *a, BigInt *b)
+BigInt *big_int_fast_sub(BigInt *r, BigInt *a, BigInt *b)
 {
     ADD_STAT_COLLECTION(BIGINT_TYPE_BIG_INT_SUB);
 
-    BIG_INT_DEFINE_PTR(b_neg);
     BIG_INT_DEFINE_PTR(a_abs);
     BIG_INT_DEFINE_PTR(b_abs);
     BIG_INT_DEFINE_PTR(aa_abs);
@@ -378,13 +506,6 @@ BigInt *big_int_sub(BigInt *r, BigInt *a, BigInt *b)
     dbl_chunk_size_t diff;
     uint8_t do_sign_switch;
     uint64_t r_size;
-
-    // Use addition operations depending on signs
-    if (a->sign != b->sign) {
-        big_int_neg(b_neg, b);
-        r = big_int_add(r, a, b_neg);
-        return r;
-    }
 
     // If a, b < 0; calculate -(|a| - |b|) instead
     if (a->sign == 1) {
@@ -415,6 +536,16 @@ BigInt *big_int_sub(BigInt *r, BigInt *a, BigInt *b)
         bb_abs = b_abs;
     }
 
+    // TODO: fix this case
+    /*
+    if(a->size == 8 && b->size == 8)
+    {
+        big_int_sub_256(r, aa_abs, bb_abs);
+
+        return r;
+    }
+    */
+
     // Assertion: aa_abs >= bb_abs
 
     // Note an underflow sets the 1 bit at position MSB+1 of the chunk:
@@ -424,8 +555,8 @@ BigInt *big_int_sub(BigInt *r, BigInt *a, BigInt *b)
     r_size = 0;
     for (i = 0; i < bb_abs->size; ++i) {
         diff = aa_abs->chunks[i] - bb_abs->chunks[i] - borrow;
-        r->chunks[i] = diff % BIGINT_RADIX;
-        borrow = (diff / BIGINT_RADIX) & 1;
+        r->chunks[i] = diff & BIGINT_CHUNK_MASK;
+        borrow = (diff >> BIGINT_CHUNK_SHIFT) & 1;
 
         if (r->chunks[i] != 0)
             r_size = i;
@@ -433,8 +564,8 @@ BigInt *big_int_sub(BigInt *r, BigInt *a, BigInt *b)
 
     for (; i < aa_abs->size; ++i) {
         diff = aa_abs->chunks[i] - borrow;
-        r->chunks[i] = diff % BIGINT_RADIX;
-        borrow = (diff / BIGINT_RADIX) & 1;
+        r->chunks[i] = diff & BIGINT_CHUNK_MASK;
+        borrow = (diff >> BIGINT_CHUNK_SHIFT) & 1;
 
         if (r->chunks[i] != 0)
             r_size = i;
@@ -442,16 +573,152 @@ BigInt *big_int_sub(BigInt *r, BigInt *a, BigInt *b)
 
     // Assertion: borrow = 0, because aa_abs >= bb_abs
 
-    // There is never an overflow, because we subtract two numbers with diff. signs
+    // Because |a| >= |b| and we calculate |a| - |b|, the result is positive
+    // and we never have underflow.
     r->overflow = 0;
-
-    // The sign is zero, because |a| >= |b| and we calculate |a| - |b|
     r->sign = 0;
     r->size = r_size + 1;
 
-    return (do_sign_switch) ? big_int_neg(r, r) : r;
+    if (do_sign_switch)
+        r->sign = !r->sign;
+
+    return r;
 }
 
+
+// TODO: document
+BigInt *big_int_sub_upper_bound(BigInt *r, BigInt *a, BigInt *b)
+{
+
+    dbl_chunk_size_t a_c_0 = a->chunks[0];
+    dbl_chunk_size_t a_c_1 = a->chunks[1];
+    dbl_chunk_size_t a_c_2 = a->chunks[2];
+    dbl_chunk_size_t a_c_3 = a->chunks[3];
+    dbl_chunk_size_t a_c_4 = a->chunks[4];
+    dbl_chunk_size_t a_c_5 = a->chunks[5];
+    dbl_chunk_size_t a_c_6 = a->chunks[6];
+    dbl_chunk_size_t a_c_7 = a->chunks[7];
+
+    dbl_chunk_size_t b_c_0 = b->chunks[0];
+    dbl_chunk_size_t b_c_1 = b->chunks[1];
+    dbl_chunk_size_t b_c_2 = b->chunks[2];
+    dbl_chunk_size_t b_c_3 = b->chunks[3];
+    dbl_chunk_size_t b_c_4 = b->chunks[4];
+    dbl_chunk_size_t b_c_5 = b->chunks[5];
+    dbl_chunk_size_t b_c_6 = b->chunks[6];
+    dbl_chunk_size_t b_c_7 = b->chunks[7];
+
+    dbl_chunk_size_t r_c_0 = a_c_0 - b_c_0;
+    dbl_chunk_size_t r_c_1 = a_c_1 - b_c_1;
+    dbl_chunk_size_t r_c_2 = a_c_2 - b_c_2;
+    dbl_chunk_size_t r_c_3 = a_c_3 - b_c_3;
+    dbl_chunk_size_t r_c_4 = a_c_4 - b_c_4;
+    dbl_chunk_size_t r_c_5 = a_c_5 - b_c_5;
+    dbl_chunk_size_t r_c_6 = a_c_6 - b_c_6;
+    dbl_chunk_size_t r_c_7 = a_c_7 - b_c_7;
+
+    r->chunks[0] = r_c_0;
+    r->chunks[1] = r_c_1;
+    r->chunks[2] = r_c_2;
+    r->chunks[3] = r_c_3;
+    r->chunks[4] = r_c_4;
+    r->chunks[5] = r_c_5;
+    r->chunks[6] = r_c_6;
+    r->chunks[7] = r_c_7;
+
+    r->size = BIGINT_FIXED_SIZE;
+    r->sign = 0;
+
+    return r;
+}
+
+// TODO: Fix
+// TODO: Document
+BigInt *big_int_sub_256(BigInt *r, BigInt *a, BigInt *b)
+{
+
+    dbl_chunk_size_t a_c_0 = a->chunks[0];
+    dbl_chunk_size_t a_c_1 = a->chunks[1];
+    dbl_chunk_size_t a_c_2 = a->chunks[2];
+    dbl_chunk_size_t a_c_3 = a->chunks[3];
+    dbl_chunk_size_t a_c_4 = a->chunks[4];
+    dbl_chunk_size_t a_c_5 = a->chunks[5];
+    dbl_chunk_size_t a_c_6 = a->chunks[6];
+    dbl_chunk_size_t a_c_7 = a->chunks[7];
+
+    dbl_chunk_size_t b_c_0 = b->chunks[0];
+    dbl_chunk_size_t b_c_1 = b->chunks[1];
+    dbl_chunk_size_t b_c_2 = b->chunks[2];
+    dbl_chunk_size_t b_c_3 = b->chunks[3];
+    dbl_chunk_size_t b_c_4 = b->chunks[4];
+    dbl_chunk_size_t b_c_5 = b->chunks[5];
+    dbl_chunk_size_t b_c_6 = b->chunks[6];
+    dbl_chunk_size_t b_c_7 = b->chunks[7];
+
+    a_c_0 = a_c_0 + b_c_0;
+    a_c_1 = a_c_1 + b_c_1 + ((a_c_0 >> BIGINT_CHUNK_SHIFT) & 1);
+    a_c_2 = a_c_2 + b_c_2 + ((a_c_1 >> BIGINT_CHUNK_SHIFT) & 1);
+    a_c_3 = a_c_3 + b_c_3 + ((a_c_2 >> BIGINT_CHUNK_SHIFT) & 1);
+    a_c_4 = a_c_4 + b_c_4 + ((a_c_3 >> BIGINT_CHUNK_SHIFT) & 1);
+    a_c_5 = a_c_5 + b_c_5 + ((a_c_4 >> BIGINT_CHUNK_SHIFT) & 1);
+    a_c_6 = a_c_6 + b_c_6 + ((a_c_5 >> BIGINT_CHUNK_SHIFT) & 1);
+    a_c_7 = a_c_7 + b_c_7 + ((a_c_6 >> BIGINT_CHUNK_SHIFT) & 1);
+
+    r->chunks[0] = a_c_0 & BIGINT_CHUNK_MASK;
+    r->chunks[1] = a_c_1 & BIGINT_CHUNK_MASK;
+    r->chunks[2] = a_c_2 & BIGINT_CHUNK_MASK;
+    r->chunks[3] = a_c_3 & BIGINT_CHUNK_MASK;
+    r->chunks[4] = a_c_4 & BIGINT_CHUNK_MASK;
+    r->chunks[5] = a_c_5 & BIGINT_CHUNK_MASK;
+    r->chunks[6] = a_c_6 & BIGINT_CHUNK_MASK;
+    r->chunks[7] = a_c_7 & BIGINT_CHUNK_MASK;
+
+    r->size = BIGINT_FIXED_SIZE;
+    r->sign = 0;
+
+    return r;
+}
+
+
+/**
+ * \brief Calculate r = a * a
+ * !TODO add optimizations from mul
+ * \assumption r, a, b != NULL
+ * \assumption a->size + b->size <= BIGINT_FIXED_SIZE
+ */
+BigInt *big_int_squared(BigInt *r, BigInt *a)
+{
+    ADD_STAT_COLLECTION(BIGINT_TYPE_BIG_INT_MUL);
+
+    int64_t i, j;
+    dbl_chunk_size_t carry;
+
+    r->size = 2 * a->size;
+    r->sign = 0;
+
+    for (i = 0; i < a->size; ++i) {
+        // shortcut for zero chunk
+        if (a->chunks[i] == 0)
+            r->chunks[i + a->size] = 0;
+        else {
+            // Multiply and add chunks
+            carry = 0;
+            for (j = 0; j < a->size; ++j) {
+                carry += a->chunks[j] * a->chunks[i] + r->chunks[i + j];
+                r->chunks[i + j] = carry % BIGINT_RADIX;
+                carry /= BIGINT_RADIX;
+            }
+            r->chunks[i + a->size] = carry;
+        }
+    }
+    big_int_prune_leading_zeros(r, r);
+
+    return r;
+}
+
+
+
+// === === === === === === === === === === === === === === === === === === ===
 
 /**
  * \brief Calculate r = a * b

@@ -268,3 +268,9 @@ if __name__ == "__main__":
     #print(curve.s.x)
 
     assert(s1.x == t.x)
+    c = create_big_int(0x4D1A3398ED42CEEB451D20824CA9CB49B69EF546BD7E6546AEF19AF1F9E49E1)
+    c_2 = big_int_mul(c, c)
+    q = create_big_int(0x7FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF7)
+    r = big_int_inverse(c_2, q)
+    print(hex(r.x).upper())
+    print()

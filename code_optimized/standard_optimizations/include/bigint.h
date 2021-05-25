@@ -16,10 +16,13 @@
 #define BIGINT_CHUNK_HEX_SIZE ((uint32_t) sizeof(chunk_size_t) * 2)
 #define BIGINT_CHUNK_BIT_SIZE ((uint32_t) sizeof(chunk_size_t) * 8)
 
+#define BIGINT_CHUNK_SHIFT ((uint64_t) BIGINT_CHUNK_BIT_SIZE)
+#define BIGINT_CHUNK_MASK (BIGINT_RADIX - 1)
+
 // Change if larger chunks are used
 #define STR_TO_CHUNK strtol
 #define CHUNK_ABS llabs
-#define BIGINT_RADIX (((dbl_chunk_size_t) 1) << (sizeof(chunk_size_t) * 8))
+#define BIGINT_RADIX (((dbl_chunk_size_t) 1) << BIGINT_CHUNK_BIT_SIZE)
 #define BIGINT_RADIX_SIGNED ((int64_t) BIGINT_RADIX)
 
 // Stats collection
@@ -172,6 +175,16 @@ int8_t big_int_is_odd(BigInt *a);
 BigInt *big_int_pow(BigInt *r, BigInt *b, BigInt *e, BigInt *q);
 EgcdResult *big_int_egcd(EgcdResult *r, BigInt *a, BigInt *b);
 BigInt *big_int_chi(BigInt *r, BigInt *t, BigInt *q);
+
+//New operations
+BigInt *big_int_squared(BigInt *r, BigInt *a);
+BigInt *big_int_add_256(BigInt *r, BigInt *a, BigInt *b);
+BigInt *big_int_add_upper_bound(BigInt *r, BigInt *a, BigInt *b);
+BigInt *big_int_sub_256(BigInt *r, BigInt *a, BigInt *b);
+BigInt *big_int_sub_upper_bound(BigInt *r, BigInt *a, BigInt *b);
+BigInt *big_int_fast_sub(BigInt *r, BigInt *a, BigInt *b);
+BigInt *big_int_fast_add(BigInt *r, BigInt *a, BigInt *b);
+
 
 // Reset stats (use in combination with setting the env variable COLLECT_STATS)
 void reset_stats(void);
