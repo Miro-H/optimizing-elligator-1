@@ -420,6 +420,7 @@ BigInt *big_int_curve1174_pow_small(BigInt *r, BigInt *b, uint64_t e)
     ADD_STAT_COLLECTION(BIGINT_CURVE1174_TYPE_BIG_INT_POW_SMALL);
 
     BIG_INT_DEFINE_PTR(b_loc);
+    BIG_INT_DEFINE_PTR(temp);
 
     big_int_create_from_chunk(r, 1, 0);
     big_int_copy(b_loc, b);
@@ -427,12 +428,16 @@ BigInt *big_int_curve1174_pow_small(BigInt *r, BigInt *b, uint64_t e)
     while (e) {
         // If power is odd
         if (e & 1)
-            big_int_curve1174_mul_mod(r, r, b_loc);
+        {
+            big_int_curve1174_mul_mod(temp, r, b_loc);
+            big_int_copy(r, temp);
+        }
 
         e >>= 1;
         // TODO: compute those in parallel in first step. Those are only 256
         // results, we could even store them on the stack.
-        big_int_curve1174_mul_mod(b_loc, b_loc, b_loc);
+        big_int_curve1174_mul_mod(temp, b_loc, b_loc);
+        big_int_copy(b_loc, temp);
     }
 
     return r;
@@ -449,6 +454,7 @@ BigInt *big_int_curve1174_pow(BigInt *r, BigInt *b, BigInt *e)
     ADD_STAT_COLLECTION(BIGINT_CURVE1174_TYPE_BIG_INT_POW);
 
     BIG_INT_DEFINE_PTR(b_loc);
+    BIG_INT_DEFINE_PTR(temp);
     dbl_chunk_size_t e_chunk;
 
     big_int_create_from_chunk(r, 1, 0);
@@ -461,10 +467,14 @@ BigInt *big_int_curve1174_pow(BigInt *r, BigInt *b, BigInt *e)
         while (e_chunk) {
             // If power is odd
             if (e_chunk & 1)
-                big_int_curve1174_mul_mod(r, r, b_loc);
+            {
+                big_int_curve1174_mul_mod(temp, r, b_loc);
+                big_int_copy(r, temp);
+            }
 
             e_chunk >>= 1;
-            big_int_curve1174_mul_mod(b_loc, b_loc, b_loc);
+            big_int_curve1174_mul_mod(temp, b_loc, b_loc);
+            big_int_copy(b_loc, temp);
         }
     }
 
@@ -484,23 +494,31 @@ BigInt *big_int_curve1174_pow_q_m1_d2(BigInt *r, BigInt *b)
 {
     ADD_STAT_COLLECTION(BIGINT_CURVE1174_TYPE_BIG_INT_POW_1_2);
 
+    BIG_INT_DEFINE_PTR(temp);
+
     // (q-1)/2 = 0b1111...11111011 (there are 247 ones before the suffix 011)
 
     // Ensure suffix
     // e = 1
-    big_int_curve1174_mul_mod(r, r, b);
+    big_int_curve1174_mul_mod(temp, r, b);
+    big_int_copy(r, temp);
 
     // e = 11
-    big_int_curve1174_mul_mod(b, b, b);
-    big_int_curve1174_mul_mod(r, r, b);
+    big_int_curve1174_mul_mod(temp, b, b);
+    big_int_copy(b, temp);
+    big_int_curve1174_mul_mod(temp, r, b);
+    big_int_copy(r, temp);
 
     // e = 011
-    big_int_curve1174_mul_mod(b, b, b);
+    big_int_curve1174_mul_mod(temp, b, b);
+    big_int_copy(b, temp);
 
     // All the remaining bits are set to one, so we add all of them
     for (uint32_t i = 0; i < 247; ++i) {
-        big_int_curve1174_mul_mod(b, b, b);
-        big_int_curve1174_mul_mod(r, r, b);
+        big_int_curve1174_mul_mod(temp, b, b);
+        big_int_copy(b, temp);
+        big_int_curve1174_mul_mod(temp, r, b);
+        big_int_copy(r, temp);
     }
 
     return r;
@@ -520,13 +538,17 @@ BigInt *big_int_curve1174_pow_q_p1_d4(BigInt *r, BigInt *b)
 {
     ADD_STAT_COLLECTION(BIGINT_CURVE1174_TYPE_BIG_INT_POW_1_2);
 
+    BIG_INT_DEFINE_PTR(temp);
+
     // (q+1)/4 = 0b111111...111110 (there are 248 ones)
 
     // The first bit of the exponent is zero, because we start with doubling b.
     // All the remaining bits are set to one, so we add all of them.
     for (uint32_t i = 0; i < 248; ++i) {
-        big_int_curve1174_mul_mod(b, b, b);
-        big_int_curve1174_mul_mod(r, r, b);
+        big_int_curve1174_mul_mod(temp, b, b);
+        big_int_copy(b, temp);
+        big_int_curve1174_mul_mod(temp, r, b);
+        big_int_copy(r, temp);
     }
 
     return r;

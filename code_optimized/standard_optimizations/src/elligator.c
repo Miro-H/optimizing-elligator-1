@@ -16,7 +16,6 @@
 #include "bigint_curve1174.h"
 #include "debug.h"
 
-
 /**
 * \brief Initialized Curve1174
 */
@@ -93,6 +92,7 @@ CurvePoint *elligator_1_string_to_point(CurvePoint *r, BigInt *t, Curve curve)
     BIG_INT_DEFINE_PTR(tmp_0);
     BIG_INT_DEFINE_PTR(tmp_1);
     BIG_INT_DEFINE_PTR(tmp_2);
+    BIG_INT_DEFINE_PTR(tmp_3);
 
     BIG_INT_DEFINE_FROM_CHUNK(tmp_pow_res, 0, 1);
 
@@ -101,12 +101,12 @@ CurvePoint *elligator_1_string_to_point(CurvePoint *r, BigInt *t, Curve curve)
     big_int_div_mod(u, tmp_0, tmp_1, &(curve.q)); // u = (1 − t) / (1 + t)
 
     big_int_curve1174_mul_mod(u_2, u, u); // u_2 = u^2
-    u_3 = tmp_0;
+    u_3 = tmp_3;
     big_int_curve1174_mul_mod(u_3, u_2, u); // u_3 = u^3
 
     u_5 = tmp_1;
-    big_int_curve1174_mul_mod(u_5, u_3, u_2); // u_5 = u^5
 
+    big_int_curve1174_mul_mod(u_5, u_3, u_2); // u_5 = u^5
     big_int_curve1174_mul_mod(tmp_0, &(curve.r_squared_minus_two), u_3); // (r^2 − 2)*u^3
 
     big_int_add(v, u_5, u); // u^5 + u

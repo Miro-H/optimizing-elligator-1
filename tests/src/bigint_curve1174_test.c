@@ -239,6 +239,7 @@ START_TEST(test_mul_mod)
 {
     BIG_INT_DEFINE_PTR(a);
     BIG_INT_DEFINE_PTR(b);
+    BIG_INT_DEFINE_PTR(c);
     BIG_INT_DEFINE_PTR(r);
 
     // Basic test
@@ -246,8 +247,8 @@ START_TEST(test_mul_mod)
     big_int_create_from_hex(b, "56AA098765");
     big_int_create_from_hex(r, "3A291206AC264ECED165893FF6631");
 
-    big_int_curve1174_mul_mod(a, a, b);
-    ck_assert_int_eq(big_int_compare(a, r), 0);
+    big_int_curve1174_mul_mod(c, a, b);
+    ck_assert_int_eq(big_int_compare(c, r), 0);
 
     // Test mod operation with intermediate result that is larger than 256 bits
     a = big_int_create_from_hex(a,
@@ -257,8 +258,8 @@ START_TEST(test_mul_mod)
     r = big_int_create_from_hex(r,
         "49D6974B07A3EC152F17380C6C4AD33F6D97BB72EE4771F4BFB7A50338B96CF");
 
-    big_int_curve1174_mul_mod(a, a, b);
-    ck_assert_int_eq(big_int_compare(a, r), 0);
+    big_int_curve1174_mul_mod(c, a, b);
+    ck_assert_int_eq(big_int_compare(c, r), 0);
 
     // Trigger the rare case (D6 in Knuth's Book)
     a = big_int_create_from_hex(a,
@@ -268,8 +269,8 @@ START_TEST(test_mul_mod)
     r = big_int_create_from_hex(r,
             "200000000000000000000000000000000000000000000000000000000000012");
 
-    big_int_curve1174_mul_mod(a, a, b);
-    ck_assert_int_eq(big_int_compare(a, r), 0);
+    big_int_curve1174_mul_mod(c, a, b);
+    ck_assert_int_eq(big_int_compare(c, r), 0);
 
     // Mixed signs
     a = big_int_create_from_hex(a,
@@ -279,8 +280,8 @@ START_TEST(test_mul_mod)
     r = big_int_create_from_hex(r,
         "362968B4F85C13EAD0E8C7F393B52CC09268448D11B88E0B40485AFCC746928");
 
-    big_int_curve1174_mul_mod(a, a, b);
-    ck_assert_int_eq(big_int_compare(a, r), 0);
+    big_int_curve1174_mul_mod(c, a, b);
+    ck_assert_int_eq(big_int_compare(c, r), 0);
 
     a = big_int_create_from_hex(a,
         "195C093A4A51819C08C06E57C282ED0860A30625DE4254C1638CFBCFEBB2E8D");
@@ -289,8 +290,8 @@ START_TEST(test_mul_mod)
     r = big_int_create_from_hex(r,
         "362968B4F85C13EAD0E8C7F393B52CC09268448D11B88E0B40485AFCC746928");
 
-    big_int_curve1174_mul_mod(a, a, b);
-    ck_assert_int_eq(big_int_compare(a, r), 0);
+    big_int_curve1174_mul_mod(c, a, b);
+    ck_assert_int_eq(big_int_compare(c, r), 0);
 
     a = big_int_create_from_hex(a,
         "-195C093A4A51819C08C06E57C282ED0860A30625DE4254C1638CFBCFEBB2E8D");
@@ -299,8 +300,8 @@ START_TEST(test_mul_mod)
     r = big_int_create_from_hex(r,
         "49D6974B07A3EC152F17380C6C4AD33F6D97BB72EE4771F4BFB7A50338B96CF");
 
-    big_int_curve1174_mul_mod(a, a, b);
-    ck_assert_int_eq(big_int_compare(a, r), 0);
+    big_int_curve1174_mul_mod(c, a, b);
+    ck_assert_int_eq(big_int_compare(c, r), 0);
 }
 END_TEST
 
