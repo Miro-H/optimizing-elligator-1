@@ -370,6 +370,31 @@ BigInt *big_int_curve1174_mul_mod(BigInt *r, BigInt *a, BigInt *b)
 
 
 /**
+ * \brief Calculate r := (a * a) mod q
+ *
+ * \assumption r, a != NULL
+ */
+BigInt *big_int_curve1174_square_mod(BigInt *r, BigInt *a)
+{
+    ADD_STAT_COLLECTION(BIGINT_CURVE1174_TYPE_BIG_INT_MUL_MOD);
+
+    // a, b are usually not larger than q, thus it is not worth it to perform a
+    // mod operation on the operands before multiplying.
+    // TODO: verify that even a check whether the operands are larger than q is
+    // not worth it.
+
+    big_int_squared(r, a);
+    
+    return big_int_curve1174_mod(r);
+}
+
+
+
+
+
+
+
+/**
  * \brief Calculate r := (a * b^-1) mod q
  *
  * \assumption r, a, b != NULL

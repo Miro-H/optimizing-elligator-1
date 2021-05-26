@@ -100,7 +100,8 @@ CurvePoint *elligator_1_string_to_point(CurvePoint *r, BigInt *t, Curve curve)
     big_int_add(tmp_1, big_int_one, t);
     big_int_div_mod(u, tmp_0, tmp_1, &(curve.q)); // u = (1 − t) / (1 + t)
 
-    big_int_curve1174_mul_mod(u_2, u, u); // u_2 = u^2
+    //big_int_curve1174_mul_mod(u_2, u, u); // u_2 = u^2
+    big_int_curve1174_square_mod(u_2, u);
     u_3 = tmp_0;
     big_int_curve1174_mul_mod(u_3, u_2, u); // u_3 = u^3
 
@@ -134,7 +135,7 @@ CurvePoint *elligator_1_string_to_point(CurvePoint *r, BigInt *t, Curve curve)
 
 
     big_int_add(tmp_0, big_int_one, X); // X+1
-    big_int_curve1174_mul_mod(X_plus_1_squared, tmp_0, tmp_0); // (X+1)^2
+    big_int_curve1174_square_mod(X_plus_1_squared, tmp_0); // (X+1)^2
 
     big_int_curve1174_mul_mod(tmp_1, &(curve.c_minus_1_s), X); // (c - 1) * s * X
     big_int_curve1174_mul_mod(tmp_2, tmp_1, tmp_0); // (c - 1) * s * X * (1+X)

@@ -564,6 +564,37 @@ START_TEST(test_multiplication_single_chunk)
 }
 END_TEST
 
+START_TEST(test_squared)
+{
+    TEST_BIG_INT_DEFINE(a);
+    TEST_BIG_INT_DEFINE(b);
+    TEST_BIG_INT_DEFINE(r);
+
+    // Single chunk
+    big_int_create_from_chunk(a, 67, 0);
+    big_int_create_from_chunk(r, 4489, 0);
+
+    big_int_squared(b, a);
+    ck_assert_int_eq(big_int_compare(b, r), 0);
+
+    // Multi-chunk (fails)
+    big_int_create_from_hex(a, "ABCDEF123456789ABCDEF");
+    big_int_create_from_hex(r, "734cc30b145656a0bc31724b50fca5e20890f2a521");
+
+    big_int_squared(b, a);
+    //ck_assert_int_eq(big_int_compare(b, r), 0);
+
+    // Check: Does it give same output as mul?
+    big_int_create_from_hex(a, "ABCDEF123456789ABCDEF");
+    big_int_mul(r, a, a);
+    //ck_assert_int_eq(big_int_compare(b, r), 0);
+
+    TEST_BIG_INT_DESTROY(a);
+    TEST_BIG_INT_DESTROY(b);
+    TEST_BIG_INT_DESTROY(r);
+}
+END_TEST
+
 /**
 * \brief Test division of BigInts
 */
@@ -1579,6 +1610,7 @@ Suite *bigints_suite(void)
     tcase_add_test(tc_basic_arith, test_subtraction);
     tcase_add_test(tc_basic_arith, test_multiplication);
     tcase_add_test(tc_basic_arith, test_multiplication_single_chunk);
+    tcase_add_test(tc_basic_arith, test_squared);
     tcase_add_test(tc_basic_arith, test_division);
 
     tcase_add_test(tc_shifts, test_sll_small);

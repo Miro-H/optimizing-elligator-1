@@ -14,6 +14,7 @@ BigInt *big_int_curve1174_mod(BigInt *r);
 BigInt *big_int_curve1174_add_mod(BigInt *r, BigInt *a, BigInt *b);
 BigInt *big_int_curve1174_sub_mod(BigInt *r, BigInt *a, BigInt *b);
 BigInt *big_int_curve1174_mul_mod(BigInt *r, BigInt *a, BigInt *b);
+BigInt *big_int_curve1174_square_mod(BigInt *r, BigInt *a);
 BigInt *big_int_curve1174_div_mod(BigInt *r, BigInt *a, BigInt *b);
 BigInt *big_int_curve1174_inv_fermat(BigInt *r, BigInt *a);
 
