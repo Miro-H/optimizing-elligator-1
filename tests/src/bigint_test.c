@@ -489,9 +489,9 @@ START_TEST(test_multiplication)
     b = big_int_create_from_hex(b, "-D0AAEA");
     r = big_int_create_from_hex(r, "-7C1AC14EB5921D29CEECA8");
 
-    big_int_mul(a, a, b);
-    ck_assert_int_eq(big_int_compare(a, r), 0);
-    ck_assert_uint_eq(a->overflow, 0);
+    big_int_mul(c, a, b);
+    ck_assert_int_eq(big_int_compare(c, r), 0);
+    ck_assert_uint_eq(c->overflow, 0);
 
     // Multiply two negative integers
     a = big_int_create_from_hex(a, "-98415BFAEFD30E84");
@@ -1057,6 +1057,7 @@ START_TEST(test_mul_mod)
 {
     TEST_BIG_INT_DEFINE(a);
     TEST_BIG_INT_DEFINE(b);
+    TEST_BIG_INT_DEFINE(c);
     TEST_BIG_INT_DEFINE(q);
     TEST_BIG_INT_DEFINE(r);
 
@@ -1066,8 +1067,8 @@ START_TEST(test_mul_mod)
     big_int_create_from_hex(q, "3450AEE678");
     big_int_create_from_hex(r, "fec0f30a1");
 
-    big_int_mul_mod(a, a, b, q);
-    ck_assert_int_eq(big_int_compare(a, r), 0);
+    big_int_mul_mod(c, a, b, q);
+    ck_assert_int_eq(big_int_compare(c, r), 0);
 
     // Test mod operation with intermediate result that is larger than 256 bits
     a = big_int_create_from_hex(a, "ABCD4569AB3096134DDABCD4569AB3096134DDABCD4569AB3096134DD");
@@ -1075,8 +1076,8 @@ START_TEST(test_mul_mod)
     q = big_int_create_from_hex(q, "3450AEE678");
     r = big_int_create_from_hex(r, "1f7046da41");
 
-    big_int_mul_mod(a, a, b, q);
-    ck_assert_int_eq(big_int_compare(a, r), 0);
+    big_int_mul_mod(c, a, b, q);
+    ck_assert_int_eq(big_int_compare(c, r), 0);
 
     // Trigger the rare case (D6 in Knuth's Book)
     a = big_int_create_from_hex(a,
@@ -1088,8 +1089,8 @@ START_TEST(test_mul_mod)
     r = big_int_create_from_hex(r,
             "200000000000000000000000000000000000000000000000000000000000012");
 
-    big_int_mul_mod(a, a, b, q);
-    ck_assert_int_eq(big_int_compare(a, r), 0);
+    big_int_mul_mod(c, a, b, q);
+    ck_assert_int_eq(big_int_compare(c, r), 0);
 
     // Mixed signs
     a = big_int_create_from_hex(a, "-ABCD4569ABEF");
@@ -1097,27 +1098,28 @@ START_TEST(test_mul_mod)
     q = big_int_create_from_hex(q, "3450AEE678");
     r = big_int_create_from_hex(r, "19d609f6a5");
 
-    big_int_mul_mod(a, a, b, q);
-    ck_assert_int_eq(big_int_compare(a, r), 0);
+    big_int_mul_mod(c, a, b, q);
+    ck_assert_int_eq(big_int_compare(c, r), 0);
 
     a = big_int_create_from_hex(a, "ABCD4569ABEF43096134DD");
     b = big_int_create_from_hex(b, "-ee543abc7856AA098765");
     q = big_int_create_from_hex(q, "3450AEE678");
     r = big_int_create_from_hex(r, "321a4c766f");
 
-    big_int_mul_mod(a, a, b, q);
-    ck_assert_int_eq(big_int_compare(a, r), 0);
+    big_int_mul_mod(c, a, b, q);
+    ck_assert_int_eq(big_int_compare(c, r), 0);
 
     a = big_int_create_from_hex(a, "-ABCD4569ABEF43096134DD");
     b = big_int_create_from_hex(b, "-ee543abc7856AA098765");
     q = big_int_create_from_hex(q, "3450AEE678");
     r = big_int_create_from_hex(r, "236627009");
 
-    big_int_mul_mod(a, a, b, q);
-    ck_assert_int_eq(big_int_compare(a, r), 0);
+    big_int_mul_mod(c, a, b, q);
+    ck_assert_int_eq(big_int_compare(c, r), 0);
 
     TEST_BIG_INT_DESTROY(a);
     TEST_BIG_INT_DESTROY(b);
+    TEST_BIG_INT_DESTROY(c);
     TEST_BIG_INT_DESTROY(q);
     TEST_BIG_INT_DESTROY(r);
 }
@@ -1388,6 +1390,7 @@ START_TEST(test_chi)
     TEST_BIG_INT_DEFINE(s);
     TEST_BIG_INT_DEFINE(u);
     TEST_BIG_INT_DEFINE(v);
+    TEST_BIG_INT_DEFINE(a);
 
     // Basic tests. q = 7
     // t is 0
@@ -1485,7 +1488,8 @@ START_TEST(test_chi)
     big_int_create_from_hex(q, "1FFFFFFFFFFFFFFF");
 
     big_int_copy(r, s);
-    big_int_mul(r, r, t);
+    big_int_mul(a, r, t);
+    big_int_copy(r, a);
     big_int_chi(r, r, q); // chi(st)
 
     big_int_copy(u, s);
@@ -1494,7 +1498,8 @@ START_TEST(test_chi)
     big_int_copy(v, t);
     big_int_chi(v, v, q); // chi(t)
 
-    big_int_mul(u, u, v); // chi(s) * chi(t);
+    big_int_mul(a, u, v); // chi(s) * chi(t);
+    big_int_copy(u, a);
 
     ck_assert_int_eq(big_int_compare(r, u), 0);
 
@@ -1504,7 +1509,8 @@ START_TEST(test_chi)
     big_int_create_from_hex(q, "1FFFFFFFFFFFFFFF");
 
     big_int_copy(r, s);
-    big_int_mul(r, r, t);
+    big_int_mul(a, r, t);
+    big_int_copy(r, a);
     big_int_chi(r, r, q); // chi(st)
 
     big_int_copy(u, s);
@@ -1513,7 +1519,8 @@ START_TEST(test_chi)
     big_int_copy(v, t);
     big_int_chi(v, v, q); // chi(t)
 
-    big_int_mul(u, u, v); // chi(s) * chi(t);
+    big_int_mul(a, u, v); // chi(s) * chi(t);
+    big_int_copy(u, a);
 
     ck_assert_int_eq(big_int_compare(r, u), 0);
 
@@ -1546,7 +1553,8 @@ START_TEST(test_chi)
     big_int_create_from_hex(q, "1FFFFFFFFFFFFFFF");
     big_int_create_from_chunk(r, 1, 0);
 
-    big_int_mul(t, t, t); // t^2
+    big_int_mul(a, t, t); // t^2
+    big_int_copy(t, a);
     big_int_chi(t, t, q); // chi(t^2)
     ck_assert_int_eq(big_int_compare(t, r), 0);
 
@@ -1556,7 +1564,8 @@ START_TEST(test_chi)
 
     big_int_copy(r, t);
     big_int_chi(r, t, q); // chi(t)
-    big_int_mul(r, r, t); // chi(t) * t
+    big_int_mul(a, r, t); // chi(t) * t
+    big_int_copy(r, a);
     ck_assert_int_eq(big_int_compare(t, r), 0);
 
     // Any square root s of t satisfies s = chi(s) * t^((q + 1)/4)
@@ -1574,7 +1583,8 @@ START_TEST(test_chi)
     big_int_copy(u, q);
     big_int_srl_small(u, big_int_add(u, u, big_int_one), 2); // (q + 1)/4
     big_int_pow(u, t, u, q); // t^((q + 1)/4)
-    big_int_mul(r, r, u); // chi(s) * t^((q+1)/4)
+    big_int_mul(a, r, u); // chi(s) * t^((q+1)/4)
+    big_int_copy(r, a);
 
     //ck_assert_int_eq(big_int_compare(s, r), 0);
 
@@ -1584,6 +1594,7 @@ START_TEST(test_chi)
     TEST_BIG_INT_DESTROY(s);
     TEST_BIG_INT_DESTROY(u);
     TEST_BIG_INT_DESTROY(v);
+    TEST_BIG_INT_DESTROY(a);
 }
 END_TEST
 

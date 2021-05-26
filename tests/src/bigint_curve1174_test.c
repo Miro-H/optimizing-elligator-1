@@ -569,6 +569,7 @@ START_TEST(test_chi)
     BIG_INT_DEFINE_PTR(s);
     BIG_INT_DEFINE_PTR(t);
     BIG_INT_DEFINE_PTR(u);
+    BIG_INT_DEFINE_PTR(tmp);
 
     // Is square
     big_int_create_from_hex(t,
@@ -615,7 +616,8 @@ START_TEST(test_chi)
 
     big_int_create_from_chunk(s, 1, r1);
     big_int_create_from_chunk(u, 1, r2);
-    big_int_mul(s, s, u); // chi(s) * chi(t) (for the original def. of chi)
+    big_int_mul(tmp, s, u); // chi(s) * chi(t) (for the original def. of chi)
+    big_int_copy(s, tmp);
 
     big_int_create_from_chunk(t, 1, r); // chi(st) (for the original def. of chi)
 
@@ -633,7 +635,8 @@ START_TEST(test_chi)
 
     big_int_create_from_chunk(s, 1, r1);
     big_int_create_from_chunk(u, 1, r2);
-    big_int_mul(s, s, u); // chi(s) * chi(t) (for the original def. of chi)
+    big_int_mul(tmp, s, u); // chi(s) * chi(t) (for the original def. of chi)
+    big_int_copy(s, tmp);
 
     big_int_create_from_chunk(t, 1, r); // chi(st) (for the original def. of chi)
 
