@@ -1,5 +1,3 @@
 # Optimization Notes by Chris
 
-```
-TODO
-```
+elligator_1_string_to_point
