@@ -35,6 +35,7 @@ BigInt *big_int_curve1174_mod(BigInt *r)
     ADD_STAT_COLLECTION(BIGINT_CURVE1174_TYPE_BIG_INT_MOD);
 
     BIG_INT_DEFINE_PTR(r_upper);
+    BIG_INT_DEFINE_PTR(temp);
     BigInt *r_lower;
     uint8_t orig_sign;
 
@@ -58,7 +59,8 @@ BigInt *big_int_curve1174_mod(BigInt *r)
 
         // Intentionally no mod reduction, since we do one later. We know that
         // our intermediate values are never larger than (q-1)^2 and 288 * (q-1)^2 < 2^512
-        big_int_mul(r_upper, r_upper, big_int_288); // a1 * 288
+        big_int_mul(temp, r_upper, big_int_288); // a1 * 288
+        big_int_copy(r_upper, temp);
 
         r_lower = r;
         r_lower->size = 8;
