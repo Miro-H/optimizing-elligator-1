@@ -22,15 +22,15 @@ Steps done:
 - Explicitly use strength reductions (>> isntead of /, mask instead of mod)
 - Create unrolled verion for most common case (size 8)
 - Remove redundant double checking with sub function
-
+- TODO Check AVX
 ### sub
 
 Steps done:
 
 - Explicitly use strength reductions (>> isntead of /, mask instead of mod)
-
+- TODO Create unrolled verion for most common case (size 8)
 - Remove redundant double checking with sub function
-
+- TODO Check AVX
 
 ### squared
 
@@ -39,4 +39,4 @@ Steps done:
 - New function for squaring a bigints
 - Less data movement
 - Reduces computation since results can be reduced
-
+- TODO Check AVX
