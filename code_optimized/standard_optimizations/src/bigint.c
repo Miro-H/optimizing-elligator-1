@@ -767,34 +767,36 @@ BigInt *big_int_mul(BigInt *r, BigInt *a, BigInt *b)
     int64_t i, j;
     dbl_chunk_size_t carry;
 
-    BIG_INT_DEFINE_PTR_ZEROED(r_loc);
+    big_int_create_from_hex(r, 
+        "00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000");
+    
 
     // For MUL, we we have aliasing and a separate BigInt for r is necessary
-    r_loc->size = a->size + b->size;
-    r_loc->sign = a->sign ^ b->sign;
+    r->size = a->size + b->size;
+    r->sign = a->sign ^ b->sign;
 
     for (i = 0; i < b->size; ++i) {
         // shortcut for zero chunk
         if (b->chunks[i] == 0)
         {
-            r_loc->chunks[i + a->size] = 0;
             r->chunks[i + a->size] = 0;
         }
         else {
             // Multiply and add chunks
             carry = 0;
             for (j = 0; j < a->size; ++j) {
-                carry += a->chunks[j] * b->chunks[i] + r_loc->chunks[i + j];
-                r_loc->chunks[i + j] = carry & BIGINT_RADIX_FOR_MOD;
+                carry += a->chunks[j] * b->chunks[i] + r->chunks[i + j];
+                r->chunks[i + j] = carry & BIGINT_RADIX_FOR_MOD;
                 carry >>= BIGINT_CHUNK_BIT_SIZE;
             }
-            r_loc->chunks[i + a->size] = carry;
+            r->chunks[i + a->size] = carry;
         }
     }
-    big_int_prune_leading_zeros(r_loc, r_loc);
+    big_int_prune_leading_zeros(r, r);
 
     // TODO: copy could be saved if we assume no aliasing
-    return big_int_copy(r, r_loc);
+    //return big_int_copy(r, r_loc);
+    return r;
 }
 
 
