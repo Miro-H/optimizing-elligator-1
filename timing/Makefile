@@ -6,6 +6,8 @@ SCRIPTS_DIR = scripts
 BIN_FILES   = $(filter-out $(wildcard $(BDIR)/.*), $(wildcard $(BDIR)/*))
 LOG_DIR 	= logs
 
+LATEST_LOG_PATH=${LOG_DIR}/latest_log_path.txt
+
 ifeq ($(BENCHMARKS),)
 	BENCHMARKS = -1
 endif
@@ -72,7 +74,7 @@ all: compile-runtime-benchmark compile-gmp-benchmark
 # Stats can only be collected for our BigInt library
 .PHONY: run-all
 ifeq ($(COLLECT_STATS),)
-run-all: run-gmp-benchmark run-runtime-benchmark
+run-all: run-gmp-benchmark run-runtime-benchmark run-runtime-benchmark-curve1174
 else
 run-all: run-runtime-benchmark
 endif
@@ -100,7 +102,7 @@ $(ODIR)/%.o: $(SDIR)/%.c $(DEPS)
 gen-bench-types:
 	${ROOT_SCRIPTS_DIR}/gen_types.py \
 		--src_file ${SDIR}/runtime_benchmark_curve1174.c  ${SDIR}/runtime_benchmark.c \
-		--tar_file ${IDIR}/benchmark_types.h
+		--dest_file ${IDIR}/benchmark_types.h
 
 ################################################################################
 #							Runtime Benchmarks								   #
@@ -129,6 +131,7 @@ compile-runtime-benchmark: prepare-logs-runtime-benchmark all-benched gen-bench-
 run-runtime-benchmark: OUT_SUB_PATH = $(RUNTIME_SUB_PATH)
 run-runtime-benchmark: LOG_PATH = $(LOG_BASE_PATH)/$(OUT_SUB_PATH)
 run-runtime-benchmark: compile-runtime-benchmark
+	echo "${LOG_PATH}" > ${LATEST_LOG_PATH}
 	./$(BDIR)/runtime-benchmark $(BENCHMARKS)
 
 .PHONY: plot-runtime-benchmark
@@ -174,6 +177,7 @@ compile-runtime-benchmark-curve1174: prepare-logs-runtime-benchmark-curve1174 al
 run-runtime-benchmark-curve1174: OUT_SUB_PATH = $(RUNTIME_CURVE1174_SUB_PATH)
 run-runtime-benchmark-curve1174: LOG_PATH = $(LOG_BASE_PATH)/$(OUT_SUB_PATH)
 run-runtime-benchmark-curve1174: compile-runtime-benchmark-curve1174
+	echo "${LOG_PATH}" > ${LATEST_LOG_PATH}
 	./$(BDIR)/runtime-benchmark-curve1174 $(BENCHMARKS)
 
 .PHONY: plot-runtime-benchmark-curve1174
@@ -219,6 +223,7 @@ compile-gmp-benchmark: prepare-logs-gmp-benchmark gmp-benchmark
 run-gmp-benchmark: OUT_SUB_PATH = $(GMP_SUB_PATH)
 run-gmp-benchmark: LOG_PATH = $(LOG_BASE_PATH)/$(OUT_SUB_PATH)
 run-gmp-benchmark: compile-gmp-benchmark
+	echo "${LOG_PATH}" > ${LATEST_LOG_PATH}
 	./$(BDIR)/gmp-benchmark -1
 
 .PHONY: plot-gmp-benchmark
@@ -261,6 +266,7 @@ compile-memcpy-benchmark: prepare-logs-memcpy-benchmark memcpy-benchmark
 run-memcpy-benchmark: OUT_SUB_PATH = $(MEMCPY_SUB_PATH)
 run-memcpy-benchmark: LOG_PATH = $(LOG_BASE_PATH)/$(OUT_SUB_PATH)
 run-memcpy-benchmark: compile-memcpy-benchmark
+	echo "${LOG_PATH}" > ${LATEST_LOG_PATH}
 	./$(BDIR)/memcpy-benchmark -1
 
 .PHONY: plot-memcpy-benchmark

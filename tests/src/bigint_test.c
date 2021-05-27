@@ -576,20 +576,20 @@ START_TEST(test_squared)
     big_int_create_from_chunk(a, 67, 0);
     big_int_create_from_chunk(r, 4489, 0);
 
-    big_int_squared(b, a);
+    big_int_square(b, a);
     ck_assert_int_eq(big_int_compare(b, r), 0);
 
-    // Multi-chunk (fails)
+    // Multi-chunk
     big_int_create_from_hex(a, "ABCDEF123456789ABCDEF");
-    big_int_create_from_hex(r, "734cc30b145656a0bc31724b50fca5e20890f2a521");
+    big_int_create_from_hex(r, "734CC30B145656A0BC31724B50FCA5E20890F2A521");
 
-    big_int_squared(b, a);
-    //ck_assert_int_eq(big_int_compare(b, r), 0);
+    big_int_square(b, a);
+    ck_assert_int_eq(big_int_compare(b, r), 0);
 
     // Check: Does it give same output as mul?
     big_int_create_from_hex(a, "ABCDEF123456789ABCDEF");
     big_int_mul(r, a, a);
-    //ck_assert_int_eq(big_int_compare(b, r), 0);
+    ck_assert_int_eq(big_int_compare(b, r), 0);
 
     TEST_BIG_INT_DESTROY(a);
     TEST_BIG_INT_DESTROY(b);

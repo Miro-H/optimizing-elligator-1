@@ -20,6 +20,12 @@ ifneq ($(COLLECT_STATS),)
 	CFLAGS += -DCOLLECT_STATS=${COLLECT_STATS}
 endif
 
+# Add standard optimization flags if no others are specified
+ifeq ($(OPT_FLAGS),)
+	OPT_FLAGS = -Ofast
+endif
+CFLAGS += $(OPT_FLAGS)
+
 # Add libraries to this macro, if needed
 LIBS    =
 
@@ -52,7 +58,7 @@ build-lib:
 gen-bigint-types:
 	${ROOT_SCRIPTS_DIR}/gen_types.py \
 		--src_files ${SDIR}/bigint_curve1174.c ${SDIR}/bigint.c \
-		--tar_file ${IDIR}/bigint_types.h \
+		--dest_file ${IDIR}/bigint_types.h \
 		--add_translation \
 		--array_name "big_int_type_names" \
 		--strip_prefix "BIGINT_TYPE_"

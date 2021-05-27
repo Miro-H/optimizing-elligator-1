@@ -25,6 +25,7 @@
 #define BIGINT_RADIX (((dbl_chunk_size_t) 1) << BIGINT_CHUNK_BIT_SIZE)
 #define BIGINT_RADIX_SIGNED ((int64_t) BIGINT_RADIX)
 #define BIGINT_RADIX_FOR_MOD (BIGINT_RADIX - 1)
+#define BIGINT_RADIX_FOR_MOD_128 ((unsigned __int128) (BIGINT_RADIX - 1))
 
 // Stats collection
 #ifdef COLLECT_STATS
@@ -179,7 +180,7 @@ EgcdResult *big_int_egcd(EgcdResult *r, BigInt *a, BigInt *b);
 BigInt *big_int_chi(BigInt *r, BigInt *t, BigInt *q);
 
 //New operations
-BigInt *big_int_squared(BigInt *r, BigInt *a);
+BigInt *big_int_square(BigInt *r, BigInt *a);
 BigInt *big_int_add_256(BigInt *r, BigInt *a, BigInt *b);
 BigInt *big_int_add_upper_bound(BigInt *r, BigInt *a, BigInt *b);
 BigInt *big_int_sub_256(BigInt *r, BigInt *a, BigInt *b);
