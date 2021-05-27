@@ -198,8 +198,7 @@ BigInt *elligator_1_point_to_string(BigInt *t, CurvePoint p, Curve curve)
         return t;
     }
 
-    // TODO: Switch to big_int_squared
-    big_int_curve1174_pow_small(tmp_3, tmp_1, 2); // (1 + ηr)^2
+    big_int_curve1174_square_mod(tmp_3, tmp_1); // (1 + ηr)^2
 
     big_int_sub(tmp_0, tmp_3, big_int_one); // (1 + η  * r)^2 - 1
 
@@ -211,9 +210,7 @@ BigInt *elligator_1_point_to_string(BigInt *t, CurvePoint p, Curve curve)
     big_int_add(tmp_1, big_int_one, X); // 1 + X
     big_int_curve1174_mul_mod(tmp_2, tmp_0, tmp_1); // (c - 1)sX(1 + X)
     big_int_curve1174_mul_mod(tmp_0, tmp_2, &(p.x)); // (c - 1)sX(1 + X)x
-
-    // TODO: Switch to big_int_squared
-    big_int_curve1174_pow_small(tmp_1, X, 2); // X^2
+    big_int_curve1174_square_mod(tmp_1, X); // X^2
 
     big_int_add(tmp_2, tmp_1, &(curve.c_squared_inverse)); // X^2 + 1/c^2
     big_int_curve1174_mul_mod(tmp_1, tmp_0, tmp_2); // (c - 1)sX(1 + X)x(X^2 + 1/c^2)
