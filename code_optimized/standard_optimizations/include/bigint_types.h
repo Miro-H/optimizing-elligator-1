@@ -27,24 +27,25 @@
 #define BIGINT_TYPE_BIG_INT_ABS                   18
 #define BIGINT_TYPE_BIG_INT_ADD                   19
 #define BIGINT_TYPE_BIG_INT_SUB                   20
-#define BIGINT_TYPE_BIG_INT_MUL                   21
-#define BIGINT_TYPE_BIG_INT_DEV_REM               22
-#define BIGINT_TYPE_BIG_INT_DIV                   23
-#define BIGINT_TYPE_BIG_INT_SLL_SMALL             24
-#define BIGINT_TYPE_BIG_INT_SRL_SMALL             25
-#define BIGINT_TYPE_BIG_INT_MOD                   26
-#define BIGINT_TYPE_BIG_INT_ADD_MOD               27
-#define BIGINT_TYPE_BIG_INT_SUB_MOD               28
-#define BIGINT_TYPE_BIG_INT_MUL_MOD               29
-#define BIGINT_TYPE_BIG_INT_DIV_MOD               30
-#define BIGINT_TYPE_BIG_INT_INV                   31
-#define BIGINT_TYPE_BIG_INT_POW                   32
-#define BIGINT_TYPE_BIG_INT_IS_ZERO               33
-#define BIGINT_TYPE_BIG_INT_IS_ODD                34
-#define BIGINT_TYPE_BIG_INT_COMPARE               35
-#define BIGINT_TYPE_BIG_INT_EGCD                  36
-#define BIGINT_TYPE_BIG_INT_CHI                   37
-#define BIGINT_TYPE_LAST                          38
+#define BIGINT_TYPE_BIG_INT_MUL_SINGLE_CHUNK      21
+#define BIGINT_TYPE_BIG_INT_MUL                   22
+#define BIGINT_TYPE_BIG_INT_DEV_REM               23
+#define BIGINT_TYPE_BIG_INT_DIV                   24
+#define BIGINT_TYPE_BIG_INT_SLL_SMALL             25
+#define BIGINT_TYPE_BIG_INT_SRL_SMALL             26
+#define BIGINT_TYPE_BIG_INT_MOD                   27
+#define BIGINT_TYPE_BIG_INT_ADD_MOD               28
+#define BIGINT_TYPE_BIG_INT_SUB_MOD               29
+#define BIGINT_TYPE_BIG_INT_MUL_MOD               30
+#define BIGINT_TYPE_BIG_INT_DIV_MOD               31
+#define BIGINT_TYPE_BIG_INT_INV                   32
+#define BIGINT_TYPE_BIG_INT_POW                   33
+#define BIGINT_TYPE_BIG_INT_IS_ZERO               34
+#define BIGINT_TYPE_BIG_INT_IS_ODD                35
+#define BIGINT_TYPE_BIG_INT_COMPARE               36
+#define BIGINT_TYPE_BIG_INT_EGCD                  37
+#define BIGINT_TYPE_BIG_INT_CHI                   38
+#define BIGINT_TYPE_LAST                          39
 
 __attribute__((unused))
 static char *big_int_type_names[] = {
@@ -69,6 +70,7 @@ static char *big_int_type_names[] = {
     "big_int_abs",
     "big_int_add",
     "big_int_sub",
+    "big_int_mul_single_chunk",
     "big_int_mul",
     "big_int_dev_rem",
     "big_int_div",

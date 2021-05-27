@@ -689,7 +689,7 @@ BigInt *big_int_sub_256(BigInt *r, BigInt *a, BigInt *b)
  */
 BigInt *big_int_mul_single_chunk(BigInt *r, BigInt *a, dbl_chunk_size_t b)
 {
-    ADD_STAT_COLLECTION(BIGINT_TYPE_BIG_INT_MUL);
+    ADD_STAT_COLLECTION(BIGINT_TYPE_BIG_INT_MUL_SINGLE_CHUNK);
 
     int64_t j;
     dbl_chunk_size_t carry;
