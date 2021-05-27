@@ -165,28 +165,6 @@ CurvePoint *elligator_1_string_to_point(CurvePoint *r, BigInt *t, Curve curve)
  */
 BigInt *elligator_1_point_to_string(BigInt *t, CurvePoint p, Curve curve)
 {
-    BIG_INT_DEFINE_PTR(X);
-    BIG_INT_DEFINE_PTR(eta);
-
-    BigInt *u;
-
-    int8_t z;
-
-    BIG_INT_DEFINE_PTR(tmp_0);
-    BIG_INT_DEFINE_PTR(tmp_1);
-    BIG_INT_DEFINE_PTR(tmp_2);
-    BIG_INT_DEFINE_PTR(tmp_3);
-
-    BIG_INT_DEFINE_FROM_CHUNK(tmp_pow_res, 0, 1);
-
-    big_int_sub(tmp_0, &(p.y), big_int_one); // y - 1
-    big_int_add(tmp_1, &(p.y), big_int_one); // y + 1
-    big_int_sll_small(tmp_2, tmp_1, 1); // 2 * (y + 1)
-    big_int_curve1174_div_mod(eta, tmp_0, tmp_2); // η = (y-1)/(2 * (y + 1))
-
-    big_int_curve1174_mul_mod(tmp_0, eta, &(curve.r));
-    big_int_add(tmp_1, big_int_one, tmp_0); // 1 + ηr
-
     // Special case (x, y) = (0, 1) maps to 1
     // After this, z != 0, so the input of χ is not 0 and thus returns ±1
     if (p.x.size ==  1
@@ -197,10 +175,32 @@ BigInt *elligator_1_point_to_string(BigInt *t, CurvePoint p, Curve curve)
         big_int_create_from_chunk(t, 1, 0);
         return t;
     }
+    
+    BIG_INT_DEFINE_PTR(X);
+    //BIG_INT_DEFINE_PTR(eta);
 
-    big_int_curve1174_square_mod(tmp_3, tmp_1); // (1 + ηr)^2
+    BigInt *u;
 
-    big_int_sub(tmp_0, tmp_3, big_int_one); // (1 + η  * r)^2 - 1
+    int8_t z;
+
+    BIG_INT_DEFINE_PTR(tmp_0);
+    BIG_INT_DEFINE_PTR(tmp_1);
+    BIG_INT_DEFINE_PTR(tmp_2);
+    //BIG_INT_DEFINE_PTR(tmp_3);
+
+    BIG_INT_DEFINE_FROM_CHUNK(tmp_pow_res, 0, 1);
+
+    big_int_sub(tmp_0, &(p.y), big_int_one); // y - 1
+    big_int_add(tmp_1, &(p.y), big_int_one); // y + 1
+    big_int_sll_small(tmp_2, tmp_1, 1); // 2 * (y + 1)
+    big_int_curve1174_div_mod(tmp_1, tmp_0, tmp_2); // η = (y-1)/(2 * (y + 1))
+
+    big_int_curve1174_mul_mod(tmp_0, tmp_1, &(curve.r));
+    big_int_add(tmp_1, big_int_one, tmp_0); // 1 + ηr
+
+    big_int_curve1174_square_mod(tmp_2, tmp_1); // (1 + ηr)^2
+
+    big_int_sub(tmp_0, tmp_2, big_int_one); // (1 + η  * r)^2 - 1
 
     big_int_curve1174_pow_q_p1_d4(tmp_pow_res, tmp_0); // ((1 + ηr)^2 - 1)^((q + 1) / 4)
 
