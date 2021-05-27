@@ -267,6 +267,12 @@ BigInt *big_int_abs(BigInt *r, BigInt *a)
 
  // === === === === === === === === === === === === === === === === === === ===
 
+/**
+ * r = a + b
+ * Switches between different cases.
+ *
+ * \assumption r, a, b != NULL
+ */
 BigInt *big_int_add(BigInt *r, BigInt *a, BigInt *b)
 {
 
@@ -289,6 +295,12 @@ BigInt *big_int_add(BigInt *r, BigInt *a, BigInt *b)
     return r;
 }
 
+/**
+ * r = a - b
+ * Switches between different cases.
+ *
+ * \assumption r, a, b != NULL
+ */
 BigInt *big_int_sub(BigInt *r, BigInt *a, BigInt *b)
 {
     BIG_INT_DEFINE_PTR(b_neg);
@@ -304,20 +316,21 @@ BigInt *big_int_sub(BigInt *r, BigInt *a, BigInt *b)
     return r;
 }
 
-
-// Assumption: a->sign == b->sign
-// Assumption: no overflow for a + b, i.e., #chunks <= BIGINT_FIXED_SIZE_INTERNAL
-// TODO: Document
+/**
+ * r = a + b
+ *
+ * \assumption r, a, b != NULL
+ * \assumption a->sign == b->sign
+ * \assumption no overflow for a + b, i.e., #chunks <= BIGINT_FIXED_SIZE_INTERNAL
+ */
 BigInt *big_int_fast_add(BigInt *r, BigInt *a, BigInt *b)
 {
     ADD_STAT_COLLECTION(BIGINT_TYPE_BIG_INT_ADD);
 
-    if(a->size == 8 && b->size == 8)
-    {
+    if (a->size == 8 && b->size == 8) {
         big_int_add_256(r, a, b);
         return r;
     }
-
 
     // Pointer used to point to a or b depending on which is larger
     BigInt *aa, *bb;
@@ -380,8 +393,14 @@ BigInt *big_int_fast_add(BigInt *r, BigInt *a, BigInt *b)
     return r;
 }
 
-// TODO: Fix
-// TODO: Document
+/**
+ * r = a + b for 256-bit BigInts
+ *
+ * \assumption r, a, b != NULL
+ * \assumption a, b are 256-bit (i.e., 8 chunks) BigInts
+ * \assumption a->sign == b->sign
+ * \assumption no overflow for a + b, i.e., #chunks <= BIGINT_FIXED_SIZE_INTERNAL
+ */
 BigInt *big_int_add_256(BigInt *r, BigInt *a, BigInt *b)
 {
     dbl_chunk_size_t r_c_0, r_c_1, r_c_2, r_c_3, r_c_4, r_c_5, r_c_6, r_c_7, r_c_8;
@@ -423,19 +442,16 @@ BigInt *big_int_add_256(BigInt *r, BigInt *a, BigInt *b)
     r->chunks[6] = r_c_6 & BIGINT_CHUNK_MASK;
     r->chunks[7] = r_c_7 & BIGINT_CHUNK_MASK;
 
-    if (r_c_8)
-    {
+    if (r_c_8) {
         r->chunks[8] = 1;
         r->size = 9;
     }
-    else
-    {
+    else {
         r->size = 8;
     }
+
     r->sign = a->sign;
     return r;
-
-
 }
 
 /**
