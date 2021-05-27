@@ -345,7 +345,7 @@ BigInt *big_int_fast_add(BigInt *r, BigInt *a, BigInt *b)
     // Assertion: aa->size >= bb->size
 
     // First, add chunks where both have entries
-    
+
     carry = 0;
     r_size = 0;
     for (i = 0; i < bb->size; ++i) {
@@ -423,7 +423,7 @@ BigInt *big_int_add_256(BigInt *r, BigInt *a, BigInt *b)
     r->chunks[6] = r_c_6 & BIGINT_CHUNK_MASK;
     r->chunks[7] = r_c_7 & BIGINT_CHUNK_MASK;
 
-    if (r_c_8) 
+    if (r_c_8)
     {
         r->chunks[8] = 1;
         r->size = 9;
@@ -540,51 +540,43 @@ BigInt *big_int_fast_sub(BigInt *r, BigInt *a, BigInt *b)
         bb_abs = b_abs;
     }
 
-    // TODO: fix this case
-    /*
-    if(a->size == 8 && b->size == 8)
-    {
-        big_int_sub_256(r, aa_abs, bb_abs, do_sign_switch);
-
-        return r;
-    }
-    */
-
     // Assertion: aa_abs >= bb_abs
 
-    // Note an underflow sets the 1 bit at position MSB+1 of the chunk:
-    // 0x0000000000000000 - 1 = 0xffffffff00000000
-    //  | extra | chunk |        | extra | chunk |
-    borrow = 0;
-    r_size = 0;
-    for (i = 0; i < bb_abs->size; ++i) {
-        diff = aa_abs->chunks[i] - bb_abs->chunks[i] - borrow;
-        r->chunks[i] = diff & BIGINT_CHUNK_MASK;
-        borrow = (diff >> BIGINT_CHUNK_SHIFT) & 1;
-
-        if (r->chunks[i] != 0)
-            r_size = i;
+    if(a->size == 8 && b->size == 8) {
+        big_int_sub_256(r, aa_abs, bb_abs);
     }
+    else {
+        // Note an underflow sets the 1 bit at position MSB+1 of the chunk:
+        // 0x0000000000000000 - 1 = 0xffffffff00000000
+        //  | extra | chunk |        | extra | chunk |
+        borrow = 0;
+        r_size = 0;
+        for (i = 0; i < bb_abs->size; ++i) {
+            diff = aa_abs->chunks[i] - bb_abs->chunks[i] - borrow;
+            r->chunks[i] = diff & BIGINT_CHUNK_MASK;
+            borrow = (diff >> BIGINT_CHUNK_SHIFT) & 1;
 
-    for (; i < aa_abs->size; ++i) {
-        diff = aa_abs->chunks[i] - borrow;
-        r->chunks[i] = diff & BIGINT_CHUNK_MASK;
-        borrow = (diff >> BIGINT_CHUNK_SHIFT) & 1;
+            if (r->chunks[i] != 0)
+                r_size = i;
+        }
 
-        if (r->chunks[i] != 0)
-            r_size = i;
+        for (; i < aa_abs->size; ++i) {
+            diff = aa_abs->chunks[i] - borrow;
+            r->chunks[i] = diff & BIGINT_CHUNK_MASK;
+            borrow = (diff >> BIGINT_CHUNK_SHIFT) & 1;
+
+            if (r->chunks[i] != 0)
+                r_size = i;
+        }
+
+        // Assertion: borrow = 0, because aa_abs >= bb_abs
+        r->size = r_size + 1;
     }
-
-    // Assertion: borrow = 0, because aa_abs >= bb_abs
 
     // Because |a| >= |b| and we calculate |a| - |b|, the result is positive
     // and we never have underflow.
     r->overflow = 0;
-    r->sign = 0;
-    r->size = r_size + 1;
-
-    if (do_sign_switch)
-        r->sign = !r->sign;
+    r->sign = do_sign_switch;
 
     return r;
 }
@@ -636,11 +628,16 @@ BigInt *big_int_sub_upper_bound(BigInt *r, BigInt *a, BigInt *b)
     return r;
 }
 
-// TODO: Fix
-// TODO: Document
-BigInt *big_int_sub_256(BigInt *r, BigInt *a, BigInt *b, uint8_t do_sign_switch)
+/**
+ * r = a - b for 256-bit BigInts
+ *
+ * \assumption a, b are both 256-bit (8-chunk) BigInts
+ * \assumption r, a, b != NULL
+ * \assumption a, b >= 0
+ * \assumption a >= b
+ */
+BigInt *big_int_sub_256(BigInt *r, BigInt *a, BigInt *b)
 {
-
     dbl_chunk_size_t a_c_0 = a->chunks[0];
     dbl_chunk_size_t a_c_1 = a->chunks[1];
     dbl_chunk_size_t a_c_2 = a->chunks[2];
@@ -686,22 +683,12 @@ BigInt *big_int_sub_256(BigInt *r, BigInt *a, BigInt *b, uint8_t do_sign_switch)
     r->chunks[6] = r_c_6;
     r->chunks[7] = r_c_7;
 
-    r->size = BIGINT_FIXED_SIZE;
-    
-    for (unsigned i = 7; i > -1; i--)
-    {
-        if (r->chunks[i] == 0)
-        {
-            (r->size)--;
-        }
-    }  
-
-    r->sign = 0;
-    r->overflow = 0;
-
-    if (do_sign_switch)
-        r->sign = !r->sign;
-
+    r->size = 0;
+    for (uint32_t i = 0; i < BIGINT_FIXED_SIZE; ++i) {
+        if (r->chunks[i])
+            r->size = i;
+    }
+    r->size += 1;
 
     return r;
 }
@@ -770,12 +757,12 @@ BigInt *big_int_squared(BigInt *r, BigInt *a)
         }
         else {
             // Multiply and add chunks
-                        
+
             carry = a->chunks[i] * a->chunks[i] + r_loc->chunks[i + i];
             r_loc->chunks[i + i] = carry & BIGINT_RADIX_FOR_MOD;
             carry >>= BIGINT_CHUNK_BIT_SIZE;
-        
-            for (j = i + 1; j < a->size; j++) 
+
+            for (j = i + 1; j < a->size; j++)
             {
                 carry += (unsigned __int128) 2 * a->chunks[j] * a->chunks[i] + r_loc->chunks[i + j];
                 r_loc->chunks[i + j] = carry & BIGINT_RADIX_FOR_MOD;
@@ -804,18 +791,18 @@ BigInt *big_int_squared(BigInt *r, BigInt *a)
     r_loc->size = 2 * a->size;
     r_loc->sign = 0;
 
-    for (i = 0; i < a->size; i++) 
+    for (i = 0; i < a->size; i++)
     {
         carry = a->chunks[i] * a->chunks[i] + r_loc->chunks[i + i];
         r_loc->chunks[i + i] = carry & BIGINT_RADIX_FOR_MOD;
         carry >>= BIGINT_CHUNK_BIT_SIZE;
-        
-        for (j = i + 1; j < a->size; j++) 
+
+        for (j = i + 1; j < a->size; j++)
         {
             carry += a->chunks[j] * a->chunks[i] + r_loc->chunks[i + j];
             r_loc->chunks[i + j] = carry & BIGINT_RADIX_FOR_MOD;
             carry >>= BIGINT_CHUNK_BIT_SIZE;
-            
+
             carry += a->chunks[j] * a->chunks[i] + r_loc->chunks[i + j];
             r_loc->chunks[i + j] = carry & BIGINT_RADIX_FOR_MOD;
             carry >>= BIGINT_CHUNK_BIT_SIZE;
