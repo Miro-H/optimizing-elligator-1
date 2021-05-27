@@ -718,7 +718,7 @@ BigInt *big_int_sub_256(BigInt *r, BigInt *a, BigInt *b)
  */
 BigInt *big_int_mul_single_chunk(BigInt *r, BigInt *a, dbl_chunk_size_t b)
 {
-    ADD_STAT_COLLECTION(BIGINT_TYPE_BIG_INT_MUL);
+    ADD_STAT_COLLECTION(BIGINT_TYPE_BIG_INT_MUL_SINGLE_CHUNK);
 
     int64_t j;
     dbl_chunk_size_t carry;
@@ -745,91 +745,54 @@ BigInt *big_int_mul_single_chunk(BigInt *r, BigInt *a, dbl_chunk_size_t b)
 }
 
 /**
- * \brief Calculate r = a * a
+ * \brief Calculate r = a^2
  * !TODO add optimizations from mul
- * \assumption r, a, b != NULL
- * \assumption a->size + b->size <= BIGINT_FIXED_SIZE
+ * \assumption r != a, i.e., NO ALIASING
+ * \assumption r, a != NULL
+ * \assumption 2 * (a->size) <= BIGINT_FIXED_SIZE_INTERNAL
  */
 BigInt *big_int_squared(BigInt *r, BigInt *a)
 {
-    ADD_STAT_COLLECTION(BIGINT_TYPE_BIG_INT_MUL);
+    ADD_STAT_COLLECTION(BIGINT_TYPE_BIG_INT_SQUARED);
 
     int64_t i, j;
     unsigned __int128 carry;
 
-    BIG_INT_DEFINE_PTR_ZEROED(r_loc);
-
-    // For MUL, we we have aliasing and a separate BigInt for r is necessary
-    r_loc->size = 2 * a->size;
-    r_loc->sign = 0;
+    // Set BigInt to all zeros (initializes chunks, sign, and overflow)
+    *r = (BigInt) {0};
+    r->size = 2 * a->size;
 
     for (i = 0; i < a->size; ++i) {
         // shortcut for zero chunk
-        if (a->chunks[i] == 0)
-        {
-            r_loc->chunks[i + a->size] = 0;
+        if (a->chunks[i] == 0) {
+            r->chunks[i + a->size] = 0;
             r->chunks[i + a->size] = 0;
         }
         else {
             // Multiply and add chunks
-
-            carry = a->chunks[i] * a->chunks[i] + r_loc->chunks[i + i];
-            r_loc->chunks[i + i] = carry & BIGINT_RADIX_FOR_MOD;
+            carry = a->chunks[i] * a->chunks[i] + r->chunks[i + i];
+            r->chunks[i + i] = (dbl_chunk_size_t) (carry & BIGINT_RADIX_FOR_MOD_128);
             carry >>= BIGINT_CHUNK_BIT_SIZE;
 
-            for (j = i + 1; j < a->size; j++)
-            {
-                carry += (unsigned __int128) 2 * a->chunks[j] * a->chunks[i] + r_loc->chunks[i + j];
-                r_loc->chunks[i + j] = carry & BIGINT_RADIX_FOR_MOD;
+            for (j = i + 1; j < a->size; j++) {
+                carry += (unsigned __int128) 2 * a->chunks[j] * a->chunks[i] + r->chunks[i + j];
+                r->chunks[i + j] = (dbl_chunk_size_t) (carry & BIGINT_RADIX_FOR_MOD_128);
                 carry >>= BIGINT_CHUNK_BIT_SIZE;
             }
-            r_loc->chunks[i + a->size] = carry;
+            r->chunks[i + a->size] = carry;
         }
     }
-    big_int_prune_leading_zeros(r_loc, r_loc);
 
-    // TODO: copy could be saved if we assume no aliasing
-    return big_int_copy(r, r_loc);
-}
-
-/*
-BigInt *big_int_squared(BigInt *r, BigInt *a)
-{
-    ADD_STAT_COLLECTION(BIGINT_TYPE_BIG_INT_MUL);
-
-    int64_t i, j;
-    dbl_chunk_size_t carry;
-
-    BIG_INT_DEFINE_PTR_ZEROED(r_loc);
-
-    // For MUL, we we have aliasing and a separate BigInt for r is necessary
-    r_loc->size = 2 * a->size;
-    r_loc->sign = 0;
-
-    for (i = 0; i < a->size; i++)
-    {
-        carry = a->chunks[i] * a->chunks[i] + r_loc->chunks[i + i];
-        r_loc->chunks[i + i] = carry & BIGINT_RADIX_FOR_MOD;
-        carry >>= BIGINT_CHUNK_BIT_SIZE;
-
-        for (j = i + 1; j < a->size; j++)
-        {
-            carry += a->chunks[j] * a->chunks[i] + r_loc->chunks[i + j];
-            r_loc->chunks[i + j] = carry & BIGINT_RADIX_FOR_MOD;
-            carry >>= BIGINT_CHUNK_BIT_SIZE;
-
-            carry += a->chunks[j] * a->chunks[i] + r_loc->chunks[i + j];
-            r_loc->chunks[i + j] = carry & BIGINT_RADIX_FOR_MOD;
-            carry >>= BIGINT_CHUNK_BIT_SIZE;
-        }
-        r_loc->chunks[i + a->size] = carry;
+    // Remove leading zeros
+    for (i = r->size - 1; i > 0; --i) {
+        if (r->chunks[i])
+            break;
+        r->size--;
     }
-    big_int_prune_leading_zeros(r_loc, r_loc);
 
-    // TODO: copy could be saved if we assume no aliasing
-    return big_int_copy(r, r_loc);
+    return r;
 }
-*/
+
 // === === === === === === === === === === === === === === === === === === ===
 
 /**
@@ -1292,7 +1255,7 @@ BigInt *big_int_mul_mod(BigInt *r, BigInt *a, BigInt *b, BigInt *q)
  */
 BigInt *big_int_squared_mod(BigInt *r, BigInt *a, BigInt *q)
 {
-    ADD_STAT_COLLECTION(BIGINT_TYPE_BIG_INT_MUL_MOD);
+    ADD_STAT_COLLECTION(BIGINT_TYPE_BIG_INT_SQUARED_MOD);
 
     BIG_INT_DEFINE_PTR(r_loc);
 
