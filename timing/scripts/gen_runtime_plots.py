@@ -111,7 +111,7 @@ def plot(plot_title, plot_fname, log_xaxis, log_yaxis, bar_plot, logs_dirs, logs
 
     xs = np.arange(len(x_labels))
     nr_of_versions = len(versions)
-    colors = [next(colors_iter) for i in range(len(ys[version]))]
+    colors = [next(colors_iter) for i in range(len(x_labels))]
     hatches = [next(hatches_iter) for i in range(nr_of_versions)]
 
     if nr_of_versions == 1:
@@ -190,11 +190,16 @@ if __name__ == "__main__":
 
     title       = args.title
     plot_fname  = args.plot_fname
-    logs_dirs   = args.logs_dirs.split(";")
-    logs_names  = args.logs_names.split(";")
+    logs_dirs   = args.logs_dirs
+    logs_names  = args.logs_names
     log_xaxis   = args.log_xaxis
     log_yaxis   = args.log_yaxis
     bar_plot    = args.bar_plot
+
+    if logs_dirs:
+        logs_dirs = logs_dirs.split(";")
+    if logs_names:
+        logs_names = logs_names.split(";")
 
     if logs_names and len(logs_names) != len(logs_dirs):
         print("ERROR: need to name all log folders!")

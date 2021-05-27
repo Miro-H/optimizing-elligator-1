@@ -680,6 +680,45 @@ void bench_big_int_mul_single_chunk(void *bench_args, char *bench_name, char *pa
 
 //=== === === === === === === === === === === === === === ===
 
+void bench_big_int_mul_squared_fn(void *arg)
+{
+    int64_t i = *((int64_t *) arg);
+    big_int_mul(RUNTIME_DEREF(big_int_array_1, i),
+        RUNTIME_DEREF(big_int_array_2, i), RUNTIME_DEREF(big_int_array_2, i));
+}
+
+void bench_big_int_mul_squared(void *bench_args, char *bench_name, char *path)
+{
+    BenchmarkClosure bench_closure = {
+        .bench_prep_args = bench_args,
+        .bench_prep_fn = bench_big_int_prep,
+        .bench_fn = bench_big_int_mul_squared_fn,
+        .bench_cleanup_fn = bench_big_int_cleanup,
+    };
+    benchmark_runner(bench_closure, bench_name, path, SETS, REPS, 0);
+}
+
+//=== === === === === === === === === === === === === === ===
+
+void bench_big_int_square_fn(void *arg)
+{
+    int64_t i = *((int64_t *) arg);
+    big_int_square(RUNTIME_DEREF(big_int_array_1, i), RUNTIME_DEREF(big_int_array_2, i));
+}
+
+void bench_big_int_square(void *bench_args, char *bench_name, char *path)
+{
+    BenchmarkClosure bench_closure = {
+        .bench_prep_args = bench_args,
+        .bench_prep_fn = bench_big_int_prep,
+        .bench_fn = bench_big_int_square_fn,
+        .bench_cleanup_fn = bench_big_int_cleanup,
+    };
+    benchmark_runner(bench_closure, bench_name, path, SETS, REPS, 0);
+}
+
+//=== === === === === === === === === === === === === === ===
+
 void bench_big_int_mul_mod_fn(void *arg)
 {
     int64_t i = *((int64_t *) arg);
@@ -695,6 +734,28 @@ void bench_big_int_mul_mod(void *bench_args, char *bench_name, char *path)
         .bench_prep_args = bench_args,
         .bench_prep_fn = bench_big_int_prep,
         .bench_fn = bench_big_int_mul_mod_fn,
+        .bench_cleanup_fn = bench_big_int_cleanup,
+    };
+    benchmark_runner(bench_closure, bench_name, path, SETS, REPS, 0);
+}
+
+//=== === === === === === === === === === === === === === ===
+
+void bench_big_int_mul_square_mod_fn(void *arg)
+{
+    int64_t i = *((int64_t *) arg);
+
+    big_int_mul_mod(RUNTIME_DEREF(big_int_array_1, i),
+        RUNTIME_DEREF(big_int_array_2, i), RUNTIME_DEREF(big_int_array_2, i),
+        RUNTIME_DEREF(big_int_array_q, i));
+}
+
+void bench_big_int_mul_square_mod(void *bench_args, char *bench_name, char *path)
+{
+    BenchmarkClosure bench_closure = {
+        .bench_prep_args = bench_args,
+        .bench_prep_fn = bench_big_int_prep,
+        .bench_fn = bench_big_int_mul_square_mod_fn,
         .bench_cleanup_fn = bench_big_int_cleanup,
     };
     benchmark_runner(bench_closure, bench_name, path, SETS, REPS, 0);
@@ -1209,6 +1270,14 @@ int main(int argc, char const *argv[])
                 bench_big_int_mul_single_chunk((void *)bench_big_int_size_256_args,
                     "mul single chunk", LOG_PATH "/runtime_big_int_mul_single_chunk.log"));
 
+        BENCHMARK(bench_type, BENCH_TYPE_MUL_SQUARE,
+            bench_big_int_mul_squared((void *)bench_big_int_size_256_args,
+                "mul square", LOG_PATH "/runtime_big_int_mul_squared.log"));
+
+        BENCHMARK(bench_type, BENCH_TYPE_SQUARE,
+            bench_big_int_square((void *)bench_big_int_size_256_args,
+            "square", LOG_PATH "/runtime_big_int_square.log"));
+
         BENCHMARK(bench_type, BENCH_TYPE_MUL_MOD_CURVE,
             bench_big_int_mul_mod((void *)bench_big_int_size_256_curve_mod_args,
                 "mul mod (curve)", LOG_PATH "/runtime_big_int_mul_mod_curve.log"));
@@ -1216,6 +1285,11 @@ int main(int argc, char const *argv[])
         BENCHMARK(bench_type, BENCH_TYPE_MUL_MOD_RANDOM,
             bench_big_int_mul_mod((void *)bench_big_int_size_256_random_mod_args,
                 "mul mod (random)", LOG_PATH "/runtime_big_int_mul_mod_random.log"));
+
+        BENCHMARK(bench_type, BENCH_TYPE_MUL_SQUARE_MOD_CURVE,
+            bench_big_int_mul_square_mod((void *)bench_big_int_size_256_curve_mod_args,
+                "mul square mod (curve)",
+                LOG_PATH "/runtime_big_int_mul_square_mod_curve.log"));
 
         BENCHMARK(bench_type, BENCH_TYPE_DIVREM,
             bench_big_int_div_rem((void *)bench_big_int_size_256_random_mod_args,

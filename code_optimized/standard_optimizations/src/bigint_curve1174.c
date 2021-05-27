@@ -370,6 +370,25 @@ BigInt *big_int_curve1174_mul_mod(BigInt *r, BigInt *a, BigInt *b)
 
 
 /**
+ * \brief Calculate r := a^2 mod q
+ *
+ * \assumption r, a != NULL
+ */
+BigInt *big_int_curve1174_square_mod(BigInt *r, BigInt *a)
+{
+    ADD_STAT_COLLECTION(BIGINT_CURVE1174_TYPE_BIG_INT_SQUARED_MOD);
+
+    big_int_square(r, a);
+    return big_int_curve1174_mod(r);
+}
+
+
+
+
+
+
+
+/**
  * \brief Calculate r := (a * b^-1) mod q
  *
  * \assumption r, a, b != NULL
