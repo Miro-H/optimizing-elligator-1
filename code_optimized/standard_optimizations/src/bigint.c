@@ -808,7 +808,6 @@ BigInt *big_int_mul(BigInt *r, BigInt *a, BigInt *b)
 
     int64_t i, j;
     dbl_chunk_size_t carry;
-    int not_zero;
 
     *r = (BigInt) {0};
 
@@ -817,7 +816,6 @@ BigInt *big_int_mul(BigInt *r, BigInt *a, BigInt *b)
     r->sign = a->sign ^ b->sign;
     r->size = a->size + b->size;
 
-    not_zero = 0;
     for (i = 0; i < b->size; ++i) {
         // shortcut for zero chunk
         if (b->chunks[i] == 0)
