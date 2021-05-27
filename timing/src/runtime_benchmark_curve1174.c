@@ -127,6 +127,25 @@ void bench_big_int_curve1174_mul_mod(void *bench_args, char *bench_name, char *p
 
 //=== === === === === === === === === === === === === === ===
 
+void bench_big_int_curve1174_square_mod_fn(void *arg)
+{
+    int64_t i = *((int64_t *) arg);
+    big_int_curve1174_square_mod(big_int_array_1 + i, big_int_array_2 + i);
+}
+
+void bench_big_int_curve1174_square_mod(void *bench_args, char *bench_name, char *path)
+{
+    BenchmarkClosure bench_closure = {
+        .bench_prep_args = bench_args,
+        .bench_prep_fn = bench_big_int_prep,
+        .bench_fn = bench_big_int_curve1174_square_mod_fn,
+        .bench_cleanup_fn = bench_big_int_cleanup,
+    };
+    benchmark_runner(bench_closure, bench_name, path, SETS, REPS, 0);
+}
+
+//=== === === === === === === === === === === === === === ===
+
 void bench_big_int_curve1174_div_mod_fn(void *arg)
 {
     int64_t i = *((int64_t *) arg);
@@ -344,6 +363,12 @@ int main(int argc, char const *argv[])
                 (void *) bench_big_int_curve_1174_args,
                 "mul mod (curve)",
                 LOG_PATH "/runtime_big_int_curve_1174_mul_mod.log"));
+
+        BENCHMARK(bench_type, BENCH_TYPE_CURVE_1174_SQUARE_MOD,
+            bench_big_int_curve1174_square_mod(
+                (void *) bench_big_int_curve_1174_args,
+                "square mod (curve)",
+                LOG_PATH "/runtime_big_int_curve_1174_square_mod.log"));
 
         BENCHMARK(bench_type, BENCH_TYPE_CURVE_1174_MOD,
             bench_big_int_curve1174_mod(

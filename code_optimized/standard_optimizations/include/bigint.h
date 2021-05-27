@@ -180,7 +180,7 @@ EgcdResult *big_int_egcd(EgcdResult *r, BigInt *a, BigInt *b);
 BigInt *big_int_chi(BigInt *r, BigInt *t, BigInt *q);
 
 //New operations
-BigInt *big_int_squared(BigInt *r, BigInt *a);
+BigInt *big_int_square(BigInt *r, BigInt *a);
 BigInt *big_int_add_256(BigInt *r, BigInt *a, BigInt *b);
 BigInt *big_int_add_upper_bound(BigInt *r, BigInt *a, BigInt *b);
 BigInt *big_int_sub_256(BigInt *r, BigInt *a, BigInt *b);

@@ -751,7 +751,7 @@ BigInt *big_int_mul_single_chunk(BigInt *r, BigInt *a, dbl_chunk_size_t b)
  * \assumption r, a != NULL
  * \assumption 2 * (a->size) <= BIGINT_FIXED_SIZE_INTERNAL
  */
-BigInt *big_int_squared(BigInt *r, BigInt *a)
+BigInt *big_int_square(BigInt *r, BigInt *a)
 {
     ADD_STAT_COLLECTION(BIGINT_TYPE_BIG_INT_SQUARED);
 
@@ -1253,13 +1253,13 @@ BigInt *big_int_mul_mod(BigInt *r, BigInt *a, BigInt *b, BigInt *q)
  *
  * \assumption r, a, b, q != NULL
  */
-BigInt *big_int_squared_mod(BigInt *r, BigInt *a, BigInt *q)
+BigInt *big_int_square_mod(BigInt *r, BigInt *a, BigInt *q)
 {
     ADD_STAT_COLLECTION(BIGINT_TYPE_BIG_INT_SQUARED_MOD);
 
     BIG_INT_DEFINE_PTR(r_loc);
 
-    big_int_squared(r_loc, a);
+    big_int_square(r_loc, a);
     big_int_mod(r, r_loc, q);
 
     return r;
@@ -1334,7 +1334,7 @@ BigInt *big_int_pow(BigInt *r, BigInt *b, BigInt *e, BigInt *q)
         }
 
         big_int_srl_small(e_loc, e_loc, 1);
-        big_int_squared_mod(tmp, b_loc, q);
+        big_int_square_mod(tmp, b_loc, q);
         big_int_copy(b_loc, tmp);
     }
 
