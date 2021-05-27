@@ -59,6 +59,7 @@ BigInt *big_int_curve1174_mod(BigInt *r)
 
         // Intentionally no mod reduction, since we do one later. We know that
         // our intermediate values are never larger than (q-1)^2 and 288 * (q-1)^2 < 2^512
+        // TODO: Can we remove this copy?
         big_int_mul(temp, r_upper, big_int_288); // a1 * 288
         big_int_copy(r_upper, temp);
 
@@ -448,6 +449,7 @@ BigInt *big_int_curve1174_pow_small(BigInt *r, BigInt *b, uint64_t e)
         // If power is odd
         if (e & 1)
         {
+            // TODO: Can we remove this copy?
             big_int_curve1174_mul_mod(temp, r, b_loc);
             big_int_copy(r, temp);
         }
@@ -455,6 +457,7 @@ BigInt *big_int_curve1174_pow_small(BigInt *r, BigInt *b, uint64_t e)
         e >>= 1;
         // TODO: compute those in parallel in first step. Those are only 256
         // results, we could even store them on the stack.
+        // TODO: Can we remove this copy?
         big_int_curve1174_mul_mod(temp, b_loc, b_loc);
         big_int_copy(b_loc, temp);
     }
@@ -487,11 +490,14 @@ BigInt *big_int_curve1174_pow(BigInt *r, BigInt *b, BigInt *e)
             // If power is odd
             if (e_chunk & 1)
             {
+                //  TODO: Can we remove this copy?
                 big_int_curve1174_mul_mod(temp, r, b_loc);
                 big_int_copy(r, temp);
             }
 
             e_chunk >>= 1;
+
+            // TODO: Can we remove this copy?
             big_int_curve1174_mul_mod(temp, b_loc, b_loc);
             big_int_copy(b_loc, temp);
         }
@@ -519,23 +525,29 @@ BigInt *big_int_curve1174_pow_q_m1_d2(BigInt *r, BigInt *b)
 
     // Ensure suffix
     // e = 1
+    // TODO: Can we remove this copy?
     big_int_curve1174_mul_mod(temp, r, b);
     big_int_copy(r, temp);
 
     // e = 11
+    // TODO: Can we remove this copy?
     big_int_curve1174_mul_mod(temp, b, b);
     big_int_copy(b, temp);
+    // TODO: Can we remove this copy?
     big_int_curve1174_mul_mod(temp, r, b);
     big_int_copy(r, temp);
 
     // e = 011
+    // TODO: Can we remove this copy?
     big_int_curve1174_mul_mod(temp, b, b);
     big_int_copy(b, temp);
 
     // All the remaining bits are set to one, so we add all of them
     for (uint32_t i = 0; i < 247; ++i) {
+        // TODO: Can we remove this copy?
         big_int_curve1174_mul_mod(temp, b, b);
         big_int_copy(b, temp);
+        // TODO: Can we remove this copy?
         big_int_curve1174_mul_mod(temp, r, b);
         big_int_copy(r, temp);
     }
@@ -564,8 +576,10 @@ BigInt *big_int_curve1174_pow_q_p1_d4(BigInt *r, BigInt *b)
     // The first bit of the exponent is zero, because we start with doubling b.
     // All the remaining bits are set to one, so we add all of them.
     for (uint32_t i = 0; i < 248; ++i) {
+        // TODO: Can we remove this copy?
         big_int_curve1174_mul_mod(temp, b, b);
         big_int_copy(b, temp);
+        // TODO: Can we remove this copy?
         big_int_curve1174_mul_mod(temp, r, b);
         big_int_copy(r, temp);
     }

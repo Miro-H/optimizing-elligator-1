@@ -1333,11 +1333,14 @@ BigInt *big_int_pow(BigInt *r, BigInt *b, BigInt *e, BigInt *q)
         // If power is odd
         if (big_int_is_odd(e_loc))
         {
+            // TODO: Can we remove the copy here?
             big_int_mul_mod(tmp, r_loc, b_loc, q);
             big_int_copy(r_loc, tmp);
         }
 
         big_int_srl_small(e_loc, e_loc, 1);
+
+        // TODO: Can we remove the copy here?
         big_int_square_mod(tmp, b_loc, q);
         big_int_copy(b_loc, tmp);
     }
