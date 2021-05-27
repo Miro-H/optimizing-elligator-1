@@ -403,7 +403,7 @@ BigInt *big_int_fast_add(BigInt *r, BigInt *a, BigInt *b)
  */
 BigInt *big_int_add_256(BigInt *r, BigInt *a, BigInt *b)
 {
-    dbl_chunk_size_t r_c_0, r_c_1, r_c_2, r_c_3, r_c_4, r_c_5, r_c_6, r_c_7, r_c_8;
+    dbl_chunk_size_t r_c_0, r_c_1, r_c_2, r_c_3, r_c_4, r_c_5, r_c_6, r_c_7;
 
     dbl_chunk_size_t a_c_0 = a->chunks[0];
     dbl_chunk_size_t a_c_1 = a->chunks[1];
@@ -431,7 +431,6 @@ BigInt *big_int_add_256(BigInt *r, BigInt *a, BigInt *b)
     r_c_5 = a_c_5 + b_c_5 + (r_c_4 >> BIGINT_CHUNK_SHIFT);
     r_c_6 = a_c_6 + b_c_6 + (r_c_5 >> BIGINT_CHUNK_SHIFT);
     r_c_7 = a_c_7 + b_c_7 + (r_c_6 >> BIGINT_CHUNK_SHIFT);
-    r_c_8 = r_c_7 >> BIGINT_CHUNK_SHIFT;
 
     r->chunks[0] = r_c_0 & BIGINT_CHUNK_MASK;
     r->chunks[1] = r_c_1 & BIGINT_CHUNK_MASK;
@@ -442,7 +441,7 @@ BigInt *big_int_add_256(BigInt *r, BigInt *a, BigInt *b)
     r->chunks[6] = r_c_6 & BIGINT_CHUNK_MASK;
     r->chunks[7] = r_c_7 & BIGINT_CHUNK_MASK;
 
-    if (r_c_8) {
+    if (r_c_7 >> BIGINT_CHUNK_SHIFT) {
         r->chunks[8] = 1;
         r->size = 9;
     }
