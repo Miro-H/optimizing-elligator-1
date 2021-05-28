@@ -493,12 +493,17 @@ BigInt *big_int_curve1174_pow(BigInt *r, BigInt *b, BigInt *e)
 {
     ADD_STAT_COLLECTION(BIGINT_CURVE1174_TYPE_BIG_INT_POW);
 
-    BIG_INT_DEFINE_PTR(b_loc);
-    BIG_INT_DEFINE_PTR(temp);
+    BIG_INT_DEFINE_PTR(b_loc1);
     dbl_chunk_size_t e_chunk;
 
+    BIG_INT_DEFINE_FROM_CHUNK(b_loc2, 0, 1);
+    BIG_INT_DEFINE_FROM_CHUNK(r_loc1, 0, 1);
+    BIG_INT_DEFINE_FROM_CHUNK(r_loc2, 0, 1);
+
+    BigInt* r_loc_tmp;
+
     big_int_create_from_chunk(r, 1, 0);
-    big_int_copy(b_loc, b);
+    big_int_copy(b_loc1, b);
 
     // Operate on exponent chunk by chunk
     for (uint32_t i = 0; i < e->size; ++i) {
@@ -508,20 +513,31 @@ BigInt *big_int_curve1174_pow(BigInt *r, BigInt *b, BigInt *e)
             // If power is odd
             if (e_chunk & 1)
             {
-                //  TODO: Can we remove this copy?
-                big_int_curve1174_mul_mod(temp, r, b_loc);
-                big_int_copy(r, temp);
+                big_int_curve1174_mul_mod(r_loc1, r_loc2, b_loc1);
+                r_loc_tmp = r_loc1;
+                r_loc1 = r_loc2;
+                r_loc2 = r_loc_tmp;
+            }
+
+            e_chunk >>= 1;
+            big_int_curve1174_square_mod(b_loc2, b_loc1);
+
+            // -- unroll --
+            if (e_chunk & 1)
+            {
+                big_int_curve1174_mul_mod(r_loc1, r_loc2, b_loc2);
+                r_loc_tmp = r_loc1;
+                r_loc1 = r_loc2;
+                r_loc2 = r_loc_tmp;
             }
 
             e_chunk >>= 1;
 
-            // TODO: Can we remove this copy?
-            big_int_curve1174_mul_mod(temp, b_loc, b_loc);
-            big_int_copy(b_loc, temp);
+            big_int_curve1174_square_mod(b_loc1, b_loc2);
         }
     }
 
-    return r;
+    return big_int_copy(r, r_loc2);
 }
 
 
