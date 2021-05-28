@@ -494,7 +494,6 @@ START_TEST(test_power_q_m1_d2)
     BIG_INT_DEFINE_PTR(r);
 
     // Is square
-    big_int_create_from_chunk(a, 1, 0);
     big_int_create_from_hex(b, "4F2B8718");
     big_int_create_from_chunk(r, 1, 0);
 
@@ -502,18 +501,15 @@ START_TEST(test_power_q_m1_d2)
     ck_assert_int_eq(big_int_compare(a, r), 0);
 
     // Is not square
-    big_int_create_from_chunk(a, 1, 0);
     big_int_create_from_hex(b,
         "20C828BF4E9A6412E714AE859C028B2E509F8418F797CE3E6BD91A9CF4A117E");
     big_int_create_from_hex(r,
         "7FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF6");
 
-    big_int_create_from_chunk(a, 1, 0);
     big_int_curve1174_pow_q_m1_d2(a, b);
     ck_assert_int_eq(big_int_compare(a, r), 0);
 
     // Test base 1
-    big_int_create_from_chunk(a, 1, 0);
     big_int_create_from_chunk(b, 1, 0);
     big_int_create_from_chunk(r, 1, 0);
 

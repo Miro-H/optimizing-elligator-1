@@ -215,3 +215,7 @@ LOGS_NAMES="<TODO1>" LOGS_DIRS="<path/to/first/TODO1> </path/to/second/TODO1>" S
 ## Pow
 - Remove copies by unrolling loop twice (done by Freya).
 - Avoid square operations by early exit when no bits are left in the exponent
+
+Pow for special exponent:
+- Remove `b * 1` and `b * b` and instead use square function and set r directly to `b * b^2`
+- Remove all copies by usual loop unrolling and clever variable juggling

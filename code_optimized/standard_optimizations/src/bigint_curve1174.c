@@ -370,6 +370,7 @@ BigInt *big_int_curve1174_mul_mod(BigInt *r, BigInt *a, BigInt *b)
 /**
  * \brief Calculate r := a^2 mod q
  *
+ * \assumption r != a, i.e., NO ALIASING
  * \assumption r, a != NULL
  */
 BigInt *big_int_curve1174_square_mod(BigInt *r, BigInt *a)
@@ -577,47 +578,41 @@ BigInt *big_int_curve1174_pow(BigInt *r, BigInt *b, BigInt *e)
 /**
  * \brief Calculate r := (b^((q-1)/2)) mod q
  *
- * \assumption r = 1, i.e., it is already initialized by the caller
  * \assumption r != b, i.e., NO ALIASING
- * \assumption b is MODIFIED inplace. The caller MUST NOT rely on its value.
  * \assumption r, b != NULL
  */
 BigInt *big_int_curve1174_pow_q_m1_d2(BigInt *r, BigInt *b)
 {
     ADD_STAT_COLLECTION(BIGINT_CURVE1174_TYPE_BIG_INT_POW_1_2);
 
-    BIG_INT_DEFINE_PTR(temp);
+    BIG_INT_DEFINE_PTR(b_loc_1);
+    BIG_INT_DEFINE_PTR(b_loc_2);
+    BIG_INT_DEFINE_PTR(r_loc);
 
     // (q-1)/2 = 0b1111...11111011 (there are 247 ones before the suffix 011)
 
     // Ensure suffix
-    // e = 1
-    // TODO: Can we remove this copy?
-    big_int_curve1174_mul_mod(temp, r, b);
-    big_int_copy(r, temp);
 
     // e = 11
-    // TODO: Can we remove this copy?
-    big_int_curve1174_mul_mod(temp, b, b);
-    big_int_copy(b, temp);
-    // TODO: Can we remove this copy?
-    big_int_curve1174_mul_mod(temp, r, b);
-    big_int_copy(r, temp);
+    big_int_curve1174_square_mod(b_loc_1, b);
+    big_int_curve1174_mul_mod(r_loc, b, b_loc_1);
 
     // e = 011
-    // TODO: Can we remove this copy?
-    big_int_curve1174_mul_mod(temp, b, b);
-    big_int_copy(b, temp);
+    big_int_curve1174_square_mod(b_loc_2, b_loc_1);
 
     // All the remaining bits are set to one, so we add all of them
-    for (uint32_t i = 0; i < 247; ++i) {
-        // TODO: Can we remove this copy?
-        big_int_curve1174_mul_mod(temp, b, b);
-        big_int_copy(b, temp);
-        // TODO: Can we remove this copy?
-        big_int_curve1174_mul_mod(temp, r, b);
-        big_int_copy(r, temp);
+    // Do 123 loops with unrolling = 2 --> 246 iterations
+    for (uint32_t i = 0; i < 123; ++i) {
+        big_int_curve1174_square_mod(b_loc_1, b_loc_2);
+        big_int_curve1174_mul_mod(r, r_loc, b_loc_1);
+
+        big_int_curve1174_square_mod(b_loc_2, b_loc_1);
+        big_int_curve1174_mul_mod(r_loc, r, b_loc_2);
     }
+
+    // Do last iteration --> 247 ones
+    big_int_curve1174_square_mod(b_loc_1, b_loc_2);
+    big_int_curve1174_mul_mod(r, r_loc, b_loc_1);
 
     return r;
 }
@@ -665,13 +660,12 @@ BigInt *big_int_curve1174_pow_q_p1_d4(BigInt *r, BigInt *b)
  * \assumption r, t != NULL
  * \assumption t =/= 0 (guaranteed by proof in section 3.2 of the Elligator paper)
  *             as a consequence of XY =/= 0.
- * \assumption t is MODIFIED inplace. The caller MUST NOT rely on its value.
  */
 int8_t big_int_curve1174_chi(BigInt *t)
 {
     ADD_STAT_COLLECTION(BIGINT_CURVE1174_TYPE_BIG_INT_CHI);
 
-    BIG_INT_DEFINE_FROM_CHUNK(r_loc, 0, 1);
+    BIG_INT_DEFINE_PTR(r_loc);
 
     big_int_curve1174_pow_q_m1_d2(r_loc, t);
 

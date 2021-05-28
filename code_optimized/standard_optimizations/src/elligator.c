@@ -115,7 +115,6 @@ CurvePoint *elligator_1_string_to_point(CurvePoint *r, BigInt *t, Curve curve)
     // Preserve value for later
     big_int_copy(tmp_0, v);
 
-    // this call modifies v inplace
     chiv = big_int_curve1174_chi(v);
 
     X = u;
