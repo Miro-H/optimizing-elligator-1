@@ -132,7 +132,11 @@ endif
 _ELLIGATOR_SRC	= elligator_test.c
 ELLIGATOR_SRC	= $(patsubst %,$(SDIR)/%,$(_ELLIGATOR_SRC))
 
+ifeq ($(VERSION), 1)
+_ELLIGATOR_TESTED_SRC	= bigint.c elligator.c
+else
 _ELLIGATOR_TESTED_SRC	= bigint_curve1174.c bigint.c elligator.c
+endif
 ELLIGATOR_TESTED_SRC	= $(patsubst %,$(SRC_TESTED)/%,$(_ELLIGATOR_TESTED_SRC))
 
 .PHONY: compile-elligator-test
