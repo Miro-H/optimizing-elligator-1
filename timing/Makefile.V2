@@ -212,12 +212,11 @@ memcpy-benchmark: $(MEMCPY_SRC)
 	$(CC) -o $(BDIR)/$@ $^ $(CFLAGS) $(LIBS)
 
 
-ifeq ($(LOGS_DIRS),)
-	LOGS_DIRS 	= $(RUNTIME_SUB_PATH);$(GMP_SUB_PATH)
-	LOGS_NAMES 	= V$(VERSION);gmp
-endif
-
 .PHONY: plot-comparison
+ifeq ($(LOGS_DIRS),)
+plot-comparison: LOGS_DIRS = $(RUNTIME_SUB_PATH);$(GMP_SUB_PATH)
+plot-comparison: LOGS_NAMES = V$(VERSION);gmp
+endif
 plot-comparison:
 	LOGS_DIRS="${LOGS_DIRS}" LOGS_NAMES="${LOGS_NAMES}" PUBLISH=$(PUBLISH) \
 	COLLECT_STATS=$(COLLECT_STATS) SETS=$(SETS) REPS=$(REPS) \
