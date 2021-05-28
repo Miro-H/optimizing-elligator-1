@@ -81,7 +81,10 @@ plot-runtime-benchmark: clean run-runtime-benchmark
 
 runtime-benchmark: $(OBJ_BENCHED) $(OBJ)
 	$(CC) -o $(BDIR)/$@ $^ $(CFLAGS) $(LIBS)
-	
+
+.PHONY: plots
+plots: plot-runtime-benchmark
+
 .PHONY: clean
 clean:
 	rm -f $(ODIR)/*.o *~ core $(INCDIR)/*~ $(BIN_FILES)

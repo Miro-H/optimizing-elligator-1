@@ -702,6 +702,7 @@ void bench_big_int_mul_squared(void *bench_args, char *bench_name, char *path)
 
 //=== === === === === === === === === === === === === === ===
 
+#if VERSION > 1
 void bench_big_int_square_fn(void *arg)
 {
     int64_t i = *((int64_t *) arg);
@@ -718,6 +719,7 @@ void bench_big_int_square(void *bench_args, char *bench_name, char *path)
     };
     benchmark_runner(bench_closure, bench_name, path, SETS, REPS, 0);
 }
+#endif
 
 //=== === === === === === === === === === === === === === ===
 

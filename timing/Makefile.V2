@@ -214,7 +214,7 @@ memcpy-benchmark: $(MEMCPY_SRC)
 
 .PHONY: plot-comparison
 ifeq ($(LOGS_DIRS),)
-plot-comparison: LOGS_DIRS = $(RUNTIME_SUB_PATH);$(GMP_SUB_PATH)
+plot-comparison: LOGS_DIRS = $(LOG_BASE_PATH)/$(RUNTIME_SUB_PATH);$(LOG_BASE_PATH)/$(GMP_SUB_PATH)
 plot-comparison: LOGS_NAMES = V$(VERSION);gmp
 endif
 plot-comparison:
