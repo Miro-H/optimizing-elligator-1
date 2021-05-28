@@ -175,9 +175,8 @@ BigInt *elligator_1_point_to_string(BigInt *t, CurvePoint p, Curve curve)
         big_int_create_from_chunk(t, 1, 0);
         return t;
     }
-    
+
     BIG_INT_DEFINE_PTR(X);
-    //BIG_INT_DEFINE_PTR(eta);
 
     BigInt *u;
 
@@ -186,7 +185,6 @@ BigInt *elligator_1_point_to_string(BigInt *t, CurvePoint p, Curve curve)
     BIG_INT_DEFINE_PTR(tmp_0);
     BIG_INT_DEFINE_PTR(tmp_1);
     BIG_INT_DEFINE_PTR(tmp_2);
-    //BIG_INT_DEFINE_PTR(tmp_3);
 
     BIG_INT_DEFINE_FROM_CHUNK(tmp_pow_res, 0, 1);
 
@@ -195,7 +193,7 @@ BigInt *elligator_1_point_to_string(BigInt *t, CurvePoint p, Curve curve)
     big_int_sll_small(tmp_2, tmp_1, 1); // 2 * (y + 1)
     big_int_curve1174_div_mod(tmp_1, tmp_0, tmp_2); // η = (y-1)/(2 * (y + 1))
 
-    big_int_curve1174_mul_mod(tmp_0, tmp_1, &(curve.r));
+    big_int_curve1174_mul_mod(tmp_0, tmp_1, &(curve.r)); // ηr
     big_int_add(tmp_1, big_int_one, tmp_0); // 1 + ηr
 
     big_int_curve1174_square_mod(tmp_2, tmp_1); // (1 + ηr)^2

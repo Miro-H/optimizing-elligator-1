@@ -753,37 +753,39 @@ START_TEST(test_sll_small)
 {
     TEST_BIG_INT_DEFINE(a);
     TEST_BIG_INT_DEFINE(r);
+    TEST_BIG_INT_DEFINE(t);
 
     // Shift over chunk border
     big_int_create_from_chunk(a, 4184080774, 0);
     big_int_create_from_hex(r, "3E590061800");
 
-    big_int_sll_small(a, a, 10);
-    ck_assert_int_eq(big_int_compare(a, r), 0);
+    big_int_sll_small(t, a, 10);
+    ck_assert_int_eq(big_int_compare(t, r), 0);
 
     // Shift by 0
     big_int_create_from_chunk(a, 4184080774, 0);
     big_int_create_from_chunk(r, 4184080774, 0);
 
-    big_int_sll_small(a, a, 0);
-    ck_assert_int_eq(big_int_compare(a, r), 0);
+    big_int_sll_small(t, a, 0);
+    ck_assert_int_eq(big_int_compare(t, r), 0);
 
     // Apply shift to 0
     big_int_create_from_chunk(a, 0, 0);
     big_int_create_from_chunk(r, 0, 0);
 
-    big_int_sll_small(a, a, 10);
-    ck_assert_int_eq(big_int_compare(a, r), 0);
+    big_int_sll_small(t, a, 10);
+    ck_assert_int_eq(big_int_compare(t, r), 0);
 
     // Apply shift to negative integer
     big_int_create_from_chunk(a, 4184080774, 1);
-    big_int_create_from_hex(r, "-3e590061800");
+    big_int_create_from_hex(r, "-3E590061800");
 
-    big_int_sll_small(a, a, 10);
-    ck_assert_int_eq(big_int_compare(a, r), 0);
+    big_int_sll_small(t, a, 10);
+    ck_assert_int_eq(big_int_compare(t, r), 0);
 
     TEST_BIG_INT_DESTROY(a);
     TEST_BIG_INT_DESTROY(r);
+    TEST_BIG_INT_DESTROY(t);
 }
 END_TEST
 
