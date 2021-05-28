@@ -1,0 +1,90 @@
+ODIR				= src/obj
+
+BENCHED_ROOT_DIR	=../code_unoptimized
+SRC_BENCHED			= $(BENCHED_ROOT_DIR)/src
+ODIR_BENCHED		= $(SRC_BENCHED)/obj
+IDIR_BENCHED		= $(BENCHED_ROOT_DIR)/include
+
+# Add include sources to CC flags
+CFLAGS += -I$(IDIR_BENCHED) -I$(IDIR)
+
+# Main target, building all benchmarks
+all: compile-runtime-benchmark
+
+# Stats can only be collected for our BigInt library
+.PHONY: run-all
+run-all: run-runtime-benchmark
+
+.PHONY: all-benched
+all-benched:
+ifeq ($(BENCHED_ROOT_DIR),)
+	$(error Unsupported version $(VERSION) (check Makefile comments))
+endif
+	@echo "\n------------------------------------------------------------------------"
+	@echo "Compile timing for using $(BENCHED_ROOT_DIR)"
+	@echo "------------------------------------------------------------------------\n\n"
+	make -C $(BENCHED_ROOT_DIR) clean
+	COLLECT_STATS=$(COLLECT_STATS) make -C $(BENCHED_ROOT_DIR) all
+
+# Fresh build
+.PHONY: rebuild
+rebuild: clean all
+
+$(ODIR)/%.o: $(SDIR)/%.c $(DEPS)
+	$(CC) -c -o $@ $< $(CFLAGS)
+
+
+.PHONY: gen-bench-types
+gen-bench-types:
+	${ROOT_SCRIPTS_DIR}/gen_types.py \
+		--src_file ${SDIR}/runtime_benchmark_curve1174.c  ${SDIR}/runtime_benchmark.c \
+		--dest_file ${IDIR}/benchmark_types.h
+
+################################################################################
+#							Runtime Benchmarks								   #
+################################################################################
+
+RUNTIME_SUB_PATH = V$(VERSION)/$(LOG_SUBDIRS)
+
+# Specify the object files constituting the test
+_OBJ	= benchmark_helpers.o runtime_benchmark.o
+OBJ 	= $(patsubst %,$(ODIR)/%,$(_OBJ))
+# Specify the object files of the benched functions
+_OBJ_BENCHED 	= bigint.o elligator.o
+OBJ_BENCHED		= $(patsubst %,$(ODIR_BENCHED)/%,$(_OBJ_BENCHED))
+
+.PHONY: prepare-logs-runtime-benchmark
+prepare-logs-runtime-benchmark:
+	mkdir -p $(LOG_PATH)
+
+.PHONY: compile-runtime-benchmark
+compile-runtime-benchmark: OUT_SUB_PATH = $(RUNTIME_SUB_PATH)
+compile-runtime-benchmark: LOG_PATH = $(LOG_BASE_PATH)/$(OUT_SUB_PATH)
+compile-runtime-benchmark: CFLAGS += -DLOG_PATH=\"$(LOG_PATH)\"
+compile-runtime-benchmark: prepare-logs-runtime-benchmark all-benched gen-bench-types runtime-benchmark
+
+.PHONY: run-runtime-benchmark
+run-runtime-benchmark: OUT_SUB_PATH = $(RUNTIME_SUB_PATH)
+run-runtime-benchmark: LOG_PATH = $(LOG_BASE_PATH)/$(OUT_SUB_PATH)
+run-runtime-benchmark: compile-runtime-benchmark
+	echo "${LOG_PATH}" > ${LATEST_LOG_PATH}
+	./$(BDIR)/runtime-benchmark $(BENCHMARKS)
+
+.PHONY: plot-runtime-benchmark
+plot-runtime-benchmark: OUT_SUB_PATH = $(RUNTIME_SUB_PATH)
+plot-runtime-benchmark: LOG_PATH = $(LOG_BASE_PATH)/$(OUT_SUB_PATH)
+plot-runtime-benchmark: clean run-runtime-benchmark
+	# Needs to be repeated to execute multiple times in same make call
+	PUBLISH=$(PUBLISH) COLLECT_STATS=$(COLLECT_STATS) SETS=$(SETS) \
+	REPS=$(REPS) LOGS_DIR=$(LOG_PATH) OUT_SUB_PATH=$(OUT_SUB_PATH) \
+	$(SCRIPTS_DIR)/make_all_plots.sh
+
+runtime-benchmark: $(OBJ_BENCHED) $(OBJ)
+	$(CC) -o $(BDIR)/$@ $^ $(CFLAGS) $(LIBS)
+
+.PHONY: plots
+plots: plot-runtime-benchmark
+
+.PHONY: clean
+clean:
+	rm -f $(ODIR)/*.o *~ core $(INCDIR)/*~ $(BIN_FILES)

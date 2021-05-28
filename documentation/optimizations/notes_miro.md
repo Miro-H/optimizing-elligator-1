@@ -212,6 +212,11 @@ Make a comparison plot as follows:
 LOGS_NAMES="<TODO1>" LOGS_DIRS="<path/to/first/TODO1> </path/to/second/TODO1>" SETS=10 REPS=1000 make plot-comparison
 ```
 
+## Compile Everything Together
+It is very common for Makefiles to compile individual files to object files and then link them together to an executable. In large projects, the advantage is that you only need to recompile those object files that changed, which makes recompiling the project a lot faster. However, this is a potential issue for performance optimizations, since the compiler can only optimize in individual files and not over the entire project.
+
+I changed the makefiles to compile everything together instead of using object files.
+
 ## Pow
 - Remove copies by unrolling loop twice (done by Freya).
 - Avoid square operations by early exit when no bits are left in the exponent

@@ -1,8 +1,8 @@
-IDIR    	= ./include
-LDIR		= ./lib
-BDIR		= ./bin
-SDIR		= ./src
-ODIR    	= ./$(SDIR)/obj
+IDIR    	= include
+LDIR		= lib
+BDIR		= bin
+SDIR		= src
+ODIR    	= $(SDIR)/obj
 TESTS_DIR 	= ../tests
 BIN_FILES   = $(filter-out $(wildcard $(BDIR)/.*), $(wildcard $(BDIR)/*))
 
@@ -36,7 +36,7 @@ LIB_OBJS 	= $(patsubst %,$(ODIR)/%,$(_LIB_SRCS:.c=.o))
 # arguments. Make sure it always compiles the main project.
 all: gen-bigint-types $(LIB_NAME) build-lib
 
-$(ODIR)/%.o: $(SDIR)/%.c $(DEPS)
+$(ODIR)/%.o: $(SDIR)/%.c
 	$(CC) -c -o $@ $< $(CFLAGS)
 
 # Fresh build
@@ -46,7 +46,6 @@ rebuild: clean all
 build-lib:
 	ar rcs $(LIB_NAME) $(LIB_HEADERS) $(LIB_OBJS)
 	ranlib $(LIB_NAME)
-
 
 .PHONY: gen-bigint-types
 gen-bigint-types:

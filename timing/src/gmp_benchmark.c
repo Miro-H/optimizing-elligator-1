@@ -985,7 +985,7 @@ int main(int argc, char const *argv[])
                 "mul", LOG_PATH "/gmp_mpz_mul.log"));
 
         // mul from MPZ should correspond to BigInt mul
-        BENCHMARK(bench_type, BENCH_TYPE_MUL_CURVE,
+        BENCHMARK(bench_type, BENCH_TYPE_MUL_MOD_CURVE,
             bench_mpz_mul_mod((void *)bench_mpz_size_256_curve_mod_args,
                 "mul mod (curve)", LOG_PATH "/gmp_mpz_mul_mod_curve.log"));
 
@@ -999,30 +999,15 @@ int main(int argc, char const *argv[])
             bench_mpz_tdiv_qr((void *)bench_mpz_size_256_random_mod_args,
                 "divrem", LOG_PATH "/gmp_mpz_tdiv_qr.log"));
 
-        // tdiv_qr from MPZ should correspond to BigInt divrem
-        BENCHMARK(bench_type, BENCH_TYPE_DIVREM_CURVE,
-            bench_mpz_tdiv_qr((void *)bench_mpz_size_256_curve_mod_args,
-                "divrem (curve)", LOG_PATH "/gmp_mpz_tdiv_qr_curve.log"));
-
-        // tdiv_qr from MPZ should correspond to BigInt divrem
-        BENCHMARK(bench_type, BENCH_TYPE_DIVREM_RANDOM,
-            bench_mpz_tdiv_qr((void *)bench_mpz_size_256_random_mod_args,
-                "divrem (random)", LOG_PATH "/gmp_mpz_tdiv_qr_random.log"));
-
         // tdiv_q from MPZ should correspond to BigInt div
         BENCHMARK(bench_type, BENCH_TYPE_DIV,
             bench_mpz_tdiv_q((void *)bench_mpz_size_256_args,
                 "div", LOG_PATH "/gmp_mpz_tdiv_q.log"));
 
         // tdiv_q from MPZ should correspond to BigInt div
-        BENCHMARK(bench_type, BENCH_TYPE_DIV_CURVE,
+        BENCHMARK(bench_type, BENCH_TYPE_DIV_MOD_CURVE,
             bench_mpz_tdiv_q_mod((void *)bench_mpz_size_256_curve_mod_args,
                 "div (curve)", LOG_PATH "/gmp_mpz_tdiv_q_mod_curve.log"));
-
-        // tdiv_q from MPZ should correspond to BigInt div
-        BENCHMARK(bench_type, BENCH_TYPE_DIV_RANDOM,
-            bench_mpz_tdiv_q_mod((void *)bench_mpz_size_256_random_mod_args,
-                "div (random)", LOG_PATH "/gmp_mpz_tdiv_q_mod_random.log"));
 
         // mul_2exp from MPZ should correspond to BigInt sll
         BENCHMARK(bench_type, BENCH_TYPE_SLL,
