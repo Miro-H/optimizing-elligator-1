@@ -597,7 +597,13 @@ BigInt *big_int_fast_sub(BigInt *r, BigInt *a, BigInt *b)
 }
 
 
-// TODO: document
+/**
+ * \brief Calculate r = a - b without taking borrows into account
+ *
+ * \assumption r, a, b != NULL
+ * \assumption a->sign == b->sign
+ * \assumption overflow is not cleaned up
+ */
 BigInt *big_int_sub_upper_bound(BigInt *r, BigInt *a, BigInt *b)
 {
 
@@ -746,7 +752,7 @@ BigInt *big_int_mul_single_chunk(BigInt *r, BigInt *a, dbl_chunk_size_t b)
 
 /**
  * \brief Calculate r = a^2
- * !TODO add optimizations from mul
+ *
  * \assumption r != a, i.e., NO ALIASING
  * \assumption r, a != NULL
  * \assumption 2 * (a->size) <= BIGINT_FIXED_SIZE_INTERNAL
@@ -765,7 +771,6 @@ BigInt *big_int_square(BigInt *r, BigInt *a)
     for (i = 0; i < a->size; ++i) {
         // shortcut for zero chunk
         if (a->chunks[i] == 0) {
-            r->chunks[i + a->size] = 0;
             r->chunks[i + a->size] = 0;
         }
         else {
@@ -800,7 +805,7 @@ BigInt *big_int_square(BigInt *r, BigInt *a)
  *
  * \assumption r, a, b != NULL
  * \assumption a->size + b->size <= BIGINT_FIXED_SIZE_INTERNAL
- * \assumption no
+ * \assumption a != b, i.e., no aliasing
  */
 BigInt *big_int_mul(BigInt *r, BigInt *a, BigInt *b)
 {
@@ -809,34 +814,35 @@ BigInt *big_int_mul(BigInt *r, BigInt *a, BigInt *b)
     int64_t i, j;
     dbl_chunk_size_t carry;
 
-    BIG_INT_DEFINE_PTR_ZEROED(r_loc);
+    *r = (BigInt) {0};
 
-    // For MUL, we we have aliasing and a separate BigInt for r is necessary
-    r_loc->size = a->size + b->size;
-    r_loc->sign = a->sign ^ b->sign;
+    r->sign = a->sign ^ b->sign;
+    r->size = a->size + b->size;
 
     for (i = 0; i < b->size; ++i) {
         // shortcut for zero chunk
-        if (b->chunks[i] == 0)
-        {
-            r_loc->chunks[i + a->size] = 0;
+        if (b->chunks[i] == 0) {
             r->chunks[i + a->size] = 0;
         }
         else {
             // Multiply and add chunks
             carry = 0;
             for (j = 0; j < a->size; ++j) {
-                carry += a->chunks[j] * b->chunks[i] + r_loc->chunks[i + j];
-                r_loc->chunks[i + j] = carry & BIGINT_RADIX_FOR_MOD;
+                carry += a->chunks[j] * b->chunks[i] + r->chunks[i + j];
+                r->chunks[i + j] = carry & BIGINT_RADIX_FOR_MOD;
                 carry >>= BIGINT_CHUNK_BIT_SIZE;
+                r->chunks[i + a->size] = carry;
             }
-            r_loc->chunks[i + a->size] = carry;
         }
     }
-    big_int_prune_leading_zeros(r_loc, r_loc);
+    // Prune leading zeros
+    for (int64_t i = r->size - 1; i > 0; --i) {
+        if (r->chunks[i])
+            break;
+        r->size--;
+    }
 
-    // TODO: copy could be saved if we assume no aliasing
-    return big_int_copy(r, r_loc);
+    return r;
 }
 
 
@@ -861,7 +867,9 @@ BigInt *big_int_div_rem(BigInt *q, BigInt *r, BigInt *a, BigInt *b)
     BIG_INT_DEFINE_PTR(a_abs);
     BIG_INT_DEFINE_PTR(b_abs);
     BIG_INT_DEFINE_PTR(a_loc);
+    BIG_INT_DEFINE_PTR(a_loc_2);
     BIG_INT_DEFINE_PTR(b_loc);
+    BIG_INT_DEFINE_PTR(b_loc_2);
     BIG_INT_DEFINE_PTR(a_part);
     BIG_INT_DEFINE_PTR(q_c_bigint);
     BIG_INT_DEFINE_PTR(qb);
@@ -935,8 +943,10 @@ BigInt *big_int_div_rem(BigInt *q, BigInt *r, BigInt *a, BigInt *b)
         }
 
         if (factor > 0) {
-            big_int_sll_small(a_loc, a_loc, factor);
-            big_int_sll_small(b_loc, b_loc, factor);
+            big_int_sll_small(a_loc_2, a_loc, factor);
+            a_loc = a_loc_2;
+            big_int_sll_small(b_loc_2, b_loc, factor);
+            b_loc = b_loc_2;
         }
 
         if (a_loc->size == a->size) {
@@ -975,7 +985,8 @@ BigInt *big_int_div_rem(BigInt *q, BigInt *r, BigInt *a, BigInt *b)
             } while (r_c < BIGINT_RADIX);
 
             // Multiply and subtract
-            // TODO: this entire part can surely be done more efficiently
+            // XXX: this entire part can surely be done more efficiently. However,
+            // we avoid using divrem in Elligator, so it does not matter for us.
             for (i = 0; i <= b_loc->size; ++i) {
                 if (q_idx + i >= a_loc->size)
                     break;
@@ -987,8 +998,7 @@ BigInt *big_int_div_rem(BigInt *q, BigInt *r, BigInt *a, BigInt *b)
             big_int_create_from_chunk(q_c_bigint, q_c, 0);
             big_int_sub(qb, a_part, big_int_mul(qb, q_c_bigint, b_loc));
 
-            // TODO: test this case specifically, apparently this is a very unlikely
-            // case (cf. step D6 in D. Knuth's book section 4.3)
+            // This is a very unlikely case (cf. step D6 in D. Knuth's book section 4.3)
             if (qb->sign == 1) {
                 // WARNING("Rare case in div_rem triggered\n");
                 big_int_add(qb, qb, radix_pow);
@@ -1060,20 +1070,19 @@ BigInt *big_int_div(BigInt *q, BigInt *a, BigInt *b)
  * \brief Calculate r = a << shift for "small" shifts (not BigInt shifts)
  *
  * \assumption r, a != NULL
+ * \assumption r != a: no aliasing
  * \assumption a->size + shift / BIGINT_CHUNK_BIT_SIZE < BIGINT_FIXED_SIZE_INTERNAL
  */
 BigInt *big_int_sll_small(BigInt *r, BigInt *a, uint64_t shift)
 {
     ADD_STAT_COLLECTION(BIGINT_TYPE_BIG_INT_SLL_SMALL);
 
-    BIG_INT_DEFINE_PTR(r_loc);
-
     dbl_chunk_size_t carry;
     int64_t i, r_idx;
 
     // Set the lowest chunks to zero
     for (r_idx = 0; r_idx < (int64_t) (shift / BIGINT_CHUNK_BIT_SIZE); ++r_idx) {
-        r_loc->chunks[r_idx] = 0;
+        r->chunks[r_idx] = 0;
     }
 
     // Shift the other chunks by the chunk internal shift
@@ -1081,31 +1090,30 @@ BigInt *big_int_sll_small(BigInt *r, BigInt *a, uint64_t shift)
     carry = 0;
     for (i = 0; i < a->size; ++i) {
         carry = (a->chunks[i] << shift) | carry;
-        r_loc->chunks[r_idx] = carry % BIGINT_RADIX;
+        r->chunks[r_idx] = carry % BIGINT_RADIX;
         carry /= BIGINT_RADIX;
 
         ++r_idx;
     }
 
-    r_loc->overflow = 0;
-    r_loc->sign = a->sign;
+    r->overflow = 0;
+    r->sign = a->sign;
 
     // Add the last block if there is a carry from the MSB block
     if (carry) {
         if (r_idx < BIGINT_FIXED_SIZE_INTERNAL) {
-            r_loc->chunks[r_idx] = carry;
+            r->chunks[r_idx] = carry;
             ++r_idx;
         }
         else {
             WARNING("sll caused overflow!\n");
-            r_loc->overflow = 1;
+            r->overflow = 1;
         }
     }
 
-    r_loc->size = r_idx;
+    r->size = r_idx;
 
-    // TODO: copy could be saved if we assume no aliasing
-    return big_int_copy(r, r_loc);
+    return r;
 }
 
 
@@ -1180,19 +1188,11 @@ BigInt *big_int_mod(BigInt *r, BigInt *a, BigInt *q)
 
     BIG_INT_DEFINE_PTR(tmp);
 
-    // TODO: this can be optimized for special cases. We need to check if
-    // q (for the mapping) is close to a power of two. In that case, we might
-    // be able to avoid using division here!
     big_int_div_rem(tmp, r, a, q);
 
     return r;
 }
 
-// TODO: Evaluate if it's worth it to add specialized implementations for all
-//       those *_mod operations.
-// TODO: Evaluate if it's worth it to take the arguments a, b mod q before
-//       doing the operation. (For now, probably not as this uses division,
-//       but might be interesting later, if we can make mod faster).
 
 /**
  * \brief Calculate r := (a + b) mod q
@@ -1311,35 +1311,59 @@ BigInt *big_int_inv(BigInt *r, BigInt *a, BigInt *q)
  * \brief Calculate r := (b^e) mod q
  *
  * \assumption r, b, e, q != NULL
+ *
+ * NOTE: there is an optimized pow function for Elligator in bigint_curve1174,
+ * that we use instead. Not all optimizations were ported back to this function.
  */
 BigInt *big_int_pow(BigInt *r, BigInt *b, BigInt *e, BigInt *q)
 {
     ADD_STAT_COLLECTION(BIGINT_TYPE_BIG_INT_POW);
 
     BIG_INT_DEFINE_PTR(e_loc);
-    BIG_INT_DEFINE_PTR(b_loc);
-    BIG_INT_DEFINE_PTR(tmp);
+    BIG_INT_DEFINE_PTR(b_loc1);
+    BIG_INT_DEFINE_PTR(b_loc2);
+    BIG_INT_DEFINE_PTR(r_loc1);
 
-    BIG_INT_DEFINE_FROM_CHUNK(r_loc, 0, 1);
+    BIG_INT_DEFINE_FROM_CHUNK(r_loc2, 0, 1);
+
+    BigInt* r_loc_tmp;
 
     big_int_copy(e_loc, e);
-    big_int_copy(b_loc, b);
+    big_int_copy(b_loc1, b);
 
     while (big_int_compare(e_loc, big_int_zero) > 0) {
         // If power is odd
-        if (big_int_is_odd(e_loc))
-        {
-            big_int_mul_mod(tmp, r_loc, b_loc, q);
-            big_int_copy(r_loc, tmp);
+        if (big_int_is_odd(e_loc)) {
+            big_int_mul_mod(r_loc1, r_loc2, b_loc1, q);
+            r_loc_tmp = r_loc1;
+            r_loc1 = r_loc2;
+            r_loc2 = r_loc_tmp;
         }
 
         big_int_srl_small(e_loc, e_loc, 1);
-        big_int_square_mod(tmp, b_loc, q);
-        big_int_copy(b_loc, tmp);
+
+        if (big_int_is_zero(e_loc))
+            break;
+
+        big_int_square_mod(b_loc2, b_loc1, q);
+
+        // ------ unroll ------
+        if (big_int_is_odd(e_loc)) {
+            big_int_mul_mod(r_loc1, r_loc2, b_loc2, q);
+            r_loc_tmp = r_loc1;
+            r_loc1 = r_loc2;
+            r_loc2 = r_loc_tmp;
+        }
+
+        big_int_srl_small(e_loc, e_loc, 1);
+
+        if (!big_int_is_zero(e_loc))
+            big_int_square_mod(b_loc1, b_loc2, q);
     }
 
-    // TODO: copy could be saved if we assume no aliasing
-    return big_int_copy(r, r_loc);
+    // This copy could be saved if we assume no aliasing, but we don't use
+    // this function for Elligator anymore internally.
+    return big_int_copy(r, r_loc2);
 }
 
 
@@ -1492,6 +1516,9 @@ EgcdResult *big_int_egcd(EgcdResult *r, BigInt *a, BigInt *b)
  *
  * \assumption r, t, q != NULL
  * \assumption q is prime
+ *
+ * NOTE: there is an optimized Chi function for Elligator in bigint_curve1174,
+ * that we use instead. Not all optimizations were ported back to this function.
  */
 BigInt *big_int_chi(BigInt *r, BigInt *t, BigInt *q)
 {
@@ -1500,7 +1527,7 @@ BigInt *big_int_chi(BigInt *r, BigInt *t, BigInt *q)
     BIG_INT_DEFINE_PTR(e);
 
     if (big_int_compare(t, big_int_zero) == 0) {
-        // TODO: [Optimization] change return value to int8_t
+        // XXX: [Optimization] change return value to int8_t
         big_int_create_from_chunk(r, 0, 0);
         return r;
     }
@@ -1513,7 +1540,7 @@ BigInt *big_int_chi(BigInt *r, BigInt *t, BigInt *q)
     if (!big_int_compare(r, big_int_zero) || !big_int_compare(r, big_int_one))
         return r;
 
-    // TODO: [Optimization] change return value to int8_t
+    // XXX: [Optimization] change return value to int8_t
     big_int_create_from_chunk(r, 1, 1); // r = -1
     return r;
 

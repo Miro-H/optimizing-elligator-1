@@ -205,6 +205,7 @@ START_TEST(test_advanced_curve1174)
     TEST_BIG_INT_DEFINE(four);
     TEST_BIG_INT_DEFINE(temp1);
     TEST_BIG_INT_DEFINE(temp2);
+    TEST_BIG_INT_DEFINE(temp3);
 
     init_curve1174(&curve);
 
@@ -237,16 +238,14 @@ START_TEST(test_advanced_curve1174)
     ck_assert_int_eq(big_int_compare(temp1, TEST_REF(curve.d)), 0);
 
     // Check that d = -(c + 1)^2 / (c - 1)^2 mod q
-    big_int_copy(temp1, TEST_REF(curve.c));
-    big_int_add(temp1, temp1, big_int_one);
-    big_int_mul_mod(temp1, temp1, temp1, TEST_REF(curve.q));
-    big_int_neg(temp1, temp1); // temp1 = -(c + 1)^2
+    big_int_add(temp1, TEST_REF(curve.c), big_int_one);
+    big_int_mul_mod(temp3, temp1, temp1, TEST_REF(curve.q));
+    big_int_neg(temp1, temp3); // temp1 = -(c + 1)^2
 
-    big_int_copy(temp2, TEST_REF(curve.c));
-    big_int_sub(temp2, temp2, big_int_one);
+    big_int_sub(temp2, TEST_REF(curve.c), big_int_one);
 
-    big_int_mul_mod(temp2, temp2, temp2, TEST_REF(curve.q)); // temp1 = (c - 1)^2
-    big_int_div_mod(temp1, temp1, temp2, TEST_REF(curve.q)); // temp1 = -(c + 1)^2 / (c - 1)^2 mod q
+    big_int_mul_mod(temp3, temp2, temp2, TEST_REF(curve.q)); // temp1 = (c - 1)^2
+    big_int_div_mod(temp1, temp1, temp3, TEST_REF(curve.q)); // temp1 = -(c + 1)^2 / (c - 1)^2 mod q
     ck_assert_int_eq(big_int_compare(temp1, TEST_REF(curve.d)), 0);
 
     // r != 0
@@ -261,6 +260,7 @@ START_TEST(test_advanced_curve1174)
     TEST_BIG_INT_DESTROY(four);
     TEST_BIG_INT_DESTROY(temp1);
     TEST_BIG_INT_DESTROY(temp2);
+    TEST_BIG_INT_DESTROY(temp3);
 
     TEST_FREE_CURVE(&curve);
 }
@@ -278,6 +278,8 @@ START_TEST(test_advanced_string_to_point)
     TEST_BIG_INT_DEFINE(temp1);
     TEST_BIG_INT_DEFINE(temp2);
     TEST_BIG_INT_DEFINE(temp3);
+    TEST_BIG_INT_DEFINE(temp4);
+    TEST_BIG_INT_DEFINE(temp5);
 
     init_curve1174(&curve);
 
@@ -289,18 +291,17 @@ START_TEST(test_advanced_string_to_point)
     big_int_create_from_chunk(temp1, 0, 0);
     big_int_create_from_chunk(temp2, 0, 0);
     big_int_create_from_chunk(temp3, 0, 0);
+
     big_int_mul_mod(temp1, TEST_REF(curve_point.x), TEST_REF(curve_point.x),
         TEST_REF(curve.q)); // temp1 = x^2
     big_int_mul_mod(temp2, TEST_REF(curve_point.y), TEST_REF(curve_point.y),
         TEST_REF(curve.q)); // temp2 = y^2
     big_int_mul_mod(temp3, temp1, temp2, TEST_REF(curve.q)); // temp3 = x^2 * y^2
     big_int_add_mod(temp1, temp1, temp2, TEST_REF(curve.q)); // temp1 = x^2 + y^2
-    big_int_mul_mod(temp3, TEST_REF(curve.d), temp3,
-        TEST_REF(curve.q)); // temp3 = d * x^2 * y^2
-    big_int_add_mod(temp3, big_int_one, temp3,
-        TEST_REF(curve.q)); // temp3 = 1 + d * x^2 * x^2
+    big_int_mul_mod(temp4, TEST_REF(curve.d), temp3, TEST_REF(curve.q)); // temp3 = d * x^2 * y^2
+    big_int_add_mod(temp5, big_int_one, temp4, TEST_REF(curve.q)); // temp3 = 1 + d * x^2 * x^2
 
-    ck_assert_int_eq(big_int_compare(temp1, temp3), 0);
+    ck_assert_int_eq(big_int_compare(temp1, temp5), 0);
 
     // Same test with t = 1
     big_int_create_from_chunk(t, 1, 0);
@@ -316,8 +317,8 @@ START_TEST(test_advanced_string_to_point)
         TEST_REF(curve.q)); // temp2 = y^2
     big_int_mul_mod(temp3, temp1, temp2, TEST_REF(curve.q)); // temp3 = x^2 * y^2
     big_int_add_mod(temp1, temp1, temp2, TEST_REF(curve.q)); // temp1 = x^2 + y^2
-    big_int_mul_mod(temp3, TEST_REF(curve.d), temp3, TEST_REF(curve.q)); // temp3 = d * x^2 * y^2
-    big_int_add_mod(temp3, big_int_one, temp3, TEST_REF(curve.q)); // temp3 = 1 + d * x^2 * x^2
+    big_int_mul_mod(temp4, TEST_REF(curve.d), temp3, TEST_REF(curve.q)); // temp3 = d * x^2 * y^2
+    big_int_add_mod(temp3, big_int_one, temp4, TEST_REF(curve.q)); // temp3 = 1 + d * x^2 * x^2
 
     ck_assert_int_eq(big_int_compare(temp1, temp3), 0);
 
@@ -328,6 +329,8 @@ START_TEST(test_advanced_string_to_point)
     TEST_BIG_INT_DESTROY(temp1);
     TEST_BIG_INT_DESTROY(temp2);
     TEST_BIG_INT_DESTROY(temp3);
+    TEST_BIG_INT_DESTROY(temp4);
+    TEST_BIG_INT_DESTROY(temp5);
 
     TEST_FREE_CURVE(&curve);
     TEST_FREE_CURVE_POINT(&curve_point);

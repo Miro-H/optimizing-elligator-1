@@ -239,6 +239,7 @@ START_TEST(test_mul_mod)
 {
     BIG_INT_DEFINE_PTR(a);
     BIG_INT_DEFINE_PTR(b);
+    BIG_INT_DEFINE_PTR(c);
     BIG_INT_DEFINE_PTR(r);
 
     // Basic test
@@ -246,8 +247,8 @@ START_TEST(test_mul_mod)
     big_int_create_from_hex(b, "56AA098765");
     big_int_create_from_hex(r, "3A291206AC264ECED165893FF6631");
 
-    big_int_curve1174_mul_mod(a, a, b);
-    ck_assert_int_eq(big_int_compare(a, r), 0);
+    big_int_curve1174_mul_mod(c, a, b);
+    ck_assert_int_eq(big_int_compare(c, r), 0);
 
     // Test mod operation with intermediate result that is larger than 256 bits
     a = big_int_create_from_hex(a,
@@ -257,8 +258,8 @@ START_TEST(test_mul_mod)
     r = big_int_create_from_hex(r,
         "49D6974B07A3EC152F17380C6C4AD33F6D97BB72EE4771F4BFB7A50338B96CF");
 
-    big_int_curve1174_mul_mod(a, a, b);
-    ck_assert_int_eq(big_int_compare(a, r), 0);
+    big_int_curve1174_mul_mod(c, a, b);
+    ck_assert_int_eq(big_int_compare(c, r), 0);
 
     // Trigger the rare case (D6 in Knuth's Book)
     a = big_int_create_from_hex(a,
@@ -268,8 +269,8 @@ START_TEST(test_mul_mod)
     r = big_int_create_from_hex(r,
             "200000000000000000000000000000000000000000000000000000000000012");
 
-    big_int_curve1174_mul_mod(a, a, b);
-    ck_assert_int_eq(big_int_compare(a, r), 0);
+    big_int_curve1174_mul_mod(c, a, b);
+    ck_assert_int_eq(big_int_compare(c, r), 0);
 
     // Mixed signs
     a = big_int_create_from_hex(a,
@@ -279,8 +280,8 @@ START_TEST(test_mul_mod)
     r = big_int_create_from_hex(r,
         "362968B4F85C13EAD0E8C7F393B52CC09268448D11B88E0B40485AFCC746928");
 
-    big_int_curve1174_mul_mod(a, a, b);
-    ck_assert_int_eq(big_int_compare(a, r), 0);
+    big_int_curve1174_mul_mod(c, a, b);
+    ck_assert_int_eq(big_int_compare(c, r), 0);
 
     a = big_int_create_from_hex(a,
         "195C093A4A51819C08C06E57C282ED0860A30625DE4254C1638CFBCFEBB2E8D");
@@ -289,8 +290,8 @@ START_TEST(test_mul_mod)
     r = big_int_create_from_hex(r,
         "362968B4F85C13EAD0E8C7F393B52CC09268448D11B88E0B40485AFCC746928");
 
-    big_int_curve1174_mul_mod(a, a, b);
-    ck_assert_int_eq(big_int_compare(a, r), 0);
+    big_int_curve1174_mul_mod(c, a, b);
+    ck_assert_int_eq(big_int_compare(c, r), 0);
 
     a = big_int_create_from_hex(a,
         "-195C093A4A51819C08C06E57C282ED0860A30625DE4254C1638CFBCFEBB2E8D");
@@ -299,8 +300,8 @@ START_TEST(test_mul_mod)
     r = big_int_create_from_hex(r,
         "49D6974B07A3EC152F17380C6C4AD33F6D97BB72EE4771F4BFB7A50338B96CF");
 
-    big_int_curve1174_mul_mod(a, a, b);
-    ck_assert_int_eq(big_int_compare(a, r), 0);
+    big_int_curve1174_mul_mod(c, a, b);
+    ck_assert_int_eq(big_int_compare(c, r), 0);
 }
 END_TEST
 
@@ -493,7 +494,6 @@ START_TEST(test_power_q_m1_d2)
     BIG_INT_DEFINE_PTR(r);
 
     // Is square
-    big_int_create_from_chunk(a, 1, 0);
     big_int_create_from_hex(b, "4F2B8718");
     big_int_create_from_chunk(r, 1, 0);
 
@@ -501,18 +501,15 @@ START_TEST(test_power_q_m1_d2)
     ck_assert_int_eq(big_int_compare(a, r), 0);
 
     // Is not square
-    big_int_create_from_chunk(a, 1, 0);
     big_int_create_from_hex(b,
         "20C828BF4E9A6412E714AE859C028B2E509F8418F797CE3E6BD91A9CF4A117E");
     big_int_create_from_hex(r,
         "7FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF6");
 
-    big_int_create_from_chunk(a, 1, 0);
     big_int_curve1174_pow_q_m1_d2(a, b);
     ck_assert_int_eq(big_int_compare(a, r), 0);
 
     // Test base 1
-    big_int_create_from_chunk(a, 1, 0);
     big_int_create_from_chunk(b, 1, 0);
     big_int_create_from_chunk(r, 1, 0);
 
@@ -532,7 +529,6 @@ START_TEST(test_power_q_p1_d4)
     BIG_INT_DEFINE_PTR(r);
 
     // small base
-    big_int_create_from_chunk(a, 1, 0);
     big_int_create_from_hex(b, "4F2B8718");
     big_int_create_from_hex(r,
         "6AE28F43FDBF0178DD44753A05BF32117192C2304661D5981D0F0EE2738219");
@@ -541,7 +537,6 @@ START_TEST(test_power_q_p1_d4)
     ck_assert_int_eq(big_int_compare(a, r), 0);
 
     // large base
-    big_int_create_from_chunk(a, 1, 0);
     big_int_create_from_hex(b,
         "19D8C8E4B460A43A1E517119780415E4C70941C6C4FBB2BFB1AF15B2273CF96");
     big_int_create_from_hex(r,
@@ -551,7 +546,6 @@ START_TEST(test_power_q_p1_d4)
     ck_assert_int_eq(big_int_compare(a, r), 0);
 
     // Test base 1
-    big_int_create_from_chunk(a, 1, 0);
     big_int_create_from_chunk(b, 1, 0);
     big_int_create_from_chunk(r, 1, 0);
 
@@ -559,6 +553,43 @@ START_TEST(test_power_q_p1_d4)
     ck_assert_int_eq(big_int_compare(a, r), 0);
 }
 END_TEST
+
+
+/**
+* \brief Test the special function for raising BigInts to the power (q-2)
+*/
+START_TEST(test_power_q_m2)
+{
+    BIG_INT_DEFINE_PTR(a);
+    BIG_INT_DEFINE_PTR(b);
+    BIG_INT_DEFINE_PTR(r);
+
+    // small base
+    big_int_create_from_hex(b, "4F2B8718");
+    big_int_create_from_hex(r,
+        "D655555C933BC7BC58E2E73AE28257F0A1FBA13A734314F73DFA4E13B26584");
+
+    big_int_curve1174_pow_q_m2(a, b);
+    ck_assert_int_eq(big_int_compare(a, r), 0);
+
+    // large base
+    big_int_create_from_hex(b,
+        "19D8C8E4B460A43A1E517119780415E4C70941C6C4FBB2BFB1AF15B2273CF96");
+    big_int_create_from_hex(r,
+        "1FF84CD5B0DC81B23593F31AC8158E28AF4124A280A5CF3C3332D7F32C17B92");
+
+    big_int_curve1174_pow_q_m2(a, b);
+    ck_assert_int_eq(big_int_compare(a, r), 0);
+
+    // Test base 1
+    big_int_create_from_chunk(b, 1, 0);
+    big_int_create_from_chunk(r, 1, 0);
+
+    big_int_curve1174_pow_q_m2(a, b);
+    ck_assert_int_eq(big_int_compare(a, r), 0);
+}
+END_TEST
+
 
 /**
 * \brief Test chi function on BigInts
@@ -569,6 +600,7 @@ START_TEST(test_chi)
     BIG_INT_DEFINE_PTR(s);
     BIG_INT_DEFINE_PTR(t);
     BIG_INT_DEFINE_PTR(u);
+    BIG_INT_DEFINE_PTR(tmp);
 
     // Is square
     big_int_create_from_hex(t,
@@ -615,7 +647,8 @@ START_TEST(test_chi)
 
     big_int_create_from_chunk(s, 1, r1);
     big_int_create_from_chunk(u, 1, r2);
-    big_int_mul(s, s, u); // chi(s) * chi(t) (for the original def. of chi)
+    big_int_mul(tmp, s, u); // chi(s) * chi(t) (for the original def. of chi)
+    big_int_copy(s, tmp);
 
     big_int_create_from_chunk(t, 1, r); // chi(st) (for the original def. of chi)
 
@@ -633,7 +666,8 @@ START_TEST(test_chi)
 
     big_int_create_from_chunk(s, 1, r1);
     big_int_create_from_chunk(u, 1, r2);
-    big_int_mul(s, s, u); // chi(s) * chi(t) (for the original def. of chi)
+    big_int_mul(tmp, s, u); // chi(s) * chi(t) (for the original def. of chi)
+    big_int_copy(s, tmp);
 
     big_int_create_from_chunk(t, 1, r); // chi(st) (for the original def. of chi)
 
@@ -673,6 +707,7 @@ Suite *bigints_suite(void)
     tcase_add_test(tc_advanced_ops, test_power_small);
     tcase_add_test(tc_advanced_ops, test_power_q_m1_d2);
     tcase_add_test(tc_advanced_ops, test_power_q_p1_d4);
+    tcase_add_test(tc_advanced_ops, test_power_q_m2);
     tcase_add_test(tc_advanced_ops, test_chi);
 
     suite_add_tcase(s, tc_modular_arith);

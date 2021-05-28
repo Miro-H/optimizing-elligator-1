@@ -29,7 +29,6 @@ void bench_big_int_prep(void *argptr)
     RUNTIME_BIG_INT_ALLOC_ARR(big_int_array_3, array_size);
 
     RUNTIME_BIG_INT_ALLOC_ARR(big_int_512_array, array_size);
-    RUNTIME_BIG_INT_ALLOC_ARR(big_int_array_of_ones, array_size);
 
     int8_t_array = (int8_t *) malloc(array_size * sizeof(int8_t));
     uint64_t_array = (uint64_t *) malloc(array_size * sizeof(uint64_t));
@@ -43,8 +42,6 @@ void bench_big_int_prep(void *argptr)
 
         // 512-bit BigInts
         big_int_create_random(big_int_512_array + i, 2 * BIGINT_FIXED_SIZE);
-
-        big_int_create_from_chunk(big_int_array_of_ones, 1, 0);
 
         offset = 1;
         uint64_t_array[i] = 0;
@@ -266,7 +263,7 @@ void bench_big_int_curve1174_pow_small(void *bench_args, char *bench_name, char 
 void bench_big_int_curve1174_pow_q_m1_d2_fn(void *arg)
 {
     int64_t i = *((int64_t *) arg);
-    big_int_curve1174_pow_q_m1_d2(big_int_array_of_ones + i, big_int_array_2 + i);
+    big_int_curve1174_pow_q_m1_d2(big_int_array_1 + i, big_int_array_2 + i);
 }
 
 void bench_big_int_curve1174_pow_q_m1_d2(void *bench_args, char *bench_name, char *path)
@@ -285,7 +282,7 @@ void bench_big_int_curve1174_pow_q_m1_d2(void *bench_args, char *bench_name, cha
 void bench_big_int_curve1174_pow_q_p1_d4_fn(void *arg)
 {
     int64_t i = *((int64_t *) arg);
-    big_int_curve1174_pow_q_p1_d4(big_int_array_of_ones + i, big_int_array_2 + i);
+    big_int_curve1174_pow_q_p1_d4(big_int_array_1 + i, big_int_array_2 + i);
 }
 
 void bench_big_int_curve1174_pow_q_p1_d4(void *bench_args, char *bench_name, char *path)

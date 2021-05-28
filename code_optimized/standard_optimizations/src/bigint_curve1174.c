@@ -35,6 +35,7 @@ BigInt *big_int_curve1174_mod(BigInt *r)
     ADD_STAT_COLLECTION(BIGINT_CURVE1174_TYPE_BIG_INT_MOD);
 
     BIG_INT_DEFINE_PTR(r_upper);
+    BIG_INT_DEFINE_PTR(r_upper_288);
     BigInt *r_lower;
     uint8_t orig_sign;
 
@@ -58,11 +59,11 @@ BigInt *big_int_curve1174_mod(BigInt *r)
 
         // Intentionally no mod reduction, since we do one later. We know that
         // our intermediate values are never larger than (q-1)^2 and 288 * (q-1)^2 < 2^512
-        big_int_mul(r_upper, r_upper, big_int_288); // a1 * 288
+        big_int_mul(r_upper_288, r_upper, big_int_288); // a1 * 288
 
         r_lower = r;
         r_lower->size = 8;
-        big_int_curve1174_add_mod(r, r_lower, r_upper); // r = a1 * 288 + a0 (mod q)
+        big_int_curve1174_add_mod(r, r_lower, r_upper_288); // r = a1 * 288 + a0 (mod q)
     }
     // Case: q <= |a| < 2^256
     else if (big_int_curve1174_compare_to_q(r) != -1) {
@@ -361,9 +362,6 @@ BigInt *big_int_curve1174_mul_mod(BigInt *r, BigInt *a, BigInt *b)
 
     // a, b are usually not larger than q, thus it is not worth it to perform a
     // mod operation on the operands before multiplying.
-    // TODO: verify that even a check whether the operands are larger than q is
-    // not worth it.
-
     big_int_mul(r, a, b);
     return big_int_curve1174_mod(r);
 }
@@ -372,6 +370,7 @@ BigInt *big_int_curve1174_mul_mod(BigInt *r, BigInt *a, BigInt *b)
 /**
  * \brief Calculate r := a^2 mod q
  *
+ * \assumption r != a, i.e., NO ALIASING
  * \assumption r, a != NULL
  */
 BigInt *big_int_curve1174_square_mod(BigInt *r, BigInt *a)
@@ -381,11 +380,6 @@ BigInt *big_int_curve1174_square_mod(BigInt *r, BigInt *a)
     big_int_square(r, a);
     return big_int_curve1174_mod(r);
 }
-
-
-
-
-
 
 
 /**
@@ -417,13 +411,13 @@ BigInt *big_int_curve1174_inv_fermat(BigInt *r, BigInt *a)
 {
     ADD_STAT_COLLECTION(BIGINT_CURVE1174_TYPE_BIG_INT_INV);
 
-    big_int_curve1174_pow(r, a, q_m2);
+    big_int_curve1174_pow_q_m2(r, a);
     return r;
 }
 
 
-// TODO: implement Montgommery inverse, which is based on cheaper shifting operations
-// and compare it to fermat.
+// TODO: consider implementing Montgommery inverse, which are based on cheaper
+// shifting operations and compare it to fermat.
 
 
 /**
@@ -436,21 +430,51 @@ BigInt *big_int_curve1174_pow_small(BigInt *r, BigInt *b, uint64_t e)
 {
     ADD_STAT_COLLECTION(BIGINT_CURVE1174_TYPE_BIG_INT_POW_SMALL);
 
-    BIG_INT_DEFINE_PTR(b_loc);
+    BIG_INT_DEFINE_PTR(b_loc1);
+    BIG_INT_DEFINE_PTR(b_loc2);
 
-    big_int_create_from_chunk(r, 1, 0);
-    big_int_copy(b_loc, b);
+    BIG_INT_DEFINE_FROM_CHUNK(r2, 0, 1);
+
+    BigInt* r_tmp, *r1;
+
+    r1 = r;
+
+    big_int_copy(b_loc1, b);
 
     while (e) {
         // If power is odd
-        if (e & 1)
-            big_int_curve1174_mul_mod(r, r, b_loc);
+        if (e & 1) {
+            big_int_curve1174_mul_mod(r1, r2, b_loc1);
+            r_tmp = r1;
+            r1 = r2;
+            r2 = r_tmp;
+        }
 
         e >>= 1;
-        // TODO: compute those in parallel in first step. Those are only 256
-        // results, we could even store them on the stack.
-        big_int_curve1174_mul_mod(b_loc, b_loc, b_loc);
+
+        // Early exit: avoid cleanup due to unrolling, avoid unnecessary square op
+        if (!e)
+            break;
+
+        big_int_curve1174_square_mod(b_loc2, b_loc1);
+
+        // ------ Unroll ------
+        if (e & 1) {
+            big_int_curve1174_mul_mod(r1, r2, b_loc2);
+            r_tmp = r1;
+            r1 = r2;
+            r2 = r_tmp;
+        }
+
+        e >>= 1;
+
+        // Early exit: avoid unnecessary square op
+        if (e)
+            big_int_curve1174_square_mod(b_loc1, b_loc2);
     }
+
+    if (r != r2)
+        big_int_copy(r, r2);
 
     return r;
 }
@@ -465,25 +489,87 @@ BigInt *big_int_curve1174_pow(BigInt *r, BigInt *b, BigInt *e)
 {
     ADD_STAT_COLLECTION(BIGINT_CURVE1174_TYPE_BIG_INT_POW);
 
-    BIG_INT_DEFINE_PTR(b_loc);
-    dbl_chunk_size_t e_chunk;
+    BIG_INT_DEFINE_PTR(b_loc1);
+    BIG_INT_DEFINE_PTR(b_loc2);
 
-    big_int_create_from_chunk(r, 1, 0);
-    big_int_copy(b_loc, b);
+    dbl_chunk_size_t e_chunk;
+    uint32_t i, j;
+
+    BIG_INT_DEFINE_FROM_CHUNK(r2, 0, 1);
+
+    BigInt* r_tmp, *r1;
+
+    r1 = r;
+    big_int_copy(b_loc1, b);
 
     // Operate on exponent chunk by chunk
-    for (uint32_t i = 0; i < e->size; ++i) {
+    for (i = 0; i < e->size - 1; ++i) {
         e_chunk = e->chunks[i];
 
-        while (e_chunk) {
+        for (j = 0; j < BIGINT_CHUNK_BIT_SIZE; ++j) {
             // If power is odd
-            if (e_chunk & 1)
-                big_int_curve1174_mul_mod(r, r, b_loc);
+            if (e_chunk & 1) {
+                big_int_curve1174_mul_mod(r1, r2, b_loc1);
+                r_tmp = r1;
+                r1 = r2;
+                r2 = r_tmp;
+            }
 
             e_chunk >>= 1;
-            big_int_curve1174_mul_mod(b_loc, b_loc, b_loc);
+            big_int_curve1174_square_mod(b_loc2, b_loc1);
+
+            // -- unroll --
+            if (e_chunk & 1) {
+                big_int_curve1174_mul_mod(r1, r2, b_loc2);
+                r_tmp = r1;
+                r1 = r2;
+                r2 = r_tmp;
+            }
+
+            e_chunk >>= 1;
+
+            big_int_curve1174_square_mod(b_loc1, b_loc2);
         }
     }
+
+    // Special case for the last chunk
+    e_chunk = e->chunks[e->size - 1];
+    for (j = 0; j < BIGINT_CHUNK_BIT_SIZE; ++j) {
+        // If power is odd
+        if (e_chunk & 1) {
+            big_int_curve1174_mul_mod(r1, r2, b_loc1);
+            r_tmp = r1;
+            r1 = r2;
+            r2 = r_tmp;
+        }
+
+        e_chunk >>= 1;
+
+        // Early exit: avoid cleanup due to unrolling, avoid unnecessary square op
+        if (!e_chunk)
+            break;
+
+        big_int_curve1174_square_mod(b_loc2, b_loc1);
+
+        // -- unroll --
+        if (e_chunk & 1) {
+            big_int_curve1174_mul_mod(r1, r2, b_loc2);
+            r_tmp = r1;
+            r1 = r2;
+            r2 = r_tmp;
+        }
+
+        e_chunk >>= 1;
+
+        // Early exit: avoid unnecessary square op
+        if (e)
+            big_int_curve1174_square_mod(b_loc1, b_loc2);
+
+        big_int_curve1174_square_mod(b_loc1, b_loc2);
+    }
+
+    if (r != r2)
+        big_int_copy(r, r2);
 
     return r;
 }
@@ -492,33 +578,41 @@ BigInt *big_int_curve1174_pow(BigInt *r, BigInt *b, BigInt *e)
 /**
  * \brief Calculate r := (b^((q-1)/2)) mod q
  *
- * \assumption r = 1, i.e., it is already initialized by the caller
  * \assumption r != b, i.e., NO ALIASING
- * \assumption b is MODIFIED inplace. The caller MUST NOT rely on its value.
  * \assumption r, b != NULL
  */
 BigInt *big_int_curve1174_pow_q_m1_d2(BigInt *r, BigInt *b)
 {
-    ADD_STAT_COLLECTION(BIGINT_CURVE1174_TYPE_BIG_INT_POW_1_2);
+    ADD_STAT_COLLECTION(BIGINT_CURVE1174_TYPE_BIG_INT_POW_Q_M1_D2);
+
+    BIG_INT_DEFINE_PTR(b_loc_1);
+    BIG_INT_DEFINE_PTR(b_loc_2);
+    BIG_INT_DEFINE_PTR(r_loc);
 
     // (q-1)/2 = 0b1111...11111011 (there are 247 ones before the suffix 011)
 
     // Ensure suffix
-    // e = 1
-    big_int_curve1174_mul_mod(r, r, b);
 
     // e = 11
-    big_int_curve1174_mul_mod(b, b, b);
-    big_int_curve1174_mul_mod(r, r, b);
+    big_int_curve1174_square_mod(b_loc_1, b);
+    big_int_curve1174_mul_mod(r_loc, b, b_loc_1);
 
     // e = 011
-    big_int_curve1174_mul_mod(b, b, b);
+    big_int_curve1174_square_mod(b_loc_2, b_loc_1);
 
     // All the remaining bits are set to one, so we add all of them
-    for (uint32_t i = 0; i < 247; ++i) {
-        big_int_curve1174_mul_mod(b, b, b);
-        big_int_curve1174_mul_mod(r, r, b);
+    // Do 123 loops with unrolling = 2 --> 246 iterations
+    for (uint32_t i = 0; i < 123; ++i) {
+        big_int_curve1174_square_mod(b_loc_1, b_loc_2);
+        big_int_curve1174_mul_mod(r, r_loc, b_loc_1);
+
+        big_int_curve1174_square_mod(b_loc_2, b_loc_1);
+        big_int_curve1174_mul_mod(r_loc, r, b_loc_2);
     }
+
+    // Do last iteration --> 247 ones
+    big_int_curve1174_square_mod(b_loc_1, b_loc_2);
+    big_int_curve1174_mul_mod(r, r_loc, b_loc_1);
 
     return r;
 }
@@ -528,22 +622,81 @@ BigInt *big_int_curve1174_pow_q_m1_d2(BigInt *r, BigInt *b)
 /**
  * \brief Calculate r := (b^((q+1)/4)) mod q
  *
- * \assumption r = 1, i.e., it is already initialized by the caller
  * \assumption r != b, i.e., NO ALIASING
- * \assumption b is MODIFIED inplace. The caller MUST NOT rely on its value.
  * \assumption r, b != NULL
  */
 BigInt *big_int_curve1174_pow_q_p1_d4(BigInt *r, BigInt *b)
 {
-    ADD_STAT_COLLECTION(BIGINT_CURVE1174_TYPE_BIG_INT_POW_1_2);
+    ADD_STAT_COLLECTION(BIGINT_CURVE1174_TYPE_BIG_INT_POW_Q_P1_D4);
+
+    BIG_INT_DEFINE_PTR(b_loc_1);
+    BIG_INT_DEFINE_PTR(b_loc_2);
+    BIG_INT_DEFINE_PTR(r_loc);
 
     // (q+1)/4 = 0b111111...111110 (there are 248 ones)
 
-    // The first bit of the exponent is zero, because we start with doubling b.
+    // e = 10
+    big_int_curve1174_square_mod(b_loc_1, b);
+    big_int_copy(r_loc, b_loc_1);
+
+    // e = 110
+    big_int_curve1174_square_mod(b_loc_2, b_loc_1);
+    big_int_curve1174_mul_mod(r, r_loc, b_loc_2);
+
     // All the remaining bits are set to one, so we add all of them.
-    for (uint32_t i = 0; i < 248; ++i) {
-        big_int_curve1174_mul_mod(b, b, b);
-        big_int_curve1174_mul_mod(r, r, b);
+    // We use loop unrolling to avoid BigInt copies. 2x123 iterations -> 246 bits
+    for (uint32_t i = 0; i < 123; ++i) {
+        big_int_curve1174_square_mod(b_loc_1, b_loc_2);
+        big_int_curve1174_mul_mod(r_loc, r, b_loc_1);
+
+        big_int_curve1174_square_mod(b_loc_2, b_loc_1);
+        big_int_curve1174_mul_mod(r, r_loc, b_loc_2);
+    }
+
+    return r;
+}
+
+
+/**
+ * \brief Calculate r := (b^(q-2)) mod q
+ *
+ * \assumption r != b, i.e., NO ALIASING
+ * \assumption r, b != NULL
+ */
+BigInt *big_int_curve1174_pow_q_m2(BigInt *r, BigInt *b)
+{
+    ADD_STAT_COLLECTION(BIGINT_CURVE1174_TYPE_BIG_INT_POW_Q_M2);
+
+    BIG_INT_DEFINE_PTR(b_loc_1);
+    BIG_INT_DEFINE_PTR(b_loc_2);
+    BIG_INT_DEFINE_PTR(r_loc);
+
+    // (q-2) = 0b11111...1110101 (there are 247 ones before the suffix 0101)
+
+    // Ensure suffix
+
+    // e = 01
+    big_int_curve1174_square_mod(b_loc_1, b);
+
+    // e = 101
+    big_int_curve1174_square_mod(b_loc_2, b_loc_1);
+    big_int_curve1174_mul_mod(r_loc, b, b_loc_2);
+
+    // e = 0101
+    big_int_curve1174_square_mod(b_loc_1, b_loc_2);
+
+    // e = 10101
+    big_int_curve1174_square_mod(b_loc_2, b_loc_1);
+    big_int_curve1174_mul_mod(r, r_loc, b_loc_2);
+
+    // All the remaining bits are set to one, so we add all of them
+    // Do 123 loops with unrolling = 2 --> 246 iterations
+    for (uint32_t i = 0; i < 123; ++i) {
+        big_int_curve1174_square_mod(b_loc_1, b_loc_2);
+        big_int_curve1174_mul_mod(r_loc, r, b_loc_1);
+
+        big_int_curve1174_square_mod(b_loc_2, b_loc_1);
+        big_int_curve1174_mul_mod(r, r_loc, b_loc_2);
     }
 
     return r;
@@ -560,13 +713,12 @@ BigInt *big_int_curve1174_pow_q_p1_d4(BigInt *r, BigInt *b)
  * \assumption r, t != NULL
  * \assumption t =/= 0 (guaranteed by proof in section 3.2 of the Elligator paper)
  *             as a consequence of XY =/= 0.
- * \assumption t is MODIFIED inplace. The caller MUST NOT rely on its value.
  */
 int8_t big_int_curve1174_chi(BigInt *t)
 {
     ADD_STAT_COLLECTION(BIGINT_CURVE1174_TYPE_BIG_INT_CHI);
 
-    BIG_INT_DEFINE_FROM_CHUNK(r_loc, 0, 1);
+    BIG_INT_DEFINE_PTR(r_loc);
 
     big_int_curve1174_pow_q_m1_d2(r_loc, t);
 
