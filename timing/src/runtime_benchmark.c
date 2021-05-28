@@ -1053,6 +1053,26 @@ void bench_big_int_compare(void *bench_args, char *bench_name, char *path)
 
 //=== === === === === === === === === === === === === === ===
 
+void bench_big_int_compare_to_q_fn(void *arg)
+{
+    int64_t i = *((int64_t *) arg);
+    int8_t_array_1[i] = big_int_compare(RUNTIME_DEREF(big_int_array_1, i),
+        RUNTIME_DEREF(big_int_array_q, i));
+}
+
+void bench_big_int_compare_to_q(void *bench_args, char *bench_name, char *path)
+{
+    BenchmarkClosure bench_closure = {
+        .bench_prep_args = bench_args,
+        .bench_prep_fn = bench_big_int_prep,
+        .bench_fn = bench_big_int_compare_to_q_fn,
+        .bench_cleanup_fn = bench_big_int_cleanup,
+    };
+    benchmark_runner(bench_closure, bench_name, path, SETS, REPS, 0);
+}
+
+//=== === === === === === === === === === === === === === ===
+
 void bench_big_int_egcd_fn(void *arg)
 {
     int64_t i = *((int64_t *) arg);
@@ -1299,7 +1319,7 @@ int main(int argc, char const *argv[])
 
         BENCHMARK(bench_type, BENCH_TYPE_MUL_SQUARE_MOD_CURVE,
             bench_big_int_mul_square_mod((void *)bench_big_int_size_256_curve_mod_args,
-                "mul square mod (curve)",
+                "square mod (curve)",
                 LOG_PATH "/runtime_big_int_mul_square_mod_curve.log"));
 
         BENCHMARK(bench_type, BENCH_TYPE_DIVREM,
@@ -1373,6 +1393,11 @@ int main(int argc, char const *argv[])
         BENCHMARK(bench_type, BENCH_TYPE_COMPARE,
             bench_big_int_compare((void *)bench_big_int_size_256_args, "compare",
                 LOG_PATH "/runtime_big_int_compare.log"));
+
+        BENCHMARK(bench_type, BENCH_TYPE_COMPARE_TO_Q,
+            bench_big_int_compare_to_q((void *)bench_big_int_size_256_args,
+                "compare to q",
+                LOG_PATH "/runtime_big_int_compare_to_q.log"));
 
         BENCHMARK(bench_type, BENCH_TYPE_EGCD,
             bench_big_int_egcd((void *)bench_big_int_size_256_args, "eGCD",

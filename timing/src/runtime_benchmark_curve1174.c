@@ -388,7 +388,7 @@ int main(int argc, char const *argv[])
         BENCHMARK(bench_type, BENCH_TYPE_CURVE_1174_INV_FERMAT,
             bench_big_int_curve1174_inv_fermat(
                 (void *) bench_big_int_curve_1174_args,
-                "inv fermat",
+                "inv",
                 LOG_PATH "/runtime_big_int_curve_1174_inv_fermat.log"));
 
         BENCHMARK(bench_type, BENCH_TYPE_CURVE_1174_COMPARE,
