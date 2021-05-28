@@ -1311,6 +1311,9 @@ BigInt *big_int_inv(BigInt *r, BigInt *a, BigInt *q)
  * \brief Calculate r := (b^e) mod q
  *
  * \assumption r, b, e, q != NULL
+ *
+ * NOTE: there is an optimized pow function for Elligator in bigint_curve1174,
+ * that we use instead. Not all optimizations were ported back to this function.
  */
 BigInt *big_int_pow(BigInt *r, BigInt *b, BigInt *e, BigInt *q)
 {
@@ -1330,8 +1333,7 @@ BigInt *big_int_pow(BigInt *r, BigInt *b, BigInt *e, BigInt *q)
 
     while (big_int_compare(e_loc, big_int_zero) > 0) {
         // If power is odd
-        if (big_int_is_odd(e_loc))
-        {
+        if (big_int_is_odd(e_loc)) {
             big_int_mul_mod(r_loc1, r_loc2, b_loc1, q);
             r_loc_tmp = r_loc1;
             r_loc1 = r_loc2;
@@ -1340,11 +1342,13 @@ BigInt *big_int_pow(BigInt *r, BigInt *b, BigInt *e, BigInt *q)
 
         big_int_srl_small(e_loc, e_loc, 1);
 
+        if (big_int_is_zero(e_loc))
+            break;
+
         big_int_square_mod(b_loc2, b_loc1, q);
 
         // ------ unroll ------
-        if (big_int_is_odd(e_loc))
-        {
+        if (big_int_is_odd(e_loc)) {
             big_int_mul_mod(r_loc1, r_loc2, b_loc2, q);
             r_loc_tmp = r_loc1;
             r_loc1 = r_loc2;
@@ -1353,8 +1357,8 @@ BigInt *big_int_pow(BigInt *r, BigInt *b, BigInt *e, BigInt *q)
 
         big_int_srl_small(e_loc, e_loc, 1);
 
-        big_int_square_mod(b_loc1, b_loc2, q);
-
+        if (!big_int_is_zero(e_loc))
+            big_int_square_mod(b_loc1, b_loc2, q);
     }
 
     // This copy could be saved if we assume no aliasing, but we don't use
@@ -1512,6 +1516,9 @@ EgcdResult *big_int_egcd(EgcdResult *r, BigInt *a, BigInt *b)
  *
  * \assumption r, t, q != NULL
  * \assumption q is prime
+ *
+ * NOTE: there is an optimized Chi function for Elligator in bigint_curve1174,
+ * that we use instead. Not all optimizations were ported back to this function.
  */
 BigInt *big_int_chi(BigInt *r, BigInt *t, BigInt *q)
 {
@@ -1520,7 +1527,7 @@ BigInt *big_int_chi(BigInt *r, BigInt *t, BigInt *q)
     BIG_INT_DEFINE_PTR(e);
 
     if (big_int_compare(t, big_int_zero) == 0) {
-        // TODO: [Optimization] change return value to int8_t
+        // XXX: [Optimization] change return value to int8_t
         big_int_create_from_chunk(r, 0, 0);
         return r;
     }
@@ -1533,7 +1540,7 @@ BigInt *big_int_chi(BigInt *r, BigInt *t, BigInt *q)
     if (!big_int_compare(r, big_int_zero) || !big_int_compare(r, big_int_one))
         return r;
 
-    // TODO: [Optimization] change return value to int8_t
+    // XXX: [Optimization] change return value to int8_t
     big_int_create_from_chunk(r, 1, 1); // r = -1
     return r;
 
