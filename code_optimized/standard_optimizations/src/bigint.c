@@ -1322,12 +1322,12 @@ BigInt *big_int_pow(BigInt *r, BigInt *b, BigInt *e, BigInt *q)
 
     BIG_INT_DEFINE_PTR(e_loc);
     BIG_INT_DEFINE_PTR(b_loc1);
-    BIG_INT_DEFINE_PTR(tmp);
 
-    BIG_INT_DEFINE_FROM_CHUNK(r_loc, 0, 1);
-    //BIG_INT_DEFINE_FROM_CHUNK(r_loc1, 0, 1);
-    //BIG_INT_DEFINE_FROM_CHUNK(r_loc2, 0, 1);
+    BIG_INT_DEFINE_FROM_CHUNK(r_loc1, 0, 1);
+    BIG_INT_DEFINE_FROM_CHUNK(r_loc2, 0, 1);
     BIG_INT_DEFINE_FROM_CHUNK(b_loc2, 0, 1);
+
+    BigInt* r_loc_tmp;
 
     big_int_copy(e_loc, e);
     big_int_copy(b_loc1, b);
@@ -1336,11 +1336,10 @@ BigInt *big_int_pow(BigInt *r, BigInt *b, BigInt *e, BigInt *q)
         // If power is odd
         if (big_int_is_odd(e_loc))
         {
-            // TODO: Can we remove the copy here?
-            big_int_mul_mod(tmp, r_loc, b_loc1, q);
-            big_int_copy(r_loc, tmp);
-
-            //big_int_mul_mod(r_loc1, r_loc2, b_loc, q);
+            big_int_mul_mod(r_loc1, r_loc2, b_loc1, q);
+            r_loc_tmp = r_loc1;
+            r_loc1 = r_loc2;
+            r_loc2 = r_loc_tmp;
         }
 
         big_int_srl_small(e_loc, e_loc, 1);
@@ -1348,14 +1347,12 @@ BigInt *big_int_pow(BigInt *r, BigInt *b, BigInt *e, BigInt *q)
         big_int_square_mod(b_loc2, b_loc1, q);
 
         // ------ unroll ------
-        // If power is odd
         if (big_int_is_odd(e_loc))
         {
-            // TODO: Can we remove the copy here?
-            big_int_mul_mod(tmp, r_loc, b_loc2, q);
-            big_int_copy(r_loc, tmp);
-
-            //big_int_mul_mod(r_loc2, r_loc1, b_loc, q);
+            big_int_mul_mod(r_loc1, r_loc2, b_loc2, q);
+            r_loc_tmp = r_loc1;
+            r_loc1 = r_loc2;
+            r_loc2 = r_loc_tmp;
         }
 
         big_int_srl_small(e_loc, e_loc, 1);
@@ -1365,7 +1362,7 @@ BigInt *big_int_pow(BigInt *r, BigInt *b, BigInt *e, BigInt *q)
     }
 
     // TODO: copy could be saved if we assume no aliasing
-    return big_int_copy(r, r_loc);
+    return big_int_copy(r, r_loc2);
 }
 
 
