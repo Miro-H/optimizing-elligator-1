@@ -5,12 +5,7 @@ bin/*
 # Ignore generated log files from tests
 logs/*
 !logs/.keep
-!logs/runtime
-!logs/stats
 
-# Ignore plots generated locally, move plots from plots/local to plots/ to upload
-# them.
+# Ignore plots generated locally, move plots from plots/local to plots/ to upload them.
 plots/local/*
 !plots/local/.keep
-!plots/local/runtime
-!plots/local/stats

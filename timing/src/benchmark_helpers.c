@@ -52,17 +52,17 @@ void bench_warmup(BenchmarkClosure bench_closure, uint64_t num_sets,
 
     do
     {
-        bench_closure.bench_prep_fn(bench_closure.bench_prep_args);
-
-        start = start_tsc();
+        cycles = 0;
         for (j = 0; j < num_sets_local; ++j)
         {
+            bench_closure.bench_prep_fn(bench_closure.bench_prep_args);
+            start = start_tsc();
             for (i = 0; i < num_reps; ++i)
             {
                 bench_closure.bench_fn((void *) &i);
             }
+            cycles += stop_tsc(start);
         }
-        cycles = stop_tsc(start);
         bench_closure.bench_cleanup_fn((void *) cleanup_args);
 
         num_sets_local <<= 1;
@@ -70,8 +70,8 @@ void bench_warmup(BenchmarkClosure bench_closure, uint64_t num_sets,
 
     if (num_sets_local > num_sets) {
         WARNING("Current benchmark uses less than %d cycles. It's recommended "
-            "to increase the number of reps to %" PRIu64,
-            WARMUP_CYCLES, (num_reps * (num_sets_local - num_sets)) / num_sets);
+            "to increase sets * reps to %" PRIu64 "\n",
+            WARMUP_CYCLES, num_sets_local * num_reps);
     }
 }
 
@@ -149,10 +149,11 @@ void benchmark_runner(BenchmarkClosure bench_closure, char *bench_name,
     }
 #endif
 
-    fclose(out_fp);
-
     if (!do_write_to_stdout)
+    {
         printf("Wrote benchmark results to log file: '%s'\n", log_fname);
+        fclose(out_fp);
+    }
 }
 
 /*

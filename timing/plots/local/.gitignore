@@ -1,0 +1,6 @@
+# Only keep folders, ignore other content
+runtime/*
+!runtime/.keep
+
+stats/*
+!stats/.keep

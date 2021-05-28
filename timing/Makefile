@@ -1,25 +1,59 @@
-IDIR    	= include
-ODIR    	= src/obj
-SDIR  		= src
-BDIR		= bin
-SCRIPTS_DIR = scripts
-BIN_FILES   = $(filter-out $(wildcard $(BDIR)/.*), $(wildcard $(BDIR)/*))
-LOG_DIR 	= logs/
+# Switches between Makefiles for different versions
+
+TARGETS := 								\
+	all 								\
+	all-benched 						\
+	rebuild 							\
+	run-all 							\
+	gen-bench-types 					\
+	run-runtime-benchmark				\
+	plot-runtime-benchmark 				\
+	runtime-benchmark 					\
+	run-runtime-benchmark-curve1174 	\
+	plot-runtime-benchmark-curve1174	\
+	runtime-benchmark-curve1174			\
+	run-gmp-benchmark 					\
+	plot-gmp-benchmark 					\
+	gmp-benchmark 						\
+	run-memcpy-benchmark				\
+	plot-memcpy-benchmark				\
+	memcpy-benchmark 					\
+	plot-comparison 					\
+	plots								\
+	clean
+
+#
+# The following versions exist:
+#	- Version 1: Straightforward C, unoptimized
+#	- Version 2: Uptimized C using standard techniques
+#	- Version 3 (in the future): C including AVX optimizations
+#
+ifeq ($(VERSION),)
+	VERSION = 2
+endif
+export VERSION
+
+# Set shared variables
+export IDIR				= include
+export SDIR				= src
+export BDIR				= bin
+export SCRIPTS_DIR		= scripts
+export BIN_FILES		= $(filter-out $(wildcard $(BDIR)/.*), $(wildcard $(BDIR)/*))
+export LOG_DIR			= logs
+export ROOT_SCRIPTS_DIR	= ../scripts
+
+export LATEST_LOG_PATH = ${LOG_DIR}/latest_log_path.txt
 
 ifeq ($(BENCHMARKS),)
 	BENCHMARKS = -1
 endif
+export BENCHMARKS
 
-# src directory of the benchmarked code
-SRC_BENCHED		= ../src
-ODIR_BENCHED 	= $(SRC_BENCHED)/obj
-IDIR_BENCHED	= $(SRC_BENCHED)/../include
+export CC = gcc
 
-# common scripts
-ROOT_SCRIPTS_DIR = ../scripts
-
-CC      	= gcc
-CFLAGS  	= -I$(IDIR_BENCHED) -I$(IDIR)
+#
+# Add various shared CFLAGS
+#
 
 # Add additional compilation flags to improve code quality
 CFLAGS += -Wall -Werror
@@ -32,82 +66,43 @@ endif
 ifeq ($(REPS),)
 	REPS = 10000
 endif
-
-CFLAGS += -DSETS=$(SETS) -DREPS=$(REPS)
+export SETS
+export REPS
+CFLAGS += -DSETS=$(SETS) -DREPS=$(REPS) -DVERSION=$(VERSION)
 
 # Forward COLLECT_STATS env variable to compiled binaries
-LOG_PATH := $(abspath $(LOG_DIR))
+export LOG_BASE_PATH = $(abspath $(LOG_DIR))
 ifneq ($(COLLECT_STATS),)
-	LOG_PATH := $(LOG_PATH)/stats
+	LOG_SUBDIRS = stats
 	CFLAGS += -DCOLLECT_STATS=${COLLECT_STATS}
 else
-	LOG_PATH := $(LOG_PATH)/runtime
+	LOG_SUBDIRS = runtime
 endif
 
-LOG_PATH := $(LOG_PATH)/$(shell date "+%Y-%m-%d_%H-%M-%S")
+LOG_SUBDIRS := $(LOG_SUBDIRS)/$(shell date "+%Y-%m-%d_%H-%M-%S")
+export LOG_SUBDIRS
 
-# Add macros for compiled C files
-CFLAGS += -DLOG_PATH=\"$(LOG_PATH)\"
+# Add standard optimization flags if no others are specified
+ifeq ($(OPT_FLAGS),)
+	OPT_FLAGS = -Ofast
+endif
+CFLAGS += $(OPT_FLAGS)
 
-# Assume that the executable depends on all header files.
-DEPS = $(wildcard $(IDIR)/*.h)
+export CFLAGS
 
-LIBS =
+#
+# Switch between different Makefiles
+#
+ifeq ($(VERSION),1)
 
-# Main target, building all benchmarks
-all: compile-runtime-benchmark
+.PHONY: $(TARGETS)
+$(TARGETS):
+	make -f Makefile.V1 $(MAKECMDGOALS)
 
-.PHONY: prepare-logs
-prepare-logs:
-	mkdir -p $(LOG_PATH)
+else ifeq ($(VERSION), 2)
 
-.PHONY: run-all
-run-all: run-runtime-benchmark
+.PHONY: $(TARGETS)
+$(TARGETS):
+	make -f Makefile.V2 $(MAKECMDGOALS)
 
-.PHONY: all-benched
-all-benched:
-	make -C $(SRC_BENCHED) clean
-	COLLECT_STATS=$(COLLECT_STATS) make -C $(SRC_BENCHED) all
-
-# Fresh build
-.PHONY: rebuild
-rebuild: clean all
-
-$(ODIR)/%.o: $(SDIR)/%.c $(DEPS)
-	$(CC) -c -o $@ $< $(CFLAGS)
-
-# Specify the object files constituting the test
-_OBJ	= benchmark_helpers.o runtime_benchmark.o
-OBJ 	= $(patsubst %,$(ODIR)/%,$(_OBJ))
-# Specify the object files of the benched functions
-_OBJ_BENCHED 	= bigint.o elligator.o
-OBJ_BENCHED		= $(patsubst %,$(ODIR_BENCHED)/%,$(_OBJ_BENCHED))
-
-.PHONY: gen-bench-types
-gen-bench-types:
-	${ROOT_SCRIPTS_DIR}/gen_types.py \
-		--src_file ${SDIR}/runtime_benchmark.c \
-		--tar_file ${IDIR}/benchmark_types.h
-
-.PHONY: compile-runtime-benchmark
-compile-runtime-benchmark: prepare-logs all-benched gen-bench-types runtime-benchmark
-
-.PHONY: run-runtime-benchmark
-run-runtime-benchmark: compile-runtime-benchmark
-	./$(BDIR)/runtime-benchmark $(BENCHMARKS)
-
-runtime-benchmark: $(OBJ_BENCHED) $(OBJ)
-	$(CC) -o $(BDIR)/$@ $^ $(CFLAGS) $(LIBS)
-
-.PHONY: plots
-plots: run-all
-	COLLECT_STATS=$(COLLECT_STATS) LOGS_DIR=$(LOG_PATH) SETS=$(SETS) \
-	REPS=$(REPS) $(SCRIPTS_DIR)/make_all_plots.sh
-
-.PHONY: publish-plots
-publish-plots: run-all
-	PUBLISH=1 ${SCRIPTS_DIR}/make_all_plots.sh
-
-.PHONY: clean
-clean:
-	rm -f $(ODIR)/*.o *~ core $(INCDIR)/*~ $(BIN_FILES)
+endif
