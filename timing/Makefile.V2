@@ -77,14 +77,14 @@ compile-runtime-benchmark: prepare-logs-runtime-benchmark print-compile-msg gen-
 .PHONY: run-runtime-benchmark
 run-runtime-benchmark: OUT_SUB_PATH = $(RUNTIME_SUB_PATH)
 run-runtime-benchmark: LOG_PATH = $(LOG_BASE_PATH)/$(OUT_SUB_PATH)
-run-runtime-benchmark: compile-runtime-benchmark
+run-runtime-benchmark: clean compile-runtime-benchmark
 	echo "${LOG_PATH}" > ${LATEST_LOG_PATH}
 	./$(BDIR)/runtime-benchmark $(BENCHMARKS)
 
 .PHONY: plot-runtime-benchmark
 plot-runtime-benchmark: OUT_SUB_PATH = $(RUNTIME_SUB_PATH)
 plot-runtime-benchmark: LOG_PATH = $(LOG_BASE_PATH)/$(OUT_SUB_PATH)
-plot-runtime-benchmark: clean run-runtime-benchmark
+plot-runtime-benchmark: run-runtime-benchmark
 	# Needs to be repeated to execute multiple times in same make call
 	PUBLISH=$(PUBLISH) COLLECT_STATS=$(COLLECT_STATS) SETS=$(SETS) \
 	REPS=$(REPS) LOGS_DIR=$(LOG_PATH) OUT_SUB_PATH=$(OUT_SUB_PATH) \
@@ -120,14 +120,14 @@ compile-runtime-benchmark-curve1174: prepare-logs-runtime-benchmark-curve1174 pr
 .PHONY: run-runtime-benchmark-curve1174
 run-runtime-benchmark-curve1174: OUT_SUB_PATH = $(RUNTIME_CURVE1174_SUB_PATH)
 run-runtime-benchmark-curve1174: LOG_PATH = $(LOG_BASE_PATH)/$(OUT_SUB_PATH)
-run-runtime-benchmark-curve1174: compile-runtime-benchmark-curve1174
+run-runtime-benchmark-curve1174: clean compile-runtime-benchmark-curve1174
 	echo "${LOG_PATH}" > ${LATEST_LOG_PATH}
 	./$(BDIR)/runtime-benchmark-curve1174 $(BENCHMARKS)
 
 .PHONY: plot-runtime-benchmark-curve1174
 plot-runtime-benchmark-curve1174: OUT_SUB_PATH = $(RUNTIME_CURVE1174_SUB_PATH)
 plot-runtime-benchmark-curve1174: LOG_PATH = $(LOG_BASE_PATH)/$(OUT_SUB_PATH)
-plot-runtime-benchmark-curve1174: clean run-runtime-benchmark-curve1174
+plot-runtime-benchmark-curve1174: run-runtime-benchmark-curve1174
 	# Needs to be repeated to execute multiple times in same make call
 	PUBLISH=$(PUBLISH) COLLECT_STATS=$(COLLECT_STATS) SETS=$(SETS) \
 	REPS=$(REPS) LOGS_DIR=$(LOG_PATH) OUT_SUB_PATH=$(OUT_SUB_PATH) \
@@ -161,14 +161,14 @@ compile-gmp-benchmark: prepare-logs-gmp-benchmark gmp-benchmark
 .PHONY: run-gmp-benchmark
 run-gmp-benchmark: OUT_SUB_PATH = $(GMP_SUB_PATH)
 run-gmp-benchmark: LOG_PATH = $(LOG_BASE_PATH)/$(OUT_SUB_PATH)
-run-gmp-benchmark: compile-gmp-benchmark
+run-gmp-benchmark: clean compile-gmp-benchmark
 	echo "${LOG_PATH}" > ${LATEST_LOG_PATH}
 	./$(BDIR)/gmp-benchmark -1
 
 .PHONY: plot-gmp-benchmark
 plot-gmp-benchmark: OUT_SUB_PATH = $(GMP_SUB_PATH)
 plot-gmp-benchmark: LOG_PATH = $(LOG_BASE_PATH)/$(OUT_SUB_PATH)
-plot-gmp-benchmark: clean run-gmp-benchmark
+plot-gmp-benchmark: run-gmp-benchmark
 	# Needs to be repeated to execute multiple times in same make call
 	PUBLISH=$(PUBLISH) COLLECT_STATS=$(COLLECT_STATS) SETS=$(SETS) \
 	REPS=$(REPS) LOGS_DIR=$(LOG_PATH) OUT_SUB_PATH=$(OUT_SUB_PATH) \
@@ -200,14 +200,14 @@ compile-memcpy-benchmark: prepare-logs-memcpy-benchmark memcpy-benchmark
 .PHONY: run-memcpy-benchmark
 run-memcpy-benchmark: OUT_SUB_PATH = $(MEMCPY_SUB_PATH)
 run-memcpy-benchmark: LOG_PATH = $(LOG_BASE_PATH)/$(OUT_SUB_PATH)
-run-memcpy-benchmark: compile-memcpy-benchmark
+run-memcpy-benchmark: clean compile-memcpy-benchmark
 	echo "${LOG_PATH}" > ${LATEST_LOG_PATH}
 	./$(BDIR)/memcpy-benchmark -1
 
 .PHONY: plot-memcpy-benchmark
 plot-memcpy-benchmark: OUT_SUB_PATH = $(MEMCPY_SUB_PATH)
 plot-memcpy-benchmark: LOG_PATH = $(LOG_BASE_PATH)/$(OUT_SUB_PATH)
-plot-memcpy-benchmark: clean run-memcpy-benchmark
+plot-memcpy-benchmark: run-memcpy-benchmark
 	# Needs to be repeated to execute multiple times in same make call
 	PUBLISH=$(PUBLISH) COLLECT_STATS=$(COLLECT_STATS) SETS=$(SETS) \
 	REPS=$(REPS) LOGS_DIR=$(LOG_PATH) OUT_SUB_PATH=$(OUT_SUB_PATH) \

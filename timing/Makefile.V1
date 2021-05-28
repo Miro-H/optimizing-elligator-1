@@ -66,14 +66,14 @@ compile-runtime-benchmark: prepare-logs-runtime-benchmark all-benched gen-bench-
 .PHONY: run-runtime-benchmark
 run-runtime-benchmark: OUT_SUB_PATH = $(RUNTIME_SUB_PATH)
 run-runtime-benchmark: LOG_PATH = $(LOG_BASE_PATH)/$(OUT_SUB_PATH)
-run-runtime-benchmark: compile-runtime-benchmark
+run-runtime-benchmark: clean compile-runtime-benchmark
 	echo "${LOG_PATH}" > ${LATEST_LOG_PATH}
 	./$(BDIR)/runtime-benchmark $(BENCHMARKS)
 
 .PHONY: plot-runtime-benchmark
 plot-runtime-benchmark: OUT_SUB_PATH = $(RUNTIME_SUB_PATH)
 plot-runtime-benchmark: LOG_PATH = $(LOG_BASE_PATH)/$(OUT_SUB_PATH)
-plot-runtime-benchmark: clean run-runtime-benchmark
+plot-runtime-benchmark: run-runtime-benchmark
 	# Needs to be repeated to execute multiple times in same make call
 	PUBLISH=$(PUBLISH) COLLECT_STATS=$(COLLECT_STATS) SETS=$(SETS) \
 	REPS=$(REPS) LOGS_DIR=$(LOG_PATH) OUT_SUB_PATH=$(OUT_SUB_PATH) \
