@@ -554,6 +554,43 @@ START_TEST(test_power_q_p1_d4)
 }
 END_TEST
 
+
+/**
+* \brief Test the special function for raising BigInts to the power (q-2)
+*/
+START_TEST(test_power_q_m2)
+{
+    BIG_INT_DEFINE_PTR(a);
+    BIG_INT_DEFINE_PTR(b);
+    BIG_INT_DEFINE_PTR(r);
+
+    // small base
+    big_int_create_from_hex(b, "4F2B8718");
+    big_int_create_from_hex(r,
+        "D655555C933BC7BC58E2E73AE28257F0A1FBA13A734314F73DFA4E13B26584");
+
+    big_int_curve1174_pow_q_m2(a, b);
+    ck_assert_int_eq(big_int_compare(a, r), 0);
+
+    // large base
+    big_int_create_from_hex(b,
+        "19D8C8E4B460A43A1E517119780415E4C70941C6C4FBB2BFB1AF15B2273CF96");
+    big_int_create_from_hex(r,
+        "1FF84CD5B0DC81B23593F31AC8158E28AF4124A280A5CF3C3332D7F32C17B92");
+
+    big_int_curve1174_pow_q_m2(a, b);
+    ck_assert_int_eq(big_int_compare(a, r), 0);
+
+    // Test base 1
+    big_int_create_from_chunk(b, 1, 0);
+    big_int_create_from_chunk(r, 1, 0);
+
+    big_int_curve1174_pow_q_m2(a, b);
+    ck_assert_int_eq(big_int_compare(a, r), 0);
+}
+END_TEST
+
+
 /**
 * \brief Test chi function on BigInts
 */
@@ -670,6 +707,7 @@ Suite *bigints_suite(void)
     tcase_add_test(tc_advanced_ops, test_power_small);
     tcase_add_test(tc_advanced_ops, test_power_q_m1_d2);
     tcase_add_test(tc_advanced_ops, test_power_q_p1_d4);
+    tcase_add_test(tc_advanced_ops, test_power_q_m2);
     tcase_add_test(tc_advanced_ops, test_chi);
 
     suite_add_tcase(s, tc_modular_arith);
