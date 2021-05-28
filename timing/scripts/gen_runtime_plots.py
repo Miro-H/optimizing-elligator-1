@@ -139,7 +139,6 @@ def plot(plot_title, plot_fname, log_xaxis, log_yaxis, bar_plot, logs_dirs, logs
 
     plt.xticks(ticks=xs, labels=x_labels, rotation='vertical')
     plt.grid(linestyle="-", axis="y", color="white")
-    ax.set_xlabel(x_label)
     ax.set_ylabel(y_label, rotation=0, loc="top")
 
     if nr_of_versions > 1:

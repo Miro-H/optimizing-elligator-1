@@ -3,7 +3,6 @@
 SCRIPTS_DIR=$(cd $(dirname $0) && pwd)
 TIMING_BASE_DIR=$(dirname ${SCRIPTS_DIR})
 
-DEFAULT_VERSION=2
 DEFAULT_SETS=10
 DEFAULT_REPS=10000
 
@@ -14,12 +13,9 @@ fi
 SETS="${SETS:-$DEFAULT_SETS}"
 REPS="${REPS:-$DEFAULT_REPS}"
 
-if [[ -z $VERSION ]]; then
-    echo "WARNING: using default value for VERSION (V${DEFAULT_VERSION})"
-fi
-VERSION="${VERSION:-$DEFAULT_VERSION}"
+MAX_VERSION=2
 
-COMP_NAME=comp_V${VERSION}_curve1174_vs_V1_bigint
+COMP_NAME=comp_elligator
 
 SDIR=${TIMING_BASE_DIR}/src
 IDIR=${TIMING_BASE_DIR}/include
@@ -29,37 +25,11 @@ GEN_SCRIPT=${TIMING_BASE_DIR}/../scripts/gen_types.py
 LATEST_LOG_PATH=${TIMING_BASE_DIR}/logs/latest_log_path.txt
 
 BENCH_TYPES=\
-"BENCH_TYPE_CURVE_1174_ADD_MOD\
- BENCH_TYPE_CURVE_1174_SUB_MOD\
- BENCH_TYPE_CURVE_1174_MUL_MOD\
- BENCH_TYPE_CURVE_1174_SQUARE_MOD\
- BENCH_TYPE_CURVE_1174_MOD\
- BENCH_TYPE_CURVE_1174_MOD_512\
- BENCH_TYPE_CURVE_1174_DIV_MOD\
- BENCH_TYPE_CURVE_1174_INV_FERMAT\
- BENCH_TYPE_CURVE_1174_COMPARE\
- BENCH_TYPE_CURVE_1174_POW\
- BENCH_TYPE_CURVE_1174_POW_SMALL\
- BENCH_TYPE_CURVE_1174_POW_Q_M1_D2\
- BENCH_TYPE_CURVE_1174_POW_Q_P1_D4\
- BENCH_TYPE_CURVE_1174_CHI\
- BENCH_TYPE_ADD_MOD_CURVE\
- BENCH_TYPE_SUB_MOD_CURVE\
- BENCH_TYPE_MUL_MOD_CURVE\
- BENCH_TYPE_MUL_SQUARE_MOD_CURVE\
- BENCH_TYPE_DIV_MOD_CURVE\
- BENCH_TYPE_MOD_CURVE\
- BENCH_TYPE_MOD_512_CURVE\
- BENCH_TYPE_INV\
- BENCH_TYPE_POW_CURVE\
- BENCH_TYPE_POW_SMALL_CURVE\
- BENCH_TYPE_POW_Q_M1_D2_CURVE\
- BENCH_TYPE_POW_Q_P1_D4_CURVE\
- BENCH_TYPE_COMPARE_TO_Q\
- BENCH_TYPE_CHI"
+"BENCH_TYPE_ELLIGATOR1_STR2PNT\
+ BENCH_TYPE_ELLIGATOR1_PNT2STR"
 
 echo "#####################################################################"
-echo "#      Generate comparison plots for V${VERSION} Curve1174 vs V1 BigInt      #"
+echo "#       Generate comparison plots for Elligator from V1 to V${MAX_VERSION}       #"
 echo "#####################################################################"
 
 echo -e "\t- Get benchmark integers"
@@ -86,36 +56,31 @@ echo -e "\t- Create benchmark logs"
 COMP_LOG=${LOG_SUBDIR}/${COMP_NAME}.log
 touch ${COMP_LOG}
 
-echo -e "\t\t- run-runtime-benchmark"
-BENCHMARKS="${BENCH_TYPES_INT}" \
-    VERSION=1 \
-    SETS=${SETS} \
-    REPS=${REPS} \
-    make \
-    run-runtime-benchmark >> ${COMP_LOG}
+LOG_SUBDIR=""
+LOGS_NAMES=""
+SEP=""
 
-# Get log path
-BIGINT_LOG_DIR=$(cat "${LATEST_LOG_PATH}")
+for VERSION in `seq 1 ${MAX_VERSION}`;
+do
+    echo -e "\t\t- run-runtime-benchmark for V${VERSION}"
+    BENCHMARKS="${BENCH_TYPES_INT}" \
+        VERSION=${VERSION} \
+        SETS=${SETS} \
+        REPS=${REPS} \
+        make \
+        run-runtime-benchmark >> ${COMP_LOG}
 
-echo -e "\t\t- run-runtime-benchmark-curve1174"
-BENCHMARKS="${BENCH_TYPES_INT}" \
-    VERSION=${VERSION} \
-    SETS=${SETS} \
-    REPS=${REPS} \
-    make \
-    run-runtime-benchmark-curve1174 >> ${COMP_LOG}
-
-# Get log path
-CURVE1174_LOG_DIR=$(cat "${LATEST_LOG_PATH}")
+    # Get log path
+    NEW_LOG_DIR=$(cat "${LATEST_LOG_PATH}")
+    LOG_SUBDIR="${LOG_SUBDIR}${SEP}${NEW_LOG_DIR}"
+    LOGS_NAMES="${LOGS_NAMES}${SEP}V${VERSION}"
+    SEP=";"
+done
 
 echo -e "\t- Create benchmark plots"
 
-LOG_SUBDIR="${BIGINT_LOG_DIR};${CURVE1174_LOG_DIR}"
-LOGS_NAMES="bigint;curve1174"
-
 ${SCRIPTS_DIR}/gen_runtime_plots.py                                            \
-    --title "Runtime Comparison for V${VERSION} Curve1174 vs V1 BigInt \
-    (${SETS} sets, ${REPS} reps)"                                              \
+    --title "Runtime Comparison for Elligator from V1 to V${MAX_VERSION} (${SETS} sets, ${REPS} reps)"                                              \
     --plot_fname "${PLOTS_SUBDIR}/comparison_bar_log_scale.png"                \
     --logs_dir "${LOG_SUBDIR}"                                                 \
     --logs_names "${LOGS_NAMES}"                                               \
