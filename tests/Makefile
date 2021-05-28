@@ -10,16 +10,18 @@ BIN_FILES   = $(filter-out $(wildcard $(BDIR)/.*), $(wildcard $(BDIR)/*))
 # The following versions exist:
 #	- Version 1: Straightforward C, unoptimized
 #	- Version 2: Uptimized C using standard techniques
-#	- Version 3 (in the future): C including AVX optimizations
+#	- Version 3: C including AVX optimizations
 #
 ifeq ($(VERSION),)
-	VERSION = 2
+	VERSION = 3
 endif
 
 ifeq ($(VERSION), 1)
 	TESTED_ROOT_DIR = ../code_unoptimized
 else ifeq ($(VERSION), 2)
 	TESTED_ROOT_DIR = ../code_optimized/standard_optimizations
+else ifeq ($(VERSION), 3)
+	TESTED_ROOT_DIR = ../code_optimized/avx_optimizations
 endif
 
 SRC_TESTED	= $(TESTED_ROOT_DIR)/src

@@ -29,7 +29,7 @@ TARGETS := 								\
 #	- Version 3 (in the future): C including AVX optimizations
 #
 ifeq ($(VERSION),)
-	VERSION = 2
+	VERSION = 3
 endif
 export VERSION
 
@@ -99,7 +99,7 @@ ifeq ($(VERSION),1)
 $(TARGETS):
 	make -f Makefile.V1 $(MAKECMDGOALS)
 
-else ifeq ($(VERSION), 2)
+else
 
 .PHONY: $(TARGETS)
 $(TARGETS):
