@@ -5,10 +5,6 @@
 #include "bigint.h"
 #include "bigint_curve1174_constants.h"
 
-// This is set to the faster algorithm for computing inverses
-// #define BIG_INT_CURVE1174_INV(r, a) big_int_curve1174_inv_fermat((r), (a))
-#define BIG_INT_CURVE1174_INV(r, a) big_int_inv((r), (a), q)
-
 // Modular arithmetic. Note q = 2^251 - 9 is FIXED for all the functions below!
 BigInt *big_int_curve1174_mod(BigInt *r);
 BigInt *big_int_curve1174_add_mod(BigInt *r, BigInt *a, BigInt *b);

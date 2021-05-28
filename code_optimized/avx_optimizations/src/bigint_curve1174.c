@@ -394,7 +394,7 @@ BigInt *big_int_curve1174_div_mod(BigInt *r, BigInt *a, BigInt *b)
     BIG_INT_DEFINE_PTR(r_loc);
 
     // Write to local copy to be save against pointer reuse
-    BIG_INT_CURVE1174_INV(r_loc, b);
+    big_int_curve1174_inv_fermat(r_loc, b);
     big_int_curve1174_mul_mod(r, a, r_loc);
     return r;
 }
