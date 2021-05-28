@@ -94,8 +94,6 @@ CurvePoint *elligator_1_string_to_point(CurvePoint *r, BigInt *t, Curve curve)
     BIG_INT_DEFINE_PTR(tmp_2);
     BIG_INT_DEFINE_PTR(tmp_3);
 
-    BIG_INT_DEFINE_FROM_CHUNK(tmp_pow_res, 0, 1);
-
     big_int_sub(tmp_0, big_int_one, t);
     big_int_add(tmp_1, big_int_one, t);
     big_int_div_mod(u, tmp_0, tmp_1, &(curve.q)); // u = (1 − t) / (1 + t)
@@ -122,15 +120,14 @@ CurvePoint *elligator_1_string_to_point(CurvePoint *r, BigInt *t, Curve curve)
 
     tmp_0->sign = tmp_0->sign ^ chiv; // χ(v)v
 
-    big_int_curve1174_pow_q_p1_d4(tmp_pow_res, tmp_0); // (χ(v)v)^((q + 1) / 4)
-    tmp_pow_res->sign = tmp_pow_res->sign ^ chiv; // (χ(v)v)^((q + 1) / 4)χ(v)
+    big_int_curve1174_pow_q_p1_d4(tmp_3, tmp_0); // (χ(v)v)^((q + 1) / 4)
+    tmp_3->sign ^= chiv; // (χ(v)v)^((q + 1) / 4)χ(v)
 
     big_int_add(tmp_2, u_2, &(curve.c_squared_inverse)); // u^2 + 1 / c^2
     chi_2 = big_int_curve1174_chi(tmp_2); // χ(u^2 + 1 / c^2)
 
-    Y = tmp_pow_res;
+    Y = tmp_3;
     Y->sign = Y->sign ^ chi_2; // Y = (χ(v)v)^((q + 1) / 4)χ(v)χ(u^2 + 1 / c^2)
-
 
     big_int_add(tmp_0, big_int_one, X); // X+1
     big_int_curve1174_square_mod(X_plus_1_squared, tmp_0); // (X+1)^2
@@ -185,7 +182,6 @@ BigInt *elligator_1_point_to_string(BigInt *t, CurvePoint p, Curve curve)
     BIG_INT_DEFINE_PTR(tmp_1);
     BIG_INT_DEFINE_PTR(tmp_2);
 
-    BIG_INT_DEFINE_FROM_CHUNK(tmp_pow_res, 0, 1);
 
     big_int_sub(tmp_0, &(p.y), big_int_one); // y - 1
     big_int_add(tmp_1, &(p.y), big_int_one); // y + 1
@@ -199,9 +195,9 @@ BigInt *elligator_1_point_to_string(BigInt *t, CurvePoint p, Curve curve)
 
     big_int_sub(tmp_0, tmp_2, big_int_one); // (1 + η  * r)^2 - 1
 
-    big_int_curve1174_pow_q_p1_d4(tmp_pow_res, tmp_0); // ((1 + ηr)^2 - 1)^((q + 1) / 4)
+    big_int_curve1174_pow_q_p1_d4(tmp_2, tmp_0); // ((1 + ηr)^2 - 1)^((q + 1) / 4)
 
-    big_int_curve1174_sub_mod(X, tmp_pow_res, tmp_1); // X = −(1 + ηr) + ((1 + ηr)^2 − 1)^((q + 1) / 4)
+    big_int_curve1174_sub_mod(X, tmp_2, tmp_1); // X = −(1 + ηr) + ((1 + ηr)^2 − 1)^((q + 1) / 4)
 
     big_int_curve1174_mul_mod(tmp_0, &(curve.c_minus_1_s), X); // (c - 1)sX
     big_int_add(tmp_1, big_int_one, X); // 1 + X

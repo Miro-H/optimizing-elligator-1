@@ -622,28 +622,35 @@ BigInt *big_int_curve1174_pow_q_m1_d2(BigInt *r, BigInt *b)
 /**
  * \brief Calculate r := (b^((q+1)/4)) mod q
  *
- * \assumption r = 1, i.e., it is already initialized by the caller
  * \assumption r != b, i.e., NO ALIASING
- * \assumption b is MODIFIED inplace. The caller MUST NOT rely on its value.
  * \assumption r, b != NULL
  */
 BigInt *big_int_curve1174_pow_q_p1_d4(BigInt *r, BigInt *b)
 {
     ADD_STAT_COLLECTION(BIGINT_CURVE1174_TYPE_BIG_INT_POW_1_2);
 
-    BIG_INT_DEFINE_PTR(temp);
+    BIG_INT_DEFINE_PTR(b_loc_1);
+    BIG_INT_DEFINE_PTR(b_loc_2);
+    BIG_INT_DEFINE_PTR(r_loc);
 
     // (q+1)/4 = 0b111111...111110 (there are 248 ones)
 
-    // The first bit of the exponent is zero, because we start with doubling b.
+    // e = 10
+    big_int_curve1174_square_mod(b_loc_1, b);
+    big_int_copy(r_loc, b_loc_1);
+
+    // e = 110
+    big_int_curve1174_square_mod(b_loc_2, b_loc_1);
+    big_int_curve1174_mul_mod(r, r_loc, b_loc_2);
+
     // All the remaining bits are set to one, so we add all of them.
-    for (uint32_t i = 0; i < 248; ++i) {
-        // TODO: Can we remove this copy?
-        big_int_curve1174_mul_mod(temp, b, b);
-        big_int_copy(b, temp);
-        // TODO: Can we remove this copy?
-        big_int_curve1174_mul_mod(temp, r, b);
-        big_int_copy(r, temp);
+    // We use loop unrolling to avoid BigInt copies. 2x123 iterations -> 246 bits
+    for (uint32_t i = 0; i < 123; ++i) {
+        big_int_curve1174_square_mod(b_loc_1, b_loc_2);
+        big_int_curve1174_mul_mod(r_loc, r, b_loc_1);
+
+        big_int_curve1174_square_mod(b_loc_2, b_loc_1);
+        big_int_curve1174_mul_mod(r, r_loc, b_loc_2);
     }
 
     return r;

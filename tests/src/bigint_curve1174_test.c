@@ -529,7 +529,6 @@ START_TEST(test_power_q_p1_d4)
     BIG_INT_DEFINE_PTR(r);
 
     // small base
-    big_int_create_from_chunk(a, 1, 0);
     big_int_create_from_hex(b, "4F2B8718");
     big_int_create_from_hex(r,
         "6AE28F43FDBF0178DD44753A05BF32117192C2304661D5981D0F0EE2738219");
@@ -538,7 +537,6 @@ START_TEST(test_power_q_p1_d4)
     ck_assert_int_eq(big_int_compare(a, r), 0);
 
     // large base
-    big_int_create_from_chunk(a, 1, 0);
     big_int_create_from_hex(b,
         "19D8C8E4B460A43A1E517119780415E4C70941C6C4FBB2BFB1AF15B2273CF96");
     big_int_create_from_hex(r,
@@ -548,7 +546,6 @@ START_TEST(test_power_q_p1_d4)
     ck_assert_int_eq(big_int_compare(a, r), 0);
 
     // Test base 1
-    big_int_create_from_chunk(a, 1, 0);
     big_int_create_from_chunk(b, 1, 0);
     big_int_create_from_chunk(r, 1, 0);
 
