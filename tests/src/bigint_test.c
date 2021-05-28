@@ -341,9 +341,6 @@ START_TEST(test_subtraction)
     ck_assert_int_eq(big_int_compare(a, r), 0);
     ck_assert_uint_eq(a->overflow, 0);
 
-    // TODO: test chunk overflow
-    // TODO: test chunk underflow
-
     TEST_BIG_INT_DESTROY(a);
     TEST_BIG_INT_DESTROY(b);
     TEST_BIG_INT_DESTROY(r);
@@ -1489,42 +1486,28 @@ START_TEST(test_chi)
     big_int_create_from_hex(t, "734CC30B14564B142BFAFAAF71"); // ABCDEF1234567 squared
     big_int_create_from_hex(q, "1FFFFFFFFFFFFFFF");
 
-    big_int_copy(r, s);
-    big_int_mul(a, r, t);
-    big_int_copy(r, a);
-    big_int_chi(r, r, q); // chi(st)
+    big_int_mul(a, s, t);
+    big_int_chi(r, a, q); // chi(st)
 
-    big_int_copy(u, s);
-    big_int_chi(u, u, q); // chi(s)
+    big_int_chi(u, s, q); // chi(s)
+    big_int_chi(v, t, q); // chi(t)
+    big_int_mul(t, u, v); // chi(s) * chi(t);
 
-    big_int_copy(v, t);
-    big_int_chi(v, v, q); // chi(t)
-
-    big_int_mul(a, u, v); // chi(s) * chi(t);
-    big_int_copy(u, a);
-
-    ck_assert_int_eq(big_int_compare(r, u), 0);
+    ck_assert_int_eq(big_int_compare(r, t), 0);
 
     // s square, t non-square
     big_int_create_from_hex(s, "3626229738A3B9"); // 0x75bcd15 squared
     big_int_create_from_hex(t, "734CC30B14564B142BFAFAAF70");
     big_int_create_from_hex(q, "1FFFFFFFFFFFFFFF");
 
-    big_int_copy(r, s);
-    big_int_mul(a, r, t);
-    big_int_copy(r, a);
-    big_int_chi(r, r, q); // chi(st)
+    big_int_mul(a, s, t);
+    big_int_chi(r, a, q); // chi(st)
 
-    big_int_copy(u, s);
-    big_int_chi(u, u, q); // chi(s)
+    big_int_chi(u, s, q); // chi(s)
+    big_int_chi(v, t, q); // chi(t)
+    big_int_mul(t, u, v); // chi(s) * chi(t);
 
-    big_int_copy(v, t);
-    big_int_chi(v, v, q); // chi(t)
-
-    big_int_mul(a, u, v); // chi(s) * chi(t);
-    big_int_copy(u, a);
-
-    ck_assert_int_eq(big_int_compare(r, u), 0);
+    ck_assert_int_eq(big_int_compare(r, t), 0);
 
     // chi(st) = chi(s) * chi(t) for s or t = 0 is trivial.
 
@@ -1533,22 +1516,20 @@ START_TEST(test_chi)
     big_int_create_from_hex(t, "3626229738A3B9"); // 0x75bcd15 squared
     big_int_create_from_hex(q, "1FFFFFFFFFFFFFFF");
 
-    big_int_chi(t, t, q); // chi(t)
+    big_int_chi(u, t, q); // chi(t)
 
-    big_int_copy(r, t);
-    big_int_div(r, big_int_one, t); // 1/chi(t)
+    big_int_div(v, big_int_one, u); // 1/chi(t)
 
-    ck_assert_int_eq(big_int_compare(t, r), 0);
+    ck_assert_int_eq(big_int_compare(u, v), 0);
 
     big_int_create_from_hex(t, "3626229738A3B8");
     big_int_create_from_hex(q, "1FFFFFFFFFFFFFFF");
 
-    big_int_chi(t, t, q); // chi(t)
+    big_int_chi(u, t, q); // chi(t)
 
-    big_int_copy(r, t);
-    big_int_div(r, big_int_one, t); // 1/chi(t)
+    big_int_div(v, big_int_one, u); // 1/chi(t)
 
-    ck_assert_int_eq(big_int_compare(t, r), 0);
+    ck_assert_int_eq(big_int_compare(u, v), 0);
 
     // chi(t^2) = 1 if t != 0
     big_int_create_from_hex(t, "ABCDEF123456789");
@@ -1556,39 +1537,33 @@ START_TEST(test_chi)
     big_int_create_from_chunk(r, 1, 0);
 
     big_int_mul(a, t, t); // t^2
-    big_int_copy(t, a);
-    big_int_chi(t, t, q); // chi(t^2)
+    big_int_chi(t, a, q); // chi(t^2)
     ck_assert_int_eq(big_int_compare(t, r), 0);
 
     // chi(t)t = t if t is square
     big_int_create_from_hex(t, "3626229738A3B9"); // 0x75bcd15 squared
     big_int_create_from_hex(q, "1FFFFFFFFFFFFFFF");
 
-    big_int_copy(r, t);
     big_int_chi(r, t, q); // chi(t)
     big_int_mul(a, r, t); // chi(t) * t
-    big_int_copy(r, a);
-    ck_assert_int_eq(big_int_compare(t, r), 0);
+    ck_assert_int_eq(big_int_compare(t, a), 0);
 
     // Any square root s of t satisfies s = chi(s) * t^((q + 1)/4)
     /* TODO: Maybe I misunderstood this part of the paper,
      * but I don't see how this can hold. If s is not square
      * then it means s = -s.
      */
-    big_int_create_from_hex(t, "3626229738a3b9"); // 0x75bcd15 squared
-    big_int_create_from_hex(s, "75bcd15");
-    big_int_create_from_hex(q, "1fffffffffffffff");
+    big_int_create_from_hex(t, "3626229738A3B9"); // 0x75bcd15 squared
+    big_int_create_from_hex(s, "75BCD15");
+    big_int_create_from_hex(q, "1FFFFFFFFFFFFFFF");
 
-    big_int_copy(r, s);
-    big_int_chi(r, r, q); // chi(s)
+    big_int_chi(u, r, q); // chi(s)
 
-    big_int_copy(u, q);
-    big_int_srl_small(u, big_int_add(u, u, big_int_one), 2); // (q + 1)/4
-    big_int_pow(u, t, u, q); // t^((q + 1)/4)
+    big_int_srl_small(v, big_int_add(a, q, big_int_one), 2); // (q + 1)/4
+    big_int_pow(r, t, u, q); // t^((q + 1)/4)
     big_int_mul(a, r, u); // chi(s) * t^((q+1)/4)
-    big_int_copy(r, a);
 
-    //ck_assert_int_eq(big_int_compare(s, r), 0);
+    // ck_assert_int_eq(big_int_compare(s, r), 0);
 
     TEST_BIG_INT_DESTROY(r);
     TEST_BIG_INT_DESTROY(t);
