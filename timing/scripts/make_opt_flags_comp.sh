@@ -115,7 +115,7 @@ do
     cp ${LATEST_LOG_DIR}/*.log ${LOG_SUBDIR}/${OPT_FLAG//[- ]/_}/
 done
 
-echo -e "\t- Create benchmark logs"
+echo -e "\t- Create benchmark plots"
 LOGS_NAMES="${ALL_OPTS}" \
     LOGS_DIRS="${ALL_OPT_LOG_DIRS}" \
     SETS=${SETS} \
