@@ -3,16 +3,6 @@
 SCRIPTS_DIR=$(cd $(dirname $0) && pwd)
 TIMING_BASE_DIR=$(dirname ${SCRIPTS_DIR})
 
-DEFAULT_SETS=10
-DEFAULT_REPS=10000
-
-if [[ -z $SETS || -z $REPS ]]; then
-    echo "WARNING: using default value for SETS (${DEFAULT_SETS}) and/or "\
-         "REPS (${DEFAULT_REPS})"
-fi
-SETS="${SETS:-$DEFAULT_SETS}"
-REPS="${REPS:-$DEFAULT_REPS}"
-
 COMP_NAME=comp_elligator_stats
 
 SDIR=${TIMING_BASE_DIR}/src
@@ -58,8 +48,6 @@ echo -e "\t\t- run-runtime-benchmark for V1"
 COLLECT_STATS=1 \
 BENCHMARKS="${BENCH_TYPES_INT}" \
     VERSION=1 \
-    SETS=${SETS} \
-    REPS=${REPS} \
     make \
     run-runtime-benchmark >> ${COMP_LOG}
 
@@ -70,8 +58,6 @@ echo -e "\t\t- run-runtime-benchmark for V2"
 COLLECT_STATS=1 \
 BENCHMARKS="${BENCH_TYPES_INT}" \
     VERSION=2 \
-    SETS=${SETS} \
-    REPS=${REPS} \
     make \
     run-runtime-benchmark >> ${COMP_LOG}
 
@@ -83,9 +69,9 @@ LOGS_NAMES="V1;V2"
 
 echo -e "\t- Create benchmark plots"
 
-${SCRIPTS_DIR}/gen_stats_plots.py                                            \
-    --title "Stats Comparison for Elligator for V1 and V2 (${SETS} sets, ${REPS} reps" \
-    --plot_fname "${PLOTS_SUBDIR}/comparison_bar_log_scale.png"                \
+${SCRIPTS_DIR}/gen_stats_plots.py                                              \
+    --title "Stats Comparison for Elligator for V1 and V2"                     \
+    --plot_dir "${PLOTS_SUBDIR}"                                               \
     --logs_dir "${LOG_SUBDIR}"                                                 \
     --logs_names "${LOGS_NAMES}"                                               \
     --bar_plot                                                                 \

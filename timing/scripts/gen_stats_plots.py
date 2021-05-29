@@ -4,6 +4,7 @@ import argparse
 import matplotlib
 import matplotlib.pyplot as plt
 import os
+import numpy as np
 
 from statistics import median
 from ast import literal_eval
@@ -21,6 +22,8 @@ color_codes = ["#2d1a71", "#3257be", "#409def", "#70dbff", "#bfffff", "#3e32d5",
                "#eae6da", "#2f3143", "#505d6d", "#7b95a0", "#a6cfd0", "#dfeae4",
                "#8d4131", "#cb734d", "#efaf79", "#9c2b3b", "#e45761", "#ffffff",
                "#000000", "#e4162b", "#ffff40"]
+
+hatches_strs = [ "///" , "\\\\\\" , "|||" , "-" , "+" , "x", "o", "O", ".", "*"]
 
 plt.rc("axes", facecolor="#E6E6E6", axisbelow=True)
 
@@ -41,24 +44,55 @@ TITLE_FONT_SIZE = 20
 LABEL_FONT_SIZE = 12
 
 
-def plot(plot_title, plot_fname, log_xaxis, log_yaxis, bar_plot, xs, ys, x_labels, x_axis_label, y_axis_label):
+def plot(plot_title, plot_fname, log_xaxis, log_yaxis, bar_plot, ys_arr,
+         x_labels, x_axis_label, y_axis_label, data_labels):
     plt.rcParams["figure.figsize"] = (14,8)
     fig, ax = plt.subplots()
 
     if log_yaxis:
         ax.set_yscale("log")
 
+    if len(data_labels) == 1:
+        bar_width = 0.5
+    else:
+        bar_width = 1 / (len(data_labels) + 2)
+
     colors_iter = cycle(color_codes)
     colors = [next(colors_iter) for i in range(len(x_labels))]
-    if bar_plot:
-        ax.bar(xs, ys, width=0.5, color=colors)
-    else:
-        ax.scatter(xs, ys, marker='x', c=colors)
+
+    hatches_iter = cycle(hatches_strs)
+    hatches = [next(hatches_iter) for i in range(len(x_labels))]
+
+    xs = np.arange(len(x_labels))
+
+    x_off = -bar_width * len(data_labels) / 2
+
+    for i, data_label in enumerate(data_labels):
+        if bar_plot:
+            if len(data_labels) > 1:
+                ax.bar(xs + x_off, ys_arr[data_label], bar_width, label=data_label,
+                       align="edge", color=colors, hatch=hatches[i])
+            else:
+                ax.bar(xs + x_off, ys_arr[data_label], bar_width, label=data_label,
+                       align="edge", color=colors)
+            x_off += bar_width
+        else:
+            ax.scatter(xs, ys_arr[data_label], marker='x', c=colors)
 
     plt.xticks(ticks=xs, labels=x_labels, rotation='vertical')
     plt.grid(linestyle="-", axis="y", color="white")
     ax.set_xlabel(x_axis_label)
     ax.set_ylabel(y_axis_label, rotation=0, loc="top")
+
+    if len(data_labels) > 1:
+        ax.legend()
+
+        legend = ax.get_legend()
+        for i in range(len(data_labels)):
+            handle = legend.legendHandles[i]
+            handle.set_color(ax.get_facecolor())
+            handle.set_edgecolor("black")
+            handle.set_linewidth(1)
 
     ax.set_title(plot_title, loc="left", fontsize=TITLE_FONT_SIZE, pad=20)
     ax.spines['left'].set_visible(False)
@@ -75,9 +109,14 @@ if __name__ == "__main__":
     # Read arguments
     parser = argparse.ArgumentParser()
 
+    parser.add_argument("--title_prefix", help="Title prefix for the generated plot.",
+                        default="Function Call Count")
     parser.add_argument("--plot_dir", help="Path of the generated plot.")
-    parser.add_argument("--logs_dir", help="Path where the input logs are stored.",
-                        default=LOGS_DIR_DEFAULT_PATH)
+    parser.add_argument("--logs_dirs", default=LOGS_DIR_DEFAULT_PATH,
+                        help="Path to one or more directory, where the input logs are stored.")
+    parser.add_argument("--logs_names",
+                        help="Specify the names (separated by semicolon) of the "\
+                        "data sets stored in the different log folders.")
     parser.add_argument("--log_xaxis", help="Toggle x-axis to have a log scale.",
                         action="store_true")
     parser.add_argument("--log_yaxis", help="Toggle y-axis to have a log scale.",
@@ -87,33 +126,55 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    plot_dir    = args.plot_dir
-    logs_dir    = args.logs_dir
-    log_xaxis   = args.log_xaxis
-    log_yaxis   = args.log_yaxis
-    bar_plot    = args.bar_plot
+    title_prefix    = args.title_prefix
+    plot_dir        = args.plot_dir
+    logs_dirs       = args.logs_dirs
+    logs_names      = args.logs_names
+    log_xaxis       = args.log_xaxis
+    log_yaxis       = args.log_yaxis
+    bar_plot        = args.bar_plot
 
+    if logs_dirs:
+        logs_dirs = logs_dirs.split(";")
+    if logs_names:
+        logs_names = logs_names.split(";")
+    else:
+        logs_names = ["tmp"]
 
-    for in_file in os.listdir(logs_dir):
-        with open(os.path.join(logs_dir, in_file), "r") as in_fp:
-            lines = in_fp.readlines()
+    for in_file in os.listdir(logs_dirs[0]):
+        ys_dict = dict()
+        x_labels = set()
 
-            if len(lines) == 0:
-                continue
+        for i, logs_dir in enumerate(logs_dirs):
+            with open(os.path.join(logs_dir, in_file), "r") as in_fp:
+                lines = in_fp.readlines()
 
-            data_label = lines[0].rstrip()
-            x_axis_label, y_axis_label = lines[1].split(", ")
+                if len(lines) == 0:
+                    continue
 
-            x_labels = []
-            ys = []
-            for line in lines[2:]:
-                big_int_fn, big_int_fn_cnt = line.split(", ")
-                big_int_fn_cnt = literal_eval(big_int_fn_cnt.rstrip())
-                x_labels.append(big_int_fn)
-                ys.append(big_int_fn_cnt)
+                data_label = lines[0].rstrip()
+                x_axis_label, y_axis_label = lines[1].split(", ")
 
-            xs = [i for i in range(len(x_labels))]
+                ys_dict[logs_names[i]] = dict()
+                for line in lines[2:]:
+                    big_int_fn, big_int_fn_cnt = line.split(", ")
+                    big_int_fn_cnt = literal_eval(big_int_fn_cnt.rstrip())
+                    x_labels.add(big_int_fn)
+                    ys_dict[logs_names[i]][big_int_fn] = big_int_fn_cnt
 
-        title = f"Function Call Count for '{data_label}'"
+        # Normalize data: set entries that are not present in one folder to zero
+        ys_arr = dict()
+        x_labels = sorted(list(x_labels))
+        for log_name in logs_names:
+            ys_arr[log_name] = []
+            for x_label in x_labels:
+                if x_label not in ys_dict[log_name]:
+                    ys_arr[log_name].append(0)
+                else:
+                    ys_arr[log_name].append(ys_dict[log_name][x_label])
+
+        title = f"{title_prefix} for '{data_label}'"
         plot_fname = plot_dir + "/" + in_file.split("/")[-1].split(".")[0] + ".png"
-        plot(title, plot_fname, log_xaxis, log_yaxis, bar_plot, xs, ys, x_labels, x_axis_label, y_axis_label)
+
+        plot(title, plot_fname, log_xaxis, log_yaxis, bar_plot, ys_arr, x_labels,
+             x_axis_label, y_axis_label, logs_names)

@@ -114,7 +114,7 @@ if __name__ == '__main__':
             tar_fp.write(f"\n#endif // {guard_macro}\n")
 
     if lookup_names:
-        print(f"{matches.index(lookup_names[0])}", end="")
+        print(f"{matches_sorted.index(lookup_names[0])}", end="")
         for lookup_name in lookup_names[1:]:
-            print(f" {matches.index(lookup_name)}", end="")
+            print(f" {matches_sorted.index(lookup_name)}", end="")
         print("")
