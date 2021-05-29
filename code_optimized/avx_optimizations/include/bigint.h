@@ -5,6 +5,8 @@
 #include <string.h>
 #include "bigint_types.h"
 
+#include <immintrin.h>
+
 // To work with 8 chunk integers (256 bits) we internally need 17 chunk integers.
 // The reason is that intermediate products can be 16 chunks and division performs
 // a scaling that may require an additional chunk.

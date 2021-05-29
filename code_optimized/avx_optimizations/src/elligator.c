@@ -26,18 +26,18 @@ void init_curve1174(Curve *curve)
         "7FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF7");
 
     // d = -1174
-    big_int_create_from_hex(&(curve->d),
+    big_int_create_from_hex(&(curve->d), // we could remove this as it is never used
         "7FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFB61");
 
-    big_int_create_from_hex(&(curve->s),
+    big_int_create_from_hex(&(curve->s),  // we could remove this as it is never used
         "3FE707F0D7004FD334EE813A5F1A74AB2449139C82C39D84A09AE74CC78C615");
 
     // c = 2 / s^2
-    big_int_create_from_hex(&(curve->c),
+    big_int_create_from_hex(&(curve->c), // we could remove this as it is never used
         "4D1A3398ED42CEEB451D20824CA9CB49B69EF546BD7E6546AEF19AF1F9E49E1");
 
     // c - 1
-    big_int_create_from_hex(&(curve->c_minus_1),
+    big_int_create_from_hex(&(curve->c_minus_1), // we could remove this as it is never used
         "4D1A3398ED42CEEB451D20824CA9CB49B69EF546BD7E6546AEF19AF1F9E49E0");
 
      // (c - 1) * s
@@ -49,7 +49,7 @@ void init_curve1174(Curve *curve)
         "771F18AED833220B34B0FDADEFE83B1C247BCCD1D7983A9438B412D3C3700BA");
 
     // r = c + 1/c
-    big_int_create_from_hex(&(curve->r),
+    big_int_create_from_hex(&(curve->r), 
         "6006FBDA7649C433816B286006FBDA7649C433816B286006FBDA7649C43383");
 
     // r^2 - 2

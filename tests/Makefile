@@ -33,6 +33,12 @@ CFLAGS  	= -I$(IDIR_TESTED) -I$(IDIR)
 # Add additional compilation flags to improve code quality
 CFLAGS += -Wall -Werror
 
+ifeq ($(VERSION),3)
+	CFLAGS += -mavx
+endif
+
+
+
 ifneq ($(DEBUG),)
 	CFLAGS += -Wno-unused-variable
 endif
