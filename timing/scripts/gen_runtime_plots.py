@@ -44,7 +44,7 @@ TITLE_FONT_SIZE = 20
 LABEL_FONT_SIZE = 12
 
 
-def plot(plot_title, plot_fname, log_xaxis, log_yaxis, bar_plot, logs_dirs, logs_names):
+def plot(plot_title, plot_fname, log_xaxis, log_yaxis, bar_plot, speedup_plot, logs_dirs, logs_names):
     plt.rcParams["figure.figsize"] = (14,8)
 
     x_label, y_label = "", ""
@@ -98,6 +98,7 @@ def plot(plot_title, plot_fname, log_xaxis, log_yaxis, bar_plot, logs_dirs, logs
         x_labels = x_labels.union(set(ys[version].keys()))
     x_labels = sorted(list(x_labels))
 
+
     # Normalize data and add zero values for non-existant data
     ys_norm = dict()
     for version in versions:
@@ -106,7 +107,12 @@ def plot(plot_title, plot_fname, log_xaxis, log_yaxis, bar_plot, logs_dirs, logs
             if x_label not in ys[version]:
                 ys_norm[version].append(0)
             else:
-                ys_norm[version].append(ys[version][x_label])
+                if speedup_plot:
+                    # normalize all data in relation to first version
+                    ys_norm[version].append(ys[versions[0]][x_label] / ys[version][x_label])
+                else:
+                    ys_norm[version].append(ys[version][x_label])
+
 
     xs = np.arange(len(x_labels))
     nr_of_versions = len(versions)
@@ -126,8 +132,8 @@ def plot(plot_title, plot_fname, log_xaxis, log_yaxis, bar_plot, logs_dirs, logs
 
     x_off = -bar_width * len(versions) / 2
     for i, version in enumerate(versions):
-        if bar_plot:
-            if nr_of_versions > 1:
+        if bar_plot or speedup_plot:
+            if nr_of_versions > 1 or speedup_plot:
                 ax.bar(xs + x_off, ys_norm[version], bar_width, label=version,
                        align="edge", color=colors, hatch=hatches[i])
             else:
@@ -139,9 +145,12 @@ def plot(plot_title, plot_fname, log_xaxis, log_yaxis, bar_plot, logs_dirs, logs
 
     plt.xticks(ticks=xs, labels=x_labels, rotation='vertical')
     plt.grid(linestyle="-", axis="y", color="white")
+
+    if speedup_plot:
+        y_label = "speedup"
     ax.set_ylabel(y_label, rotation=0, loc="top")
 
-    if nr_of_versions > 1:
+    if nr_of_versions > 1 and not speedup_plot:
         ax.legend()
 
         legend = ax.get_legend()
@@ -187,16 +196,20 @@ if __name__ == "__main__":
                         action="store_true")
     parser.add_argument("--bar_plot", help="Toggle bar plots.",
                         action="store_true")
+    parser.add_argument("--speedup_plot", help="Toggle speedup plots. The first "\
+                        "log name is taken as baseline.",
+                        action="store_true")
 
     args = parser.parse_args()
 
-    title       = args.title
-    plot_fname  = args.plot_fname
-    logs_dirs   = args.logs_dirs
-    logs_names  = args.logs_names
-    log_xaxis   = args.log_xaxis
-    log_yaxis   = args.log_yaxis
-    bar_plot    = args.bar_plot
+    title           = args.title
+    plot_fname      = args.plot_fname
+    logs_dirs       = args.logs_dirs
+    logs_names      = args.logs_names
+    log_xaxis       = args.log_xaxis
+    log_yaxis       = args.log_yaxis
+    bar_plot        = args.bar_plot
+    speedup_plot    = args.speedup_plot
 
     if logs_dirs:
         logs_dirs = logs_dirs.split(";")
@@ -207,8 +220,8 @@ if __name__ == "__main__":
         print("ERROR: need to name all log folders!")
         exit(1)
 
-    if len(logs_dirs) > 1 and not bar_plot:
-        print("ERROR: comparison plots are only supported for bar plots.")
+    if len(logs_dirs) > 1 and not bar_plot and not speedup_plot:
+        print("ERROR: comparisons are only supported for bar or speedup plots.")
         exit(1)
 
-    plot(title, plot_fname, log_xaxis, log_yaxis, bar_plot, logs_dirs, logs_names)
+    plot(title, plot_fname, log_xaxis, log_yaxis, bar_plot, speedup_plot, logs_dirs, logs_names)

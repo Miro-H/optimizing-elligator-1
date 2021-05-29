@@ -121,3 +121,10 @@ ${SCRIPTS_DIR}/gen_runtime_plots.py                                            \
     --logs_names "${LOGS_NAMES}"                                               \
     --bar_plot                                                                 \
     --log_yaxis
+
+${SCRIPTS_DIR}/gen_runtime_plots.py                                            \
+    --title "Speedup Comparison for V${VERSION} Curve1174 vs V1 BigInt (${SETS} sets, ${REPS} reps)"                                              \
+    --plot_fname "${PLOTS_SUBDIR}/speedup_comparison_bar_log_scale.png"        \
+    --logs_dir "${LOG_SUBDIR}"                                                 \
+    --logs_names "${LOGS_NAMES}"                                               \
+    --speedup_plot
