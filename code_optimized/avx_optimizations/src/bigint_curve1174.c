@@ -32,7 +32,7 @@
  */
 BigInt *big_int_curve1174_mod(BigInt *r)
 {
-    ADD_STAT_COLLECTION(BIGINT_CURVE1174_TYPE_BIG_INT_MOD);
+    ADD_STAT_COLLECTION(BIGINT_TYPE_CURVE1174_BIG_INT_MOD);
 
     BIG_INT_DEFINE_PTR(r_upper);
     BIG_INT_DEFINE_PTR(r_upper_288);
@@ -328,7 +328,7 @@ BigInt *big_int_curve1174_mod(BigInt *r)
  */
 BigInt *big_int_curve1174_add_mod(BigInt *r, BigInt *a, BigInt *b)
 {
-    ADD_STAT_COLLECTION(BIGINT_CURVE1174_TYPE_BIG_INT_ADD_MOD);
+    ADD_STAT_COLLECTION(BIGINT_TYPE_CURVE1174_BIG_INT_ADD_MOD);
 
     big_int_add(r, a, b);
     big_int_curve1174_mod(r);
@@ -344,7 +344,7 @@ BigInt *big_int_curve1174_add_mod(BigInt *r, BigInt *a, BigInt *b)
  */
 BigInt *big_int_curve1174_sub_mod(BigInt *r, BigInt *a, BigInt *b)
 {
-    ADD_STAT_COLLECTION(BIGINT_CURVE1174_TYPE_BIG_INT_SUB_MOD);
+    ADD_STAT_COLLECTION(BIGINT_TYPE_CURVE1174_BIG_INT_SUB_MOD);
 
     big_int_sub(r, a, b);
     return big_int_curve1174_mod(r);
@@ -358,7 +358,7 @@ BigInt *big_int_curve1174_sub_mod(BigInt *r, BigInt *a, BigInt *b)
  */
 BigInt *big_int_curve1174_mul_mod(BigInt *r, BigInt *a, BigInt *b)
 {
-    ADD_STAT_COLLECTION(BIGINT_CURVE1174_TYPE_BIG_INT_MUL_MOD);
+    ADD_STAT_COLLECTION(BIGINT_TYPE_CURVE1174_BIG_INT_MUL_MOD);
 
     // a, b are usually not larger than q, thus it is not worth it to perform a
     // mod operation on the operands before multiplying.
@@ -375,7 +375,7 @@ BigInt *big_int_curve1174_mul_mod(BigInt *r, BigInt *a, BigInt *b)
  */
 BigInt *big_int_curve1174_square_mod(BigInt *r, BigInt *a)
 {
-    ADD_STAT_COLLECTION(BIGINT_CURVE1174_TYPE_BIG_INT_SQUARED_MOD);
+    ADD_STAT_COLLECTION(BIGINT_TYPE_CURVE1174_BIG_INT_SQUARED_MOD);
 
     big_int_square(r, a);
     return big_int_curve1174_mod(r);
@@ -389,7 +389,7 @@ BigInt *big_int_curve1174_square_mod(BigInt *r, BigInt *a)
  */
 BigInt *big_int_curve1174_div_mod(BigInt *r, BigInt *a, BigInt *b)
 {
-    ADD_STAT_COLLECTION(BIGINT_CURVE1174_TYPE_BIG_INT_DIV_MOD);
+    ADD_STAT_COLLECTION(BIGINT_TYPE_CURVE1174_BIG_INT_DIV_MOD);
 
     BIG_INT_DEFINE_PTR(r_loc);
 
@@ -409,7 +409,7 @@ BigInt *big_int_curve1174_div_mod(BigInt *r, BigInt *a, BigInt *b)
  */
 BigInt *big_int_curve1174_inv_fermat(BigInt *r, BigInt *a)
 {
-    ADD_STAT_COLLECTION(BIGINT_CURVE1174_TYPE_BIG_INT_INV);
+    ADD_STAT_COLLECTION(BIGINT_TYPE_CURVE1174_BIG_INT_INV);
 
     big_int_curve1174_pow_q_m2(r, a);
     return r;
@@ -428,7 +428,7 @@ BigInt *big_int_curve1174_inv_fermat(BigInt *r, BigInt *a)
  */
 BigInt *big_int_curve1174_pow_small(BigInt *r, BigInt *b, uint64_t e)
 {
-    ADD_STAT_COLLECTION(BIGINT_CURVE1174_TYPE_BIG_INT_POW_SMALL);
+    ADD_STAT_COLLECTION(BIGINT_TYPE_CURVE1174_BIG_INT_POW_SMALL);
 
     BIG_INT_DEFINE_PTR(b_loc1);
     BIG_INT_DEFINE_PTR(b_loc2);
@@ -487,7 +487,7 @@ BigInt *big_int_curve1174_pow_small(BigInt *r, BigInt *b, uint64_t e)
  */
 BigInt *big_int_curve1174_pow(BigInt *r, BigInt *b, BigInt *e)
 {
-    ADD_STAT_COLLECTION(BIGINT_CURVE1174_TYPE_BIG_INT_POW);
+    ADD_STAT_COLLECTION(BIGINT_TYPE_CURVE1174_BIG_INT_POW);
 
     BIG_INT_DEFINE_PTR(b_loc1);
     BIG_INT_DEFINE_PTR(b_loc2);
@@ -583,7 +583,7 @@ BigInt *big_int_curve1174_pow(BigInt *r, BigInt *b, BigInt *e)
  */
 BigInt *big_int_curve1174_pow_q_m1_d2(BigInt *r, BigInt *b)
 {
-    ADD_STAT_COLLECTION(BIGINT_CURVE1174_TYPE_BIG_INT_POW_Q_M1_D2);
+    ADD_STAT_COLLECTION(BIGINT_TYPE_CURVE1174_BIG_INT_POW_Q_M1_D2);
 
     BIG_INT_DEFINE_PTR(b_loc_1);
     BIG_INT_DEFINE_PTR(b_loc_2);
@@ -627,7 +627,7 @@ BigInt *big_int_curve1174_pow_q_m1_d2(BigInt *r, BigInt *b)
  */
 BigInt *big_int_curve1174_pow_q_p1_d4(BigInt *r, BigInt *b)
 {
-    ADD_STAT_COLLECTION(BIGINT_CURVE1174_TYPE_BIG_INT_POW_Q_P1_D4);
+    ADD_STAT_COLLECTION(BIGINT_TYPE_CURVE1174_BIG_INT_POW_Q_P1_D4);
 
     BIG_INT_DEFINE_PTR(b_loc_1);
     BIG_INT_DEFINE_PTR(b_loc_2);
@@ -665,7 +665,7 @@ BigInt *big_int_curve1174_pow_q_p1_d4(BigInt *r, BigInt *b)
  */
 BigInt *big_int_curve1174_pow_q_m2(BigInt *r, BigInt *b)
 {
-    ADD_STAT_COLLECTION(BIGINT_CURVE1174_TYPE_BIG_INT_POW_Q_M2);
+    ADD_STAT_COLLECTION(BIGINT_TYPE_CURVE1174_BIG_INT_POW_Q_M2);
 
     BIG_INT_DEFINE_PTR(b_loc_1);
     BIG_INT_DEFINE_PTR(b_loc_2);
@@ -716,7 +716,7 @@ BigInt *big_int_curve1174_pow_q_m2(BigInt *r, BigInt *b)
  */
 int8_t big_int_curve1174_chi(BigInt *t)
 {
-    ADD_STAT_COLLECTION(BIGINT_CURVE1174_TYPE_BIG_INT_CHI);
+    ADD_STAT_COLLECTION(BIGINT_TYPE_CURVE1174_BIG_INT_CHI);
 
     BIG_INT_DEFINE_PTR(r_loc);
 

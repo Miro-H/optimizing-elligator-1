@@ -1,4 +1,8 @@
-BENCHED_ROOT_DIR	= ../code_optimized/standard_optimizations
+ifeq ($(VERSION),2)
+	BENCHED_ROOT_DIR	= ../code_optimized/standard_optimizations
+else
+	BENCHED_ROOT_DIR	= ../code_optimized/avx_optimizations
+endif
 SRC_BENCHED			= $(BENCHED_ROOT_DIR)/src
 IDIR_BENCHED		= $(BENCHED_ROOT_DIR)/include
 
@@ -43,6 +47,7 @@ gen-bigint-types:
 		--dest_file ${IDIR_BENCHED}/bigint_types.h \
 		--add_translation \
 		--array_name "big_int_type_names" \
+		--pattern "(BASIC_[A-Z1-9_]+|[A-Z1-9_]+TYPE_[A-Z1-9_]+)[^A-Z]+" \
 		--strip_prefix "BIGINT_TYPE_"
 
 

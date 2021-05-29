@@ -37,8 +37,8 @@ if __name__ == '__main__':
     parser.add_argument("--add_translation", action="store_true",
                         help="Add array to translate numbers to names.")
     parser.add_argument("--array_name", help="Name of the translation array")
-    parser.add_argument("--strip_prefix", help="Prefix to strip from matches",
-                        default="")
+    parser.add_argument("--strip_prefixes", nargs="+", default=[""],
+                        help="Prefixes to strip from matches")
 
     args = parser.parse_args()
 
@@ -48,7 +48,7 @@ if __name__ == '__main__':
     pattern         = args.pattern
     add_translation = args.add_translation
     array_name      = args.array_name
-    strip_prefix    = args.strip_prefix
+    strip_prefixes  = args.strip_prefixes
 
     if dest_file == None and lookup_names == None:
         print("ERROR: either --dest_file or --lookup_names must be specified")
@@ -68,6 +68,13 @@ if __name__ == '__main__':
     matches = unique_list(matches)
     line_len = max([len(match) for match in matches]) + 1
 
+    # Search last entry in matches
+    last_entry = None
+    for i, match in enumerate(matches):
+        if match.endswith("_LAST"):
+            last_entry = match
+            matches = matches[:i] + matches[i+1:]
+
     if dest_file:
         with open(dest_file, "w+") as tar_fp:
             tar_fp.write(HEADER)
@@ -76,16 +83,30 @@ if __name__ == '__main__':
             guard_macro = dest_file.split("/")[-1].split(".")[0].upper() + "_H_"
             tar_fp.write(f"#ifndef {guard_macro}\n#define {guard_macro}\n\n")
 
-            for idx, match in enumerate(matches):
+            # Sort all matches, except preserving the last entry
+            matches_sorted = sorted(matches)
+            if last_entry:
+                matches_sorted.append(last_entry)
+
+            for idx, match in enumerate(matches_sorted):
                 tar_fp.write(LINE_FORMAT.format(match.ljust(line_len), idx))
 
             if add_translation:
                 tar_fp.write("\n__attribute__((unused))")
                 tar_fp.write(f"\nstatic char *{array_name}[] = {{\n")
 
-                names = [match.replace(strip_prefix, "").lower() for match in matches]
+                names = []
+                for match in matches:
+                    name = match
+                    for strip_prefix in strip_prefixes:
+                        name = name.replace(strip_prefix, "")
+                    names.append(name.lower())
 
-                for name in names[:-1]:
+                names_sorted = sorted(names)
+                if last_entry:
+                    names_sorted.append(last_entry)
+
+                for name in names_sorted:
                     tar_fp.write(f"    \"{name}\",\n")
 
                 tar_fp.write(f"    \"{names[-1]}\"\n}};\n")
