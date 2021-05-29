@@ -55,7 +55,7 @@ BigInt *big_int_curve1174_mod(BigInt *r)
         r_upper->size = r->size - Q_CHUNKS;
         memcpy((void *) r_upper->chunks,
                (void *) (r->chunks + Q_CHUNKS),
-               r_upper->size * BIGINT_INTERNAL_CHUNK_BYTE); ADD_OTHER
+               r_upper->size * BIGINT_INTERNAL_CHUNK_BYTE); ADD_STAT_COLLECTION(BASIC_ADD_OTHER)
 
         // Intentionally no mod reduction, since we do one later. We know that
         // our intermediate values are never larger than (q-1)^2 and 288 * (q-1)^2 < 2^512
@@ -503,10 +503,10 @@ BigInt *big_int_curve1174_pow(BigInt *r, BigInt *b, BigInt *e)
     big_int_copy(b_loc1, b);
 
     // Operate on exponent chunk by chunk
-    for (i = 0; i < e->size - 1; ++i) { ADD_OTHER
+    for (i = 0; i < e->size - 1; ++i) { ADD_STAT_COLLECTION(BASIC_ADD_OTHER)
         e_chunk = e->chunks[i];
 
-        for (j = 0; j < BIGINT_CHUNK_BIT_SIZE; ++j) { ADD_OTHER
+        for (j = 0; j < BIGINT_CHUNK_BIT_SIZE; ++j) { ADD_STAT_COLLECTION(BASIC_ADD_OTHER)
             // If power is odd
             if (e_chunk & 1) {
                 big_int_curve1174_mul_mod(r1, r2, b_loc1);
@@ -534,7 +534,7 @@ BigInt *big_int_curve1174_pow(BigInt *r, BigInt *b, BigInt *e)
 
     // Special case for the last chunk
     e_chunk = e->chunks[e->size - 1];
-    for (j = 0; j < BIGINT_CHUNK_BIT_SIZE; ++j) { ADD_OTHER
+    for (j = 0; j < BIGINT_CHUNK_BIT_SIZE; ++j) { ADD_STAT_COLLECTION(BASIC_ADD_OTHER)
         // If power is odd
         if (e_chunk & 1) {
             big_int_curve1174_mul_mod(r1, r2, b_loc1);
@@ -602,7 +602,7 @@ BigInt *big_int_curve1174_pow_q_m1_d2(BigInt *r, BigInt *b)
 
     // All the remaining bits are set to one, so we add all of them
     // Do 123 loops with unrolling = 2 --> 246 iterations
-    for (uint32_t i = 0; i < 123; ++i) { ADD_OTHER
+    for (uint32_t i = 0; i < 123; ++i) { ADD_STAT_COLLECTION(BASIC_ADD_OTHER)
         big_int_curve1174_square_mod(b_loc_1, b_loc_2);
         big_int_curve1174_mul_mod(r, r_loc, b_loc_1);
 
@@ -645,7 +645,7 @@ BigInt *big_int_curve1174_pow_q_p1_d4(BigInt *r, BigInt *b)
 
     // All the remaining bits are set to one, so we add all of them.
     // We use loop unrolling to avoid BigInt copies. 2x123 iterations -> 246 bits
-    for (uint32_t i = 0; i < 123; ++i) { ADD_OTHER
+    for (uint32_t i = 0; i < 123; ++i) { ADD_STAT_COLLECTION(BASIC_ADD_OTHER)
         big_int_curve1174_square_mod(b_loc_1, b_loc_2);
         big_int_curve1174_mul_mod(r_loc, r, b_loc_1);
 
@@ -691,7 +691,7 @@ BigInt *big_int_curve1174_pow_q_m2(BigInt *r, BigInt *b)
 
     // All the remaining bits are set to one, so we add all of them
     // Do 123 loops with unrolling = 2 --> 246 iterations
-    for (uint32_t i = 0; i < 123; ++i) { ADD_OTHER
+    for (uint32_t i = 0; i < 123; ++i) { ADD_STAT_COLLECTION(BASIC_ADD_OTHER)
         big_int_curve1174_square_mod(b_loc_1, b_loc_2);
         big_int_curve1174_mul_mod(r_loc, r, b_loc_1);
 

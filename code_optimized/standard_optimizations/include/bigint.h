@@ -73,23 +73,6 @@ typedef struct EgcdResult {
 */
 uint64_t big_int_stats[BIGINT_TYPE_LAST];
 
-// might want to put this into the big_int_stats
-uint64_t add_chunk_counter;
-uint64_t add_size_counter;
-uint64_t add_other_counter;
-
-uint64_t mul_chunk_counter;
-uint64_t mul_size_counter;
-uint64_t mul_other_counter;
-
-#define ADD_CHUNK add_chunk_counter++;
-#define ADD_SIZE add_other_counter++;
-#define ADD_OTHER add_other_counter++;
-
-#define MUL_CHUNK mul_chunk_counter++;
-#define MUL_SIZE mul_size_counter++;
-#define MUL_OTHER mul_other_counter++;
-
 #define MULT_CHUNKS(...) __VA_ARGS__
 
 // BIG_INT_DEFINE_STRUCT but allowing you to specify the type (e.g., static or

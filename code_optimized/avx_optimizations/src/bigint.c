@@ -62,10 +62,10 @@ BigInt *big_int_prune_leading_zeros(BigInt *r, BigInt *a)
     r = big_int_get_res(r, a);
 
     // Find actual size of r (at least 1)
-    for (int64_t i = r->size - 1; i > 0; --i) {
+    for (int64_t i = r->size - 1; i > 0; --i) { ADD_STAT_COLLECTION(BASIC_ADD_OTHER)
         if (r->chunks[i])
             break;
-        r->size--;
+        r->size--; ADD_STAT_COLLECTION(BASIC_ADD_SIZE)
     }
 
     return r;
@@ -131,22 +131,22 @@ BigInt *big_int_create_from_hex(BigInt *r, char* s)
     long long parsed_int;
 
     s_len = strlen(s);
-    s_end = s + s_len;
+    s_end = s + s_len; 
 
     // Don't count sign to integer size
     if (*s == '-')
         s_len--;
 
     // chunk_size = ceil(s_len/BIGINT_CHUNK_HEX_SIZE)
-    chunk_size = (s_len + BIGINT_CHUNK_HEX_SIZE - 1) / BIGINT_CHUNK_HEX_SIZE;
+    chunk_size = (s_len + BIGINT_CHUNK_HEX_SIZE - 1) / BIGINT_CHUNK_HEX_SIZE;  
 
     r->overflow  = 0;
     r->size      = chunk_size;
 
     // Null terinate buffer to stop strtoll
     buf[BIGINT_CHUNK_HEX_SIZE] = 0;
-    for (i = 0; i < chunk_size - 1; ++i) {
-        s_end -= BIGINT_CHUNK_HEX_SIZE;
+    for (i = 0; i < chunk_size - 1; ++i) { 
+        s_end -= BIGINT_CHUNK_HEX_SIZE; 
         strncpy(buf, s_end, BIGINT_CHUNK_HEX_SIZE);
 
         r->chunks[i] = (dbl_chunk_size_t) STR_TO_CHUNK(buf, NULL, 16);
@@ -213,7 +213,7 @@ BigInt *big_int_copy(BigInt *a, BigInt *b)
     ADD_STAT_COLLECTION(BIGINT_TYPE_BIG_INT_COPY);
 
     // Copy exactly as many bits as we need and not a single one more
-    memcpy((void *) a, (void *) b, BIGINT_METADATA_SIZE + (b->size) * BIGINT_INTERNAL_CHUNK_BYTE);
+    memcpy((void *) a, (void *) b, BIGINT_METADATA_SIZE + (b->size) * BIGINT_INTERNAL_CHUNK_BYTE); ADD_STAT_COLLECTION(BASIC_ADD_OTHER)
     return a;
 }
 
@@ -361,8 +361,8 @@ BigInt *big_int_fast_add(BigInt *r, BigInt *a, BigInt *b)
 
     carry = 0;
     r_size = 0;
-    for (i = 0; i < bb->size; ++i) {
-        sum = aa->chunks[i] + bb->chunks[i] + carry;
+    for (i = 0; i < bb->size; ++i) { ADD_STAT_COLLECTION(BASIC_ADD_OTHER)
+        sum = aa->chunks[i] + bb->chunks[i] + carry; ADD_STAT_COLLECTION(BASIC_ADD_CHUNK) ADD_STAT_COLLECTION(BASIC_ADD_CHUNK)
         r->chunks[i] = sum & BIGINT_CHUNK_MASK;
         carry = sum >> BIGINT_CHUNK_SHIFT;
 
@@ -371,8 +371,8 @@ BigInt *big_int_fast_add(BigInt *r, BigInt *a, BigInt *b)
     }
 
     // Second, finish possible remaining chunks of larger integer
-    for (; i < aa->size; ++i) {
-        sum = aa->chunks[i] + carry;
+    for (; i < aa->size; ++i) { ADD_STAT_COLLECTION(BASIC_ADD_OTHER)
+        sum = aa->chunks[i] + carry; ADD_STAT_COLLECTION(BASIC_ADD_CHUNK)
         r->chunks[i] = sum & BIGINT_CHUNK_MASK;
         carry = sum >> BIGINT_CHUNK_SHIFT;
 
@@ -386,9 +386,9 @@ BigInt *big_int_fast_add(BigInt *r, BigInt *a, BigInt *b)
     r->sign = aa->sign;
     if (carry && i < BIGINT_FIXED_SIZE_INTERNAL) {
         r->chunks[i] = 1;
-        r_size++;
+        r_size++; ADD_STAT_COLLECTION(BASIC_ADD_SIZE)
     }
-    r->size = r_size + 1;
+    r->size = r_size + 1; ADD_STAT_COLLECTION(BASIC_ADD_SIZE)
 
     return r;
 }
@@ -423,14 +423,14 @@ BigInt *big_int_add_256(BigInt *r, BigInt *a, BigInt *b)
     dbl_chunk_size_t b_c_6 = b->chunks[6];
     dbl_chunk_size_t b_c_7 = b->chunks[7];
 
-    r_c_0 = a_c_0 + b_c_0;
-    r_c_1 = a_c_1 + b_c_1 + (r_c_0 >> BIGINT_CHUNK_SHIFT);
-    r_c_2 = a_c_2 + b_c_2 + (r_c_1 >> BIGINT_CHUNK_SHIFT);
-    r_c_3 = a_c_3 + b_c_3 + (r_c_2 >> BIGINT_CHUNK_SHIFT);
-    r_c_4 = a_c_4 + b_c_4 + (r_c_3 >> BIGINT_CHUNK_SHIFT);
-    r_c_5 = a_c_5 + b_c_5 + (r_c_4 >> BIGINT_CHUNK_SHIFT);
-    r_c_6 = a_c_6 + b_c_6 + (r_c_5 >> BIGINT_CHUNK_SHIFT);
-    r_c_7 = a_c_7 + b_c_7 + (r_c_6 >> BIGINT_CHUNK_SHIFT);
+    r_c_0 = a_c_0 + b_c_0; ADD_STAT_COLLECTION(BASIC_ADD_CHUNK)
+    r_c_1 = a_c_1 + b_c_1 + (r_c_0 >> BIGINT_CHUNK_SHIFT); ADD_STAT_COLLECTION(BASIC_ADD_CHUNK) ADD_STAT_COLLECTION(BASIC_ADD_CHUNK)
+    r_c_2 = a_c_2 + b_c_2 + (r_c_1 >> BIGINT_CHUNK_SHIFT); ADD_STAT_COLLECTION(BASIC_ADD_CHUNK) ADD_STAT_COLLECTION(BASIC_ADD_CHUNK)
+    r_c_3 = a_c_3 + b_c_3 + (r_c_2 >> BIGINT_CHUNK_SHIFT); ADD_STAT_COLLECTION(BASIC_ADD_CHUNK) ADD_STAT_COLLECTION(BASIC_ADD_CHUNK)
+    r_c_4 = a_c_4 + b_c_4 + (r_c_3 >> BIGINT_CHUNK_SHIFT); ADD_STAT_COLLECTION(BASIC_ADD_CHUNK) ADD_STAT_COLLECTION(BASIC_ADD_CHUNK)
+    r_c_5 = a_c_5 + b_c_5 + (r_c_4 >> BIGINT_CHUNK_SHIFT); ADD_STAT_COLLECTION(BASIC_ADD_CHUNK) ADD_STAT_COLLECTION(BASIC_ADD_CHUNK)
+    r_c_6 = a_c_6 + b_c_6 + (r_c_5 >> BIGINT_CHUNK_SHIFT); ADD_STAT_COLLECTION(BASIC_ADD_CHUNK) ADD_STAT_COLLECTION(BASIC_ADD_CHUNK)
+    r_c_7 = a_c_7 + b_c_7 + (r_c_6 >> BIGINT_CHUNK_SHIFT); ADD_STAT_COLLECTION(BASIC_ADD_CHUNK) ADD_STAT_COLLECTION(BASIC_ADD_CHUNK)
 
     r->chunks[0] = r_c_0 & BIGINT_CHUNK_MASK;
     r->chunks[1] = r_c_1 & BIGINT_CHUNK_MASK;
@@ -480,14 +480,14 @@ BigInt *big_int_add_upper_bound(BigInt *r, BigInt *a, BigInt *b)
     dbl_chunk_size_t b_c_6 = b->chunks[6];
     dbl_chunk_size_t b_c_7 = b->chunks[7];
 
-    dbl_chunk_size_t r_c_0 = a_c_0 + b_c_0;
-    dbl_chunk_size_t r_c_1 = a_c_1 + b_c_1;
-    dbl_chunk_size_t r_c_2 = a_c_2 + b_c_2;
-    dbl_chunk_size_t r_c_3 = a_c_3 + b_c_3;
-    dbl_chunk_size_t r_c_4 = a_c_4 + b_c_4;
-    dbl_chunk_size_t r_c_5 = a_c_5 + b_c_5;
-    dbl_chunk_size_t r_c_6 = a_c_6 + b_c_6;
-    dbl_chunk_size_t r_c_7 = a_c_7 + b_c_7;
+    dbl_chunk_size_t r_c_0 = a_c_0 + b_c_0; ADD_STAT_COLLECTION(BASIC_ADD_CHUNK)
+    dbl_chunk_size_t r_c_1 = a_c_1 + b_c_1; ADD_STAT_COLLECTION(BASIC_ADD_CHUNK)
+    dbl_chunk_size_t r_c_2 = a_c_2 + b_c_2; ADD_STAT_COLLECTION(BASIC_ADD_CHUNK)
+    dbl_chunk_size_t r_c_3 = a_c_3 + b_c_3; ADD_STAT_COLLECTION(BASIC_ADD_CHUNK) 
+    dbl_chunk_size_t r_c_4 = a_c_4 + b_c_4; ADD_STAT_COLLECTION(BASIC_ADD_CHUNK)
+    dbl_chunk_size_t r_c_5 = a_c_5 + b_c_5; ADD_STAT_COLLECTION(BASIC_ADD_CHUNK)
+    dbl_chunk_size_t r_c_6 = a_c_6 + b_c_6; ADD_STAT_COLLECTION(BASIC_ADD_CHUNK)
+    dbl_chunk_size_t r_c_7 = a_c_7 + b_c_7; ADD_STAT_COLLECTION(BASIC_ADD_CHUNK)
 
     r->chunks[0] = r_c_0;
     r->chunks[1] = r_c_1;
@@ -566,8 +566,8 @@ BigInt *big_int_fast_sub(BigInt *r, BigInt *a, BigInt *b)
         //  | extra | chunk |        | extra | chunk |
         borrow = 0;
         r_size = 0;
-        for (i = 0; i < bb_abs->size; ++i) {
-            diff = aa_abs->chunks[i] - bb_abs->chunks[i] - borrow;
+        for (i = 0; i < bb_abs->size; ++i) { ADD_STAT_COLLECTION(BASIC_ADD_OTHER)
+            diff = aa_abs->chunks[i] - bb_abs->chunks[i] - borrow; ADD_STAT_COLLECTION(BASIC_ADD_CHUNK) ADD_STAT_COLLECTION(BASIC_ADD_CHUNK)
             r->chunks[i] = diff & BIGINT_CHUNK_MASK;
             borrow = (diff >> BIGINT_CHUNK_SHIFT) & 1;
 
@@ -575,8 +575,8 @@ BigInt *big_int_fast_sub(BigInt *r, BigInt *a, BigInt *b)
                 r_size = i;
         }
 
-        for (; i < aa_abs->size; ++i) {
-            diff = aa_abs->chunks[i] - borrow;
+        for (; i < aa_abs->size; ++i) { ADD_STAT_COLLECTION(BASIC_ADD_OTHER)
+            diff = aa_abs->chunks[i] - borrow; ADD_STAT_COLLECTION(BASIC_ADD_CHUNK)
             r->chunks[i] = diff & BIGINT_CHUNK_MASK;
             borrow = (diff >> BIGINT_CHUNK_SHIFT) & 1;
 
@@ -585,7 +585,7 @@ BigInt *big_int_fast_sub(BigInt *r, BigInt *a, BigInt *b)
         }
 
         // Assertion: borrow = 0, because aa_abs >= bb_abs
-        r->size = r_size + 1;
+        r->size = r_size + 1; ADD_STAT_COLLECTION(BASIC_ADD_SIZE)
     }
 
     // Because |a| >= |b| and we calculate |a| - |b|, the result is positive
@@ -625,14 +625,14 @@ BigInt *big_int_sub_upper_bound(BigInt *r, BigInt *a, BigInt *b)
     dbl_chunk_size_t b_c_6 = b->chunks[6];
     dbl_chunk_size_t b_c_7 = b->chunks[7];
 
-    dbl_chunk_size_t r_c_0 = a_c_0 - b_c_0;
-    dbl_chunk_size_t r_c_1 = a_c_1 - b_c_1;
-    dbl_chunk_size_t r_c_2 = a_c_2 - b_c_2;
-    dbl_chunk_size_t r_c_3 = a_c_3 - b_c_3;
-    dbl_chunk_size_t r_c_4 = a_c_4 - b_c_4;
-    dbl_chunk_size_t r_c_5 = a_c_5 - b_c_5;
-    dbl_chunk_size_t r_c_6 = a_c_6 - b_c_6;
-    dbl_chunk_size_t r_c_7 = a_c_7 - b_c_7;
+    dbl_chunk_size_t r_c_0 = a_c_0 - b_c_0; ADD_STAT_COLLECTION(BASIC_ADD_CHUNK)
+    dbl_chunk_size_t r_c_1 = a_c_1 - b_c_1; ADD_STAT_COLLECTION(BASIC_ADD_CHUNK)
+    dbl_chunk_size_t r_c_2 = a_c_2 - b_c_2; ADD_STAT_COLLECTION(BASIC_ADD_CHUNK)
+    dbl_chunk_size_t r_c_3 = a_c_3 - b_c_3; ADD_STAT_COLLECTION(BASIC_ADD_CHUNK)
+    dbl_chunk_size_t r_c_4 = a_c_4 - b_c_4; ADD_STAT_COLLECTION(BASIC_ADD_CHUNK)
+    dbl_chunk_size_t r_c_5 = a_c_5 - b_c_5; ADD_STAT_COLLECTION(BASIC_ADD_CHUNK)
+    dbl_chunk_size_t r_c_6 = a_c_6 - b_c_6; ADD_STAT_COLLECTION(BASIC_ADD_CHUNK)
+    dbl_chunk_size_t r_c_7 = a_c_7 - b_c_7; ADD_STAT_COLLECTION(BASIC_ADD_CHUNK)
 
     r->chunks[0] = r_c_0;
     r->chunks[1] = r_c_1;
@@ -677,14 +677,14 @@ BigInt *big_int_sub_256(BigInt *r, BigInt *a, BigInt *b)
     dbl_chunk_size_t b_c_6 = b->chunks[6];
     dbl_chunk_size_t b_c_7 = b->chunks[7];
 
-    dbl_chunk_size_t r_c_0 = a_c_0 - b_c_0;
-    dbl_chunk_size_t r_c_1 = a_c_1 - b_c_1 - ((r_c_0 >> BIGINT_CHUNK_SHIFT) & 1);
-    dbl_chunk_size_t r_c_2 = a_c_2 - b_c_2 - ((r_c_1 >> BIGINT_CHUNK_SHIFT) & 1);
-    dbl_chunk_size_t r_c_3 = a_c_3 - b_c_3 - ((r_c_2 >> BIGINT_CHUNK_SHIFT) & 1);
-    dbl_chunk_size_t r_c_4 = a_c_4 - b_c_4 - ((r_c_3 >> BIGINT_CHUNK_SHIFT) & 1);
-    dbl_chunk_size_t r_c_5 = a_c_5 - b_c_5 - ((r_c_4 >> BIGINT_CHUNK_SHIFT) & 1);
-    dbl_chunk_size_t r_c_6 = a_c_6 - b_c_6 - ((r_c_5 >> BIGINT_CHUNK_SHIFT) & 1);
-    dbl_chunk_size_t r_c_7 = a_c_7 - b_c_7 - ((r_c_6 >> BIGINT_CHUNK_SHIFT) & 1);
+    dbl_chunk_size_t r_c_0 = a_c_0 - b_c_0; ADD_STAT_COLLECTION(BASIC_ADD_CHUNK)
+    dbl_chunk_size_t r_c_1 = a_c_1 - b_c_1 - ((r_c_0 >> BIGINT_CHUNK_SHIFT) & 1); ADD_STAT_COLLECTION(BASIC_ADD_CHUNK) ADD_STAT_COLLECTION(BASIC_ADD_CHUNK)
+    dbl_chunk_size_t r_c_2 = a_c_2 - b_c_2 - ((r_c_1 >> BIGINT_CHUNK_SHIFT) & 1); ADD_STAT_COLLECTION(BASIC_ADD_CHUNK) ADD_STAT_COLLECTION(BASIC_ADD_CHUNK)
+    dbl_chunk_size_t r_c_3 = a_c_3 - b_c_3 - ((r_c_2 >> BIGINT_CHUNK_SHIFT) & 1); ADD_STAT_COLLECTION(BASIC_ADD_CHUNK) ADD_STAT_COLLECTION(BASIC_ADD_CHUNK)
+    dbl_chunk_size_t r_c_4 = a_c_4 - b_c_4 - ((r_c_3 >> BIGINT_CHUNK_SHIFT) & 1); ADD_STAT_COLLECTION(BASIC_ADD_CHUNK) ADD_STAT_COLLECTION(BASIC_ADD_CHUNK)
+    dbl_chunk_size_t r_c_5 = a_c_5 - b_c_5 - ((r_c_4 >> BIGINT_CHUNK_SHIFT) & 1); ADD_STAT_COLLECTION(BASIC_ADD_CHUNK) ADD_STAT_COLLECTION(BASIC_ADD_CHUNK)
+    dbl_chunk_size_t r_c_6 = a_c_6 - b_c_6 - ((r_c_5 >> BIGINT_CHUNK_SHIFT) & 1); ADD_STAT_COLLECTION(BASIC_ADD_CHUNK) ADD_STAT_COLLECTION(BASIC_ADD_CHUNK)
+    dbl_chunk_size_t r_c_7 = a_c_7 - b_c_7 - ((r_c_6 >> BIGINT_CHUNK_SHIFT) & 1); ADD_STAT_COLLECTION(BASIC_ADD_CHUNK) ADD_STAT_COLLECTION(BASIC_ADD_CHUNK)
 
     r_c_0 = r_c_0 & BIGINT_CHUNK_MASK;
     r_c_1 = r_c_1 & BIGINT_CHUNK_MASK;
@@ -705,11 +705,11 @@ BigInt *big_int_sub_256(BigInt *r, BigInt *a, BigInt *b)
     r->chunks[7] = r_c_7;
 
     r->size = 0;
-    for (uint32_t i = 0; i < BIGINT_FIXED_SIZE; ++i) {
+    for (uint32_t i = 0; i < BIGINT_FIXED_SIZE; ++i) { ADD_STAT_COLLECTION(BASIC_ADD_OTHER)
         if (r->chunks[i])
             r->size = i;
     }
-    r->size += 1;
+    r->size += 1; ADD_STAT_COLLECTION(BASIC_ADD_SIZE)
 
     return r;
 }
@@ -733,15 +733,16 @@ BigInt *big_int_mul_single_chunk(BigInt *r, BigInt *a, dbl_chunk_size_t b)
 
     // Multiply and add chunks
     carry = 0;
-    for (j = 0; j < a->size; ++j) {
-        carry += a->chunks[j] * b;
+    for (j = 0; j < a->size; ++j) { ADD_STAT_COLLECTION(BASIC_ADD_OTHER)
+        carry += a->chunks[j] * b; ADD_STAT_COLLECTION(BASIC_ADD_CHUNK) ADD_STAT_COLLECTION(BASIC_MUL_CHUNK)
+
         r->chunks[j] = carry & BIGINT_RADIX_FOR_MOD;
         carry >>= BIGINT_CHUNK_BIT_SIZE;
     }
 
     if (carry > 0) {
         r->chunks[a->size] = carry;
-        r->size = a->size + 1;
+        r->size = a->size + 1; ADD_STAT_COLLECTION(BASIC_ADD_SIZE)
     }
     else {
         r->size = a->size;
@@ -766,33 +767,37 @@ BigInt *big_int_square(BigInt *r, BigInt *a)
 
     // Set BigInt to all zeros (initializes chunks, sign, and overflow)
     *r = (BigInt) {0};
-    r->size = 2 * a->size;
+    r->size = 2 * a->size; ADD_STAT_COLLECTION(BASIC_MUL_SIZE)
 
-    for (i = 0; i < a->size; ++i) {
+    for (i = 0; i < a->size; ++i) { ADD_STAT_COLLECTION(BASIC_ADD_OTHER)
         // shortcut for zero chunk
         if (a->chunks[i] == 0) {
-            r->chunks[i + a->size] = 0;
+            r->chunks[i + a->size] = 0; ADD_STAT_COLLECTION(BASIC_ADD_OTHER)
         }
         else {
             // Multiply and add chunks
-            carry = a->chunks[i] * a->chunks[i] + r->chunks[i + i];
-            r->chunks[i + i] = (dbl_chunk_size_t) (carry & BIGINT_RADIX_FOR_MOD_128);
+            carry = a->chunks[i] * a->chunks[i] + r->chunks[i + i]; 
+            ADD_STAT_COLLECTION(BASIC_ADD_CHUNK) ADD_STAT_COLLECTION(BASIC_ADD_OTHER) ADD_STAT_COLLECTION(BASIC_MUL_CHUNK)
+
+            r->chunks[i + i] = (dbl_chunk_size_t) (carry & BIGINT_RADIX_FOR_MOD_128); ADD_STAT_COLLECTION(BASIC_ADD_OTHER)
             carry >>= BIGINT_CHUNK_BIT_SIZE;
 
-            for (j = i + 1; j < a->size; j++) {
-                carry += (unsigned __int128) 2 * a->chunks[j] * a->chunks[i] + r->chunks[i + j];
-                r->chunks[i + j] = (dbl_chunk_size_t) (carry & BIGINT_RADIX_FOR_MOD_128);
+            for (j = i + 1; j < a->size; j++) { ADD_STAT_COLLECTION(BASIC_ADD_OTHER)
+                carry += (unsigned __int128) 2 * a->chunks[j] * a->chunks[i] + r->chunks[i + j]; 
+                ADD_STAT_COLLECTION(BASIC_ADD_CHUNK) ADD_STAT_COLLECTION(BASIC_ADD_CHUNK) ADD_STAT_COLLECTION(BASIC_ADD_OTHER) 
+                ADD_STAT_COLLECTION(BASIC_MUL_CHUNK) ADD_STAT_COLLECTION(BASIC_MUL_CHUNK)
+                r->chunks[i + j] = (dbl_chunk_size_t) (carry & BIGINT_RADIX_FOR_MOD_128); ADD_STAT_COLLECTION(BASIC_ADD_OTHER)
                 carry >>= BIGINT_CHUNK_BIT_SIZE;
             }
-            r->chunks[i + a->size] = carry;
+            r->chunks[i + a->size] = carry; ADD_STAT_COLLECTION(BASIC_ADD_OTHER)
         }
     }
 
     // Remove leading zeros
-    for (i = r->size - 1; i > 0; --i) {
+    for (i = r->size - 1; i > 0; --i) { ADD_STAT_COLLECTION(BASIC_ADD_OTHER)
         if (r->chunks[i])
             break;
-        r->size--;
+        r->size--; ADD_STAT_COLLECTION(BASIC_ADD_SIZE)
     }
 
     return r;
@@ -817,29 +822,31 @@ BigInt *big_int_mul(BigInt *r, BigInt *a, BigInt *b)
     *r = (BigInt) {0};
 
     r->sign = a->sign ^ b->sign;
-    r->size = a->size + b->size;
+    r->size = a->size + b->size; ADD_STAT_COLLECTION(BASIC_ADD_SIZE)
 
-    for (i = 0; i < b->size; ++i) {
+    for (i = 0; i < b->size; ++i) { ADD_STAT_COLLECTION(BASIC_ADD_OTHER)
         // shortcut for zero chunk
         if (b->chunks[i] == 0) {
-            r->chunks[i + a->size] = 0;
+            r->chunks[i + a->size] = 0; ADD_STAT_COLLECTION(BASIC_ADD_OTHER)
         }
         else {
             // Multiply and add chunks
             carry = 0;
-            for (j = 0; j < a->size; ++j) {
-                carry += a->chunks[j] * b->chunks[i] + r->chunks[i + j];
-                r->chunks[i + j] = carry & BIGINT_RADIX_FOR_MOD;
+            for (j = 0; j < a->size; ++j) { ADD_STAT_COLLECTION(BASIC_ADD_OTHER)
+                carry += a->chunks[j] * b->chunks[i] + r->chunks[i + j]; 
+                ADD_STAT_COLLECTION(BASIC_ADD_CHUNK) ADD_STAT_COLLECTION(BASIC_ADD_CHUNK) 
+                ADD_STAT_COLLECTION(BASIC_ADD_OTHER) ADD_STAT_COLLECTION(BASIC_MUL_CHUNK)
+                r->chunks[i + j] = carry & BIGINT_RADIX_FOR_MOD; ADD_STAT_COLLECTION(BASIC_ADD_OTHER)
                 carry >>= BIGINT_CHUNK_BIT_SIZE;
-                r->chunks[i + a->size] = carry;
+                r->chunks[i + a->size] = carry; ADD_STAT_COLLECTION(BASIC_ADD_OTHER)
             }
         }
     }
     // Prune leading zeros
-    for (int64_t i = r->size - 1; i > 0; --i) {
+    for (int64_t i = r->size - 1; i > 0; --i) { ADD_STAT_COLLECTION(BASIC_ADD_OTHER)
         if (r->chunks[i])
             break;
-        r->size--;
+        r->size--; ADD_STAT_COLLECTION(BASIC_ADD_SIZE)
     }
 
     return r;
@@ -911,10 +918,10 @@ BigInt *big_int_div_rem(BigInt *q, BigInt *r, BigInt *a, BigInt *b)
     }
     // Since we do operations on double chunks, we can also do the shortcut for length 2
     else if (a->size == 2) {
-        a_tmp = a->chunks[1] * BIGINT_RADIX + a->chunks[0];
+        a_tmp = a->chunks[1] * BIGINT_RADIX + a->chunks[0]; ADD_STAT_COLLECTION(BASIC_ADD_CHUNK) ADD_STAT_COLLECTION(BASIC_MUL_CHUNK)
         b_tmp = b->chunks[0];
         if (b->size == 2)
-            b_tmp += b->chunks[1] * BIGINT_RADIX;
+            b_tmp += b->chunks[1] * BIGINT_RADIX; ADD_STAT_COLLECTION(BASIC_ADD_CHUNK) ADD_STAT_COLLECTION(BASIC_MUL_CHUNK)
         q_sign = a->sign ^ b->sign;
 
         q = big_int_create_from_dbl_chunk(q, a_tmp / b_tmp, q_sign);
@@ -924,7 +931,7 @@ BigInt *big_int_div_rem(BigInt *q, BigInt *r, BigInt *a, BigInt *b)
         // Below: Division for a->size > 2
 
         q->sign = a->sign ^ b->sign;
-        q->size = a->size - b->size + 1;
+        q->size = a->size - b->size + 1; ADD_STAT_COLLECTION(BASIC_ADD_SIZE) ADD_STAT_COLLECTION(BASIC_ADD_SIZE)
 
         // Preserve values of a, b
         big_int_copy(a_loc, a);
@@ -936,9 +943,9 @@ BigInt *big_int_div_rem(BigInt *q, BigInt *r, BigInt *a, BigInt *b)
 
         // Normalize: find factor such that b->chunks[b->size - 1] >= BIGINT_RADIX/2
         factor = 0;
-        tmp = b_loc->chunks[b->size - 1];
-        while (2 * tmp < BIGINT_RADIX) {
-            ++factor;
+        tmp = b_loc->chunks[b->size - 1]; ADD_STAT_COLLECTION(BASIC_ADD_OTHER)
+        while (2 * tmp < BIGINT_RADIX) { ADD_STAT_COLLECTION(BASIC_MUL_CHUNK)
+            ++factor; ADD_STAT_COLLECTION(BASIC_ADD_OTHER)
             tmp <<= 1;
         }
 
@@ -953,31 +960,31 @@ BigInt *big_int_div_rem(BigInt *q, BigInt *r, BigInt *a, BigInt *b)
             // Special case where we actually have a zero in the MSB, just to make
             // subsequent ops easier
             a_loc->chunks[a->size] = 0;
-            a_loc->size += 1;
+            a_loc->size += 1; ADD_STAT_COLLECTION(BASIC_ADD_SIZE)
         }
 
         radix_pow->chunks[b->size] = 1;
-        radix_pow->size = b->size + 1;
+        radix_pow->size = b->size + 1; ADD_STAT_COLLECTION(BASIC_ADD_SIZE)
 
         // Calculate quotient digit by digit
-        for (q_idx = q->size - 1; q_idx >= 0; --q_idx) {
+        for (q_idx = q->size - 1; q_idx >= 0; --q_idx) { ADD_STAT_COLLECTION(BASIC_ADD_OTHER)
             // Calculate quotient and remainder of
             // a->chunks[q_idx : q_idx + b->size] / b_loc
 
-            a_idx = q_idx + b->size;
+            a_idx = q_idx + b->size; ADD_STAT_COLLECTION(BASIC_ADD_SIZE)
 
-            q_c = a_loc->chunks[a_idx] * BIGINT_RADIX + a_loc->chunks[a_idx - 1];
-            r_c = q_c % b_loc->chunks[b->size - 1];
-            q_c /= b_loc->chunks[b->size - 1];
+            q_c = a_loc->chunks[a_idx] * BIGINT_RADIX + a_loc->chunks[a_idx - 1]; ADD_STAT_COLLECTION(BASIC_ADD_CHUNK) ADD_STAT_COLLECTION(BASIC_ADD_OTHER) ADD_STAT_COLLECTION(BASIC_MUL_CHUNK)
+            r_c = q_c % b_loc->chunks[b->size - 1]; ADD_STAT_COLLECTION(BASIC_ADD_OTHER)
+            q_c /= b_loc->chunks[b->size - 1]; ADD_STAT_COLLECTION(BASIC_ADD_OTHER)
 
-            do {
+            do { ADD_STAT_COLLECTION(BASIC_ADD_CHUNK) ADD_STAT_COLLECTION(BASIC_ADD_OTHER) ADD_STAT_COLLECTION(BASIC_ADD_OTHER) ADD_STAT_COLLECTION(BASIC_MUL_CHUNK) ADD_STAT_COLLECTION(BASIC_MUL_CHUNK)
                 if (q_c >= BIGINT_RADIX
                     || (b->size > 1
                         && q_c * b_loc->chunks[b->size - 2] >
-                           BIGINT_RADIX * r_c + a_loc->chunks[a_idx - 2]))
+                           BIGINT_RADIX * r_c + a_loc->chunks[a_idx - 2])) 
                 {
-                    --q_c;
-                    r_c += b_loc->chunks[b_loc->size - 1];
+                    --q_c; ADD_STAT_COLLECTION(BASIC_ADD_OTHER)
+                    r_c += b_loc->chunks[b_loc->size - 1]; ADD_STAT_COLLECTION(BASIC_ADD_CHUNK) ADD_STAT_COLLECTION(BASIC_ADD_OTHER)
                 }
                 else {
                     break;
@@ -987,10 +994,10 @@ BigInt *big_int_div_rem(BigInt *q, BigInt *r, BigInt *a, BigInt *b)
             // Multiply and subtract
             // XXX: this entire part can surely be done more efficiently. However,
             // we avoid using divrem in Elligator, so it does not matter for us.
-            for (i = 0; i <= b_loc->size; ++i) {
+            for (i = 0; i <= b_loc->size; ++i) { ADD_STAT_COLLECTION(BASIC_ADD_OTHER)
                 if (q_idx + i >= a_loc->size)
                     break;
-                a_part->chunks[i] = a_loc->chunks[q_idx + i];
+                a_part->chunks[i] = a_loc->chunks[q_idx + i]; ADD_STAT_COLLECTION(BASIC_ADD_OTHER)
             }
             a_part->size = i;
             a_part->sign = 0;
@@ -1003,22 +1010,22 @@ BigInt *big_int_div_rem(BigInt *q, BigInt *r, BigInt *a, BigInt *b)
                 // WARNING("Rare case in div_rem triggered\n");
                 big_int_add(qb, qb, radix_pow);
 
-                --q_c;
+                --q_c; ADD_STAT_COLLECTION(BASIC_ADD_OTHER)
                 // NOTE: we intentionally ignore the overflow in a_part, it cancels
                 // out with the borrow that we ignored from the previous add.
                 big_int_add(qb, qb, b_loc);
 
-                for (i = 0; i <= b->size; ++i) {
-                    if (q_idx + i >= a_loc->size)
+                for (i = 0; i <= b->size; ++i) { ADD_STAT_COLLECTION(BASIC_ADD_OTHER) ADD_STAT_COLLECTION(BASIC_ADD_OTHER)
+                    if (q_idx + i >= a_loc->size) 
                         break;
-                    a_loc->chunks[q_idx + i] = qb->chunks[i];
+                    a_loc->chunks[q_idx + i] = qb->chunks[i]; ADD_STAT_COLLECTION(BASIC_ADD_OTHER)
                 }
             }
             else {
-                for (i = 0; i <= b->size; ++i) {
+                for (i = 0; i <= b->size; ++i) { ADD_STAT_COLLECTION(BASIC_ADD_OTHER) ADD_STAT_COLLECTION(BASIC_ADD_OTHER)
                     if (q_idx + i >= a_loc->size)
                         break;
-                    a_loc->chunks[q_idx + i] = qb->chunks[i];
+                    a_loc->chunks[q_idx + i] = qb->chunks[i]; ADD_STAT_COLLECTION(BASIC_ADD_OTHER)
                 }
             }
 
@@ -1081,19 +1088,19 @@ BigInt *big_int_sll_small(BigInt *r, BigInt *a, uint64_t shift)
     int64_t i, r_idx;
 
     // Set the lowest chunks to zero
-    for (r_idx = 0; r_idx < (int64_t) (shift / BIGINT_CHUNK_BIT_SIZE); ++r_idx) {
+    for (r_idx = 0; r_idx < (int64_t) (shift / BIGINT_CHUNK_BIT_SIZE); ++r_idx) { ADD_STAT_COLLECTION(BASIC_ADD_OTHER)
         r->chunks[r_idx] = 0;
     }
 
     // Shift the other chunks by the chunk internal shift
     shift %= BIGINT_CHUNK_BIT_SIZE;
     carry = 0;
-    for (i = 0; i < a->size; ++i) {
+    for (i = 0; i < a->size; ++i) { ADD_STAT_COLLECTION(BASIC_ADD_OTHER)
         carry = (a->chunks[i] << shift) | carry;
         r->chunks[r_idx] = carry % BIGINT_RADIX;
         carry /= BIGINT_RADIX;
 
-        ++r_idx;
+        ++r_idx; ADD_STAT_COLLECTION(BASIC_ADD_OTHER)
     }
 
     r->overflow = 0;
@@ -1103,7 +1110,7 @@ BigInt *big_int_sll_small(BigInt *r, BigInt *a, uint64_t shift)
     if (carry) {
         if (r_idx < BIGINT_FIXED_SIZE_INTERNAL) {
             r->chunks[r_idx] = carry;
-            ++r_idx;
+            ++r_idx; ADD_STAT_COLLECTION(BASIC_ADD_OTHER)
         }
         else {
             WARNING("sll caused overflow!\n");
@@ -1132,7 +1139,7 @@ BigInt *big_int_srl_small(BigInt *r, BigInt *a, uint64_t shift)
     int64_t i, a_idx;
 
     // Special case where we shift away all bits
-    if (shift / BIGINT_CHUNK_BIT_SIZE >= a->size) {
+    if (shift / BIGINT_CHUNK_BIT_SIZE >= a->size) { ADD_STAT_COLLECTION(BASIC_ADD_OTHER) ADD_STAT_COLLECTION(BASIC_ADD_OTHER) ADD_STAT_COLLECTION(BASIC_ADD_OTHER)
         // Special case for rounding towards -inf
         if (a->sign && (shift - 1) / BIGINT_CHUNK_BIT_SIZE < a->size) {
             big_int_create_from_chunk(r,
@@ -1145,24 +1152,24 @@ BigInt *big_int_srl_small(BigInt *r, BigInt *a, uint64_t shift)
         return r;
     }
 
-    r->size = a->size - shift / BIGINT_CHUNK_BIT_SIZE;
+    r->size = a->size - shift / BIGINT_CHUNK_BIT_SIZE; ADD_STAT_COLLECTION(BASIC_ADD_SIZE)
 
     // Take the chunks of a that are not all completely shifted away
     a_idx = (int64_t) (shift / BIGINT_CHUNK_BIT_SIZE);
     shift %= BIGINT_CHUNK_BIT_SIZE;
 
     // Store the last bit that is shifted away to implement rounding towards -inf
-    last_bit = (a->chunks[a_idx] >> (shift - 1)) & 1;
+    last_bit = (a->chunks[a_idx] >> (shift - 1)) & 1; ADD_STAT_COLLECTION(BASIC_ADD_CHUNK)
 
     // Go upwards to avoid aliasing, since we always write r[i] and read
     // a[a_idx+1], where i < a_idx + 1.
-    for (i = 0; i < r->size-1; ++i) {
-        carry = (a->chunks[a_idx + 1] << (BIGINT_CHUNK_BIT_SIZE - shift)) % BIGINT_RADIX;
+    for (i = 0; i < r->size-1; ++i) { ADD_STAT_COLLECTION(BASIC_ADD_OTHER)
+        carry = (a->chunks[a_idx + 1] << (BIGINT_CHUNK_BIT_SIZE - shift)) % BIGINT_RADIX; ADD_STAT_COLLECTION(BASIC_ADD_OTHER)
         r->chunks[i] = carry | (a->chunks[a_idx] >> shift);
-        ++a_idx;
+        ++a_idx; ADD_STAT_COLLECTION(BASIC_ADD_OTHER)
     }
     // Write MSB entry
-    r->chunks[r->size - 1] = a->chunks[a_idx] >> shift;
+    r->chunks[r->size - 1] = a->chunks[a_idx] >> shift; ADD_STAT_COLLECTION(BASIC_ADD_OTHER)
 
     // Add last bit (round towards -inf)
     if (a->sign && last_bit) {
@@ -1418,7 +1425,7 @@ int8_t big_int_compare(BigInt *a, BigInt *b)
         }
         else {
             // Actually compare all the chunks, from the largest to the smallest
-            for (int64_t i = a->size - 1; i >= 0; --i) {
+            for (int64_t i = a->size - 1; i >= 0; --i) { ADD_STAT_COLLECTION(BASIC_ADD_OTHER)
                 if (a->chunks[i] != b->chunks[i]) {
                     if (a->sign == 1)
                         return (a->chunks[i] > b->chunks[i]) ? -1 : 1;
@@ -1553,4 +1560,5 @@ void reset_stats()
 {
     for (int64_t i = 0; i < BIGINT_TYPE_LAST; ++i)
         big_int_stats[i] = 0;
+
 }
