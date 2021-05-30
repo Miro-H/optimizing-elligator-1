@@ -100,12 +100,12 @@ ifeq ($(VERSION),1)
 
 .PHONY: $(TARGETS)
 $(TARGETS):
-	make -f Makefile.V1 $(MAKECMDGOALS)
+	make -f Makefile.V1 $@
 
 else
 
 .PHONY: $(TARGETS)
 $(TARGETS):
-	make -f Makefile.V2 $(MAKECMDGOALS)
+	make -f Makefile.V2 $@
 
 endif
