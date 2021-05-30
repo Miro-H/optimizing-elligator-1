@@ -435,7 +435,7 @@ BigInt *big_int_add(BigInt *r, BigInt *a, BigInt *b)
     if (carry) {
         if (i < r->alloc_size) {
             r->chunks[i] = 1;
-            r_size++;
+            r_size = i;
         }
         else {
             WARNING("Addition overflow detected. Currently operations are limited to 256 bits.\n");

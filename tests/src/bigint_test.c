@@ -275,6 +275,17 @@ START_TEST(test_addition)
     ck_assert_int_eq(big_int_compare(a, r), 0);
     ck_assert_uint_eq(a->overflow, 0);
 
+    // Test last carry bit
+    big_int_create_from_hex(a,
+        "FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF20000");
+    big_int_create_from_hex(b, "000E0EE0");
+    big_int_create_from_hex(r,
+        "10000000000000000000000000000000000000000000000000000000000000EE0");
+
+    big_int_add(a, a, b); // a = a + b
+    ck_assert_int_eq(big_int_compare(a, r), 0);
+    ck_assert_uint_eq(a->overflow, 0);
+
     TEST_BIG_INT_DESTROY(a);
     TEST_BIG_INT_DESTROY(b);
     TEST_BIG_INT_DESTROY(r);
