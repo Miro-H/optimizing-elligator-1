@@ -21,9 +21,9 @@
 #define BIGINT_TYPE_BIG_INT_CREATE_FROM_DBL_CHUNK 12
 #define BIGINT_TYPE_BIG_INT_CREATE_FROM_HEX       13
 #define BIGINT_TYPE_BIG_INT_CREATE_RANDOM         14
-#define BIGINT_TYPE_BIG_INT_DEV_REM               15
-#define BIGINT_TYPE_BIG_INT_DIV                   16
-#define BIGINT_TYPE_BIG_INT_DIV_MOD               17
+#define BIGINT_TYPE_BIG_INT_DIV                   15
+#define BIGINT_TYPE_BIG_INT_DIV_MOD               16
+#define BIGINT_TYPE_BIG_INT_DIV_REM               17
 #define BIGINT_TYPE_BIG_INT_EGCD                  18
 #define BIGINT_TYPE_BIG_INT_GET_RES               19
 #define BIGINT_TYPE_BIG_INT_INV                   20
@@ -74,9 +74,9 @@ static char *big_int_type_names[] = {
     "big_int_create_from_dbl_chunk",
     "big_int_create_from_hex",
     "big_int_create_random",
-    "big_int_dev_rem",
     "big_int_div",
     "big_int_div_mod",
+    "big_int_div_rem",
     "big_int_egcd",
     "big_int_get_res",
     "big_int_inv",

@@ -610,7 +610,7 @@ BigInt *big_int_mul(BigInt *r, BigInt *a, BigInt *b)
  */
 BigInt *big_int_div_rem(BigInt *q, BigInt *r, BigInt *a, BigInt *b)
 {
-    ADD_STAT_COLLECTION(BIGINT_TYPE_BIG_INT_DEV_REM);
+    ADD_STAT_COLLECTION(BIGINT_TYPE_BIG_INT_DIV_REM);
 
     dbl_chunk_size_t a_tmp, b_tmp, tmp, q_c, r_c;
     uint8_t q_sign;

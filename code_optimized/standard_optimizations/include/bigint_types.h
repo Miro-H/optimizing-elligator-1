@@ -34,9 +34,9 @@
 #define BIGINT_TYPE_BIG_INT_CURVE1174_POW_SMALL   25
 #define BIGINT_TYPE_BIG_INT_CURVE1174_SQUARED_MOD 26
 #define BIGINT_TYPE_BIG_INT_CURVE1174_SUB_MOD     27
-#define BIGINT_TYPE_BIG_INT_DEV_REM               28
-#define BIGINT_TYPE_BIG_INT_DIV                   29
-#define BIGINT_TYPE_BIG_INT_DIV_MOD               30
+#define BIGINT_TYPE_BIG_INT_DIV                   28
+#define BIGINT_TYPE_BIG_INT_DIV_MOD               29
+#define BIGINT_TYPE_BIG_INT_DIV_REM               30
 #define BIGINT_TYPE_BIG_INT_EGCD                  31
 #define BIGINT_TYPE_BIG_INT_GET_RES               32
 #define BIGINT_TYPE_BIG_INT_INV                   33
@@ -87,9 +87,9 @@ static char *big_int_type_names[] = {
     "big_int_curve1174_pow_small",
     "big_int_curve1174_squared_mod",
     "big_int_curve1174_sub_mod",
-    "big_int_dev_rem",
     "big_int_div",
     "big_int_div_mod",
+    "big_int_div_rem",
     "big_int_egcd",
     "big_int_get_res",
     "big_int_inv",
