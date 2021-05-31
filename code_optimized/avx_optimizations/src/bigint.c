@@ -403,70 +403,87 @@ BigInt *big_int_fast_add(BigInt *r, BigInt *a, BigInt *b)
  */
 BigInt *big_int_add_256(BigInt *r, BigInt *a, BigInt *b)
 {
-    dbl_chunk_size_t r_c_0, r_c_1, r_c_2, r_c_3, r_c_4, r_c_5, r_c_6, r_c_7;
 
+    __m256i a_0_3 = _mm256_loadu_si256((__m256i*) &(a->chunks[0]));
+    __m256i a_1_4 = _mm256_loadu_si256((__m256i*) &(a->chunks[1]));
+    __m256i a_2_5 = _mm256_loadu_si256((__m256i*) &(a->chunks[2]));
+    __m256i a_3_6 = _mm256_loadu_si256((__m256i*) &(a->chunks[3]));
+    __m256i a_4_7 = _mm256_loadu_si256((__m256i*) &(a->chunks[4]));
+    __m256i a_5_8 = _mm256_loadu_si256((__m256i*) &(a->chunks[5]));
+    __m256i a_6_9 = _mm256_loadu_si256((__m256i*) &(a->chunks[6]));
+    __m256i a_7_10 = _mm256_loadu_si256((__m256i*) &(a->chunks[7]));
 
-    __m256i a_lo = _mm256_loadu_si256((__m256i*) &(a->chunks));
-    __m256i a_hi = _mm256_loadu_si256((__m256i*) &(a->chunks[8]));
+    __m256i b_0_3 = _mm256_loadu_si256((__m256i*) &(b->chunks[0]));
+    __m256i b_1_4 = _mm256_loadu_si256((__m256i*) &(b->chunks[1]));
+    __m256i b_2_5 = _mm256_loadu_si256((__m256i*) &(b->chunks[2]));
+    __m256i b_3_6 = _mm256_loadu_si256((__m256i*) &(b->chunks[3]));
+    __m256i b_4_7 = _mm256_loadu_si256((__m256i*) &(b->chunks[4]));
+    __m256i b_5_8 = _mm256_loadu_si256((__m256i*) &(b->chunks[5]));
+    __m256i b_6_9 = _mm256_loadu_si256((__m256i*) &(b->chunks[6]));
+    __m256i b_7_10 = _mm256_loadu_si256((__m256i*) &(b->chunks[7]));
 
-    __m256i b_lo = _mm256_loadu_si256((__m256i*) &(b->chunks));
-    __m256i b_hi = _mm256_loadu_si256((__m256i*) &(b->chunks[8]));
+    __m256i zero = _mm256_set1_epi64x(0);
 
-    __m256i r_lo, r_hi, tmp_lo, tmp_hi;
+    __m256i r_0_3 = _mm256_add_epi64(a_0_3, b_0_3);
+    __m256i r_0_3_shift = _mm256_srli_epi64(r_0_3, BIGINT_CHUNK_SHIFT);
 
-    r_lo = _mm256_add_epi64(a_lo, b_lo); ADD_STAT_COLLECTION(AVX_ADD_CHUNK)
-    r_hi = _mm256_add_epi64(a_hi, b_hi); ADD_STAT_COLLECTION(AVX_ADD_CHUNK)
+    r_0_3 = _mm256_blend_epi32(zero, r_0_3, 1);
 
-    tmp_lo = _mm256_srli_epi64(r_lo, BIGINT_CHUNK_SHIFT);
-    tmp_hi = _mm256_srli_epi64(r_hi, BIGINT_CHUNK_SHIFT);
+    __m256i r_1_4 = _mm256_add_epi64(a_1_4, b_1_4);
+    r_1_4 = _mm256_add_epi64(r_1_4, r_0_3_shift);
+    __m256i r_1_4_shift = _mm256_srli_epi64(r_1_4, BIGINT_CHUNK_SHIFT);
+    r_1_4 = _mm256_permute4x64_epi64(r_1_4, 0);
 
+    r_0_3 = _mm256_blend_epi32(r_0_3, r_1_4, 4);
 
+    __m256i r_2_5 = _mm256_add_epi64(a_2_5, b_2_5);
+    r_2_5 = _mm256_add_epi64(r_2_5, r_1_4_shift);
+    __m256i r_2_5_shift = _mm256_srli_epi64(r_2_5, BIGINT_CHUNK_SHIFT);
+    r_2_5 = _mm256_permute4x64_epi64(r_2_5, 0);
 
-    _mm256_storeu_si256((__m256i*) &(r->chunks), r_lo);
-    _mm256_storeu_si256((__m256i*) &(r->chunks[8]), r_hi);
+    r_0_3 = _mm256_blend_epi32(r_0_3, r_2_5, 16);
 
-    return r;
+    __m256i r_3_6 = _mm256_add_epi64(a_3_6, b_3_6);
+    r_3_6 = _mm256_add_epi64(r_3_6, r_2_5_shift);
+    __m256i r_3_6_shift = _mm256_srli_epi64(r_3_6, BIGINT_CHUNK_SHIFT);
+    r_3_6 = _mm256_permute4x64_epi64(r_3_6, 0);
 
+    r_0_3 = _mm256_blend_epi32(r_0_3, r_3_6, 64);
 
+    __m256i r_4_7 = _mm256_add_epi64(a_4_7, b_4_7);
+    r_4_7 = _mm256_add_epi64(r_4_7, r_3_6_shift);
+    __m256i r_4_7_shift = _mm256_srli_epi64(r_4_7, BIGINT_CHUNK_SHIFT);
 
+    r_4_7 =  _mm256_blend_epi32(zero, r_4_7, 1);
 
-    dbl_chunk_size_t a_c_0 = a->chunks[0];
-    dbl_chunk_size_t a_c_1 = a->chunks[1];
-    dbl_chunk_size_t a_c_2 = a->chunks[2];
-    dbl_chunk_size_t a_c_3 = a->chunks[3];
-    dbl_chunk_size_t a_c_4 = a->chunks[4];
-    dbl_chunk_size_t a_c_5 = a->chunks[5];
-    dbl_chunk_size_t a_c_6 = a->chunks[6];
-    dbl_chunk_size_t a_c_7 = a->chunks[7];
+    __m256i r_5_8 = _mm256_add_epi64(a_5_8, b_5_8);
+    r_5_8 = _mm256_add_epi64(r_5_8, r_4_7_shift);
+    __m256i r_5_8_shift = _mm256_srli_epi64(r_5_8, BIGINT_CHUNK_SHIFT);
+    r_5_8 = _mm256_permute4x64_epi64(r_5_8, 0);
 
-    dbl_chunk_size_t b_c_0 = b->chunks[0];
-    dbl_chunk_size_t b_c_1 = b->chunks[1];
-    dbl_chunk_size_t b_c_2 = b->chunks[2];
-    dbl_chunk_size_t b_c_3 = b->chunks[3];
-    dbl_chunk_size_t b_c_4 = b->chunks[4];
-    dbl_chunk_size_t b_c_5 = b->chunks[5];
-    dbl_chunk_size_t b_c_6 = b->chunks[6];
-    dbl_chunk_size_t b_c_7 = b->chunks[7];
+    r_4_7 = _mm256_blend_epi32(r_4_7, r_5_8, 4);
 
-    r_c_0 = a_c_0 + b_c_0; ADD_STAT_COLLECTION(BASIC_ADD_CHUNK)
-    r_c_1 = a_c_1 + b_c_1 + (r_c_0 >> BIGINT_CHUNK_SHIFT); ADD_STAT_COLLECTION(BASIC_ADD_CHUNK) ADD_STAT_COLLECTION(BASIC_ADD_CHUNK)
-    r_c_2 = a_c_2 + b_c_2 + (r_c_1 >> BIGINT_CHUNK_SHIFT); ADD_STAT_COLLECTION(BASIC_ADD_CHUNK) ADD_STAT_COLLECTION(BASIC_ADD_CHUNK)
-    r_c_3 = a_c_3 + b_c_3 + (r_c_2 >> BIGINT_CHUNK_SHIFT); ADD_STAT_COLLECTION(BASIC_ADD_CHUNK) ADD_STAT_COLLECTION(BASIC_ADD_CHUNK)
-    r_c_4 = a_c_4 + b_c_4 + (r_c_3 >> BIGINT_CHUNK_SHIFT); ADD_STAT_COLLECTION(BASIC_ADD_CHUNK) ADD_STAT_COLLECTION(BASIC_ADD_CHUNK)
-    r_c_5 = a_c_5 + b_c_5 + (r_c_4 >> BIGINT_CHUNK_SHIFT); ADD_STAT_COLLECTION(BASIC_ADD_CHUNK) ADD_STAT_COLLECTION(BASIC_ADD_CHUNK)
-    r_c_6 = a_c_6 + b_c_6 + (r_c_5 >> BIGINT_CHUNK_SHIFT); ADD_STAT_COLLECTION(BASIC_ADD_CHUNK) ADD_STAT_COLLECTION(BASIC_ADD_CHUNK)
-    r_c_7 = a_c_7 + b_c_7 + (r_c_6 >> BIGINT_CHUNK_SHIFT); ADD_STAT_COLLECTION(BASIC_ADD_CHUNK) ADD_STAT_COLLECTION(BASIC_ADD_CHUNK)
+    __m256i r_6_9 = _mm256_add_epi64(a_6_9, b_6_9);
+    r_6_9 = _mm256_add_epi64(r_6_9, r_5_8_shift);
+    __m256i r_6_9_shift = _mm256_srli_epi64(r_6_9, BIGINT_CHUNK_SHIFT);
+    r_6_9 = _mm256_permute4x64_epi64(r_6_9, 0);
 
-    r->chunks[0] = r_c_0 & BIGINT_CHUNK_MASK;
-    r->chunks[1] = r_c_1 & BIGINT_CHUNK_MASK;
-    r->chunks[2] = r_c_2 & BIGINT_CHUNK_MASK;
-    r->chunks[3] = r_c_3 & BIGINT_CHUNK_MASK;
-    r->chunks[4] = r_c_4 & BIGINT_CHUNK_MASK;
-    r->chunks[5] = r_c_5 & BIGINT_CHUNK_MASK;
-    r->chunks[6] = r_c_6 & BIGINT_CHUNK_MASK;
-    r->chunks[7] = r_c_7 & BIGINT_CHUNK_MASK;
+    r_4_7 = _mm256_blend_epi32(r_4_7, r_6_9, 16);
 
-    if (r_c_7 >> BIGINT_CHUNK_SHIFT) {
+    __m256i r_7_10 = _mm256_add_epi64(a_7_10, b_7_10);
+    r_7_10 = _mm256_add_epi64(r_7_10, r_6_9_shift);
+    __m256i r_7_10_shift = _mm256_srli_epi64(r_7_10, BIGINT_CHUNK_SHIFT);
+    r_7_10 = _mm256_permute4x64_epi64(r_7_10, 0);
+
+    r_4_7 = _mm256_blend_epi32(r_4_7, r_7_10, 64);
+
+    _mm256_storeu_si256((__m256i*) &(r->chunks), r_0_3);
+
+    _mm256_storeu_si256((__m256i*) &(r->chunks[4]), r_4_7);
+
+    dbl_chunk_size_t r_c_7 = _mm256_extract_epi64(r_7_10_shift, 0);
+
+    if (r_c_7) {
         r->chunks[8] = 1;
         r->size = 9;
     }
@@ -475,6 +492,7 @@ BigInt *big_int_add_256(BigInt *r, BigInt *a, BigInt *b)
     }
 
     r->sign = a->sign;
+
     return r;
 }
 

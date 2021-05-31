@@ -34,7 +34,7 @@ CFLAGS  	= -I$(IDIR_TESTED) -I$(IDIR)
 CFLAGS += -Wall -Werror
 
 ifeq ($(VERSION),3)
-	CFLAGS += -mavx
+	CFLAGS += -mavx -march=native
 endif
 
 
