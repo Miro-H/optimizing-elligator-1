@@ -13,6 +13,7 @@
  */
 #include <stdlib.h>
 #include <time.h> // for random BigInt
+#include <immintrin.h>
 
 // header files
 #include "bigint.h"
