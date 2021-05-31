@@ -9,6 +9,15 @@ IDIR_BENCHED		= $(BENCHED_ROOT_DIR)/include
 # Add include sources to CC flags
 CFLAGS += -I$(IDIR_BENCHED) -I$(IDIR)
 
+ifeq ($(VERSION),2)
+	CFLAGS += -mavx -march=native
+endif
+
+ifeq ($(VERSION),3)
+	CFLAGS += -mavx -march=native
+endif
+
+
 # Main target, building all benchmarks
 all: compile-runtime-benchmark compile-runtime-benchmark-curve1174 compile-gmp-benchmark compile-memcpy-benchmark
 
