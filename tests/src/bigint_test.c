@@ -517,6 +517,84 @@ START_TEST(test_multiplication)
 }
 END_TEST
 
+//#if VERSION == 2
+/**
+ * \brief Test multiplication of four BigInts in parallel.
+ */
+START_TEST(test_multiplication_four)
+{
+    TEST_BIG_INT_DEFINE(a0);
+    TEST_BIG_INT_DEFINE(b0);
+    TEST_BIG_INT_DEFINE(c0);
+    TEST_BIG_INT_DEFINE(r0);
+
+    TEST_BIG_INT_DEFINE(a1);
+    TEST_BIG_INT_DEFINE(b1);
+    TEST_BIG_INT_DEFINE(c1);
+    TEST_BIG_INT_DEFINE(r1);
+
+    TEST_BIG_INT_DEFINE(a2);
+    TEST_BIG_INT_DEFINE(b2);
+    TEST_BIG_INT_DEFINE(c2);
+    TEST_BIG_INT_DEFINE(r2);
+
+    TEST_BIG_INT_DEFINE(a3);
+    TEST_BIG_INT_DEFINE(b3);
+    TEST_BIG_INT_DEFINE(c3);
+    TEST_BIG_INT_DEFINE(r3);
+
+    // Single chunk multiplication
+    big_int_create_from_chunk(a0, 5, 0);
+    big_int_create_from_chunk(b0, 20, 0);
+    big_int_create_from_chunk(r0, 100, 0);
+
+    big_int_create_from_chunk(a1, 17, 0);
+    big_int_create_from_chunk(b1, 2, 0);
+    big_int_create_from_chunk(r1, 34, 0);
+
+    big_int_create_from_chunk(a2, 120, 0);
+    big_int_create_from_chunk(b2, 134, 0);
+    big_int_create_from_chunk(r2, 16080, 0);
+
+    big_int_create_from_chunk(a3, 77, 0);
+    big_int_create_from_chunk(b3, 99, 0);
+    big_int_create_from_chunk(r3, 7623, 0);
+
+    big_int_mul_4(c0, c1, c2, c3, a0, a1, a2, a3, b0, b1, b2, b3);
+
+    ck_assert_int_eq(big_int_compare(c0, r0), 0);
+    ck_assert_int_eq(big_int_compare(c1, r1), 0);
+    ck_assert_int_eq(big_int_compare(c2, r2), 0);
+    ck_assert_int_eq(big_int_compare(c3, r3), 0);
+
+    // Multi-chunk
+    big_int_create_from_hex(a0, "ABCDEF123456789123451234567890");
+    big_int_create_from_hex(b0, "123456789123456789AB1234567890");
+    big_int_create_from_hex(r0, "c379aabefa0344d43d089733526e5ff292d14ba1390f8a3326fb9875100");
+
+    big_int_create_from_hex(a1, "abcdefabcdefabcdefabcdefabcdef");
+    big_int_create_from_hex(b1, "F98765432109876543210987654321");
+    big_int_create_from_hex(r1, "a7762baccb882ab57d8011fb6a075018a9f4135497956aa2400e245618cf");
+
+    big_int_create_from_hex(a2, "ABCABCABCABCABCABCABCABCABCABC");
+    big_int_create_from_hex(b2, "A6A6A6A6A6A6A6A6A6A6A6A6A6A6A6");
+    big_int_create_from_hex(r2, "6fd54ba3087ed63bb2096ee53ca217902ab45cf78129c44df6911ac35de8");
+
+    big_int_create_from_hex(a3, "D27BACF18930EF67ABCD7EFD9ABD17");
+    big_int_create_from_hex(b3, "777777777777777777777777777777");
+    big_int_create_from_hex(r3, "6239b71b6227e730613dc3cbae9c81d0f97c17d10b4c02d1f56f678496b1");
+
+    big_int_mul_4(c0, c1, c2, c3, a0, a1, a2, a3, b0, b1, b2, b3);
+
+    ck_assert_int_eq(big_int_compare(c0, r0), 0);
+    ck_assert_int_eq(big_int_compare(c1, r1), 0);
+    ck_assert_int_eq(big_int_compare(c2, r2), 0);
+    ck_assert_int_eq(big_int_compare(c3, r3), 0);
+
+}
+END_TEST
+//#endif
+
 #if VERSION > 1
 /**
  * \brief Test multiplication of BigInts where one input has only one chunk.
@@ -1610,6 +1688,7 @@ Suite *bigints_suite(void)
     tcase_add_test(tc_basic_arith, test_addition);
     tcase_add_test(tc_basic_arith, test_subtraction);
     tcase_add_test(tc_basic_arith, test_multiplication);
+    tcase_add_test(tc_basic_arith, test_multiplication_four);
 #if VERSION > 1
     tcase_add_test(tc_basic_arith, test_multiplication_single_chunk);
     tcase_add_test(tc_basic_arith, test_squared);

@@ -199,6 +199,9 @@ BigInt *big_int_square_64(BigInt *r, BigInt *a);
 BigInt *big_int_square_32(BigInt *r, BigInt *a);
 BigInt *big_int_mul_256avx(BigInt *r, BigInt *a, BigInt *b);
 BigInt *big_int_mul_256(BigInt *r, BigInt *a, BigInt *b);
+BigInt *big_int_mul_4(BigInt *r0, BigInt *r1, BigInt *r2, BigInt *r3,
+                      BigInt *a0, BigInt *a1, BigInt *a2, BigInt *a3,
+                      BigInt *b0, BigInt *b1, BigInt *b2, BigInt *b3);
 
 // Reset stats (use in combination with setting the env variable COLLECT_STATS)
 void reset_stats(void);
