@@ -424,23 +424,23 @@ BigInt *big_int_fast_add(BigInt *r, BigInt *a, BigInt *b)
 BigInt *big_int_add_256(BigInt *r, BigInt *a, BigInt *b)
 {
 
-    __m256i a_0_3 = _mm256_loadu_si256((__m256i*) &(a->chunks[0]));
-    __m256i a_1_4 = _mm256_loadu_si256((__m256i*) &(a->chunks[1]));
-    __m256i a_2_5 = _mm256_loadu_si256((__m256i*) &(a->chunks[2]));
-    __m256i a_3_6 = _mm256_loadu_si256((__m256i*) &(a->chunks[3]));
-    __m256i a_4_7 = _mm256_loadu_si256((__m256i*) &(a->chunks[4]));
-    __m256i a_5_8 = _mm256_loadu_si256((__m256i*) &(a->chunks[5]));
-    __m256i a_6_9 = _mm256_loadu_si256((__m256i*) &(a->chunks[6]));
-    __m256i a_7_10 = _mm256_loadu_si256((__m256i*) &(a->chunks[7]));
+    __m256i a_0_3 = _mm256_loadu_si256((__m256i *)&(a->chunks[0]));
+    __m256i a_1_4 = _mm256_loadu_si256((__m256i *)&(a->chunks[1]));
+    __m256i a_2_5 = _mm256_loadu_si256((__m256i *)&(a->chunks[2]));
+    __m256i a_3_6 = _mm256_loadu_si256((__m256i *)&(a->chunks[3]));
+    __m256i a_4_7 = _mm256_loadu_si256((__m256i *)&(a->chunks[4]));
+    __m256i a_5_8 = _mm256_loadu_si256((__m256i *)&(a->chunks[5]));
+    __m256i a_6_9 = _mm256_loadu_si256((__m256i *)&(a->chunks[6]));
+    __m256i a_7_10 = _mm256_loadu_si256((__m256i *)&(a->chunks[7]));
 
-    __m256i b_0_3 = _mm256_loadu_si256((__m256i*) &(b->chunks[0]));
-    __m256i b_1_4 = _mm256_loadu_si256((__m256i*) &(b->chunks[1]));
-    __m256i b_2_5 = _mm256_loadu_si256((__m256i*) &(b->chunks[2]));
-    __m256i b_3_6 = _mm256_loadu_si256((__m256i*) &(b->chunks[3]));
-    __m256i b_4_7 = _mm256_loadu_si256((__m256i*) &(b->chunks[4]));
-    __m256i b_5_8 = _mm256_loadu_si256((__m256i*) &(b->chunks[5]));
-    __m256i b_6_9 = _mm256_loadu_si256((__m256i*) &(b->chunks[6]));
-    __m256i b_7_10 = _mm256_loadu_si256((__m256i*) &(b->chunks[7]));
+    __m256i b_0_3 = _mm256_loadu_si256((__m256i *)&(b->chunks[0]));
+    __m256i b_1_4 = _mm256_loadu_si256((__m256i *)&(b->chunks[1]));
+    __m256i b_2_5 = _mm256_loadu_si256((__m256i *)&(b->chunks[2]));
+    __m256i b_3_6 = _mm256_loadu_si256((__m256i *)&(b->chunks[3]));
+    __m256i b_4_7 = _mm256_loadu_si256((__m256i *)&(b->chunks[4]));
+    __m256i b_5_8 = _mm256_loadu_si256((__m256i *)&(b->chunks[5]));
+    __m256i b_6_9 = _mm256_loadu_si256((__m256i *)&(b->chunks[6]));
+    __m256i b_7_10 = _mm256_loadu_si256((__m256i *)&(b->chunks[7]));
 
     __m256i zero = _mm256_set1_epi64x(0);
 
@@ -474,7 +474,7 @@ BigInt *big_int_add_256(BigInt *r, BigInt *a, BigInt *b)
     r_4_7 = _mm256_add_epi64(r_4_7, r_3_6_shift);
     __m256i r_4_7_shift = _mm256_srli_epi64(r_4_7, BIGINT_CHUNK_SHIFT);
 
-    r_4_7 =  _mm256_blend_epi32(zero, r_4_7, 1);
+    r_4_7 = _mm256_blend_epi32(zero, r_4_7, 1);
 
     __m256i r_5_8 = _mm256_add_epi64(a_5_8, b_5_8);
     r_5_8 = _mm256_add_epi64(r_5_8, r_4_7_shift);
@@ -497,13 +497,14 @@ BigInt *big_int_add_256(BigInt *r, BigInt *a, BigInt *b)
 
     r_4_7 = _mm256_blend_epi32(r_4_7, r_7_10, 64);
 
-    _mm256_storeu_si256((__m256i*) &(r->chunks), r_0_3);
+    _mm256_storeu_si256((__m256i *)&(r->chunks), r_0_3);
 
-    _mm256_storeu_si256((__m256i*) &(r->chunks[4]), r_4_7);
+    _mm256_storeu_si256((__m256i *)&(r->chunks[4]), r_4_7);
 
     dbl_chunk_size_t r_c_7 = _mm256_extract_epi64(r_7_10_shift, 0);
 
-    if (r_c_7) {
+    if (r_c_7)
+    {
         r->chunks[8] = 1;
         r->size = 9;
     }
@@ -526,19 +527,21 @@ BigInt *big_int_add_256(BigInt *r, BigInt *a, BigInt *b)
  */
 BigInt *big_int_add_upper_bound(BigInt *r, BigInt *a, BigInt *b)
 {
-    __m256i a_lo = _mm256_loadu_si256((__m256i*) &(a->chunks));
-    __m256i a_hi = _mm256_loadu_si256((__m256i*) &(a->chunks[8]));
+    __m256i a_lo = _mm256_loadu_si256((__m256i *)&(a->chunks));
+    __m256i a_hi = _mm256_loadu_si256((__m256i *)&(a->chunks[8]));
 
-    __m256i b_lo = _mm256_loadu_si256((__m256i*) &(b->chunks));
-    __m256i b_hi = _mm256_loadu_si256((__m256i*) &(b->chunks[8]));
+    __m256i b_lo = _mm256_loadu_si256((__m256i *)&(b->chunks));
+    __m256i b_hi = _mm256_loadu_si256((__m256i *)&(b->chunks[8]));
 
     __m256i r_lo, r_hi;
 
-    r_lo = _mm256_add_epi64(a_lo, b_lo); ADD_STAT_COLLECTION(AVX_ADD_CHUNK)
-    r_hi = _mm256_add_epi64(a_hi, b_hi); ADD_STAT_COLLECTION(AVX_ADD_CHUNK)
+    r_lo = _mm256_add_epi64(a_lo, b_lo);
+    ADD_STAT_COLLECTION(AVX_ADD_CHUNK)
+    r_hi = _mm256_add_epi64(a_hi, b_hi);
+    ADD_STAT_COLLECTION(AVX_ADD_CHUNK)
 
-    _mm256_storeu_si256((__m256i*) &(r->chunks), r_lo);
-    _mm256_storeu_si256((__m256i*) &(r->chunks[8]), r_hi);
+    _mm256_storeu_si256((__m256i *)&(r->chunks), r_lo);
+    _mm256_storeu_si256((__m256i *)&(r->chunks[8]), r_hi);
 
     return r;
 }
@@ -658,19 +661,21 @@ BigInt *big_int_fast_sub(BigInt *r, BigInt *a, BigInt *b)
 BigInt *big_int_sub_upper_bound(BigInt *r, BigInt *a, BigInt *b)
 {
 
-    __m256i a_lo = _mm256_loadu_si256((__m256i*) &(a->chunks));
-    __m256i a_hi = _mm256_loadu_si256((__m256i*) &(a->chunks[8]));
+    __m256i a_lo = _mm256_loadu_si256((__m256i *)&(a->chunks));
+    __m256i a_hi = _mm256_loadu_si256((__m256i *)&(a->chunks[8]));
 
-    __m256i b_lo = _mm256_loadu_si256((__m256i*) &(b->chunks));
-    __m256i b_hi = _mm256_loadu_si256((__m256i*) &(b->chunks[8]));
+    __m256i b_lo = _mm256_loadu_si256((__m256i *)&(b->chunks));
+    __m256i b_hi = _mm256_loadu_si256((__m256i *)&(b->chunks[8]));
 
     __m256i r_lo, r_hi;
 
-    r_lo = _mm256_sub_epi64(a_lo, b_lo); ADD_STAT_COLLECTION(AVX_ADD_CHUNK)
-    r_hi = _mm256_sub_epi64(a_hi, b_hi); ADD_STAT_COLLECTION(AVX_ADD_CHUNK)
+    r_lo = _mm256_sub_epi64(a_lo, b_lo);
+    ADD_STAT_COLLECTION(AVX_ADD_CHUNK)
+    r_hi = _mm256_sub_epi64(a_hi, b_hi);
+    ADD_STAT_COLLECTION(AVX_ADD_CHUNK)
 
-    _mm256_storeu_si256((__m256i*) &(r->chunks), r_lo);
-    _mm256_storeu_si256((__m256i*) &(r->chunks[8]), r_hi);
+    _mm256_storeu_si256((__m256i *)&(r->chunks), r_lo);
+    _mm256_storeu_si256((__m256i *)&(r->chunks[8]), r_hi);
 
     return r;
 }
@@ -1400,8 +1405,7 @@ BigInt *big_int_square_96(BigInt *r, BigInt *a)
     r->chunks[5] = r_5 & BIGINT_RADIX_FOR_MOD;
 
     // Remove leading zeros
-    for (unsigned i = r->size - 1; i > 0; --i)
-    {
+    for (unsigned i = r->size - 1; i > 0; --i) {
         if (r->chunks[i])
             break;
         r->size--;
@@ -1884,6 +1888,19 @@ BigInt *big_int_mul_256avx(BigInt *r, BigInt *a, BigInt *b)
 
     return r;
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
