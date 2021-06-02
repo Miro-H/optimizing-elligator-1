@@ -189,6 +189,14 @@ BigInt *big_int_sub_256(BigInt *r, BigInt *a, BigInt *b);
 BigInt *big_int_sub_upper_bound(BigInt *r, BigInt *a, BigInt *b);
 BigInt *big_int_fast_sub(BigInt *r, BigInt *a, BigInt *b);
 BigInt *big_int_fast_add(BigInt *r, BigInt *a, BigInt *b);
+BigInt *big_int_square_256(BigInt *r, BigInt *a);
+BigInt *big_int_square_224(BigInt *r, BigInt *a);
+BigInt *big_int_square_192(BigInt *r, BigInt *a);
+BigInt *big_int_square_160(BigInt *r, BigInt *a);
+BigInt *big_int_square_128(BigInt *r, BigInt *a);
+BigInt *big_int_square_96(BigInt *r, BigInt *a);
+BigInt *big_int_square_64(BigInt *r, BigInt *a);
+BigInt *big_int_square_32(BigInt *r, BigInt *a);
 
 
 // Reset stats (use in combination with setting the env variable COLLECT_STATS)
