@@ -1986,11 +1986,26 @@ BigInt *big_int_mul_4(BigInt *r0, BigInt *r1, BigInt *r2, BigInt *r3,
 {
     ADD_STAT_COLLECTION(BIGINT_TYPE_BIG_INT_MUL_4);
 
+    //__m256i a_sign;
+    //__m256i b_sign;
+    //__m256i r_sign;
+
+    //__m256i a_size;
+    //__m256i b_size;
+    //__m256i r_size;
+    //__m256i carry;
+
     int64_t i, j;
     dbl_chunk_size_t carry0;
     dbl_chunk_size_t carry1;
     dbl_chunk_size_t carry2;
     dbl_chunk_size_t carry3;
+
+    //a_sign = _mm256_set_epi64x(a0->sign, a1->sign, a2->sign, a3->sign);
+    //b_sign = _mm256_set_epi64x(b0->sign, b1->sign, b2->sign, b3->sign);
+
+    //a_size = _mm256_set_epi64x(a0->size, a1->size, a2->size, a3->size);
+    //b_size = _mm256_set_epi64x(b0->size, b1->size, b2->size, b3->size);
 
     *r0 = (BigInt) {0};
     *r1 = (BigInt) {0};
@@ -2002,10 +2017,14 @@ BigInt *big_int_mul_4(BigInt *r0, BigInt *r1, BigInt *r2, BigInt *r3,
     r2->sign = a2->sign ^ b2->sign;
     r3->sign = a3->sign ^ b3->sign;
 
+    //r_sign = _mm256_and_si256(a_sign, b_sign);
+
     r0->size = a0->size + b0->size; ADD_STAT_COLLECTION(BASIC_ADD_SIZE)
     r1->size = a1->size + b1->size; ADD_STAT_COLLECTION(BASIC_ADD_SIZE)
     r2->size = a2->size + b2->size; ADD_STAT_COLLECTION(BASIC_ADD_SIZE)
     r3->size = a3->size + b3->size; ADD_STAT_COLLECTION(BASIC_ADD_SIZE)
+
+    //r_size = _mm256_add_epi64(a_size, b_size);
 
     for (i = 0; i < b0->size; ++i) { ADD_STAT_COLLECTION(BASIC_ADD_OTHER)
         // shortcut for zero chunk
@@ -2029,6 +2048,9 @@ BigInt *big_int_mul_4(BigInt *r0, BigInt *r1, BigInt *r2, BigInt *r3,
             carry1 = 0;
             carry2 = 0;
             carry3 = 0;
+
+            //carry = _mm256_setzero_si256();
+
             for (j = 0; j < a0->size; ++j) { ADD_STAT_COLLECTION(BASIC_ADD_OTHER)
                 carry0 += a0->chunks[j] * b0->chunks[i] + r0->chunks[i + j];
                 carry1 += a1->chunks[j] * b1->chunks[i] + r1->chunks[i + j];
@@ -2053,6 +2075,7 @@ BigInt *big_int_mul_4(BigInt *r0, BigInt *r1, BigInt *r2, BigInt *r3,
                 carry1 >>= BIGINT_CHUNK_BIT_SIZE;
                 carry2 >>= BIGINT_CHUNK_BIT_SIZE;
                 carry3 >>= BIGINT_CHUNK_BIT_SIZE;
+                //carry = _mm256_sll_epi64(carry, 1)
 
                 r0->chunks[i + a0->size] = carry0; ADD_STAT_COLLECTION(BASIC_ADD_OTHER)
                 r1->chunks[i + a1->size] = carry1; ADD_STAT_COLLECTION(BASIC_ADD_OTHER)
