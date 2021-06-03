@@ -1709,8 +1709,6 @@ BigInt *big_int_mul_256(BigInt *r, BigInt *a, BigInt *b)
     return r;
 }
 
-
-
 BigInt *big_int_mul_256avx(BigInt *r, BigInt *a, BigInt *b)
 {
     ADD_STAT_COLLECTION(BIGINT_TYPE_BIG_INT_MUL_256);
@@ -1888,32 +1886,6 @@ BigInt *big_int_mul_256avx(BigInt *r, BigInt *a, BigInt *b)
 
     return r;
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 /**
