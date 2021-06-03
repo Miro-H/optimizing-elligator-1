@@ -31,7 +31,7 @@ CC      	= gcc
 CFLAGS  	= -I$(IDIR_TESTED) -I$(IDIR)
 
 # Add additional compilation flags to improve code quality
-CFLAGS += -Wall -Werror
+CFLAGS += -Wall -Werror 
 
 ifeq ($(VERSION),3)
 	CFLAGS += -mavx2 -march=native
@@ -70,9 +70,9 @@ endif
 
 # Main target, building all tests
 ifneq ($(VERSION), 1)
-all: compile-bigint-test compile-elligator-test compile-bigint-curve1174-test
+all: compile-bigint-test compile-elligator-test compile-bigint-curve1174-test compile-gmp-elligator-test
 else
-all: compile-bigint-test compile-elligator-test
+all: compile-bigint-test compile-elligator-test compile-gmp-elligator-test
 endif
 
 .PHONY: print-compile-msg
@@ -152,6 +152,23 @@ compile-elligator-test: print-compile-msg elligator-test
 
 elligator-test: $(ELLIGATOR_SRC) $(ELLIGATOR_TESTED_SRC)
 	$(CC) -o $(BDIR)/$@ $^ $(CFLAGS) $(LIBS)
+
+################################################################################
+#                           GMP Elligator Tests                                #
+################################################################################
+
+# Specify the object files constituting the test
+_OBJ	= gmp_elligator_test.o
+OBJ 	= $(patsubst %,$(ODIR)/%,$(_OBJ))
+# Specify the object files of the tested functions
+_OBJ_TESTED = gmp_elligator.o
+OBJ_TESTED 	= $(patsubst %,$(ODIR_TESTED)/%,$(_OBJ_TESTED))
+
+.PHONY: compile-gmp-elligator-test
+compile-gmp-elligator-test: all-tested gmp-elligator-test
+
+gmp-elligator-test: $(OBJ_TESTED) $(OBJ)
+	$(CC) -lgmp -o $(BDIR)/$@ $^ $(CFLAGS) $(LIBS)
 
 ################################################################################
 #                            Other targets                                     #
