@@ -20,6 +20,8 @@ typedef struct GMP_Curve // edward curve
     mpz_t r; // r = c + 1/c
 } GMP_Curve;
 
+void mpz_chi(mpz_t r, mpz_t t, mpz_t q);
+
 void gmp_init_curve1174(GMP_Curve *curve);
 void gmp_free_curve(GMP_Curve *curve);
 void gmp_free_curve_point(GMP_CurvePoint *point);

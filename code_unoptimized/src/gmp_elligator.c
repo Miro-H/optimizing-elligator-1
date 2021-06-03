@@ -24,6 +24,7 @@ void mpz_chi(mpz_t r, mpz_t t, mpz_t q)
 {
     ADD_STAT_COLLECTION(BIGINT_TYPE_BIG_INT_CHI);
 
+    // BigInt *e
     mpz_t e;
     mpz_t e_minus_1;
 
@@ -37,20 +38,26 @@ void mpz_chi(mpz_t r, mpz_t t, mpz_t q)
         FATAL("Chi function implementation only supports odd q (actually prime q)!");
 
     if (!r)
+    {
         //r = big_int_alloc(BIGINT_FIXED_SIZE);
         mpz_init(r);
+    }
 
     //if (big_int_compare(t, big_int_zero) == 0)
     if (mpz_cmp_ui(t, 0) == 0)
+    {
         //return big_int_create_from_chunk(r, 0, 0);
         mpz_set_ui(r, 0);
+        mpz_clear(e);
+        mpz_clear(e_minus_1);
         return;
+    }
 
     //e = big_int_duplicate(q);
-    mpz_set(e, q);
+    mpz_set(e, q); // 7
     //big_int_srl_small(e, big_int_sub(e, e, big_int_one), 1);
-    mpz_sub_ui(e_minus_1, e, 1);
-    mpz_mul_2exp(e, e_minus_1, 1);
+    mpz_sub_ui(e_minus_1, e, 1); // 7
+    mpz_fdiv_q_2exp(e, e_minus_1, 1);
 
     //big_int_pow(r, t, e, q);
     mpz_powm(r, t, e, q);
@@ -61,8 +68,10 @@ void mpz_chi(mpz_t r, mpz_t t, mpz_t q)
 
     //if (!big_int_compare(r, big_int_zero) || !big_int_compare(r, big_int_one))
     if (!mpz_cmp_ui(r, 0) || !mpz_cmp_ui(r, 1))
+    {
         //return r;
         return;
+    }
     //return big_int_create_from_chunk(r, 1, 1); // r = -1
     mpz_set_si(r, -1);
     return;
