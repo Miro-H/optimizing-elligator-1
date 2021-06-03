@@ -1504,6 +1504,11 @@ BigInt *big_int_mul(BigInt *r, BigInt *a, BigInt *b)
 {
     ADD_STAT_COLLECTION(BIGINT_TYPE_BIG_INT_MUL);
 
+    if (a->size == 8 && b->size == 8)
+    {
+        return big_int_mul_256(r, a, b);
+    }
+
     int64_t i, j;
     dbl_chunk_size_t carry;
 
@@ -1556,62 +1561,332 @@ BigInt *big_int_mul(BigInt *r, BigInt *a, BigInt *b)
     return r;
 }
 
-
-
-
-
-BigInt *big_int_mul(BigInt *r, BigInt *a, BigInt *b)
+BigInt *big_int_mul_256(BigInt *r, BigInt *a, BigInt *b)
 {
-    ADD_STAT_COLLECTION(BIGINT_TYPE_BIG_INT_MUL);
+    ADD_STAT_COLLECTION(BIGINT_TYPE_BIG_INT_MUL_256);
+    dbl_chunk_size_t a0, a1, a2, a3, a4, a5, a6, a7;
+    dbl_chunk_size_t b0, b1, b2, b3, b4, b5, b6, b7;
+    
+    a0 = a->chunks[0];
+    a1 = a->chunks[1];
+    a2 = a->chunks[2];
+    a3 = a->chunks[3];
 
-    int64_t i, j;
-    dbl_chunk_size_t carry;
+    a4 = a->chunks[4];
+    a5 = a->chunks[5];
+    a6 = a->chunks[6];
+    a7 = a->chunks[7];
 
+    b0 = b->chunks[0];
+    b1 = b->chunks[1];
+    b2 = b->chunks[2];
+    b3 = b->chunks[3];
+
+    b4 = b->chunks[4];
+    b5 = b->chunks[5];
+    b6 = b->chunks[6];
+    b7 = b->chunks[7];
+   
+    unsigned __int128 r_0, r_1, r_2, r_3, r_4, r_5, r_6, r_7, r_8, r_9, r_10, r_11, r_12, r_13, r_14, r_15;
+    
+    unsigned __int128 a0_b0 = a0*b0;
+    unsigned __int128 a0_b1 = a0*b1;
+    unsigned __int128 a0_b2 = a0*b2;
+    unsigned __int128 a0_b3 = a0*b3;
+    unsigned __int128 a0_b4 = a0*b4;
+    unsigned __int128 a0_b5 = a0*b5;
+    unsigned __int128 a0_b6 = a0*b6;
+    unsigned __int128 a0_b7 = a0*b7;
+    
+    unsigned __int128 a1_b0 = a1*b0;
+    unsigned __int128 a1_b1 = a1*b1;
+    unsigned __int128 a1_b2 = a1*b2;
+    unsigned __int128 a1_b3 = a1*b3;
+    unsigned __int128 a1_b4 = a1*b4;
+    unsigned __int128 a1_b5 = a1*b5;
+    unsigned __int128 a1_b6 = a1*b6;
+    unsigned __int128 a1_b7 = a1*b7;
+
+    unsigned __int128 a2_b0 = a2*b0;
+    unsigned __int128 a2_b1 = a2*b1;
+    unsigned __int128 a2_b2 = a2*b2;
+    unsigned __int128 a2_b3 = a2*b3;
+    unsigned __int128 a2_b4 = a2*b4;
+    unsigned __int128 a2_b5 = a2*b5;
+    unsigned __int128 a2_b6 = a2*b6;
+    unsigned __int128 a2_b7 = a2*b7;
+    
+    unsigned __int128 a3_b0 = a3*b0;
+    unsigned __int128 a3_b1 = a3*b1;
+    unsigned __int128 a3_b2 = a3*b2;
+    unsigned __int128 a3_b3 = a3*b3;
+    unsigned __int128 a3_b4 = a3*b4;
+    unsigned __int128 a3_b5 = a3*b5;
+    unsigned __int128 a3_b6 = a3*b6;
+    unsigned __int128 a3_b7 = a3*b7;
+    
+    unsigned __int128 a4_b0 = a4*b0;
+    unsigned __int128 a4_b1 = a4*b1;
+    unsigned __int128 a4_b2 = a4*b2;
+    unsigned __int128 a4_b3 = a4*b3;
+    unsigned __int128 a4_b4 = a4*b4;
+    unsigned __int128 a4_b5 = a4*b5;
+    unsigned __int128 a4_b6 = a4*b6;
+    unsigned __int128 a4_b7 = a4*b7;
+    
+    unsigned __int128 a5_b0 = a5*b0;
+    unsigned __int128 a5_b1 = a5*b1;
+    unsigned __int128 a5_b2 = a5*b2;
+    unsigned __int128 a5_b3 = a5*b3;
+    unsigned __int128 a5_b4 = a5*b4;
+    unsigned __int128 a5_b5 = a5*b5;
+    unsigned __int128 a5_b6 = a5*b6;
+    unsigned __int128 a5_b7 = a5*b7;
+    
+    unsigned __int128 a6_b0 = a6*b0;
+    unsigned __int128 a6_b1 = a6*b1;
+    unsigned __int128 a6_b2 = a6*b2;
+    unsigned __int128 a6_b3 = a6*b3;
+    unsigned __int128 a6_b4 = a6*b4;
+    unsigned __int128 a6_b5 = a6*b5;
+    unsigned __int128 a6_b6 = a6*b6;
+    unsigned __int128 a6_b7 = a6*b7;
+    
+    unsigned __int128 a7_b0 = a7*b0;
+    unsigned __int128 a7_b1 = a7*b1;
+    unsigned __int128 a7_b2 = a7*b2;
+    unsigned __int128 a7_b3 = a7*b3;
+    unsigned __int128 a7_b4 = a7*b4;
+    unsigned __int128 a7_b5 = a7*b5;
+    unsigned __int128 a7_b6 = a7*b6;
+    unsigned __int128 a7_b7 = a7*b7;
+    
+    r_0 = a0_b0;
+    r_1 = (r_0 >> BIGINT_CHUNK_SHIFT) + a0_b1 + a1_b0;
+    r_2 = (r_1 >> BIGINT_CHUNK_SHIFT) + a0_b2 + a1_b1 + a2_b0;
+    r_3 = (r_2 >> BIGINT_CHUNK_SHIFT) + a0_b3 + a1_b2 + a2_b1 + a3_b0;
+    r_4 = (r_3 >> BIGINT_CHUNK_SHIFT) + a0_b4 + a1_b3 + a2_b2 + a3_b1 + a4_b0;
+    r_5 = (r_4 >> BIGINT_CHUNK_SHIFT) + a0_b5 + a1_b4 + a2_b3 + a3_b2 + a4_b1 + a5_b0;
+    r_6 = (r_5 >> BIGINT_CHUNK_SHIFT) + a0_b6 + a1_b5 + a2_b4 + a3_b3 + a4_b2 + a5_b1 + a6_b0;
+    r_7 = (r_6 >> BIGINT_CHUNK_SHIFT) + a0_b7 + a1_b6 + a2_b5 + a3_b4 + a4_b3 + a5_b2 + a6_b1 + a7_b0;
+    r_8 = (r_7 >> BIGINT_CHUNK_SHIFT) + a1_b7 + a2_b6 + a3_b5 + a4_b4 + a5_b3 + a6_b2 + a7_b1;
+    r_9 = (r_8 >> BIGINT_CHUNK_SHIFT) + a2_b7 + a3_b6 + a4_b5 + a5_b4 + a6_b3 + a7_b2;
+    r_10 = (r_9 >> BIGINT_CHUNK_SHIFT) + a3_b7 + a4_b6 + a5_b5 + a6_b4 + a7_b3;
+    r_11 = (r_10 >> BIGINT_CHUNK_SHIFT) + a4_b7 + a5_b6 + a6_b5 + a7_b4;
+    r_12 = (r_11 >> BIGINT_CHUNK_SHIFT) + a5_b7 + a6_b6 + a7_b5;
+    r_13 = (r_12 >> BIGINT_CHUNK_SHIFT) + a6_b7 + a7_b6;
+    r_14 = (r_13 >> BIGINT_CHUNK_SHIFT) + a7_b7;
+    r_15 = (r_14 >> BIGINT_CHUNK_SHIFT);
+    
     *r = (BigInt){0};
-
     r->sign = a->sign ^ b->sign;
-    r->size = a->size + b->size;
-    ADD_STAT_COLLECTION(BASIC_ADD_SIZE)
+    r->size = 16;
 
-    for (i = 0; i < b->size; ++i)
-    {
-        ADD_STAT_COLLECTION(BASIC_ADD_OTHER)
-        // shortcut for zero chunk
-        if (b->chunks[i] == 0)
-        {
-            r->chunks[i + a->size] = 0;
-            ADD_STAT_COLLECTION(BASIC_ADD_OTHER)
-        }
-        else
-        {
-            // Multiply and add chunks
-            carry = 0;
-            for (j = 0; j < a->size; ++j)
-            {
-                ADD_STAT_COLLECTION(BASIC_ADD_OTHER)
-                carry += a->chunks[j] * b->chunks[i] + r->chunks[i + j];
-                ADD_STAT_COLLECTION(BASIC_ADD_CHUNK)
-                ADD_STAT_COLLECTION(BASIC_ADD_CHUNK)
-                ADD_STAT_COLLECTION(BASIC_ADD_OTHER)
-                ADD_STAT_COLLECTION(BASIC_MUL_CHUNK)
-                    r->chunks[i + j] = carry & BIGINT_RADIX_FOR_MOD;
-                ADD_STAT_COLLECTION(BASIC_ADD_OTHER)
-                carry >>= BIGINT_CHUNK_BIT_SIZE;
-                r->chunks[i + a->size] = carry;
-                ADD_STAT_COLLECTION(BASIC_ADD_OTHER)
-            }
-        }
-    }
+    r->chunks[0] = r_0 & BIGINT_RADIX_FOR_MOD_128;
+    r->chunks[1] = r_1 & BIGINT_RADIX_FOR_MOD_128;
+    r->chunks[2] = r_2 & BIGINT_RADIX_FOR_MOD_128;
+    r->chunks[3] = r_3 & BIGINT_RADIX_FOR_MOD_128;
+    r->chunks[4] = r_4 & BIGINT_RADIX_FOR_MOD_128;
+    r->chunks[5] = r_5 & BIGINT_RADIX_FOR_MOD_128;
+    r->chunks[6] = r_6 & BIGINT_RADIX_FOR_MOD_128;
+    r->chunks[7] = r_7 & BIGINT_RADIX_FOR_MOD_128;
+    r->chunks[8] = r_8 & BIGINT_RADIX_FOR_MOD_128;
+    r->chunks[9] = r_9 & BIGINT_RADIX_FOR_MOD_128;
+    r->chunks[10] = r_10 & BIGINT_RADIX_FOR_MOD_128;
+    r->chunks[11] = r_11 & BIGINT_RADIX_FOR_MOD_128;
+    r->chunks[12] = r_12 & BIGINT_RADIX_FOR_MOD_128;
+    r->chunks[13] = r_13 & BIGINT_RADIX_FOR_MOD_128;
+    r->chunks[14] = r_14 & BIGINT_RADIX_FOR_MOD_128;
+    r->chunks[15] = r_15 & BIGINT_RADIX_FOR_MOD_128;
+   
     // Prune leading zeros
     for (int64_t i = r->size - 1; i > 0; --i)
     {
-        ADD_STAT_COLLECTION(BASIC_ADD_OTHER)
         if (r->chunks[i])
             break;
         r->size--;
-        ADD_STAT_COLLECTION(BASIC_ADD_SIZE)
     }
+    
+    return r;
+}
 
+
+
+BigInt *big_int_mul_256avx(BigInt *r, BigInt *a, BigInt *b)
+{
+    ADD_STAT_COLLECTION(BIGINT_TYPE_BIG_INT_MUL_256);
+    __m256i a_0, a_1, a_2, a_3, a_4, a_5, a_6, a_7;
+    __m256i a_0_3, a_4_7, b_0_3, b_4_7;
+    
+    __m256i a0_b_0_3, a0_b_4_7;
+    __m256i a1_b_0_3, a1_b_4_7;
+    __m256i a2_b_0_3, a2_b_4_7;
+    __m256i a3_b_0_3, a3_b_4_7;
+    __m256i a4_b_0_3, a4_b_4_7;
+    __m256i a5_b_0_3, a5_b_4_7;
+    __m256i a6_b_0_3, a6_b_4_7;
+    __m256i a7_b_0_3, a7_b_4_7;
+
+    a_0_3 = _mm256_loadu_si256 ((__m256i *) &(a->chunks[0]));
+    a_4_7 = _mm256_loadu_si256 ((__m256i *) &(a->chunks[4]));
+    
+    b_0_3 = _mm256_loadu_si256 ((__m256i *) &(b->chunks[0]));
+    b_4_7 = _mm256_loadu_si256 ((__m256i *) &(b->chunks[4]));
+
+    a_0 = _mm256_permute4x64_epi64(a_0_3, 0);
+    a_1 = _mm256_permute4x64_epi64(a_0_3, 85);
+    a_2 = _mm256_permute4x64_epi64(a_0_3, 170);
+    a_3 = _mm256_permute4x64_epi64(a_0_3, 255);
+
+    a_4 = _mm256_permute4x64_epi64(a_4_7, 0);
+    a_5 = _mm256_permute4x64_epi64(a_4_7, 85);
+    a_6 = _mm256_permute4x64_epi64(a_4_7, 170);
+    a_7 = _mm256_permute4x64_epi64(a_4_7, 255); 
+
+    a0_b_0_3 = _mm256_mul_epu32(a_0, b_0_3);
+    a0_b_4_7 = _mm256_mul_epu32(a_0, b_4_7);
+    
+    a1_b_0_3 = _mm256_mul_epu32(a_1, b_0_3);
+    a1_b_4_7 = _mm256_mul_epu32(a_1, b_4_7);
+    
+    a2_b_0_3 = _mm256_mul_epu32(a_2, b_0_3);
+    a2_b_4_7 = _mm256_mul_epu32(a_2, b_4_7);
+    
+    a3_b_0_3 = _mm256_mul_epu32(a_3, b_0_3);
+    a3_b_4_7 = _mm256_mul_epu32(a_3, b_4_7);
+
+    a4_b_0_3 = _mm256_mul_epu32(a_4, b_0_3);
+    a4_b_4_7 = _mm256_mul_epu32(a_4, b_4_7);
+    
+    a5_b_0_3 = _mm256_mul_epu32(a_5, b_0_3);
+    a5_b_4_7 = _mm256_mul_epu32(a_5, b_4_7);
+    
+    a6_b_0_3 = _mm256_mul_epu32(a_6, b_0_3);
+    a6_b_4_7 = _mm256_mul_epu32(a_6, b_4_7);
+    
+    a7_b_0_3 = _mm256_mul_epu32(a_7, b_0_3);
+    a7_b_4_7 = _mm256_mul_epu32(a_7, b_4_7);
+   
+    unsigned __int128 r_0, r_1, r_2, r_3, r_4, r_5, r_6, r_7, r_8, r_9, r_10, r_11, r_12, r_13, r_14, r_15;
+    
+    unsigned __int128 a0_b0 = _mm256_extract_epi64(a0_b_0_3, 0);
+    unsigned __int128 a0_b1 = _mm256_extract_epi64(a0_b_0_3, 1);
+    unsigned __int128 a0_b2 = _mm256_extract_epi64(a0_b_0_3, 2);
+    unsigned __int128 a0_b3 = _mm256_extract_epi64(a0_b_0_3, 3);
+    unsigned __int128 a0_b4 = _mm256_extract_epi64(a0_b_4_7, 0);
+    unsigned __int128 a0_b5 = _mm256_extract_epi64(a0_b_4_7, 1);
+    unsigned __int128 a0_b6 = _mm256_extract_epi64(a0_b_4_7, 2);
+    unsigned __int128 a0_b7 = _mm256_extract_epi64(a0_b_4_7, 3);
+    
+    unsigned __int128 a1_b0 = _mm256_extract_epi64(a1_b_0_3, 0);
+    unsigned __int128 a1_b1 = _mm256_extract_epi64(a1_b_0_3, 1);
+    unsigned __int128 a1_b2 = _mm256_extract_epi64(a1_b_0_3, 2);
+    unsigned __int128 a1_b3 = _mm256_extract_epi64(a1_b_0_3, 3);
+    unsigned __int128 a1_b4 = _mm256_extract_epi64(a1_b_4_7, 0);
+    unsigned __int128 a1_b5 = _mm256_extract_epi64(a1_b_4_7, 1);
+    unsigned __int128 a1_b6 = _mm256_extract_epi64(a1_b_4_7, 2);
+    unsigned __int128 a1_b7 = _mm256_extract_epi64(a1_b_4_7, 3);
+
+    unsigned __int128 a2_b0 = _mm256_extract_epi64(a2_b_0_3, 0);
+    unsigned __int128 a2_b1 = _mm256_extract_epi64(a2_b_0_3, 1);
+    unsigned __int128 a2_b2 = _mm256_extract_epi64(a2_b_0_3, 2);
+    unsigned __int128 a2_b3 = _mm256_extract_epi64(a2_b_0_3, 3);
+    unsigned __int128 a2_b4 = _mm256_extract_epi64(a2_b_4_7, 0);
+    unsigned __int128 a2_b5 = _mm256_extract_epi64(a2_b_4_7, 1);
+    unsigned __int128 a2_b6 = _mm256_extract_epi64(a2_b_4_7, 2);
+    unsigned __int128 a2_b7 = _mm256_extract_epi64(a2_b_4_7, 3);
+    
+    unsigned __int128 a3_b0 = _mm256_extract_epi64(a3_b_0_3, 0);
+    unsigned __int128 a3_b1 = _mm256_extract_epi64(a3_b_0_3, 1);
+    unsigned __int128 a3_b2 = _mm256_extract_epi64(a3_b_0_3, 2);
+    unsigned __int128 a3_b3 = _mm256_extract_epi64(a3_b_0_3, 3);
+    unsigned __int128 a3_b4 = _mm256_extract_epi64(a3_b_4_7, 0);
+    unsigned __int128 a3_b5 = _mm256_extract_epi64(a3_b_4_7, 1);
+    unsigned __int128 a3_b6 = _mm256_extract_epi64(a3_b_4_7, 2);
+    unsigned __int128 a3_b7 = _mm256_extract_epi64(a3_b_4_7, 3);
+    
+    unsigned __int128 a4_b0 = _mm256_extract_epi64(a4_b_0_3, 0);
+    unsigned __int128 a4_b1 = _mm256_extract_epi64(a4_b_0_3, 1);
+    unsigned __int128 a4_b2 = _mm256_extract_epi64(a4_b_0_3, 2);
+    unsigned __int128 a4_b3 = _mm256_extract_epi64(a4_b_0_3, 3);
+    unsigned __int128 a4_b4 = _mm256_extract_epi64(a4_b_4_7, 0);
+    unsigned __int128 a4_b5 = _mm256_extract_epi64(a4_b_4_7, 1);
+    unsigned __int128 a4_b6 = _mm256_extract_epi64(a4_b_4_7, 2);
+    unsigned __int128 a4_b7 = _mm256_extract_epi64(a4_b_4_7, 3);
+    
+    unsigned __int128 a5_b0 = _mm256_extract_epi64(a5_b_0_3, 0);
+    unsigned __int128 a5_b1 = _mm256_extract_epi64(a5_b_0_3, 1);
+    unsigned __int128 a5_b2 = _mm256_extract_epi64(a5_b_0_3, 2);
+    unsigned __int128 a5_b3 = _mm256_extract_epi64(a5_b_0_3, 3);
+    unsigned __int128 a5_b4 = _mm256_extract_epi64(a5_b_4_7, 0);
+    unsigned __int128 a5_b5 = _mm256_extract_epi64(a5_b_4_7, 1);
+    unsigned __int128 a5_b6 = _mm256_extract_epi64(a5_b_4_7, 2);
+    unsigned __int128 a5_b7 = _mm256_extract_epi64(a5_b_4_7, 3);
+    
+    unsigned __int128 a6_b0 = _mm256_extract_epi64(a6_b_0_3, 0);
+    unsigned __int128 a6_b1 = _mm256_extract_epi64(a6_b_0_3, 1);
+    unsigned __int128 a6_b2 = _mm256_extract_epi64(a6_b_0_3, 2);
+    unsigned __int128 a6_b3 = _mm256_extract_epi64(a6_b_0_3, 3);
+    unsigned __int128 a6_b4 = _mm256_extract_epi64(a6_b_4_7, 0);
+    unsigned __int128 a6_b5 = _mm256_extract_epi64(a6_b_4_7, 1);
+    unsigned __int128 a6_b6 = _mm256_extract_epi64(a6_b_4_7, 2);
+    unsigned __int128 a6_b7 = _mm256_extract_epi64(a6_b_4_7, 3);
+    
+    unsigned __int128 a7_b0 = _mm256_extract_epi64(a7_b_0_3, 0);
+    unsigned __int128 a7_b1 = _mm256_extract_epi64(a7_b_0_3, 1);
+    unsigned __int128 a7_b2 = _mm256_extract_epi64(a7_b_0_3, 2);
+    unsigned __int128 a7_b3 = _mm256_extract_epi64(a7_b_0_3, 3);
+    unsigned __int128 a7_b4 = _mm256_extract_epi64(a7_b_4_7, 0);
+    unsigned __int128 a7_b5 = _mm256_extract_epi64(a7_b_4_7, 1);
+    unsigned __int128 a7_b6 = _mm256_extract_epi64(a7_b_4_7, 2);
+    unsigned __int128 a7_b7 = _mm256_extract_epi64(a7_b_4_7, 3);
+    
+    r_0 = a0_b0;
+    r_1 = (r_0 >> BIGINT_CHUNK_SHIFT) + a0_b1 + a1_b0;
+    r_2 = (r_1 >> BIGINT_CHUNK_SHIFT) + a0_b2 + a1_b1 + a2_b0;
+    r_3 = (r_2 >> BIGINT_CHUNK_SHIFT) + a0_b3 + a1_b2 + a2_b1 + a3_b0;
+    r_4 = (r_3 >> BIGINT_CHUNK_SHIFT) + a0_b4 + a1_b3 + a2_b2 + a3_b1 + a4_b0;
+    r_5 = (r_4 >> BIGINT_CHUNK_SHIFT) + a0_b5 + a1_b4 + a2_b3 + a3_b2 + a4_b1 + a5_b0;
+    r_6 = (r_5 >> BIGINT_CHUNK_SHIFT) + a0_b6 + a1_b5 + a2_b4 + a3_b3 + a4_b2 + a5_b1 + a6_b0;
+    r_7 = (r_6 >> BIGINT_CHUNK_SHIFT) + a0_b7 + a1_b6 + a2_b5 + a3_b4 + a4_b3 + a5_b2 + a6_b1 + a7_b0;
+    r_8 = (r_7 >> BIGINT_CHUNK_SHIFT) + a1_b7 + a2_b6 + a3_b5 + a4_b4 + a5_b3 + a6_b2 + a7_b1;
+    r_9 = (r_8 >> BIGINT_CHUNK_SHIFT) + a2_b7 + a3_b6 + a4_b5 + a5_b4 + a6_b3 + a7_b2;
+    r_10 = (r_9 >> BIGINT_CHUNK_SHIFT) + a3_b7 + a4_b6 + a5_b5 + a6_b4 + a7_b3;
+    r_11 = (r_10 >> BIGINT_CHUNK_SHIFT) + a4_b7 + a5_b6 + a6_b5 + a7_b4;
+    r_12 = (r_11 >> BIGINT_CHUNK_SHIFT) + a5_b7 + a6_b6 + a7_b5;
+    r_13 = (r_12 >> BIGINT_CHUNK_SHIFT) + a6_b7 + a7_b6;
+    r_14 = (r_13 >> BIGINT_CHUNK_SHIFT) + a7_b7;
+    r_15 = (r_14 >> BIGINT_CHUNK_SHIFT);
+    
+    *r = (BigInt){0};
+    r->sign = a->sign ^ b->sign;
+    r->size = 16;
+
+    r->chunks[0] = r_0 & BIGINT_RADIX_FOR_MOD_128;
+    r->chunks[1] = r_1 & BIGINT_RADIX_FOR_MOD_128;
+    r->chunks[2] = r_2 & BIGINT_RADIX_FOR_MOD_128;
+    r->chunks[3] = r_3 & BIGINT_RADIX_FOR_MOD_128;
+    r->chunks[4] = r_4 & BIGINT_RADIX_FOR_MOD_128;
+    r->chunks[5] = r_5 & BIGINT_RADIX_FOR_MOD_128;
+    r->chunks[6] = r_6 & BIGINT_RADIX_FOR_MOD_128;
+    r->chunks[7] = r_7 & BIGINT_RADIX_FOR_MOD_128;
+    r->chunks[8] = r_8 & BIGINT_RADIX_FOR_MOD_128;
+    r->chunks[9] = r_9 & BIGINT_RADIX_FOR_MOD_128;
+    r->chunks[10] = r_10 & BIGINT_RADIX_FOR_MOD_128;
+    r->chunks[11] = r_11 & BIGINT_RADIX_FOR_MOD_128;
+    r->chunks[12] = r_12 & BIGINT_RADIX_FOR_MOD_128;
+    r->chunks[13] = r_13 & BIGINT_RADIX_FOR_MOD_128;
+    r->chunks[14] = r_14 & BIGINT_RADIX_FOR_MOD_128;
+    r->chunks[15] = r_15 & BIGINT_RADIX_FOR_MOD_128;
+   
+    // Prune leading zeros
+    for (int64_t i = r->size - 1; i > 0; --i)
+    {
+        if (r->chunks[i])
+            break;
+        r->size--;
+    }
+    
     return r;
 }
 

@@ -31,39 +31,40 @@
 #define BIGINT_TYPE_BIG_INT_IS_ZERO               22
 #define BIGINT_TYPE_BIG_INT_MOD                   23
 #define BIGINT_TYPE_BIG_INT_MUL                   24
-#define BIGINT_TYPE_BIG_INT_MUL_MOD               25
-#define BIGINT_TYPE_BIG_INT_MUL_SINGLE_CHUNK      26
-#define BIGINT_TYPE_BIG_INT_NEG                   27
-#define BIGINT_TYPE_BIG_INT_POW                   28
-#define BIGINT_TYPE_BIG_INT_PRUNE_LEADING_ZEROS   29
-#define BIGINT_TYPE_BIG_INT_SLL_SMALL             30
-#define BIGINT_TYPE_BIG_INT_SQUARED               31
-#define BIGINT_TYPE_BIG_INT_SQUARED_128           32
-#define BIGINT_TYPE_BIG_INT_SQUARED_16            33
-#define BIGINT_TYPE_BIG_INT_SQUARED_192           34
-#define BIGINT_TYPE_BIG_INT_SQUARED_224           35
-#define BIGINT_TYPE_BIG_INT_SQUARED_256           36
-#define BIGINT_TYPE_BIG_INT_SQUARED_32            37
-#define BIGINT_TYPE_BIG_INT_SQUARED_64            38
-#define BIGINT_TYPE_BIG_INT_SQUARED_96            39
-#define BIGINT_TYPE_BIG_INT_SQUARED_MOD           40
-#define BIGINT_TYPE_BIG_INT_SRL_SMALL             41
-#define BIGINT_TYPE_BIG_INT_SUB                   42
-#define BIGINT_TYPE_BIG_INT_SUB_MOD               43
-#define BIGINT_TYPE_CURVE1174_BIG_INT_ADD_MOD     44
-#define BIGINT_TYPE_CURVE1174_BIG_INT_CHI         45
-#define BIGINT_TYPE_CURVE1174_BIG_INT_DIV_MOD     46
-#define BIGINT_TYPE_CURVE1174_BIG_INT_INV         47
-#define BIGINT_TYPE_CURVE1174_BIG_INT_MOD         48
-#define BIGINT_TYPE_CURVE1174_BIG_INT_MUL_MOD     49
-#define BIGINT_TYPE_CURVE1174_BIG_INT_POW         50
-#define BIGINT_TYPE_CURVE1174_BIG_INT_POW_Q_M1_D2 51
-#define BIGINT_TYPE_CURVE1174_BIG_INT_POW_Q_M2    52
-#define BIGINT_TYPE_CURVE1174_BIG_INT_POW_Q_P1_D4 53
-#define BIGINT_TYPE_CURVE1174_BIG_INT_POW_SMALL   54
-#define BIGINT_TYPE_CURVE1174_BIG_INT_SQUARED_MOD 55
-#define BIGINT_TYPE_CURVE1174_BIG_INT_SUB_MOD     56
-#define BIGINT_TYPE_LAST                          57
+#define BIGINT_TYPE_BIG_INT_MUL_256               25
+#define BIGINT_TYPE_BIG_INT_MUL_MOD               26
+#define BIGINT_TYPE_BIG_INT_MUL_SINGLE_CHUNK      27
+#define BIGINT_TYPE_BIG_INT_NEG                   28
+#define BIGINT_TYPE_BIG_INT_POW                   29
+#define BIGINT_TYPE_BIG_INT_PRUNE_LEADING_ZEROS   30
+#define BIGINT_TYPE_BIG_INT_SLL_SMALL             31
+#define BIGINT_TYPE_BIG_INT_SQUARED               32
+#define BIGINT_TYPE_BIG_INT_SQUARED_128           33
+#define BIGINT_TYPE_BIG_INT_SQUARED_16            34
+#define BIGINT_TYPE_BIG_INT_SQUARED_192           35
+#define BIGINT_TYPE_BIG_INT_SQUARED_224           36
+#define BIGINT_TYPE_BIG_INT_SQUARED_256           37
+#define BIGINT_TYPE_BIG_INT_SQUARED_32            38
+#define BIGINT_TYPE_BIG_INT_SQUARED_64            39
+#define BIGINT_TYPE_BIG_INT_SQUARED_96            40
+#define BIGINT_TYPE_BIG_INT_SQUARED_MOD           41
+#define BIGINT_TYPE_BIG_INT_SRL_SMALL             42
+#define BIGINT_TYPE_BIG_INT_SUB                   43
+#define BIGINT_TYPE_BIG_INT_SUB_MOD               44
+#define BIGINT_TYPE_CURVE1174_BIG_INT_ADD_MOD     45
+#define BIGINT_TYPE_CURVE1174_BIG_INT_CHI         46
+#define BIGINT_TYPE_CURVE1174_BIG_INT_DIV_MOD     47
+#define BIGINT_TYPE_CURVE1174_BIG_INT_INV         48
+#define BIGINT_TYPE_CURVE1174_BIG_INT_MOD         49
+#define BIGINT_TYPE_CURVE1174_BIG_INT_MUL_MOD     50
+#define BIGINT_TYPE_CURVE1174_BIG_INT_POW         51
+#define BIGINT_TYPE_CURVE1174_BIG_INT_POW_Q_M1_D2 52
+#define BIGINT_TYPE_CURVE1174_BIG_INT_POW_Q_M2    53
+#define BIGINT_TYPE_CURVE1174_BIG_INT_POW_Q_P1_D4 54
+#define BIGINT_TYPE_CURVE1174_BIG_INT_POW_SMALL   55
+#define BIGINT_TYPE_CURVE1174_BIG_INT_SQUARED_MOD 56
+#define BIGINT_TYPE_CURVE1174_BIG_INT_SUB_MOD     57
+#define BIGINT_TYPE_LAST                          58
 
 __attribute__((unused))
 static char *big_int_type_names[] = {
@@ -92,6 +93,7 @@ static char *big_int_type_names[] = {
     "big_int_is_zero",
     "big_int_mod",
     "big_int_mul",
+    "big_int_mul_256",
     "big_int_mul_mod",
     "big_int_mul_single_chunk",
     "big_int_neg",
