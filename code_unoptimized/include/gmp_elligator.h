@@ -25,6 +25,6 @@ void gmp_free_curve(GMP_Curve *curve);
 void gmp_free_curve_point(GMP_CurvePoint *point);
 
 GMP_CurvePoint *gmp_elligator_1_string_to_point(GMP_CurvePoint *curve_point, mpz_t t, GMP_Curve curve);
-mpz_t *gmp_elligator_1_point_to_string(mpz_t t, GMP_CurvePoint p, GMP_Curve curve);
+void gmp_elligator_1_point_to_string(mpz_t t, GMP_CurvePoint p, GMP_Curve curve);
 
 #endif // GMP_ELLIGATOR_H_
