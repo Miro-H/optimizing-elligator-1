@@ -517,7 +517,7 @@ START_TEST(test_multiplication)
 }
 END_TEST
 
-//#if VERSION == 2
+#if VERSION >= 3
 /**
  * \brief Test multiplication of four BigInts in parallel.
  */
@@ -593,7 +593,7 @@ START_TEST(test_multiplication_four)
 
 }
 END_TEST
-//#endif
+#endif
 
 #if VERSION > 1
 /**
