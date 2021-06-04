@@ -13,8 +13,8 @@ fi
 SETS="${SETS:-$DEFAULT_SETS}"
 REPS="${REPS:-$DEFAULT_REPS}"
 
+MIN_VERSION=1
 MAX_VERSION=3
-
 COMP_NAME=comp_elligator
 
 SDIR=${TIMING_BASE_DIR}/src
@@ -26,11 +26,14 @@ SAGE_ELLIGATOR=${TIMING_BASE_DIR}/scripts/runtime_elligator.sage
 LATEST_LOG_PATH=${TIMING_BASE_DIR}/logs/latest_log_path.txt
 
 BENCH_TYPES=\
-"BENCH_TYPE_ELLIGATOR1_STR2PNT\
- BENCH_TYPE_ELLIGATOR1_PNT2STR"
+"BENCH_TYPE_CURVE_1174_POW_Q_M2"
+
+# BENCH_TYPES=\
+# "BENCH_TYPE_ELLIGATOR1_STR2PNT\
+#  BENCH_TYPE_ELLIGATOR1_PNT2STR"
 
 echo "#####################################################################"
-echo "#       Generate comparison plots for Elligator from V1 to V${MAX_VERSION}       #"
+echo "#       Generate comparison plots for Elligator from V${MIN_VERSION} to V${MAX_VERSION}       #"
 echo "#####################################################################"
 
 echo -e "\t- Get benchmark integers"
@@ -61,15 +64,15 @@ LOG_SUBDIR=""
 LOGS_NAMES=""
 SEP=""
 
-for VERSION in `seq 1 ${MAX_VERSION}`;
+for VERSION in `seq ${MIN_VERSION} ${MAX_VERSION}`;
 do
     echo -e "\t\t- run-runtime-benchmark for V${VERSION}"
-    BENCHMARKS="${BENCH_TYPES_INT}" \
+    OPT_FLAGS="-fno-tree-vectorize" BENCHMARKS="${BENCH_TYPES_INT}" \
         VERSION=${VERSION} \
         SETS=${SETS} \
         REPS=${REPS} \
         make \
-        run-runtime-benchmark >> ${COMP_LOG}
+        run-runtime-benchmark run-runtime-benchmark-curve1174 >> ${COMP_LOG}
 
     # Get log path
     NEW_LOG_DIR=$(cat "${LATEST_LOG_PATH}")

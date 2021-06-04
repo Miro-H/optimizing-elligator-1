@@ -260,6 +260,25 @@ void bench_big_int_curve1174_pow_small(void *bench_args, char *bench_name, char 
 
 //=== === === === === === === === === === === === === === ===
 
+void bench_big_int_curve1174_pow_q_m2_fn(void *arg)
+{
+    int64_t i = *((int64_t *) arg);
+    big_int_curve1174_pow_q_m2(big_int_array_1 + i, big_int_array_2 + i);
+}
+
+void bench_big_int_curve1174_pow_q_m2(void *bench_args, char *bench_name, char *path)
+{
+    BenchmarkClosure bench_closure = {
+        .bench_prep_args = bench_args,
+        .bench_prep_fn = bench_big_int_prep,
+        .bench_fn = bench_big_int_curve1174_pow_q_m2_fn,
+        .bench_cleanup_fn = bench_big_int_cleanup,
+    };
+    benchmark_runner(bench_closure, bench_name, path, SETS, REPS, 0);
+}
+
+//=== === === === === === === === === === === === === === ===
+
 void bench_big_int_curve1174_pow_q_m1_d2_fn(void *arg)
 {
     int64_t i = *((int64_t *) arg);
@@ -408,6 +427,12 @@ int main(int argc, char const *argv[])
                 (void *) bench_big_int_curve_1174_args,
                 "pow, exp: 64-bit (curve)",
                 LOG_PATH "/runtime_big_int_curve1174_pow_small.log"));
+
+        BENCHMARK(bench_type, BENCH_TYPE_CURVE_1174_POW_Q_M2,
+            bench_big_int_curve1174_pow_q_m2(
+                (void *) bench_big_int_curve_1174_args,
+                "pow, exp: q-2 (curve)",
+                LOG_PATH "/runtime_big_int_curve1174_pow_q_m2.log"));
 
         BENCHMARK(bench_type, BENCH_TYPE_CURVE_1174_POW_Q_M1_D2,
             bench_big_int_curve1174_pow_q_m1_d2(
