@@ -82,7 +82,7 @@ void mpz_chi(mpz_t r, mpz_t t, mpz_t q)
 */
 void gmp_init_curve1174(GMP_Curve *curve)
 {
-    mpz_t gmp_two;
+    mpz_t gmp_two, inverse;
 
     mpz_init(gmp_two);
     mpz_init(curve->q);
@@ -90,6 +90,7 @@ void gmp_init_curve1174(GMP_Curve *curve)
     mpz_init(curve->s);
     mpz_init(curve->c);
     mpz_init(curve->r);
+    mpz_init(inverse);
 
     mpz_set_si(gmp_two, 2);
 
@@ -111,10 +112,11 @@ void gmp_init_curve1174(GMP_Curve *curve)
 
     // c = 2 / s^2
     //curve->c = big_int_mul_mod(NULL, curve->s, curve->s, curve->q);
-    mpz_mul(curve->s, curve->s, curve->s);
-    mpz_mod(curve->s, curve->s, curve->q);
+    mpz_mul(curve->c, curve->s, curve->s);
+    mpz_mod(curve->c, curve->c, curve->q);
     //big_int_div_mod(curve->c, big_int_two, curve->c, curve->q);
-    mpz_fdiv_q(curve->c, gmp_two, curve->c);
+    mpz_invert(inverse, curve->c, curve->q);
+    mpz_mul_ui(curve->c, inverse, 2);
     mpz_mod(curve->c, curve->c, curve->q);
 
     // r = c + 1/c

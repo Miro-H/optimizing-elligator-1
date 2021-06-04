@@ -207,10 +207,55 @@ START_TEST(test_chi)
 }
 END_TEST
 
+/**
+ * \brief Test mapping a number to the curve and back
+ */
+START_TEST(test_curve1174)
+{
+    GMP_Curve curve;
+    mpz_t c, d, r;
+
+    mpz_init(c);
+    mpz_init(d);
+    mpz_init(r);
+
+    gmp_init_curve1174(&curve);
+
+    mpz_set_str(c,
+        "4D1A3398ED42CEEB451D20824CA9CB49B69EF546BD7E6546AEF19AF1F9E49E1",
+        16);
+    mpz_set_str(d,
+        "7FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFB61",
+        16);
+    mpz_set_str(r,
+        "6006FBDA7649C433816B286006FBDA7649C433816B286006FBDA7649C43383",
+        16);
+
+    ck_assert_int_eq(mpz_cmp(curve.c, c), 0);
+    ck_assert_int_eq(mpz_cmp(curve.d, d), 0);
+    ck_assert_int_eq(mpz_cmp(curve.r, r), 0);
+
+    mpz_clear(c);
+    mpz_clear(d);
+    mpz_clear(r);
+
+    gmp_free_curve(&curve);
+}
+END_TEST
+
+/**
+ * \brief Test mapping a number to the curve and back
+ */
+START_TEST(test_e2e)
+{
+
+}
+END_TEST
+
 Suite *gmp_elligator_suite(void)
 {
     Suite *s;
-    TCase *tc_chi;
+    TCase *tc_chi, *tc_basic;
 
     s = suite_create("GMP Elligator Test Suite");
 
@@ -218,7 +263,11 @@ Suite *gmp_elligator_suite(void)
 
     tcase_add_test(tc_chi, test_chi);
 
+    tc_basic = tcase_create("Basic tests");
+    tcase_add_test(tc_basic, test_curve1174);
+
     suite_add_tcase(s, tc_chi);
+    suite_add_tcase(s, tc_basic);
 
     return s;
 }
