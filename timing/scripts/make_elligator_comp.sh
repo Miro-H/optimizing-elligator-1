@@ -67,7 +67,7 @@ SEP=""
 for VERSION in `seq ${MIN_VERSION} ${MAX_VERSION}`;
 do
     echo -e "\t\t- run-runtime-benchmark for V${VERSION}"
-    OPT_FLAGS="-fno-tree-vectorize" BENCHMARKS="${BENCH_TYPES_INT}" \
+    BENCHMARKS="${BENCH_TYPES_INT}" \
         VERSION=${VERSION} \
         SETS=${SETS} \
         REPS=${REPS} \
