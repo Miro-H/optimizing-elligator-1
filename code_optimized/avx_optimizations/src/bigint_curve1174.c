@@ -355,6 +355,7 @@ BigInt *big_int_curve1174_sub_mod(BigInt *r, BigInt *a, BigInt *b)
  * \brief Calculate r := (a * b) mod q
  *
  * \assumption r, a, b != NULL
+ * \assumption a != b (no aliasing)
  */
 BigInt *big_int_curve1174_mul_mod(BigInt *r, BigInt *a, BigInt *b)
 {
@@ -364,6 +365,27 @@ BigInt *big_int_curve1174_mul_mod(BigInt *r, BigInt *a, BigInt *b)
     // mod operation on the operands before multiplying.
     big_int_mul(r, a, b);
     return big_int_curve1174_mod(r);
+}
+
+/**
+ * forall i in [0, 3]
+ *      \brief Calculate r<i> := (a<i> * b<i>) mod q
+ *
+ *      \assumption r<i>, a<i>, b<i> != NULL
+ *      \assumption a<i>->size + b<i>->size <= BIGINT_FIXED_SIZE_INTERNAL
+ *      \assumption a<i> != b<i> (no aliasing)
+ */
+void big_int_curve1174_mul_mod_4(BigInt *r0, BigInt *r1, BigInt *r2, BigInt *r3,
+                                    BigInt *a0, BigInt *a1, BigInt *a2, BigInt *a3,
+                                    BigInt *b0, BigInt *b1, BigInt *b2, BigInt *b3)
+{
+    ADD_STAT_COLLECTION(BIGINT_TYPE_CURVE1174_BIG_INT_MUL_MOD_4);
+
+    big_int_mul_4(r0, r1, r2, r3, a0, a1, a2, a3, b0, b1, b2, b3);
+    big_int_curve1174_mod(r0);
+    big_int_curve1174_mod(r1);
+    big_int_curve1174_mod(r2);
+    big_int_curve1174_mod(r3);
 }
 
 
@@ -667,37 +689,109 @@ BigInt *big_int_curve1174_pow_q_m2(BigInt *r, BigInt *b)
 {
     ADD_STAT_COLLECTION(BIGINT_TYPE_CURVE1174_BIG_INT_POW_Q_M2);
 
-    BIG_INT_DEFINE_PTR(b_loc_1);
-    BIG_INT_DEFINE_PTR(b_loc_2);
-    BIG_INT_DEFINE_PTR(r_loc);
+    BIG_INT_DEFINE_PTR(b_loc_0_0);
+    BIG_INT_DEFINE_PTR(b_loc_1_0);
+    BIG_INT_DEFINE_PTR(b_loc_2_0);
+    BIG_INT_DEFINE_PTR(b_loc_3_0);
+    BIG_INT_DEFINE_PTR(b_loc_0_1);
+    BIG_INT_DEFINE_PTR(b_loc_1_1);
+    BIG_INT_DEFINE_PTR(b_loc_2_1);
+    BIG_INT_DEFINE_PTR(b_loc_3_1);
+
+    BIG_INT_DEFINE_PTR(r_loc_0_0);
+    BIG_INT_DEFINE_PTR(r_loc_1_0);
+    BIG_INT_DEFINE_PTR(r_loc_2_0);
+    BIG_INT_DEFINE_PTR(r_loc_3_0);
+    BIG_INT_DEFINE_PTR(r_loc_0_1);
+    BIG_INT_DEFINE_PTR(r_loc_1_1);
+    BIG_INT_DEFINE_PTR(r_loc_2_1);
+    BIG_INT_DEFINE_PTR(r_loc_3_1);
 
     // (q-2) = 0b11111...1110101 (there are 247 ones before the suffix 0101)
 
-    // Ensure suffix
+    /*
+     * Plan:
+     * Multiply powers of b in 4 variables r_loc_* in parallel,
+     * and then multiply r_loc_* values together at the end.
+     */
 
     // e = 01
-    big_int_curve1174_square_mod(b_loc_1, b);
+    big_int_curve1174_square_mod(b_loc_0_0, b);
 
     // e = 101
-    big_int_curve1174_square_mod(b_loc_2, b_loc_1);
-    big_int_curve1174_mul_mod(r_loc, b, b_loc_2);
+    big_int_curve1174_square_mod(b_loc_1_0, b_loc_0_0);
+    big_int_curve1174_mul_mod(r_loc_0_0, b, b_loc_1_0);
 
-    // e = 0101
-    big_int_curve1174_square_mod(b_loc_1, b_loc_2);
+    // e = 1110101
+    big_int_curve1174_square_mod(b_loc_2_0, b_loc_1_0);
+    big_int_curve1174_square_mod(r_loc_1_0, b_loc_2_0);
+    big_int_curve1174_square_mod(r_loc_2_0, r_loc_1_0);
+    big_int_curve1174_square_mod(r_loc_3_0, r_loc_2_0);
 
-    // e = 10101
-    big_int_curve1174_square_mod(b_loc_2, b_loc_1);
-    big_int_curve1174_mul_mod(r, r_loc, b_loc_2);
+    // Now we have:
+    // r_loc_0_0 = b^(2^2) * b^(2^0)
+    // r_loc_1_0 = b^(2^4)
+    // r_loc_2_0 = b^(2^5)
+    // r_loc_3_0 = b^(2^6)
 
-    // All the remaining bits are set to one, so we add all of them
-    // Do 123 loops with unrolling = 2 --> 246 iterations
-    for (uint32_t i = 0; i < 123; ++i) { ADD_STAT_COLLECTION(BASIC_ADD_OTHER)
-        big_int_curve1174_square_mod(b_loc_1, b_loc_2);
-        big_int_curve1174_mul_mod(r_loc, r, b_loc_1);
+    // e = 11111110101
+    big_int_curve1174_square_mod(b_loc_0_1, r_loc_3_0);
+    big_int_curve1174_square_mod(b_loc_1_1, b_loc_0_1);
+    big_int_curve1174_square_mod(b_loc_2_1, b_loc_1_1);
+    big_int_curve1174_square_mod(b_loc_3_1, b_loc_2_1);
+    big_int_curve1174_mul_mod_4(
+        r_loc_0_1, r_loc_1_1, r_loc_2_1, r_loc_3_1,
+        r_loc_0_0, r_loc_1_0, r_loc_2_0, r_loc_3_0,
+        b_loc_0_1, b_loc_1_1, b_loc_2_1, b_loc_3_1
+    );
 
-        big_int_curve1174_square_mod(b_loc_2, b_loc_1);
-        big_int_curve1174_mul_mod(r, r_loc, b_loc_2);
+    // Now we have:
+    // r_loc_0_1 *= b^(2^7)
+    // r_loc_1_1 *= b^(2^8)
+    // r_loc_2_1 *= b^(2^9)
+    // r_loc_3_1 *= b^(2^10)
+
+    // We already have 7 of 247 one bits and the suffix 0101 of e. Now
+    // we do the remaining 240 bits, which are all one, in  30 loops with
+    // unrolling, each iteration does 2 * 4 multiplications --> 30 * 8 = 240 iterations
+    for (uint32_t i = 0; i < 30; ++i) { ADD_STAT_COLLECTION(BASIC_ADD_OTHER)
+        big_int_curve1174_square_mod(b_loc_0_0, b_loc_3_1);
+        big_int_curve1174_square_mod(b_loc_1_0, b_loc_0_0);
+        big_int_curve1174_square_mod(b_loc_2_0, b_loc_1_0);
+        big_int_curve1174_square_mod(b_loc_3_0, b_loc_2_0);
+        big_int_curve1174_mul_mod_4(
+            r_loc_0_0, r_loc_1_0, r_loc_2_0, r_loc_3_0,
+            r_loc_0_1, r_loc_1_1, r_loc_2_1, r_loc_3_1,
+            b_loc_0_0, b_loc_1_0, b_loc_2_0, b_loc_3_0
+        );
+
+        // Now we have:
+        // r_loc_0 *= b^(2^(11 + i * 8))
+        // r_loc_1 *= b^(2^(11 + i * 8 + 1))
+        // r_loc_2 *= b^(2^(11 + i * 8 + 2))
+        // r_loc_3 *= b^(2^(11 + i * 8 + 3))
+
+        big_int_curve1174_square_mod(b_loc_0_1, b_loc_3_0);
+        big_int_curve1174_square_mod(b_loc_1_1, b_loc_0_1);
+        big_int_curve1174_square_mod(b_loc_2_1, b_loc_1_1);
+        big_int_curve1174_square_mod(b_loc_3_1, b_loc_2_1);
+        big_int_curve1174_mul_mod_4(
+            r_loc_0_1, r_loc_1_1, r_loc_2_1, r_loc_3_1,
+            r_loc_0_0, r_loc_1_0, r_loc_2_0, r_loc_3_0,
+            b_loc_0_1, b_loc_1_1, b_loc_2_1, b_loc_3_1
+        );
+
+        // Now we have:
+        // r_loc_0_1 *= b^(2^(11 + i * 8 + 4))
+        // r_loc_1_1 *= b^(2^(11 + i * 8 + 5))
+        // r_loc_2_1 *= b^(2^(11 + i * 8 + 6))
+        // r_loc_3_1 *= b^(2^(11 + i * 8 + 7))
     }
+
+    // Combine the r_loc values together (while avoiding aliasing)
+    big_int_curve1174_mul_mod(r_loc_0_0, r_loc_0_1, r_loc_1_1);
+    big_int_curve1174_mul_mod(r_loc_1_0, r_loc_2_1, r_loc_3_1);
+    big_int_curve1174_mul_mod(r, r_loc_0_0, r_loc_1_0);
 
     return r;
 }

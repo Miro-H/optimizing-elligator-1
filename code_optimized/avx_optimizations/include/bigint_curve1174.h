@@ -10,6 +10,9 @@ BigInt *big_int_curve1174_mod(BigInt *r);
 BigInt *big_int_curve1174_add_mod(BigInt *r, BigInt *a, BigInt *b);
 BigInt *big_int_curve1174_sub_mod(BigInt *r, BigInt *a, BigInt *b);
 BigInt *big_int_curve1174_mul_mod(BigInt *r, BigInt *a, BigInt *b);
+void big_int_curve1174_mul_mod_4(BigInt *r0, BigInt *r1, BigInt *r2, BigInt *r3,
+                                    BigInt *a0, BigInt *a1, BigInt *a2, BigInt *a3,
+                                    BigInt *b0, BigInt *b1, BigInt *b2, BigInt *b3);
 BigInt *big_int_curve1174_square_mod(BigInt *r, BigInt *a);
 BigInt *big_int_curve1174_div_mod(BigInt *r, BigInt *a, BigInt *b);
 BigInt *big_int_curve1174_inv_fermat(BigInt *r, BigInt *a);
