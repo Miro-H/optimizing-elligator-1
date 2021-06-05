@@ -224,3 +224,33 @@ I changed the makefiles to compile everything together instead of using object f
 Pow for special exponent:
 - Remove `b * 1` and `b * b` and instead use square function and set r directly to `b * b^2`
 - Remove all copies by usual loop unrolling and clever variable juggling
+
+## Roofline Plots
+- Intel Manual: table 2-13 and 2-14 show the following exec units and ports:
+    - ALU: 0, 1, 5, 6
+    - SHIFT: 0, 6
+    - Divide: 0
+    - Slow int: 1
+- Memory bandwidth:
+    - Theoretical: probably < 30 GB/s ([src](https://apple.stackexchange.com/questions/276543/finding-peak-memory-bandwidth-on-macbook-pro))
+    - Practical: 24.833 GB/s (measured with Novabench)
+        - 2.8 GHz processor, so that gives:
+        ```
+            24.833 GB/s / 2.8 GHz = 8.868... ~= 8.9 B/cycle
+        ```
+- Peak performance:
+    - Normal: 4 iops per cycle, since we have 4 ALUs behind different ports
+    - Vectorized: 16 iops per cycle, since we mostly operate on 64 bit integers. One vector has 4 operands.
+    - Depending on instruction mix:
+        - The script `./scripts/make_elligator_stats_comp.sh` prints the instruction mix
+        - Use this to add another peak performance line
+- Intensity:
+    - Work W: We count the ops, annotated by our macros
+    - Transferred bytes Q:
+        - This is pretty small if we only look at the function inputs.
+        - map: 1 BigInt + curve = `12'672 B`
+        - inv map: 1 point + curve = `13'824 B`
+        - Sizes:
+            - BigInt: `64B + 17 * 64 B = 1152 B` (64B metadata, 17 chunks with 64B)
+            - curve: 10 BigInts, i.e., `11520 B`
+            - point: 2 BigInts, i.e., `2304 B`

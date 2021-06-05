@@ -145,6 +145,7 @@ if __name__ == "__main__":
     else:
         logs_names = ["tmp"]
 
+    # all log folders are supposed to have the same log file names
     for in_file in os.listdir(logs_dirs[0]):
         ys_dict = dict()
         x_labels = set()
