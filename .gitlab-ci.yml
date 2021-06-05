@@ -7,7 +7,7 @@ test:
     before_script:
         - $CI_PROJECT_DIR/scripts/install-check.sh "$CI_PROJECT_DIR/check"
     script:
-        - DEBIAN_FRONTEND=noninteractive apt -yq install python3
+        - DEBIAN_FRONTEND=noninteractive apt -yq install python3 libgmp3-dev
         - cd $CI_PROJECT_DIR/tests
         - make all
         - $CI_PROJECT_DIR/tests/scripts/run_all_tests.sh
