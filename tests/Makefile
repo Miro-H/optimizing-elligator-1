@@ -70,7 +70,7 @@ endif
 
 # Main target, building all tests
 ifneq ($(VERSION), 1)
-all: compile-bigint-test compile-elligator-test compile-bigint-curve1174-test compile-gmp-elligator-test
+all: compile-bigint-test compile-elligator-test compile-bigint-curve1174-test
 else
 all: compile-bigint-test compile-elligator-test compile-gmp-elligator-test
 endif
@@ -153,22 +153,24 @@ compile-elligator-test: print-compile-msg elligator-test
 elligator-test: $(ELLIGATOR_SRC) $(ELLIGATOR_TESTED_SRC)
 	$(CC) -o $(BDIR)/$@ $^ $(CFLAGS) $(LIBS)
 
+
 ################################################################################
 #                           GMP Elligator Tests                                #
 ################################################################################
 
-# Specify the object files constituting the test
-_OBJ	= gmp_elligator_test.o
-OBJ 	= $(patsubst %,$(ODIR)/%,$(_OBJ))
-# Specify the object files of the tested functions
-_OBJ_TESTED = gmp_elligator.o
-OBJ_TESTED 	= $(patsubst %,$(ODIR_TESTED)/%,$(_OBJ_TESTED))
+# Specify the C files constituting the test
+_GMP_ELLIGATOR_SRC	= gmp_elligator_test.c
+GMP_ELLIGATOR_SRC	= $(patsubst %,$(SDIR)/%,$(_GMP_ELLIGATOR_SRC))
+
+_GMP_ELLIGATOR_TESTED_SRC	= gmp_elligator.c
+GMP_ELLIGATOR_TESTED_SRC	= $(patsubst %,$(SRC_TESTED)/%,$(_GMP_ELLIGATOR_TESTED_SRC))
 
 .PHONY: compile-gmp-elligator-test
-compile-gmp-elligator-test: all-tested gmp-elligator-test
+compile-gmp-elligator-test: print-compile-msg gmp-elligator-test
 
-gmp-elligator-test: $(OBJ_TESTED) $(OBJ)
+gmp-elligator-test: $(GMP_ELLIGATOR_SRC) $(GMP_ELLIGATOR_TESTED_SRC)
 	$(CC) -o $(BDIR)/$@ $^ $(CFLAGS) $(LIBS) -lgmp
+
 
 ################################################################################
 #                            Other targets                                     #
