@@ -51,8 +51,8 @@ typedef uint64_t dbl_chunk_size_t;
 
 // Attributes:
 // - packed: makes sure that the struct has the minimal size (no padding)
-// - aligned: makes sure the struct is aligned to 4 bytes
-typedef struct __attribute__((packed, aligned(4))) BigInt
+// - aligned: makes sure the struct is aligned to 8 bytes
+typedef struct __attribute__((packed, aligned(8))) BigInt
 {
     uint32_t sign : 1;          // O: positive, 1: negative
     uint32_t overflow : 1;      // 1 if operation overflowed (only supported for add/sub)
