@@ -21,7 +21,10 @@
 #include "gmp_benchmark.h"
 #include "benchmark_types.h"
 #include "debug.h"
+
+#if VERSION == 1
 #include "gmp_elligator.h"
+#endif
 
 //--- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
 
@@ -268,6 +271,7 @@ void bench_mpz_clear_cleanup(void *argptr)
     free(mpz_array);
 }
 
+#if VERSION == 1
 /**
  * \brief Prep function to use before running elligator_1_string_to_point 
  *        benchmark.
@@ -395,6 +399,7 @@ void bench_elligator_1_point_to_string_cleanup(void *argptr)
     free(mpz_array_1);
     gmp_free_curve(&bench_curve);
 }
+#endif
 
 //--- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
 //--- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
@@ -1023,6 +1028,7 @@ void bench_mpz_gcdext(void *bench_args, char *bench_name, char *path)
 
 //--- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
 
+#if VERSION == 1
 /**
  * \brief Benchmark our GMP implementation of the chi function.
  */
@@ -1091,6 +1097,7 @@ void bench_elligator_1_point_to_string(void *bench_args, char *bench_name, char 
     };
     benchmark_runner(bench_closure, bench_name, path, SETS, REPS, REPS);
 }
+#endif
 
 //--- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
 
@@ -1264,6 +1271,7 @@ int main(int argc, char const *argv[])
             bench_mpz_gcdext((void *)bench_mpz_size_256_args,
                 "eGCD", LOG_PATH "/gmp_mpz_gcdext.log"));
 
+        #if VERSION == 1
         BENCHMARK(bench_type, BENCH_TYPE_CHI,
             bench_mpz_chi((void *)bench_mpz_size_256_curve_mod_args, "chi",
                 LOG_PATH "/gmp_mpz_chi_curve.log"));
@@ -1277,6 +1285,7 @@ int main(int argc, char const *argv[])
             bench_elligator_1_point_to_string((void *)bench_mpz_size_256_args,
                 "Elligator pnt2str",
                 LOG_PATH "/gmp_elligator_1_point_to_string.log"));
+        #endif
     }
 
     return EXIT_SUCCESS;
