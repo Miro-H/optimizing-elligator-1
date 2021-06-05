@@ -37,7 +37,7 @@ LIB_OBJS 	= $(patsubst %,$(ODIR)/%,$(_LIB_SRCS:.c=.o))
 all: gen-bigint-types $(LIB_NAME) build-lib
 
 $(ODIR)/%.o: $(SDIR)/%.c
-	$(CC) -c -o $@ $< $(CFLAGS)
+	$(CC) -c -o $@ $< $(CFLAGS) $(LIBS)
 
 # Fresh build
 rebuild: clean all
