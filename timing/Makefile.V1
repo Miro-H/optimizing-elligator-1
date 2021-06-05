@@ -91,6 +91,9 @@ GMP_SUB_PATH = gmp/$(LOG_SUBDIRS)
 # Specify the C files constituting the test
 _GMP_SRC	= benchmark_helpers.c gmp_benchmark.c
 GMP_SRC		= $(patsubst %,$(SDIR)/%,$(_GMP_SRC))
+# Specify the object files of the benched functions
+_OBJ_BENCHED 	= gmp_elligator.o
+OBJ_BENCHED		= $(patsubst %,$(ODIR_BENCHED)/%,$(_OBJ_BENCHED))
 
 .PHONY: prepare-logs-gmp-benchmark
 prepare-logs-gmp-benchmark:
@@ -119,7 +122,7 @@ plot-gmp-benchmark: run-gmp-benchmark
 	REPS=$(REPS) LOGS_DIR=$(LOG_PATH) OUT_SUB_PATH=$(OUT_SUB_PATH) \
 	$(SCRIPTS_DIR)/make_all_plots.sh
 
-gmp-benchmark: $(GMP_SRC)
+gmp-benchmark: $(OBJ_BENCHED) $(GMP_SRC)
 	$(CC) -o $(BDIR)/$@ $^ $(CFLAGS) $(LIBS)
 
 .PHONY: plots
