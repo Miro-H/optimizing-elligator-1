@@ -2005,7 +2005,7 @@ void big_int_mul_4(BigInt *r0, BigInt *r1, BigInt *r2, BigInt *r3,
  *      \assumption a<i>->size = a<j>->size
  *      \assumption b<i>->size = b<j>->size
  */
-void big_int_mul_4_fast(BigInt *r0, BigInt *r1, BigInt *r2, BigInt *r3,
+void big_int_mul_4_fast2(BigInt *r0, BigInt *r1, BigInt *r2, BigInt *r3,
                         BigInt *a0, BigInt *a1, BigInt *a2, BigInt *a3,
                         BigInt *b0, BigInt *b1, BigInt *b2, BigInt *b3)
 {
@@ -2140,6 +2140,138 @@ void big_int_mul_4_fast(BigInt *r0, BigInt *r1, BigInt *r2, BigInt *r3,
         r3->size--; ADD_STAT_COLLECTION(BASIC_ADD_SIZE)
     }
 }
+
+
+
+
+
+void big_int_mul_4_fast(BigInt *r0, BigInt *r1, BigInt *r2, BigInt *r3,
+                        BigInt *a0, BigInt *a1, BigInt *a2, BigInt *a3,
+                        BigInt *b0, BigInt *b1, BigInt *b2, BigInt *b3)
+{
+    ADD_STAT_COLLECTION(BIGINT_TYPE_BIG_INT_MUL_4_FAST);
+
+    int64_t i, j;
+    uint32_t a_size, b_size, r_size;
+
+    *r0 = (BigInt) {0};
+    *r1 = (BigInt) {0};
+    *r2 = (BigInt) {0};
+    *r3 = (BigInt) {0};
+
+    r0->sign = a0->sign ^ b0->sign;
+    r1->sign = a1->sign ^ b1->sign;
+    r2->sign = a2->sign ^ b2->sign;
+    r3->sign = a3->sign ^ b3->sign;
+
+    // All have the same size (see assumptions)
+    a_size = a0->size;
+    b_size = b0->size;
+    r_size = a0->size + b0->size;
+
+    r0->size = r_size; ADD_STAT_COLLECTION(BASIC_ADD_SIZE)
+    r1->size = r_size; ADD_STAT_COLLECTION(BASIC_ADD_SIZE)
+    r2->size = r_size; ADD_STAT_COLLECTION(BASIC_ADD_SIZE)
+    r3->size = r_size; ADD_STAT_COLLECTION(BASIC_ADD_SIZE)
+
+
+    dbl_chunk_size_t repacked_bigint_a[4*a_size];
+    dbl_chunk_size_t repacked_bigint_b[4*b_size]; 
+    dbl_chunk_size_t repacked_bigint_r[4*r_size];
+    
+    *repacked_bigint_a = (dbl_chunk_size_t) {0};
+    *repacked_bigint_b = (dbl_chunk_size_t) {0};
+    *repacked_bigint_r = (dbl_chunk_size_t) {0};
+
+    for (i = 0; i < a_size; i++)
+    {
+        repacked_bigint_a[4 * i + 0] = a0->chunks[i];
+        repacked_bigint_a[4 * i + 1] = a1->chunks[i];
+        repacked_bigint_a[4 * i + 2] = a2->chunks[i];
+        repacked_bigint_a[4 * i + 3] = a3->chunks[i];
+    }
+    for (i = 0; i < b_size; i++)
+    {
+        repacked_bigint_b[4 * i + 0] = b0->chunks[i];
+        repacked_bigint_b[4 * i + 1] = b1->chunks[i];
+        repacked_bigint_b[4 * i + 2] = b2->chunks[i];
+        repacked_bigint_b[4 * i + 3] = b3->chunks[i];
+    }
+
+    __m256i carry;
+    __m256i mod_ = _mm256_set_epi64x(BIGINT_RADIX_FOR_MOD, BIGINT_RADIX_FOR_MOD, BIGINT_RADIX_FOR_MOD, BIGINT_RADIX_FOR_MOD);
+    
+    for (i = 0; i < 4 * b_size; i += 4) { ADD_STAT_COLLECTION(BASIC_ADD_OTHER)
+       
+        // Multiply and add chunks
+        carry = _mm256_setzero_si256();
+
+        for (j = 0; j < 4 * a_size; j += 4) { ADD_STAT_COLLECTION(BASIC_ADD_OTHER)
+            
+            __m256i r_ = _mm256_loadu_si256((__m256i *)(repacked_bigint_r + i + j));
+            __m256i a_ = _mm256_loadu_si256((__m256i *)(repacked_bigint_a + j));
+            __m256i b_ = _mm256_loadu_si256((__m256i *)(repacked_bigint_b + i));
+            
+            __m256i mul = _mm256_mul_epu32(a_, b_);
+            carry = _mm256_add_epi64(carry, r_);
+            carry = _mm256_add_epi64(carry, mul);
+
+            r_ = _mm256_and_si256(carry, mod_);
+            _mm256_storeu_si256((__m256i *)(repacked_bigint_r + i + j), r_);
+
+            
+            carry = _mm256_srli_epi64(carry, BIGINT_CHUNK_BIT_SIZE);
+
+            _mm256_storeu_si256((__m256i *)(repacked_bigint_r + i + 4 * a_size), carry);        
+        }
+        
+    }
+
+    for (i = 0; i < r_size; i++)
+    {
+        r0->chunks[i] = repacked_bigint_r[4 * i + 0];
+        r1->chunks[i] = repacked_bigint_r[4 * i + 1];
+        r2->chunks[i] = repacked_bigint_r[4 * i + 2];
+        r3->chunks[i] = repacked_bigint_r[4 * i + 3];
+    }
+
+
+    // Prune leading zeros
+    for (i = r_size - 1; i > 0; --i) { ADD_STAT_COLLECTION(BASIC_ADD_OTHER)
+        if (r0->chunks[i])
+            break;
+        r0->size--; ADD_STAT_COLLECTION(BASIC_ADD_SIZE)
+    }
+
+    for (i = r_size - 1; i > 0; --i) { ADD_STAT_COLLECTION(BASIC_ADD_OTHER)
+        if (r1->chunks[i])
+            break;
+        r1->size--; ADD_STAT_COLLECTION(BASIC_ADD_SIZE)
+    }
+
+    for (i = r_size - 1; i > 0; --i) { ADD_STAT_COLLECTION(BASIC_ADD_OTHER)
+        if (r2->chunks[i])
+            break;
+        r2->size--; ADD_STAT_COLLECTION(BASIC_ADD_SIZE)
+    }
+
+    for (i = r_size - 1; i > 0; --i) { ADD_STAT_COLLECTION(BASIC_ADD_OTHER)
+        if (r3->chunks[i])
+            break;
+        r3->size--; ADD_STAT_COLLECTION(BASIC_ADD_SIZE)
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
 
 // === === === === === === === === === === === === === === === === === === ===
 

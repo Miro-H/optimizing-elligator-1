@@ -31,7 +31,7 @@ CC      	= gcc
 CFLAGS  	= -I$(IDIR_TESTED) -I$(IDIR)
 
 # Add additional compilation flags to improve code quality
-CFLAGS += -Wall -Werror
+CFLAGS += -Wall -Werror -mavx2
 
 ifeq ($(VERSION),3)
 	CFLAGS += -mavx2 -march=native
