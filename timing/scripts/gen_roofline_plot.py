@@ -57,15 +57,6 @@ if __name__ == "__main__":
     parser.add_argument("--pis", required=True, nargs="+",
                         help="Peak performance value and label as string: 'val;label'.")
 
-    parser.add_argument("--alu_ports", required=True, nargs="+",
-                        help="Ports with ALU execution unit.")
-    parser.add_argument("--shift_ports", required=True, nargs="+",
-                        help="Ports with SHIFT execution unit.")
-    parser.add_argument("--div_ports", required=True, nargs="+",
-                        help="Ports with DIVIDE execution unit.")
-    parser.add_argument("--mul_ports", required=True, nargs="+",
-                        help="Ports with SLOW INT execution unit.")
-
     parser.add_argument("--max_x_val", required=True, type=int,
                         help="Maximum intensity for the x-axis.")
 
@@ -81,11 +72,6 @@ if __name__ == "__main__":
 
     beta        = literal_eval(args.beta)
     pis_strs    = args.pis
-
-    alu_ports   = args.alu_ports
-    shift_ports = args.shift_ports
-    div_ports   = args.div_ports
-    mul_ports   = args.mul_ports
 
     max_x_val = args.max_x_val
 
