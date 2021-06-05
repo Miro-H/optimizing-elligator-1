@@ -19,6 +19,7 @@
 #endif
 
 #include <gmp.h>
+#include <gmp_elligator.h>
 
 /*
  * Global mpz_t variables (GMP int type)
@@ -30,6 +31,9 @@ mpz_t *mpz_array_3;
 mpz_t *mpz_array_4;
 mpz_t *mpz_array_5;
 mpz_t *mpz_array_q;
+
+GMP_Curve bench_curve;
+GMP_CurvePoint *curve_point_array;
 
 int8_t *int8_t_array_1;
 uint64_t *uint64_t_array_1;

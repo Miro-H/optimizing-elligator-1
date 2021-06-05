@@ -21,6 +21,7 @@
 #include "gmp_benchmark.h"
 #include "benchmark_types.h"
 #include "debug.h"
+#include "gmp_elligator.h"
 
 //--- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
 
@@ -265,6 +266,134 @@ void bench_mpz_clear_prep(void *argptr)
 void bench_mpz_clear_cleanup(void *argptr)
 {
     free(mpz_array);
+}
+
+/**
+ * \brief Prep function to use before running elligator_1_string_to_point 
+ *        benchmark.
+ */
+void bench_elligator_1_string_to_point_prep(void *argptr)
+{
+    mpz_t q_half;
+
+    mpz_init(q_half);
+
+    mpz_size_ = ((int *)argptr)[0];
+    int64_t array_size = ((int *)argptr)[1];
+
+    mpz_array_1 = (mpz_t *)malloc(array_size * sizeof(mpz_t));
+
+    gmp_init_curve1174(&bench_curve);
+    curve_point_array = (GMP_CurvePoint *)malloc(array_size * sizeof(GMP_CurvePoint));
+
+    // q_half = (q-1)/2
+    mpz_fdiv_q_2exp(q_half, bench_curve.q, 1);
+
+    gmp_randstate_t state;
+    gmp_randinit_default(state);
+
+    for (uint64_t i = 0; i < array_size; i++)
+    {
+        mpz_init(curve_point_array[i].x);
+        mpz_init(curve_point_array[i].y);
+
+        // t \in [0, (q-1)/2)
+        mpz_init(mpz_array_1[i]);
+        mpz_urandomb(mpz_array_1[i], state, 256);
+        mpz_mod(mpz_array_1[i], mpz_array_1[i], q_half);
+    }
+
+    mpz_clear(q_half);
+}
+
+/**
+ * \brief Cleanup function to run after elligator_1_string_to_point benchmark
+ */
+void bench_elligator_1_string_to_point_cleanup(void *argptr)
+{
+    int64_t used_values = ((int64_t *) argptr)[0];
+    int64_t array_size = ((int *)argptr)[1];
+
+    for (uint64_t i = 0; i < array_size; i++)
+    {
+        mpz_clear(mpz_array_1[i]);
+    }
+
+    for (uint64_t i = 0; i < used_values; i++)
+    {
+        gmp_free_curve_point(curve_point_array + i);
+    }
+
+    free(curve_point_array);
+    free(mpz_array_1);
+    gmp_free_curve(&bench_curve);
+}
+
+/**
+ * \brief Prep function to run before elligator_1_point_to_string benchmark
+ */
+void bench_elligator_1_point_to_string_prep(void *argptr)
+{
+    mpz_t q_half;
+
+    mpz_init(q_half);
+
+    mpz_size_ = ((int *)argptr)[0];
+    int64_t array_size = ((int *)argptr)[1];
+
+    mpz_array = (mpz_t *)malloc(array_size * sizeof(mpz_t));
+    mpz_array_1 = (mpz_t *)malloc(array_size * sizeof(mpz_t));
+
+    gmp_init_curve1174(&bench_curve);
+    curve_point_array = (GMP_CurvePoint *) malloc(array_size * sizeof(GMP_CurvePoint));
+
+    // q_half = (q-1)/2
+    mpz_fdiv_q_2exp(q_half, bench_curve.q, 1);
+
+    gmp_randstate_t state;
+    gmp_randinit_default(state);
+
+    for (uint64_t i = 0; i < array_size; i++)
+    {
+        mpz_init(mpz_array[i]);
+
+        mpz_init(curve_point_array[i].x);
+        mpz_init(curve_point_array[i].y);
+
+        // t \in [0, (q-1)/2]
+        mpz_init(mpz_array_1[i]);
+        mpz_urandomb(mpz_array_1[i], state, 256);
+        mpz_mod(mpz_array_1[i], mpz_array_1[i], q_half);
+
+        gmp_elligator_1_string_to_point(curve_point_array + i,
+            mpz_array_1[i], bench_curve);
+    }
+
+    mpz_clear(q_half);
+}
+
+/**
+ * \brief Cleanup function to run after elligator_1_point_to_string benchmark
+ */
+void bench_elligator_1_point_to_string_cleanup(void *argptr)
+{
+    int64_t used_values = ((int64_t *) argptr)[0];
+    int64_t array_size = ((int *)argptr)[1];
+
+    for (uint64_t i = 0; i < array_size; i++)
+    {
+        mpz_clear(mpz_array_1[i]);
+    }
+
+    for (uint64_t i = 0; i < used_values; i++)
+    {
+        gmp_free_curve_point(curve_point_array + i);
+        mpz_clear(mpz_array[i]);
+    }
+
+    free(curve_point_array);
+    free(mpz_array_1);
+    gmp_free_curve(&bench_curve);
 }
 
 //--- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
@@ -895,6 +1024,77 @@ void bench_mpz_gcdext(void *bench_args, char *bench_name, char *path)
 //--- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
 
 /**
+ * \brief Benchmark our GMP implementation of the chi function.
+ */
+
+void bench_mpz_chi_fn(void *arg)
+{
+    int64_t i = *((int64_t *) arg);
+    mpz_chi(mpz_array_1[i],
+        mpz_array_2[i], mpz_array_q[i]);
+}
+
+void bench_mpz_chi(void *bench_args, char *bench_name, char *path)
+{
+    BenchmarkClosure bench_closure = {
+        .bench_prep_args = bench_args,
+        .bench_prep_fn = bench_GMP_prep,
+        .bench_fn = bench_mpz_chi_fn,
+        .bench_cleanup_fn = bench_GMP_cleanup,
+    };
+    benchmark_runner(bench_closure, bench_name, path, SETS, REPS, 0);
+}
+
+//--- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
+
+/**
+ * \brief Benchmark our GMP implementation of elligator 1 string-to-point.
+ */
+
+void bench_elligator_1_string_to_point_fn(void *arg)
+{
+    int64_t i = *((int64_t *) arg);
+    gmp_elligator_1_string_to_point(curve_point_array + i,
+        mpz_array_1[i], bench_curve);
+}
+
+void bench_elligator_1_string_to_point(void *bench_args, char *bench_name, char *path)
+{
+    BenchmarkClosure bench_closure = {
+        .bench_prep_args = bench_args,
+        .bench_prep_fn = bench_elligator_1_string_to_point_prep,
+        .bench_fn = bench_elligator_1_string_to_point_fn,
+        .bench_cleanup_fn = bench_elligator_1_string_to_point_cleanup,
+    };
+    benchmark_runner(bench_closure, bench_name, path, SETS, REPS, REPS);
+}
+
+//--- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
+
+/**
+ * \brief Benchmark our GMP implementation of elligator 1 point-to-string.
+ */
+void bench_elligator_1_point_to_string_fn(void *arg)
+{
+    int64_t i = *((int64_t *) arg);
+    gmp_elligator_1_point_to_string(mpz_array[i],
+        curve_point_array[i], bench_curve);
+}
+
+void bench_elligator_1_point_to_string(void *bench_args, char *bench_name, char *path)
+{
+    BenchmarkClosure bench_closure = {
+        .bench_prep_args = bench_args,
+        .bench_prep_fn = bench_elligator_1_point_to_string_prep,
+        .bench_fn = bench_elligator_1_point_to_string_fn,
+        .bench_cleanup_fn = bench_elligator_1_point_to_string_cleanup,
+    };
+    benchmark_runner(bench_closure, bench_name, path, SETS, REPS, REPS);
+}
+
+//--- --- --- --- --- --- --- --- --- --- --- --- --- --- ---
+
+/**
  * \brief Create and run the benchmarks.
  */
 int main(int argc, char const *argv[])
@@ -1063,6 +1263,20 @@ int main(int argc, char const *argv[])
         BENCHMARK(bench_type, BENCH_TYPE_EGCD,
             bench_mpz_gcdext((void *)bench_mpz_size_256_args,
                 "eGCD", LOG_PATH "/gmp_mpz_gcdext.log"));
+
+        BENCHMARK(bench_type, BENCH_TYPE_CHI,
+            bench_mpz_chi((void *)bench_mpz_size_256_curve_mod_args, "chi",
+                LOG_PATH "/gmp_mpz_chi_curve.log"));
+
+        BENCHMARK(bench_type, BENCH_TYPE_ELLIGATOR1_STR2PNT,
+            bench_elligator_1_string_to_point((void *)bench_mpz_size_256_args,
+            "Elligator str2pnt",
+            LOG_PATH "/gmp_elligator_1_string_to_point.log"));
+
+        BENCHMARK(bench_type, BENCH_TYPE_ELLIGATOR1_PNT2STR,
+            bench_elligator_1_point_to_string((void *)bench_mpz_size_256_args,
+                "Elligator pnt2str",
+                LOG_PATH "/gmp_elligator_1_point_to_string.log"));
     }
 
     return EXIT_SUCCESS;
