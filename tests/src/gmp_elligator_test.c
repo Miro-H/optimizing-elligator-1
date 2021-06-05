@@ -208,7 +208,7 @@ START_TEST(test_chi)
 END_TEST
 
 /**
- * \brief Test mapping a number to the curve and back
+ * \brief Check Curve1174 constants
  */
 START_TEST(test_curve1174)
 {
@@ -315,7 +315,7 @@ START_TEST(test_e2e)
     ck_assert_int_eq(mpz_cmp(r, t), 0);
 
     mpz_set_si(t, 2);
-    mpz_set_str(x, 
+    mpz_set_str(x,
         "6F5374156B145FF8BB3288E0418F513B5D7BBBAB6E252EA1BC2DB6428E1454E",
         16);
     mpz_set_str(y,
