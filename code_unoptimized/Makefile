@@ -21,7 +21,7 @@ ifneq ($(COLLECT_STATS),)
 endif
 
 # Add libraries to this macro, if needed
-LIBS    = -lgmp
+LIBS    =
 
 LIB_NAME 	= $(LDIR)/elligator.a
 # Add the name of every .c file that you want to compile here

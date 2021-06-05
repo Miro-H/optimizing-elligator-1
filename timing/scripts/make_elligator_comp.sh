@@ -13,7 +13,7 @@ fi
 SETS="${SETS:-$DEFAULT_SETS}"
 REPS="${REPS:-$DEFAULT_REPS}"
 
-MAX_VERSION=2
+MAX_VERSION=3
 
 COMP_NAME=comp_elligator
 
@@ -22,6 +22,7 @@ IDIR=${TIMING_BASE_DIR}/include
 LDIR=${TIMING_BASE_DIR}/logs/${COMP_NAME}
 PDIR=${TIMING_BASE_DIR}/plots/local/${COMP_NAME}
 GEN_SCRIPT=${TIMING_BASE_DIR}/../scripts/gen_types.py
+SAGE_ELLIGATOR=${TIMING_BASE_DIR}/scripts/runtime_elligator.sage
 LATEST_LOG_PATH=${TIMING_BASE_DIR}/logs/latest_log_path.txt
 
 BENCH_TYPES=\
@@ -77,10 +78,44 @@ do
     SEP=";"
 done
 
+#
+# GMP benchmark
+#
+echo -e "\t\t- run-gmp-benchmark"
+BENCHMARKS="${BENCH_TYPES_INT}" \
+    VERSION=1 \
+    SETS=${SETS} \
+    REPS=${REPS} \
+    make \
+    run-gmp-benchmark >> ${COMP_LOG}
+
+# Get log path
+NEW_LOG_DIR=$(cat "${LATEST_LOG_PATH}")
+LOG_SUBDIR="${LOG_SUBDIR}${SEP}${NEW_LOG_DIR}"
+LOGS_NAMES="${LOGS_NAMES}${SEP}V${VERSION}"
+SEP=";"
+
+#
+# Sage benchmark
+#
+echo -e "\t\t- running sage benchmark (this takes a while)"
+SAGE_ELLIGATOR_LDIR=${LDIR}/sage_elligator
+mkdir -p ${SAGE_ELLIGATOR_LDIR}
+
+sage ${SAGE_ELLIGATOR}                                                         \
+    --sets ${SETS}                                                             \
+    --reps ${REPS}                                                             \
+    --logs_dir ${SAGE_ELLIGATOR_LDIR} >> ${COMP_LOG}
+
+# Store log path
+NEW_LOG_DIR=$(cat "${LATEST_LOG_PATH}")
+LOG_SUBDIR="${LOG_SUBDIR}${SEP}${NEW_LOG_DIR}"
+LOGS_NAMES="${LOGS_NAMES}${SEP}sage"
+
 echo -e "\t- Create benchmark plots"
 
 ${SCRIPTS_DIR}/gen_runtime_plots.py                                            \
-    --title "Runtime Comparison for Elligator from V1 to V${MAX_VERSION} (${SETS} sets, ${REPS} reps)"                                              \
+    --title "Runtime Comparison for differnt Elligator implementations (${SETS} sets, ${REPS} reps)" \
     --plot_fname "${PLOTS_SUBDIR}/comparison_bar_log_scale.png"                \
     --logs_dir "${LOG_SUBDIR}"                                                 \
     --logs_names "${LOGS_NAMES}"                                               \
@@ -88,7 +123,7 @@ ${SCRIPTS_DIR}/gen_runtime_plots.py                                            \
     --log_yaxis
 
 ${SCRIPTS_DIR}/gen_runtime_plots.py                                            \
-    --title "Speedup Comparison for Elligator from V1 to V${MAX_VERSION} (${SETS} sets, ${REPS} reps)"                                              \
+    --title "Speedup Comparison for differnt Elligator implementations (${SETS} sets, ${REPS} reps)" \
     --plot_fname "${PLOTS_SUBDIR}/speedup_comparison_bar_log_scale.png"                \
     --logs_dir "${LOG_SUBDIR}"                                                 \
     --logs_names "${LOGS_NAMES}"                                               \

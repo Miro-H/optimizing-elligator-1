@@ -111,7 +111,7 @@ run-gmp-benchmark: OUT_SUB_PATH = $(GMP_SUB_PATH)
 run-gmp-benchmark: LOG_PATH = $(LOG_BASE_PATH)/$(OUT_SUB_PATH)
 run-gmp-benchmark: clean compile-gmp-benchmark
 	echo "${LOG_PATH}" > ${LATEST_LOG_PATH}
-	./$(BDIR)/gmp-benchmark -1
+	./$(BDIR)/gmp-benchmark $(BENCHMARKS)
 
 .PHONY: plot-gmp-benchmark
 plot-gmp-benchmark: OUT_SUB_PATH = $(GMP_SUB_PATH)
