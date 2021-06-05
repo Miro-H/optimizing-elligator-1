@@ -31,7 +31,7 @@ CC      	= gcc
 CFLAGS  	= -I$(IDIR_TESTED) -I$(IDIR)
 
 # Add additional compilation flags to improve code quality
-CFLAGS += -Wall -Werror 
+CFLAGS += -Wall -Werror
 
 ifeq ($(VERSION),3)
 	CFLAGS += -mavx2 -march=native
@@ -168,7 +168,7 @@ OBJ_TESTED 	= $(patsubst %,$(ODIR_TESTED)/%,$(_OBJ_TESTED))
 compile-gmp-elligator-test: all-tested gmp-elligator-test
 
 gmp-elligator-test: $(OBJ_TESTED) $(OBJ)
-	$(CC) -lgmp -o $(BDIR)/$@ $^ $(CFLAGS) $(LIBS)
+	$(CC) -o $(BDIR)/$@ $^ $(CFLAGS) $(LIBS) -lgmp
 
 ################################################################################
 #                            Other targets                                     #
