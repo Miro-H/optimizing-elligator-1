@@ -5,6 +5,7 @@ import matplotlib
 import matplotlib.pyplot as plt
 import os
 import numpy as np
+import re
 
 from statistics import median
 from ast import literal_eval
@@ -123,6 +124,8 @@ if __name__ == "__main__":
                         action="store_true")
     parser.add_argument("--bar_plot", help="Toggle bar plots.",
                         action="store_true")
+    parser.add_argument("--pattern", help="Only plot stats matching the given regex pattern.",
+                        default=r".*")
 
     args = parser.parse_args()
 
@@ -133,6 +136,7 @@ if __name__ == "__main__":
     log_xaxis       = args.log_xaxis
     log_yaxis       = args.log_yaxis
     bar_plot        = args.bar_plot
+    pattern         = args.pattern
 
     if logs_dirs:
         logs_dirs = logs_dirs.split(";")
@@ -158,9 +162,10 @@ if __name__ == "__main__":
                 ys_dict[logs_names[i]] = dict()
                 for line in lines[2:]:
                     big_int_fn, big_int_fn_cnt = line.split(", ")
-                    big_int_fn_cnt = literal_eval(big_int_fn_cnt.rstrip())
-                    x_labels.add(big_int_fn)
-                    ys_dict[logs_names[i]][big_int_fn] = big_int_fn_cnt
+                    if re.match(pattern, big_int_fn):
+                        big_int_fn_cnt = literal_eval(big_int_fn_cnt.rstrip())
+                        x_labels.add(big_int_fn)
+                        ys_dict[logs_names[i]][big_int_fn] = big_int_fn_cnt
 
         # Normalize data: set entries that are not present in one folder to zero
         ys_arr = dict()

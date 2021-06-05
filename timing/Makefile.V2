@@ -56,7 +56,7 @@ gen-bigint-types:
 		--dest_file ${IDIR_BENCHED}/bigint_types.h \
 		--add_translation \
 		--array_name "big_int_type_names" \
-		--pattern "(BASIC_[A-Z1-9_]+|[A-Z1-9_]+TYPE_[A-Z1-9_]+)[^A-Z]+" \
+		--pattern "(BASIC_[A-Z\d_]+|AVX_[A-Z\d_]+|[A-Z\d_]+TYPE_[A-Z\d_]+)[^A-Z]+" \
 		--strip_prefix "BIGINT_TYPE_"
 
 

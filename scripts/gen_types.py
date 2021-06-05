@@ -33,7 +33,7 @@ if __name__ == '__main__':
     parser.add_argument("--lookup_names", nargs="+",
                         help="Lookup the integer value of the given (text) benchmark types")
     parser.add_argument("--pattern", help="Pattern of elements to match",
-                        default=r"([A-Z1-9_]+TYPE_[A-Z1-9_]+)[^A-Z]+")
+                        default=r"([A-Z\d_]+TYPE_[A-Z\d_]+)[^A-Z]+")
     parser.add_argument("--add_translation", action="store_true",
                         help="Add array to translate numbers to names.")
     parser.add_argument("--array_name", help="Name of the translation array")
