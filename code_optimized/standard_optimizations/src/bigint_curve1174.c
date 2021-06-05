@@ -19,9 +19,8 @@
 #include "debug.h"
 
 // True if r is smaller or equal than the compared a_i * q
-#define MOD_BIGINT_COMP_LEQ(r, chunk_7, chunk_0)                    \
-    (r)->chunks[7] < (chunk_7)                                      \
-    || ((r)->chunks[7] == (chunk_7) && r->chunks[0] <= (chunk_0))
+#define MOD_BIGINT_COMP_LEQ(r, chunk_7, chunk_0) \
+    (r)->chunks[7] < (chunk_7) || ((r)->chunks[7] == (chunk_7) && r->chunks[0] <= (chunk_0))
 
 /**
  * \brief Calculate r := a mod q
@@ -48,14 +47,16 @@ BigInt *big_int_curve1174_mod(BigInt *r)
     // 2^251 - 9 = 0 (mod q) => 2^251 = 9 (mod q) => 2^256 = 288 (mod q)
     // Thus, we can simplify:
     // a1 * 2^256 + a0 = a1 * 288 + a0 (mod q)
-    if (r->size > Q_CHUNKS) {
+    if (r->size > Q_CHUNKS)
+    {
         // Do right shift by 256 with a memcpy because this is a special case and
         // we can save a call to big_int_srl_small this way.
         r_upper->sign = r->sign;
         r_upper->size = r->size - Q_CHUNKS;
-        memcpy((void *) r_upper->chunks,
-               (void *) (r->chunks + Q_CHUNKS),
-               r_upper->size * BIGINT_INTERNAL_CHUNK_BYTE); ADD_STAT_COLLECTION(BASIC_ADD_OTHER)
+        memcpy((void *)r_upper->chunks,
+               (void *)(r->chunks + Q_CHUNKS),
+               r_upper->size * BIGINT_INTERNAL_CHUNK_BYTE);
+        ADD_STAT_COLLECTION(BASIC_ADD_OTHER)
 
         // Intentionally no mod reduction, since we do one later. We know that
         // our intermediate values are never larger than (q-1)^2 and 288 * (q-1)^2 < 2^512
@@ -66,7 +67,8 @@ BigInt *big_int_curve1174_mod(BigInt *r)
         big_int_curve1174_add_mod(r, r_lower, r_upper_288); // r = a1 * 288 + a0 (mod q)
     }
     // Case: q <= |a| < 2^256
-    else if (big_int_curve1174_compare_to_q(r) != -1) {
+    else if (big_int_curve1174_compare_to_q(r) != -1)
+    {
         // Note that all multiples of q have chunks 1 to 6 as 0xffffffff.
         // Also note that in all except negligibly few cases, r has 8 chunks, so,
         // we optimize for that case.
@@ -74,117 +76,164 @@ BigInt *big_int_curve1174_mod(BigInt *r)
         // to those of the number, the number is smaller or equal. We build our comparison
         // such that those cases fall in the same branch.
 
-        if (MOD_BIGINT_COMP_LEQ(r, Q_17_CHUNK_7, Q_17_CHUNK_0)) {
-            if (MOD_BIGINT_COMP_LEQ(r, Q_9_CHUNK_7, Q_9_CHUNK_0)) {
-                if (MOD_BIGINT_COMP_LEQ(r, Q_5_CHUNK_7, Q_5_CHUNK_0)) {
-                    if (MOD_BIGINT_COMP_LEQ(r, Q_3_CHUNK_7, Q_3_CHUNK_0)) {
-                        if (big_int_curve1174_lt_aq(r, q_2)) {
+        if (MOD_BIGINT_COMP_LEQ(r, Q_17_CHUNK_7, Q_17_CHUNK_0))
+        {
+            if (MOD_BIGINT_COMP_LEQ(r, Q_9_CHUNK_7, Q_9_CHUNK_0))
+            {
+                if (MOD_BIGINT_COMP_LEQ(r, Q_5_CHUNK_7, Q_5_CHUNK_0))
+                {
+                    if (MOD_BIGINT_COMP_LEQ(r, Q_3_CHUNK_7, Q_3_CHUNK_0))
+                    {
+                        if (big_int_curve1174_lt_aq(r, q_2))
+                        {
                             big_int_sub(r, r, q);
                         }
-                        else {
-                            if (LIKELY(big_int_curve1174_lt_aq(r, q_3))) {
+                        else
+                        {
+                            if (LIKELY(big_int_curve1174_lt_aq(r, q_3)))
+                            {
                                 big_int_sub(r, r, q_2);
                             }
-                            else {
+                            else
+                            {
                                 big_int_sub(r, r, q_3);
                             }
                         }
                     }
-                    else {
-                        if (big_int_curve1174_lt_aq(r, q_4)) {
+                    else
+                    {
+                        if (big_int_curve1174_lt_aq(r, q_4))
+                        {
                             big_int_sub(r, r, q_3);
                         }
-                        else {
-                            if (LIKELY(big_int_curve1174_lt_aq(r, q_5))) {
+                        else
+                        {
+                            if (LIKELY(big_int_curve1174_lt_aq(r, q_5)))
+                            {
                                 big_int_sub(r, r, q_4);
                             }
-                            else {
+                            else
+                            {
                                 big_int_sub(r, r, q_5);
                             }
                         }
                     }
                 }
-                else {
-                    if (MOD_BIGINT_COMP_LEQ(r, Q_7_CHUNK_7, Q_7_CHUNK_0)) {
-                        if (big_int_curve1174_lt_aq(r, q_6)) {
+                else
+                {
+                    if (MOD_BIGINT_COMP_LEQ(r, Q_7_CHUNK_7, Q_7_CHUNK_0))
+                    {
+                        if (big_int_curve1174_lt_aq(r, q_6))
+                        {
                             big_int_sub(r, r, q_5);
                         }
-                        else {
-                            if (LIKELY(big_int_curve1174_lt_aq(r, q_7))) {
+                        else
+                        {
+                            if (LIKELY(big_int_curve1174_lt_aq(r, q_7)))
+                            {
                                 big_int_sub(r, r, q_6);
                             }
-                            else {
+                            else
+                            {
                                 big_int_sub(r, r, q_7);
                             }
                         }
                     }
-                    else {
-                        if (big_int_curve1174_lt_aq(r, q_8)) {
+                    else
+                    {
+                        if (big_int_curve1174_lt_aq(r, q_8))
+                        {
                             big_int_sub(r, r, q_7);
                         }
-                        else {
-                            if (LIKELY(big_int_curve1174_lt_aq(r, q_9))) {
+                        else
+                        {
+                            if (LIKELY(big_int_curve1174_lt_aq(r, q_9)))
+                            {
                                 big_int_sub(r, r, q_8);
                             }
-                            else {
+                            else
+                            {
                                 big_int_sub(r, r, q_9);
                             }
                         }
                     }
                 }
             }
-            else {
-                if (MOD_BIGINT_COMP_LEQ(r, Q_13_CHUNK_7, Q_13_CHUNK_0)) {
-                    if (MOD_BIGINT_COMP_LEQ(r, Q_11_CHUNK_7, Q_11_CHUNK_0)) {
-                        if (big_int_curve1174_lt_aq(r, q_10)) {
+            else
+            {
+                if (MOD_BIGINT_COMP_LEQ(r, Q_13_CHUNK_7, Q_13_CHUNK_0))
+                {
+                    if (MOD_BIGINT_COMP_LEQ(r, Q_11_CHUNK_7, Q_11_CHUNK_0))
+                    {
+                        if (big_int_curve1174_lt_aq(r, q_10))
+                        {
                             big_int_sub(r, r, q_9);
                         }
-                        else {
-                            if (LIKELY(big_int_curve1174_lt_aq(r, q_11))) {
+                        else
+                        {
+                            if (LIKELY(big_int_curve1174_lt_aq(r, q_11)))
+                            {
                                 big_int_sub(r, r, q_10);
                             }
-                            else {
+                            else
+                            {
                                 big_int_sub(r, r, q_11);
                             }
                         }
                     }
-                    else {
-                        if (big_int_curve1174_lt_aq(r, q_12)) {
+                    else
+                    {
+                        if (big_int_curve1174_lt_aq(r, q_12))
+                        {
                             big_int_sub(r, r, q_11);
                         }
-                        else {
-                            if (LIKELY(big_int_curve1174_lt_aq(r, q_13))) {
+                        else
+                        {
+                            if (LIKELY(big_int_curve1174_lt_aq(r, q_13)))
+                            {
                                 big_int_sub(r, r, q_12);
                             }
-                            else {
+                            else
+                            {
                                 big_int_sub(r, r, q_13);
                             }
                         }
                     }
                 }
-                else {
-                    if (MOD_BIGINT_COMP_LEQ(r, Q_15_CHUNK_7, Q_15_CHUNK_0)) {
-                        if (big_int_curve1174_lt_aq(r, q_14)) {
+                else
+                {
+                    if (MOD_BIGINT_COMP_LEQ(r, Q_15_CHUNK_7, Q_15_CHUNK_0))
+                    {
+                        if (big_int_curve1174_lt_aq(r, q_14))
+                        {
                             big_int_sub(r, r, q_13);
                         }
-                        else {
-                            if (LIKELY(big_int_curve1174_lt_aq(r, q_15))) {
+                        else
+                        {
+                            if (LIKELY(big_int_curve1174_lt_aq(r, q_15)))
+                            {
                                 big_int_sub(r, r, q_14);
                             }
-                            else {
+                            else
+                            {
                                 big_int_sub(r, r, q_15);
                             }
                         }
                     }
-                    else {
-                        if (big_int_curve1174_lt_aq(r, q_16)) {
+                    else
+                    {
+                        if (big_int_curve1174_lt_aq(r, q_16))
+                        {
                             big_int_sub(r, r, q_15);
                         }
-                        else {
-                            if (LIKELY(big_int_curve1174_lt_aq(r, q_17))) {
+                        else
+                        {
+                            if (LIKELY(big_int_curve1174_lt_aq(r, q_17)))
+                            {
                                 big_int_sub(r, r, q_16);
                             }
-                            else {
+                            else
+                            {
                                 big_int_sub(r, r, q_17);
                             }
                         }
@@ -192,117 +241,164 @@ BigInt *big_int_curve1174_mod(BigInt *r)
                 }
             }
         }
-        else {
-            if (MOD_BIGINT_COMP_LEQ(r, Q_25_CHUNK_7, Q_25_CHUNK_0)) {
-                if (MOD_BIGINT_COMP_LEQ(r, Q_21_CHUNK_7, Q_21_CHUNK_0)) {
-                    if (MOD_BIGINT_COMP_LEQ(r, Q_19_CHUNK_7, Q_19_CHUNK_0)) {
-                        if (big_int_curve1174_lt_aq(r, q_18)) {
+        else
+        {
+            if (MOD_BIGINT_COMP_LEQ(r, Q_25_CHUNK_7, Q_25_CHUNK_0))
+            {
+                if (MOD_BIGINT_COMP_LEQ(r, Q_21_CHUNK_7, Q_21_CHUNK_0))
+                {
+                    if (MOD_BIGINT_COMP_LEQ(r, Q_19_CHUNK_7, Q_19_CHUNK_0))
+                    {
+                        if (big_int_curve1174_lt_aq(r, q_18))
+                        {
                             big_int_sub(r, r, q_17);
                         }
-                        else {
-                            if (LIKELY(big_int_curve1174_lt_aq(r, q_19))) {
+                        else
+                        {
+                            if (LIKELY(big_int_curve1174_lt_aq(r, q_19)))
+                            {
                                 big_int_sub(r, r, q_18);
                             }
-                            else {
+                            else
+                            {
                                 big_int_sub(r, r, q_19);
                             }
                         }
                     }
-                    else {
-                        if (big_int_curve1174_lt_aq(r, q_20)) {
+                    else
+                    {
+                        if (big_int_curve1174_lt_aq(r, q_20))
+                        {
                             big_int_sub(r, r, q_19);
                         }
-                        else {
-                            if (LIKELY(big_int_curve1174_lt_aq(r, q_21))) {
+                        else
+                        {
+                            if (LIKELY(big_int_curve1174_lt_aq(r, q_21)))
+                            {
                                 big_int_sub(r, r, q_20);
                             }
-                            else {
+                            else
+                            {
                                 big_int_sub(r, r, q_21);
                             }
                         }
                     }
                 }
-                else {
-                    if (MOD_BIGINT_COMP_LEQ(r, Q_23_CHUNK_7, Q_23_CHUNK_0)) {
-                        if (big_int_curve1174_lt_aq(r, q_22)) {
+                else
+                {
+                    if (MOD_BIGINT_COMP_LEQ(r, Q_23_CHUNK_7, Q_23_CHUNK_0))
+                    {
+                        if (big_int_curve1174_lt_aq(r, q_22))
+                        {
                             big_int_sub(r, r, q_21);
                         }
-                        else {
-                            if (LIKELY(big_int_curve1174_lt_aq(r, q_23))) {
+                        else
+                        {
+                            if (LIKELY(big_int_curve1174_lt_aq(r, q_23)))
+                            {
                                 big_int_sub(r, r, q_22);
                             }
-                            else {
+                            else
+                            {
                                 big_int_sub(r, r, q_23);
                             }
                         }
                     }
-                    else {
-                        if (big_int_curve1174_lt_aq(r, q_24)) {
+                    else
+                    {
+                        if (big_int_curve1174_lt_aq(r, q_24))
+                        {
                             big_int_sub(r, r, q_23);
                         }
-                        else {
-                            if (LIKELY(big_int_curve1174_lt_aq(r, q_25))) {
+                        else
+                        {
+                            if (LIKELY(big_int_curve1174_lt_aq(r, q_25)))
+                            {
                                 big_int_sub(r, r, q_24);
                             }
-                            else {
+                            else
+                            {
                                 big_int_sub(r, r, q_25);
                             }
                         }
                     }
                 }
             }
-            else {
-                if (MOD_BIGINT_COMP_LEQ(r, Q_29_CHUNK_7, Q_29_CHUNK_0)) {
-                    if (MOD_BIGINT_COMP_LEQ(r, Q_27_CHUNK_7, Q_27_CHUNK_0)) {
-                        if (big_int_curve1174_lt_aq(r, q_26)) {
+            else
+            {
+                if (MOD_BIGINT_COMP_LEQ(r, Q_29_CHUNK_7, Q_29_CHUNK_0))
+                {
+                    if (MOD_BIGINT_COMP_LEQ(r, Q_27_CHUNK_7, Q_27_CHUNK_0))
+                    {
+                        if (big_int_curve1174_lt_aq(r, q_26))
+                        {
                             big_int_sub(r, r, q_25);
                         }
-                        else {
-                            if (LIKELY(big_int_curve1174_lt_aq(r, q_27))) {
+                        else
+                        {
+                            if (LIKELY(big_int_curve1174_lt_aq(r, q_27)))
+                            {
                                 big_int_sub(r, r, q_26);
                             }
-                            else {
+                            else
+                            {
                                 big_int_sub(r, r, q_27);
                             }
                         }
                     }
-                    else {
-                        if (big_int_curve1174_lt_aq(r, q_28)) {
+                    else
+                    {
+                        if (big_int_curve1174_lt_aq(r, q_28))
+                        {
                             big_int_sub(r, r, q_27);
                         }
-                        else {
-                            if (LIKELY(big_int_curve1174_lt_aq(r, q_29))) {
+                        else
+                        {
+                            if (LIKELY(big_int_curve1174_lt_aq(r, q_29)))
+                            {
                                 big_int_sub(r, r, q_28);
                             }
-                            else {
+                            else
+                            {
                                 big_int_sub(r, r, q_29);
                             }
                         }
                     }
                 }
-                else {
-                    if (MOD_BIGINT_COMP_LEQ(r, Q_31_CHUNK_7, Q_31_CHUNK_0)) {
-                        if (big_int_curve1174_lt_aq(r, q_30)) {
+                else
+                {
+                    if (MOD_BIGINT_COMP_LEQ(r, Q_31_CHUNK_7, Q_31_CHUNK_0))
+                    {
+                        if (big_int_curve1174_lt_aq(r, q_30))
+                        {
                             big_int_sub(r, r, q_29);
                         }
-                        else {
-                            if (LIKELY(big_int_curve1174_lt_aq(r, q_31))) {
+                        else
+                        {
+                            if (LIKELY(big_int_curve1174_lt_aq(r, q_31)))
+                            {
                                 big_int_sub(r, r, q_30);
                             }
-                            else {
+                            else
+                            {
                                 big_int_sub(r, r, q_31);
                             }
                         }
                     }
-                    else {
-                        if (big_int_curve1174_lt_aq(r, q_32)) {
+                    else
+                    {
+                        if (big_int_curve1174_lt_aq(r, q_32))
+                        {
                             big_int_sub(r, r, q_31);
                         }
-                        else {
-                            if (big_int_curve1174_lt_aq(r, q_33)) {
+                        else
+                        {
+                            if (big_int_curve1174_lt_aq(r, q_33))
+                            {
                                 big_int_sub(r, r, q_32);
                             }
-                            else {
+                            else
+                            {
                                 big_int_sub(r, r, q_33);
                             }
                         }
@@ -320,7 +416,6 @@ BigInt *big_int_curve1174_mod(BigInt *r)
     return r;
 }
 
-
 /**
  * \brief Calculate r := (a + b) mod q
  *
@@ -336,7 +431,6 @@ BigInt *big_int_curve1174_add_mod(BigInt *r, BigInt *a, BigInt *b)
     return r;
 }
 
-
 /**
  * \brief Calculate r := (a - b) mod q
  *
@@ -349,7 +443,6 @@ BigInt *big_int_curve1174_sub_mod(BigInt *r, BigInt *a, BigInt *b)
     big_int_sub(r, a, b);
     return big_int_curve1174_mod(r);
 }
-
 
 /**
  * \brief Calculate r := (a * b) mod q
@@ -366,7 +459,6 @@ BigInt *big_int_curve1174_mul_mod(BigInt *r, BigInt *a, BigInt *b)
     return big_int_curve1174_mod(r);
 }
 
-
 /**
  * \brief Calculate r := a^2 mod q
  *
@@ -380,7 +472,6 @@ BigInt *big_int_curve1174_square_mod(BigInt *r, BigInt *a)
     big_int_square(r, a);
     return big_int_curve1174_mod(r);
 }
-
 
 /**
  * \brief Calculate r := (a * b^-1) mod q
@@ -399,7 +490,6 @@ BigInt *big_int_curve1174_div_mod(BigInt *r, BigInt *a, BigInt *b)
     return r;
 }
 
-
 /**
  * \brief Calculate r := a^-1 mod q (the inverse of a)
  *
@@ -415,10 +505,8 @@ BigInt *big_int_curve1174_inv_fermat(BigInt *r, BigInt *a)
     return r;
 }
 
-
 // TODO: consider implementing Montgommery inverse, which are based on cheaper
 // shifting operations and compare it to fermat.
-
 
 /**
  * \brief Calculate r := (b^e) mod q for small exponents e < 2^64
@@ -435,22 +523,26 @@ BigInt *big_int_curve1174_pow_small(BigInt *r, BigInt *b, uint64_t e)
 
     BIG_INT_DEFINE_FROM_CHUNK(r2, 0, 1);
 
-    BigInt* r_tmp, *r1;
+    BigInt *r_tmp, *r1;
 
     r1 = r;
 
     big_int_copy(b_loc1, b);
 
-    while (e) {
+    while (e)
+    {
         // If power is odd
-        if (e & 1) {
+        if (e & 1)
+        {
             big_int_curve1174_mul_mod(r1, r2, b_loc1);
             r_tmp = r1;
             r1 = r2;
             r2 = r_tmp;
         }
+        ADD_STAT_COLLECTION(BASIC_BITWISE)
 
         e >>= 1;
+        ADD_STAT_COLLECTION(BASIC_SHIFT)
 
         // Early exit: avoid cleanup due to unrolling, avoid unnecessary square op
         if (!e)
@@ -459,14 +551,17 @@ BigInt *big_int_curve1174_pow_small(BigInt *r, BigInt *b, uint64_t e)
         big_int_curve1174_square_mod(b_loc2, b_loc1);
 
         // ------ Unroll ------
-        if (e & 1) {
+        if (e & 1)
+        {
             big_int_curve1174_mul_mod(r1, r2, b_loc2);
             r_tmp = r1;
             r1 = r2;
             r2 = r_tmp;
         }
+        ADD_STAT_COLLECTION(BASIC_BITWISE)
 
         e >>= 1;
+        ADD_STAT_COLLECTION(BASIC_SHIFT)
 
         // Early exit: avoid unnecessary square op
         if (e)
@@ -497,36 +592,46 @@ BigInt *big_int_curve1174_pow(BigInt *r, BigInt *b, BigInt *e)
 
     BIG_INT_DEFINE_FROM_CHUNK(r2, 0, 1);
 
-    BigInt* r_tmp, *r1;
+    BigInt *r_tmp, *r1;
 
     r1 = r;
     big_int_copy(b_loc1, b);
 
     // Operate on exponent chunk by chunk
-    for (i = 0; i < e->size - 1; ++i) { ADD_STAT_COLLECTION(BASIC_ADD_OTHER)
+    for (i = 0; i < e->size - 1; ++i)
+    {
+        ADD_STAT_COLLECTION(BASIC_ADD_OTHER)
         e_chunk = e->chunks[i];
 
-        for (j = 0; j < BIGINT_CHUNK_BIT_SIZE; ++j) { ADD_STAT_COLLECTION(BASIC_ADD_OTHER)
+        for (j = 0; j < BIGINT_CHUNK_BIT_SIZE; ++j)
+        {
+            ADD_STAT_COLLECTION(BASIC_ADD_OTHER)
             // If power is odd
-            if (e_chunk & 1) {
+            if (e_chunk & 1)
+            {
                 big_int_curve1174_mul_mod(r1, r2, b_loc1);
                 r_tmp = r1;
                 r1 = r2;
                 r2 = r_tmp;
             }
+            ADD_STAT_COLLECTION(BASIC_BITWISE)
 
             e_chunk >>= 1;
+            ADD_STAT_COLLECTION(BASIC_SHIFT)
             big_int_curve1174_square_mod(b_loc2, b_loc1);
 
             // -- unroll --
-            if (e_chunk & 1) {
+            if (e_chunk & 1)
+            {
                 big_int_curve1174_mul_mod(r1, r2, b_loc2);
                 r_tmp = r1;
                 r1 = r2;
                 r2 = r_tmp;
             }
+            ADD_STAT_COLLECTION(BASIC_BITWISE)
 
             e_chunk >>= 1;
+            ADD_STAT_COLLECTION(BASIC_SHIFT)
 
             big_int_curve1174_square_mod(b_loc1, b_loc2);
         }
@@ -534,16 +639,21 @@ BigInt *big_int_curve1174_pow(BigInt *r, BigInt *b, BigInt *e)
 
     // Special case for the last chunk
     e_chunk = e->chunks[e->size - 1];
-    for (j = 0; j < BIGINT_CHUNK_BIT_SIZE; ++j) { ADD_STAT_COLLECTION(BASIC_ADD_OTHER)
+    for (j = 0; j < BIGINT_CHUNK_BIT_SIZE; ++j)
+    {
+        ADD_STAT_COLLECTION(BASIC_ADD_OTHER)
         // If power is odd
-        if (e_chunk & 1) {
+        if (e_chunk & 1)
+        {
             big_int_curve1174_mul_mod(r1, r2, b_loc1);
             r_tmp = r1;
             r1 = r2;
             r2 = r_tmp;
         }
+        ADD_STAT_COLLECTION(BASIC_BITWISE)
 
         e_chunk >>= 1;
+        ADD_STAT_COLLECTION(BASIC_SHIFT)
 
         // Early exit: avoid cleanup due to unrolling, avoid unnecessary square op
         if (!e_chunk)
@@ -552,14 +662,17 @@ BigInt *big_int_curve1174_pow(BigInt *r, BigInt *b, BigInt *e)
         big_int_curve1174_square_mod(b_loc2, b_loc1);
 
         // -- unroll --
-        if (e_chunk & 1) {
+        if (e_chunk & 1)
+        {
             big_int_curve1174_mul_mod(r1, r2, b_loc2);
             r_tmp = r1;
             r1 = r2;
             r2 = r_tmp;
         }
+        ADD_STAT_COLLECTION(BASIC_BITWISE)
 
         e_chunk >>= 1;
+        ADD_STAT_COLLECTION(BASIC_SHIFT)
 
         // Early exit: avoid unnecessary square op
         if (e)
@@ -573,7 +686,6 @@ BigInt *big_int_curve1174_pow(BigInt *r, BigInt *b, BigInt *e)
 
     return r;
 }
-
 
 /**
  * \brief Calculate r := (b^((q-1)/2)) mod q
@@ -602,7 +714,9 @@ BigInt *big_int_curve1174_pow_q_m1_d2(BigInt *r, BigInt *b)
 
     // All the remaining bits are set to one, so we add all of them
     // Do 123 loops with unrolling = 2 --> 246 iterations
-    for (uint32_t i = 0; i < 123; ++i) { ADD_STAT_COLLECTION(BASIC_ADD_OTHER)
+    for (uint32_t i = 0; i < 123; ++i)
+    {
+        ADD_STAT_COLLECTION(BASIC_ADD_OTHER)
         big_int_curve1174_square_mod(b_loc_1, b_loc_2);
         big_int_curve1174_mul_mod(r, r_loc, b_loc_1);
 
@@ -616,8 +730,6 @@ BigInt *big_int_curve1174_pow_q_m1_d2(BigInt *r, BigInt *b)
 
     return r;
 }
-
-
 
 /**
  * \brief Calculate r := (b^((q+1)/4)) mod q
@@ -645,7 +757,9 @@ BigInt *big_int_curve1174_pow_q_p1_d4(BigInt *r, BigInt *b)
 
     // All the remaining bits are set to one, so we add all of them.
     // We use loop unrolling to avoid BigInt copies. 2x123 iterations -> 246 bits
-    for (uint32_t i = 0; i < 123; ++i) { ADD_STAT_COLLECTION(BASIC_ADD_OTHER)
+    for (uint32_t i = 0; i < 123; ++i)
+    {
+        ADD_STAT_COLLECTION(BASIC_ADD_OTHER)
         big_int_curve1174_square_mod(b_loc_1, b_loc_2);
         big_int_curve1174_mul_mod(r_loc, r, b_loc_1);
 
@@ -655,7 +769,6 @@ BigInt *big_int_curve1174_pow_q_p1_d4(BigInt *r, BigInt *b)
 
     return r;
 }
-
 
 /**
  * \brief Calculate r := (b^(q-2)) mod q
@@ -691,7 +804,9 @@ BigInt *big_int_curve1174_pow_q_m2(BigInt *r, BigInt *b)
 
     // All the remaining bits are set to one, so we add all of them
     // Do 123 loops with unrolling = 2 --> 246 iterations
-    for (uint32_t i = 0; i < 123; ++i) { ADD_STAT_COLLECTION(BASIC_ADD_OTHER)
+    for (uint32_t i = 0; i < 123; ++i)
+    {
+        ADD_STAT_COLLECTION(BASIC_ADD_OTHER)
         big_int_curve1174_square_mod(b_loc_1, b_loc_2);
         big_int_curve1174_mul_mod(r_loc, r, b_loc_1);
 
@@ -701,7 +816,6 @@ BigInt *big_int_curve1174_pow_q_m2(BigInt *r, BigInt *b)
 
     return r;
 }
-
 
 /**
  * \brief Calculate the Chi function chi(t) = t**((q-1)/2) mod q
@@ -745,9 +859,9 @@ int8_t big_int_curve1174_compare_to_q(BigInt *a)
     // Remaining case: a->size == Q_CHUNKS and a is positive
 
     // Compare to highest chunk of Q
-    if (a->chunks[Q_CHUNKS-1] < Q_MSB_CHUNK)
+    if (a->chunks[Q_CHUNKS - 1] < Q_MSB_CHUNK)
         return -1;
-    if (a->chunks[Q_CHUNKS-1] > Q_MSB_CHUNK)
+    if (a->chunks[Q_CHUNKS - 1] > Q_MSB_CHUNK)
         return 1;
 
     // Compare to lowest chunk of Q
@@ -755,13 +869,13 @@ int8_t big_int_curve1174_compare_to_q(BigInt *a)
         return -1;
 
     // Compare to intermediate chunks
-    for (uint32_t i = Q_CHUNKS - 2; i >= 1; --i) {
+    for (uint32_t i = Q_CHUNKS - 2; i >= 1; --i)
+    {
         if (a->chunks[i] < Q_INTERMEDIATE_CHUNK)
             return -1;
     }
     return (a->chunks[0] > Q_LSB_CHUNK) ? 1 : 0;
 }
-
 
 /**
  * \brief Greater than (q - 1) / 2
@@ -775,9 +889,9 @@ int8_t big_int_curve1174_compare_to_q(BigInt *a)
 int8_t big_int_curve1174_gt_q_m1_d2(BigInt *a)
 {
     // Compare to highest chunk of Q
-    if (a->size < Q_CHUNKS || a->chunks[Q_CHUNKS-1] < Q_M1_D2_CHUNK_7)
+    if (a->size < Q_CHUNKS || a->chunks[Q_CHUNKS - 1] < Q_M1_D2_CHUNK_7)
         return 0;
-    if (a->chunks[Q_CHUNKS-1] > Q_M1_D2_CHUNK_7)
+    if (a->chunks[Q_CHUNKS - 1] > Q_M1_D2_CHUNK_7)
         return 1;
 
     // Compare to lowest chunk of Q
@@ -785,7 +899,8 @@ int8_t big_int_curve1174_gt_q_m1_d2(BigInt *a)
         return 0;
 
     // Compare to intermediate chunks
-    for (uint32_t i = Q_CHUNKS - 2; i >= 1; --i) {
+    for (uint32_t i = Q_CHUNKS - 2; i >= 1; --i)
+    {
         if (a->chunks[i] < Q_INTERMEDIATE_CHUNK)
             return 0;
     }
@@ -813,7 +928,8 @@ int8_t big_int_curve1174_lt_aq(BigInt *b, BigInt *aq)
         return 1;
 
     // Compare to intermediate chunks
-    for (uint32_t i = aq->size - 2; i >= 1; --i) {
+    for (uint32_t i = aq->size - 2; i >= 1; --i)
+    {
         if (b->chunks[i] < Q_INTERMEDIATE_CHUNK)
             return 1;
     }

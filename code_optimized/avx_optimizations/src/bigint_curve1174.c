@@ -448,9 +448,9 @@ BigInt *big_int_curve1174_pow_small(BigInt *r, BigInt *b, uint64_t e)
             r_tmp = r1;
             r1 = r2;
             r2 = r_tmp;
-        }
+        } ADD_STAT_COLLECTION(BASIC_BITWISE)
 
-        e >>= 1;
+        e >>= 1; ADD_STAT_COLLECTION(BASIC_SHIFT)
 
         // Early exit: avoid cleanup due to unrolling, avoid unnecessary square op
         if (!e)
@@ -464,9 +464,9 @@ BigInt *big_int_curve1174_pow_small(BigInt *r, BigInt *b, uint64_t e)
             r_tmp = r1;
             r1 = r2;
             r2 = r_tmp;
-        }
+        } ADD_STAT_COLLECTION(BASIC_BITWISE)
 
-        e >>= 1;
+        e >>= 1; ADD_STAT_COLLECTION(BASIC_SHIFT)
 
         // Early exit: avoid unnecessary square op
         if (e)
@@ -515,7 +515,7 @@ BigInt *big_int_curve1174_pow(BigInt *r, BigInt *b, BigInt *e)
                 r2 = r_tmp;
             }
 
-            e_chunk >>= 1;
+            e_chunk >>= 1; ADD_STAT_COLLECTION(BASIC_SHIFT)
             big_int_curve1174_square_mod(b_loc2, b_loc1);
 
             // -- unroll --
@@ -524,9 +524,9 @@ BigInt *big_int_curve1174_pow(BigInt *r, BigInt *b, BigInt *e)
                 r_tmp = r1;
                 r1 = r2;
                 r2 = r_tmp;
-            }
+            } ADD_STAT_COLLECTION(BASIC_BITWISE)
 
-            e_chunk >>= 1;
+            e_chunk >>= 1; ADD_STAT_COLLECTION(BASIC_SHIFT)
 
             big_int_curve1174_square_mod(b_loc1, b_loc2);
         }
@@ -541,9 +541,9 @@ BigInt *big_int_curve1174_pow(BigInt *r, BigInt *b, BigInt *e)
             r_tmp = r1;
             r1 = r2;
             r2 = r_tmp;
-        }
+        } ADD_STAT_COLLECTION(BASIC_BITWISE)
 
-        e_chunk >>= 1;
+        e_chunk >>= 1; ADD_STAT_COLLECTION(BASIC_SHIFT)
 
         // Early exit: avoid cleanup due to unrolling, avoid unnecessary square op
         if (!e_chunk)
@@ -557,9 +557,9 @@ BigInt *big_int_curve1174_pow(BigInt *r, BigInt *b, BigInt *e)
             r_tmp = r1;
             r1 = r2;
             r2 = r_tmp;
-        }
+        } ADD_STAT_COLLECTION(BASIC_BITWISE)
 
-        e_chunk >>= 1;
+        e_chunk >>= 1; ADD_STAT_COLLECTION(BASIC_SHIFT)
 
         // Early exit: avoid unnecessary square op
         if (e)
@@ -741,7 +741,7 @@ int8_t big_int_curve1174_compare_to_q(BigInt *a)
         return 1;
     if (a->size < Q_CHUNKS || a->sign)
         return -1;
-
+    ADD_STAT_COLLECTION(BASIC_BITWISE)
     // Remaining case: a->size == Q_CHUNKS and a is positive
 
     // Compare to highest chunk of Q
@@ -779,7 +779,7 @@ int8_t big_int_curve1174_gt_q_m1_d2(BigInt *a)
         return 0;
     if (a->chunks[Q_CHUNKS-1] > Q_M1_D2_CHUNK_7)
         return 1;
-
+    ADD_STAT_COLLECTION(BASIC_BITWISE)
     // Compare to lowest chunk of Q
     if (a->chunks[0] <= Q_LSB_CHUNK)
         return 0;
@@ -807,7 +807,7 @@ int8_t big_int_curve1174_lt_aq(BigInt *b, BigInt *aq)
         return 1;
     if (b->size > aq->size || b->chunks[b->size - 1] > aq->chunks[aq->size - 1])
         return 0;
-
+    ADD_STAT_COLLECTION(BASIC_BITWISE) ADD_STAT_COLLECTION(BASIC_BITWISE)
     // Compare to lowest chunk of Q
     if (b->chunks[0] < aq->chunks[0])
         return 1;

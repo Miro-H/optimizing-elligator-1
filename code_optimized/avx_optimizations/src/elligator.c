@@ -73,7 +73,7 @@ CurvePoint *elligator_1_string_to_point(CurvePoint *r, BigInt *t, Curve curve)
         big_int_create_from_chunk(&(r->x), 0, 0);
         big_int_create_from_chunk(&(r->y), 1, 0);
         return r;
-    }
+    } ADD_STAT_COLLECTION(BASIC_BITWISE)
 
     BigInt *X;
     BigInt *Y;
@@ -116,18 +116,18 @@ CurvePoint *elligator_1_string_to_point(CurvePoint *r, BigInt *t, Curve curve)
     chiv = big_int_curve1174_chi(v);
 
     X = u;
-    X->sign = X->sign ^ chiv; // X = χ(v)u
+    X->sign = X->sign ^ chiv; ADD_STAT_COLLECTION(BASIC_BITWISE) // X = χ(v)u
 
-    tmp_0->sign = tmp_0->sign ^ chiv; // χ(v)v
+    tmp_0->sign = tmp_0->sign ^ chiv; ADD_STAT_COLLECTION(BASIC_BITWISE) // χ(v)v
 
     big_int_curve1174_pow_q_p1_d4(tmp_3, tmp_0); // (χ(v)v)^((q + 1) / 4)
-    tmp_3->sign ^= chiv; // (χ(v)v)^((q + 1) / 4)χ(v)
+    tmp_3->sign ^= chiv; ADD_STAT_COLLECTION(BASIC_BITWISE) // (χ(v)v)^((q + 1) / 4)χ(v)
 
     big_int_add(tmp_2, u_2, &(curve.c_squared_inverse)); // u^2 + 1 / c^2
     chi_2 = big_int_curve1174_chi(tmp_2); // χ(u^2 + 1 / c^2)
 
     Y = tmp_3;
-    Y->sign = Y->sign ^ chi_2; // Y = (χ(v)v)^((q + 1) / 4)χ(v)χ(u^2 + 1 / c^2)
+    Y->sign = Y->sign ^ chi_2; ADD_STAT_COLLECTION(BASIC_BITWISE) // Y = (χ(v)v)^((q + 1) / 4)χ(v)χ(u^2 + 1 / c^2)
 
     big_int_add(tmp_0, big_int_one, X); // X+1
     big_int_curve1174_square_mod(X_plus_1_squared, tmp_0); // (X+1)^2
@@ -170,7 +170,7 @@ BigInt *elligator_1_point_to_string(BigInt *t, CurvePoint p, Curve curve)
     {
         big_int_create_from_chunk(t, 1, 0);
         return t;
-    }
+    } ADD_STAT_COLLECTION(BASIC_BITWISE) ADD_STAT_COLLECTION(BASIC_BITWISE) ADD_STAT_COLLECTION(BASIC_BITWISE)
 
     BIG_INT_DEFINE_PTR(X);
 
@@ -212,7 +212,7 @@ BigInt *elligator_1_point_to_string(BigInt *t, CurvePoint p, Curve curve)
     z = big_int_curve1174_chi(tmp_1); // z = χ((c - 1)sX(1 + X)x(X^2 + 1/c^2))
 
     u = X;
-    u->sign = u->sign ^ z; // u = zX
+    u->sign = u->sign ^ z; ADD_STAT_COLLECTION(BASIC_BITWISE) // u = zX
 
     big_int_sub(tmp_0, big_int_one, u); // 1 - u
     big_int_add(tmp_1, big_int_one, u); // 1 + u

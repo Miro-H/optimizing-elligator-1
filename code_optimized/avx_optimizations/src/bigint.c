@@ -102,10 +102,12 @@ BigInt *big_int_create_from_dbl_chunk(BigInt *r, dbl_chunk_size_t chunk, uint8_t
     r->sign = sign;
 
     r->chunks[0] = chunk % BIGINT_RADIX;
+    ADD_STAT_COLLECTION(BASIC_MOD)
 
     if (chunk >= BIGINT_RADIX)
     {
         r->chunks[1] = chunk / BIGINT_RADIX;
+        ADD_STAT_COLLECTION(BASIC_DIV)
         r->size = 2;
     }
     else
@@ -142,13 +144,15 @@ BigInt *big_int_create_from_hex(BigInt *r, char *s)
 
     // chunk_size = ceil(s_len/BIGINT_CHUNK_HEX_SIZE)
     chunk_size = (s_len + BIGINT_CHUNK_HEX_SIZE - 1) / BIGINT_CHUNK_HEX_SIZE;
+    ADD_STAT_COLLECTION(BASIC_DIV)
 
     r->overflow = 0;
     r->size = chunk_size;
 
     // Null terinate buffer to stop strtoll
     buf[BIGINT_CHUNK_HEX_SIZE] = 0;
-    for (i = 0; i < chunk_size - 1; ++i) {
+    for (i = 0; i < chunk_size - 1; ++i)
+    {
         s_end -= BIGINT_CHUNK_HEX_SIZE;
         strncpy(buf, s_end, BIGINT_CHUNK_HEX_SIZE);
 
@@ -162,6 +166,7 @@ BigInt *big_int_create_from_hex(BigInt *r, char *s)
     parsed_int = (int64_t)STR_TO_CHUNK(buf, NULL, 16);
     r->sign = parsed_int < 0;
     r->chunks[i] = (dbl_chunk_size_t)(CHUNK_ABS(parsed_int) % BIGINT_RADIX);
+    ADD_STAT_COLLECTION(BASIC_MOD)
     return r;
 }
 
@@ -187,6 +192,7 @@ BigInt *big_int_create_random(BigInt *r, int64_t nr_of_chunks)
     }
 
     r->sign = rand() % 2;
+    ADD_STAT_COLLECTION(BASIC_MOD)
     r->overflow = 0;
     r->size = nr_of_chunks;
 
@@ -200,6 +206,7 @@ BigInt *big_int_create_random(BigInt *r, int64_t nr_of_chunks)
             offset *= RAND_MAX;
         }
         r->chunks[i] %= BIGINT_RADIX;
+        ADD_STAT_COLLECTION(BASIC_MOD)
     }
 
     return r;
@@ -338,6 +345,7 @@ BigInt *big_int_fast_add(BigInt *r, BigInt *a, BigInt *b)
     if (a->size == 8 && b->size == 8)
     {
         big_int_add_256(r, a, b);
+        ADD_STAT_COLLECTION(BASIC_BITWISE)
         return r;
     }
 
@@ -378,7 +386,9 @@ BigInt *big_int_fast_add(BigInt *r, BigInt *a, BigInt *b)
         ADD_STAT_COLLECTION(BASIC_ADD_CHUNK)
         ADD_STAT_COLLECTION(BASIC_ADD_CHUNK)
         r->chunks[i] = sum & BIGINT_CHUNK_MASK;
+        ADD_STAT_COLLECTION(BASIC_BITWISE)
         carry = sum >> BIGINT_CHUNK_SHIFT;
+        ADD_STAT_COLLECTION(BASIC_SHIFT)
 
         if (r->chunks[i] != 0)
             r_size = i;
@@ -391,7 +401,9 @@ BigInt *big_int_fast_add(BigInt *r, BigInt *a, BigInt *b)
         sum = aa->chunks[i] + carry;
         ADD_STAT_COLLECTION(BASIC_ADD_CHUNK)
         r->chunks[i] = sum & BIGINT_CHUNK_MASK;
+        ADD_STAT_COLLECTION(BASIC_BITWISE)
         carry = sum >> BIGINT_CHUNK_SHIFT;
+        ADD_STAT_COLLECTION(BASIC_SHIFT)
 
         if (r->chunks[i] != 0)
             r_size = i;
@@ -404,6 +416,7 @@ BigInt *big_int_fast_add(BigInt *r, BigInt *a, BigInt *b)
     if (carry && i < BIGINT_FIXED_SIZE_INTERNAL)
     {
         r->chunks[i] = 1;
+        ADD_STAT_COLLECTION(BASIC_BITWISE)
         r_size = i;
         ADD_STAT_COLLECTION(BASIC_ADD_SIZE)
     }
@@ -445,54 +458,77 @@ BigInt *big_int_add_256(BigInt *r, BigInt *a, BigInt *b)
     __m256i zero = _mm256_set1_epi64x(0);
 
     __m256i r_0_3 = _mm256_add_epi64(a_0_3, b_0_3);
+    ADD_STAT_COLLECTION(AVX_ADD)
     __m256i r_0_3_shift = _mm256_srli_epi64(r_0_3, BIGINT_CHUNK_SHIFT);
+    ADD_STAT_COLLECTION(AVX_OTHER)
 
     r_0_3 = _mm256_blend_epi32(zero, r_0_3, 1);
 
     __m256i r_1_4 = _mm256_add_epi64(a_1_4, b_1_4);
+    ADD_STAT_COLLECTION(AVX_ADD)
     r_1_4 = _mm256_add_epi64(r_1_4, r_0_3_shift);
+    ADD_STAT_COLLECTION(AVX_ADD)
     __m256i r_1_4_shift = _mm256_srli_epi64(r_1_4, BIGINT_CHUNK_SHIFT);
+    ADD_STAT_COLLECTION(AVX_OTHER)
     r_1_4 = _mm256_permute4x64_epi64(r_1_4, 0);
 
     r_0_3 = _mm256_blend_epi32(r_0_3, r_1_4, 4);
 
     __m256i r_2_5 = _mm256_add_epi64(a_2_5, b_2_5);
+    ADD_STAT_COLLECTION(AVX_ADD)
     r_2_5 = _mm256_add_epi64(r_2_5, r_1_4_shift);
+    ADD_STAT_COLLECTION(AVX_ADD)
     __m256i r_2_5_shift = _mm256_srli_epi64(r_2_5, BIGINT_CHUNK_SHIFT);
+    ADD_STAT_COLLECTION(AVX_OTHER)
     r_2_5 = _mm256_permute4x64_epi64(r_2_5, 0);
 
     r_0_3 = _mm256_blend_epi32(r_0_3, r_2_5, 16);
 
     __m256i r_3_6 = _mm256_add_epi64(a_3_6, b_3_6);
+    ADD_STAT_COLLECTION(AVX_ADD)
     r_3_6 = _mm256_add_epi64(r_3_6, r_2_5_shift);
+    ADD_STAT_COLLECTION(AVX_ADD)
     __m256i r_3_6_shift = _mm256_srli_epi64(r_3_6, BIGINT_CHUNK_SHIFT);
+    ADD_STAT_COLLECTION(AVX_OTHER)
     r_3_6 = _mm256_permute4x64_epi64(r_3_6, 0);
 
     r_0_3 = _mm256_blend_epi32(r_0_3, r_3_6, 64);
 
     __m256i r_4_7 = _mm256_add_epi64(a_4_7, b_4_7);
+    ADD_STAT_COLLECTION(AVX_ADD)
     r_4_7 = _mm256_add_epi64(r_4_7, r_3_6_shift);
+    ADD_STAT_COLLECTION(AVX_ADD)
     __m256i r_4_7_shift = _mm256_srli_epi64(r_4_7, BIGINT_CHUNK_SHIFT);
+    ADD_STAT_COLLECTION(AVX_OTHER)
 
     r_4_7 = _mm256_blend_epi32(zero, r_4_7, 1);
 
     __m256i r_5_8 = _mm256_add_epi64(a_5_8, b_5_8);
+    ADD_STAT_COLLECTION(AVX_ADD)
     r_5_8 = _mm256_add_epi64(r_5_8, r_4_7_shift);
+    ADD_STAT_COLLECTION(AVX_ADD)
     __m256i r_5_8_shift = _mm256_srli_epi64(r_5_8, BIGINT_CHUNK_SHIFT);
+    ADD_STAT_COLLECTION(AVX_OTHER)
     r_5_8 = _mm256_permute4x64_epi64(r_5_8, 0);
 
     r_4_7 = _mm256_blend_epi32(r_4_7, r_5_8, 4);
 
     __m256i r_6_9 = _mm256_add_epi64(a_6_9, b_6_9);
+    ADD_STAT_COLLECTION(AVX_ADD)
     r_6_9 = _mm256_add_epi64(r_6_9, r_5_8_shift);
+    ADD_STAT_COLLECTION(AVX_ADD)
     __m256i r_6_9_shift = _mm256_srli_epi64(r_6_9, BIGINT_CHUNK_SHIFT);
+    ADD_STAT_COLLECTION(AVX_OTHER)
     r_6_9 = _mm256_permute4x64_epi64(r_6_9, 0);
 
     r_4_7 = _mm256_blend_epi32(r_4_7, r_6_9, 16);
 
     __m256i r_7_10 = _mm256_add_epi64(a_7_10, b_7_10);
+    ADD_STAT_COLLECTION(AVX_ADD)
     r_7_10 = _mm256_add_epi64(r_7_10, r_6_9_shift);
+    ADD_STAT_COLLECTION(AVX_ADD)
     __m256i r_7_10_shift = _mm256_srli_epi64(r_7_10, BIGINT_CHUNK_SHIFT);
+    ADD_STAT_COLLECTION(AVX_OTHER)
     r_7_10 = _mm256_permute4x64_epi64(r_7_10, 0);
 
     r_4_7 = _mm256_blend_epi32(r_4_7, r_7_10, 64);
@@ -536,9 +572,9 @@ BigInt *big_int_add_upper_bound(BigInt *r, BigInt *a, BigInt *b)
     __m256i r_lo, r_hi;
 
     r_lo = _mm256_add_epi64(a_lo, b_lo);
-    ADD_STAT_COLLECTION(AVX_ADD_CHUNK)
+    ADD_STAT_COLLECTION(AVX_ADD)
     r_hi = _mm256_add_epi64(a_hi, b_hi);
-    ADD_STAT_COLLECTION(AVX_ADD_CHUNK)
+    ADD_STAT_COLLECTION(AVX_ADD)
 
     _mm256_storeu_si256((__m256i *)&(r->chunks), r_lo);
     _mm256_storeu_si256((__m256i *)&(r->chunks[8]), r_hi);
@@ -601,7 +637,7 @@ BigInt *big_int_fast_sub(BigInt *r, BigInt *a, BigInt *b)
     }
 
     // Assertion: aa_abs >= bb_abs
-
+    ADD_STAT_COLLECTION(BASIC_BITWISE)
     if (a->size == 8 && b->size == 8)
     {
         big_int_sub_256(r, aa_abs, bb_abs);
@@ -620,7 +656,10 @@ BigInt *big_int_fast_sub(BigInt *r, BigInt *a, BigInt *b)
             ADD_STAT_COLLECTION(BASIC_ADD_CHUNK)
             ADD_STAT_COLLECTION(BASIC_ADD_CHUNK)
             r->chunks[i] = diff & BIGINT_CHUNK_MASK;
+            ADD_STAT_COLLECTION(BASIC_BITWISE)
             borrow = (diff >> BIGINT_CHUNK_SHIFT) & 1;
+            ADD_STAT_COLLECTION(BASIC_BITWISE)
+            ADD_STAT_COLLECTION(BASIC_SHIFT)
 
             if (r->chunks[i] != 0)
                 r_size = i;
@@ -632,7 +671,10 @@ BigInt *big_int_fast_sub(BigInt *r, BigInt *a, BigInt *b)
             diff = aa_abs->chunks[i] - borrow;
             ADD_STAT_COLLECTION(BASIC_ADD_CHUNK)
             r->chunks[i] = diff & BIGINT_CHUNK_MASK;
+            ADD_STAT_COLLECTION(BASIC_BITWISE)
             borrow = (diff >> BIGINT_CHUNK_SHIFT) & 1;
+            ADD_STAT_COLLECTION(BASIC_BITWISE)
+            ADD_STAT_COLLECTION(BASIC_SHIFT)
 
             if (r->chunks[i] != 0)
                 r_size = i;
@@ -670,9 +712,9 @@ BigInt *big_int_sub_upper_bound(BigInt *r, BigInt *a, BigInt *b)
     __m256i r_lo, r_hi;
 
     r_lo = _mm256_sub_epi64(a_lo, b_lo);
-    ADD_STAT_COLLECTION(AVX_ADD_CHUNK)
+    ADD_STAT_COLLECTION(AVX_ADD)
     r_hi = _mm256_sub_epi64(a_hi, b_hi);
-    ADD_STAT_COLLECTION(AVX_ADD_CHUNK)
+    ADD_STAT_COLLECTION(AVX_ADD)
 
     _mm256_storeu_si256((__m256i *)&(r->chunks), r_lo);
     _mm256_storeu_si256((__m256i *)&(r->chunks[8]), r_hi);
@@ -711,35 +753,57 @@ BigInt *big_int_sub_256(BigInt *r, BigInt *a, BigInt *b)
     dbl_chunk_size_t r_c_0 = a_c_0 - b_c_0;
     ADD_STAT_COLLECTION(BASIC_ADD_CHUNK)
     dbl_chunk_size_t r_c_1 = a_c_1 - b_c_1 - ((r_c_0 >> BIGINT_CHUNK_SHIFT) & 1);
-    ADD_STAT_COLLECTION(BASIC_ADD_CHUNK)
-    ADD_STAT_COLLECTION(BASIC_ADD_CHUNK)
-    dbl_chunk_size_t r_c_2 = a_c_2 - b_c_2 - ((r_c_1 >> BIGINT_CHUNK_SHIFT) & 1);
-    ADD_STAT_COLLECTION(BASIC_ADD_CHUNK)
-    ADD_STAT_COLLECTION(BASIC_ADD_CHUNK)
-    dbl_chunk_size_t r_c_3 = a_c_3 - b_c_3 - ((r_c_2 >> BIGINT_CHUNK_SHIFT) & 1);
-    ADD_STAT_COLLECTION(BASIC_ADD_CHUNK)
-    ADD_STAT_COLLECTION(BASIC_ADD_CHUNK)
-    dbl_chunk_size_t r_c_4 = a_c_4 - b_c_4 - ((r_c_3 >> BIGINT_CHUNK_SHIFT) & 1);
-    ADD_STAT_COLLECTION(BASIC_ADD_CHUNK)
-    ADD_STAT_COLLECTION(BASIC_ADD_CHUNK)
-    dbl_chunk_size_t r_c_5 = a_c_5 - b_c_5 - ((r_c_4 >> BIGINT_CHUNK_SHIFT) & 1);
-    ADD_STAT_COLLECTION(BASIC_ADD_CHUNK)
-    ADD_STAT_COLLECTION(BASIC_ADD_CHUNK)
-    dbl_chunk_size_t r_c_6 = a_c_6 - b_c_6 - ((r_c_5 >> BIGINT_CHUNK_SHIFT) & 1);
-    ADD_STAT_COLLECTION(BASIC_ADD_CHUNK)
-    ADD_STAT_COLLECTION(BASIC_ADD_CHUNK)
-    dbl_chunk_size_t r_c_7 = a_c_7 - b_c_7 - ((r_c_6 >> BIGINT_CHUNK_SHIFT) & 1);
-    ADD_STAT_COLLECTION(BASIC_ADD_CHUNK)
-    ADD_STAT_COLLECTION(BASIC_ADD_CHUNK)
+    ADD_STAT_COLLECTION(BASIC_SHIFT)
+    ADD_STAT_COLLECTION(BASIC_BITWISE)
+        ADD_STAT_COLLECTION(BASIC_ADD_CHUNK)
+            ADD_STAT_COLLECTION(BASIC_ADD_CHUNK)
+                dbl_chunk_size_t r_c_2 = a_c_2 - b_c_2 - ((r_c_1 >> BIGINT_CHUNK_SHIFT) & 1);
+    ADD_STAT_COLLECTION(BASIC_SHIFT)
+    ADD_STAT_COLLECTION(BASIC_BITWISE)
+        ADD_STAT_COLLECTION(BASIC_ADD_CHUNK)
+            ADD_STAT_COLLECTION(BASIC_ADD_CHUNK)
+                dbl_chunk_size_t r_c_3 = a_c_3 - b_c_3 - ((r_c_2 >> BIGINT_CHUNK_SHIFT) & 1);
+    ADD_STAT_COLLECTION(BASIC_SHIFT)
+    ADD_STAT_COLLECTION(BASIC_BITWISE)
+        ADD_STAT_COLLECTION(BASIC_ADD_CHUNK)
+            ADD_STAT_COLLECTION(BASIC_ADD_CHUNK)
+                dbl_chunk_size_t r_c_4 = a_c_4 - b_c_4 - ((r_c_3 >> BIGINT_CHUNK_SHIFT) & 1);
+    ADD_STAT_COLLECTION(BASIC_SHIFT)
+    ADD_STAT_COLLECTION(BASIC_BITWISE)
+        ADD_STAT_COLLECTION(BASIC_ADD_CHUNK)
+            ADD_STAT_COLLECTION(BASIC_ADD_CHUNK)
+                dbl_chunk_size_t r_c_5 = a_c_5 - b_c_5 - ((r_c_4 >> BIGINT_CHUNK_SHIFT) & 1);
+    ADD_STAT_COLLECTION(BASIC_SHIFT)
+    ADD_STAT_COLLECTION(BASIC_BITWISE)
+        ADD_STAT_COLLECTION(BASIC_ADD_CHUNK)
+            ADD_STAT_COLLECTION(BASIC_ADD_CHUNK)
+                dbl_chunk_size_t r_c_6 = a_c_6 - b_c_6 - ((r_c_5 >> BIGINT_CHUNK_SHIFT) & 1);
+    ADD_STAT_COLLECTION(BASIC_SHIFT)
+    ADD_STAT_COLLECTION(BASIC_BITWISE)
+        ADD_STAT_COLLECTION(BASIC_ADD_CHUNK)
+            ADD_STAT_COLLECTION(BASIC_ADD_CHUNK)
+                dbl_chunk_size_t r_c_7 = a_c_7 - b_c_7 - ((r_c_6 >> BIGINT_CHUNK_SHIFT) & 1);
+    ADD_STAT_COLLECTION(BASIC_SHIFT)
+    ADD_STAT_COLLECTION(BASIC_BITWISE)
+        ADD_STAT_COLLECTION(BASIC_ADD_CHUNK)
+            ADD_STAT_COLLECTION(BASIC_ADD_CHUNK)
 
-    r_c_0 = r_c_0 & BIGINT_CHUNK_MASK;
+                r_c_0 = r_c_0 & BIGINT_CHUNK_MASK;
+    ADD_STAT_COLLECTION(BASIC_BITWISE)
     r_c_1 = r_c_1 & BIGINT_CHUNK_MASK;
+    ADD_STAT_COLLECTION(BASIC_BITWISE)
     r_c_2 = r_c_2 & BIGINT_CHUNK_MASK;
+    ADD_STAT_COLLECTION(BASIC_BITWISE)
     r_c_3 = r_c_3 & BIGINT_CHUNK_MASK;
+    ADD_STAT_COLLECTION(BASIC_BITWISE)
     r_c_4 = r_c_4 & BIGINT_CHUNK_MASK;
+    ADD_STAT_COLLECTION(BASIC_BITWISE)
     r_c_5 = r_c_5 & BIGINT_CHUNK_MASK;
+    ADD_STAT_COLLECTION(BASIC_BITWISE)
     r_c_6 = r_c_6 & BIGINT_CHUNK_MASK;
+    ADD_STAT_COLLECTION(BASIC_BITWISE)
     r_c_7 = r_c_7 & BIGINT_CHUNK_MASK;
+    ADD_STAT_COLLECTION(BASIC_BITWISE)
 
     r->chunks[0] = r_c_0;
     r->chunks[1] = r_c_1;
@@ -779,6 +843,7 @@ BigInt *big_int_mul_single_chunk(BigInt *r, BigInt *a, dbl_chunk_size_t b)
     dbl_chunk_size_t carry;
 
     r->sign = a->sign ^ 0;
+    ADD_STAT_COLLECTION(BASIC_BITWISE)
 
     // Multiply and add chunks
     carry = 0;
@@ -790,7 +855,9 @@ BigInt *big_int_mul_single_chunk(BigInt *r, BigInt *a, dbl_chunk_size_t b)
         ADD_STAT_COLLECTION(BASIC_MUL_CHUNK)
 
         r->chunks[j] = carry & BIGINT_RADIX_FOR_MOD;
+        ADD_STAT_COLLECTION(BASIC_BITWISE)
         carry >>= BIGINT_CHUNK_BIT_SIZE;
+        ADD_STAT_COLLECTION(BASIC_SHIFT)
     }
 
     if (carry > 0)
@@ -876,9 +943,11 @@ BigInt *big_int_square(BigInt *r, BigInt *a)
             ADD_STAT_COLLECTION(BASIC_ADD_OTHER)
             ADD_STAT_COLLECTION(BASIC_MUL_CHUNK)
 
-                r->chunks[i + i] = (dbl_chunk_size_t)(carry & BIGINT_RADIX_FOR_MOD_128);
+            r->chunks[i + i] = (dbl_chunk_size_t)(carry & BIGINT_RADIX_FOR_MOD_128);
+            ADD_STAT_COLLECTION(BASIC_BITWISE)
             ADD_STAT_COLLECTION(BASIC_ADD_OTHER)
             carry >>= BIGINT_CHUNK_BIT_SIZE;
+            ADD_STAT_COLLECTION(BASIC_SHIFT)
 
             for (j = i + 1; j < a->size; j++)
             {
@@ -891,8 +960,10 @@ BigInt *big_int_square(BigInt *r, BigInt *a)
                 ADD_STAT_COLLECTION(BASIC_MUL_CHUNK)
 
                 r->chunks[i + j] = (dbl_chunk_size_t)(carry & BIGINT_RADIX_FOR_MOD_128);
+                ADD_STAT_COLLECTION(BASIC_BITWISE)
                 ADD_STAT_COLLECTION(BASIC_ADD_OTHER)
                 carry >>= BIGINT_CHUNK_BIT_SIZE;
+                ADD_STAT_COLLECTION(BASIC_SHIFT)
             }
             r->chunks[i + a->size] = carry;
             ADD_STAT_COLLECTION(BASIC_ADD_OTHER)
@@ -942,89 +1013,194 @@ BigInt *big_int_square_256(BigInt *r, BigInt *a)
     r->size = 16;
 
     c_0_0 = a_0 * a_0;
+    ADD_STAT_COLLECTION(BASIC_MUL_CHUNK)
     c_0_1 = a_0 * a_1;
+    ADD_STAT_COLLECTION(BASIC_MUL_CHUNK)
     c_0_2 = a_0 * a_2;
+    ADD_STAT_COLLECTION(BASIC_MUL_CHUNK)
     c_0_3 = a_0 * a_3;
+    ADD_STAT_COLLECTION(BASIC_MUL_CHUNK)
     c_0_4 = a_0 * a_4;
+    ADD_STAT_COLLECTION(BASIC_MUL_CHUNK)
     c_0_5 = a_0 * a_5;
+    ADD_STAT_COLLECTION(BASIC_MUL_CHUNK)
     c_0_6 = a_0 * a_6;
+    ADD_STAT_COLLECTION(BASIC_MUL_CHUNK)
     c_0_7 = a_0 * a_7;
+    ADD_STAT_COLLECTION(BASIC_MUL_CHUNK)
 
     c_1_1 = a_1 * a_1;
+    ADD_STAT_COLLECTION(BASIC_MUL_CHUNK)
     c_1_2 = a_1 * a_2;
+    ADD_STAT_COLLECTION(BASIC_MUL_CHUNK)
     c_1_3 = a_1 * a_3;
+    ADD_STAT_COLLECTION(BASIC_MUL_CHUNK)
     c_1_4 = a_1 * a_4;
+    ADD_STAT_COLLECTION(BASIC_MUL_CHUNK)
     c_1_5 = a_1 * a_5;
+    ADD_STAT_COLLECTION(BASIC_MUL_CHUNK)
     c_1_6 = a_1 * a_6;
+    ADD_STAT_COLLECTION(BASIC_MUL_CHUNK)
     c_1_7 = a_1 * a_7;
+    ADD_STAT_COLLECTION(BASIC_MUL_CHUNK)
 
     c_2_2 = a_2 * a_2;
+    ADD_STAT_COLLECTION(BASIC_MUL_CHUNK)
     c_2_3 = a_2 * a_3;
+    ADD_STAT_COLLECTION(BASIC_MUL_CHUNK)
     c_2_4 = a_2 * a_4;
+    ADD_STAT_COLLECTION(BASIC_MUL_CHUNK)
     c_2_5 = a_2 * a_5;
+    ADD_STAT_COLLECTION(BASIC_MUL_CHUNK)
     c_2_6 = a_2 * a_6;
+    ADD_STAT_COLLECTION(BASIC_MUL_CHUNK)
     c_2_7 = a_2 * a_7;
+    ADD_STAT_COLLECTION(BASIC_MUL_CHUNK)
 
     c_3_3 = a_3 * a_3;
+    ADD_STAT_COLLECTION(BASIC_MUL_CHUNK)
     c_3_4 = a_3 * a_4;
+    ADD_STAT_COLLECTION(BASIC_MUL_CHUNK)
     c_3_5 = a_3 * a_5;
+    ADD_STAT_COLLECTION(BASIC_MUL_CHUNK)
     c_3_6 = a_3 * a_6;
+    ADD_STAT_COLLECTION(BASIC_MUL_CHUNK)
     c_3_7 = a_3 * a_7;
+    ADD_STAT_COLLECTION(BASIC_MUL_CHUNK)
 
     c_4_4 = a_4 * a_4;
+    ADD_STAT_COLLECTION(BASIC_MUL_CHUNK)
     c_4_5 = a_4 * a_5;
+    ADD_STAT_COLLECTION(BASIC_MUL_CHUNK)
     c_4_6 = a_4 * a_6;
+    ADD_STAT_COLLECTION(BASIC_MUL_CHUNK)
     c_4_7 = a_4 * a_7;
+    ADD_STAT_COLLECTION(BASIC_MUL_CHUNK)
 
     c_5_5 = a_5 * a_5;
+    ADD_STAT_COLLECTION(BASIC_MUL_CHUNK)
     c_5_6 = a_5 * a_6;
+    ADD_STAT_COLLECTION(BASIC_MUL_CHUNK)
     c_5_7 = a_5 * a_7;
+    ADD_STAT_COLLECTION(BASIC_MUL_CHUNK)
 
     c_6_6 = a_6 * a_6;
+    ADD_STAT_COLLECTION(BASIC_MUL_CHUNK)
     c_6_7 = a_6 * a_7;
+    ADD_STAT_COLLECTION(BASIC_MUL_CHUNK)
 
     c_7_7 = a_7 * a_7;
+    ADD_STAT_COLLECTION(BASIC_MUL_CHUNK)
 
     r_0 = c_0_0;
     r_1 = (unsigned __int128)(r_0 >> BIGINT_CHUNK_SHIFT) + (c_0_1 << 1);
-    r_2 = (unsigned __int128)(r_1 >> BIGINT_CHUNK_SHIFT) + (c_0_2 << 1) + c_1_1;
-    r_3 = (unsigned __int128)(r_2 >> BIGINT_CHUNK_SHIFT) + (c_0_3 << 1) + (c_1_2 << 1);
-    r_4 = (unsigned __int128)(r_3 >> BIGINT_CHUNK_SHIFT) + (c_0_4 << 1) + (c_1_3 << 1) + c_2_2;
-    r_5 = (unsigned __int128)(r_4 >> BIGINT_CHUNK_SHIFT) + (c_0_5 << 1) + (c_1_4 << 1) + (c_2_3 << 1);
-    r_6 = (unsigned __int128)(r_5 >> BIGINT_CHUNK_SHIFT) + (c_0_6 << 1) + (c_1_5 << 1) + (c_2_4 << 1) + c_3_3;
-    r_7 = (unsigned __int128)(r_6 >> BIGINT_CHUNK_SHIFT) + (c_0_7 << 1) + (c_1_6 << 1) + (c_2_5 << 1) + (c_3_4 << 1);
-    r_8 = (unsigned __int128)(r_7 >> BIGINT_CHUNK_SHIFT) + (c_1_7 << 1) + (c_2_6 << 1) + (c_3_5 << 1) + c_4_4;
-    r_9 = (unsigned __int128)(r_8 >> BIGINT_CHUNK_SHIFT) + (c_2_7 << 1) + (c_3_6 << 1) + (c_4_5 << 1);
-    r_10 = (unsigned __int128)(r_9 >> BIGINT_CHUNK_SHIFT) + (c_3_7 << 1) + (c_4_6 << 1) + c_5_5;
-    r_11 = (unsigned __int128)(r_10 >> BIGINT_CHUNK_SHIFT) + (c_4_7 << 1) + (c_5_6 << 1);
-    r_12 = (unsigned __int128)(r_11 >> BIGINT_CHUNK_SHIFT) + (c_5_7 << 1) + c_6_6;
-    r_13 = (unsigned __int128)(r_12 >> BIGINT_CHUNK_SHIFT) + (c_6_7 << 1);
-    r_14 = (unsigned __int128)(r_13 >> BIGINT_CHUNK_SHIFT) + c_7_7;
-    r_15 = (r_14 >> BIGINT_CHUNK_SHIFT);
+    ADD_STAT_COLLECTION(BASIC_SHIFT)
+    ADD_STAT_COLLECTION(BASIC_ADD_CHUNK)
+        ADD_STAT_COLLECTION(BASIC_SHIFT)
+            r_2 = (unsigned __int128)(r_1 >> BIGINT_CHUNK_SHIFT) + (c_0_2 << 1) + c_1_1;
+    ADD_STAT_COLLECTION(BASIC_SHIFT)
+    ADD_STAT_COLLECTION(BASIC_ADD_CHUNK) ADD_STAT_COLLECTION(BASIC_ADD_CHUNK)
+        ADD_STAT_COLLECTION(BASIC_SHIFT)
+            r_3 = (unsigned __int128)(r_2 >> BIGINT_CHUNK_SHIFT) + (c_0_3 << 1) + (c_1_2 << 1);
+    ADD_STAT_COLLECTION(BASIC_SHIFT)
+    ADD_STAT_COLLECTION(BASIC_ADD_CHUNK) ADD_STAT_COLLECTION(BASIC_ADD_CHUNK)
+        ADD_STAT_COLLECTION(BASIC_SHIFT)
+            ADD_STAT_COLLECTION(BASIC_SHIFT)
+                r_4 = (unsigned __int128)(r_3 >> BIGINT_CHUNK_SHIFT) + (c_0_4 << 1) + (c_1_3 << 1) + c_2_2;
+    ADD_STAT_COLLECTION(BASIC_SHIFT)
+    ADD_STAT_COLLECTION(BASIC_ADD_CHUNK) ADD_STAT_COLLECTION(BASIC_ADD_CHUNK) ADD_STAT_COLLECTION(BASIC_ADD_CHUNK)
+        ADD_STAT_COLLECTION(BASIC_SHIFT)
+            ADD_STAT_COLLECTION(BASIC_SHIFT)
+                r_5 = (unsigned __int128)(r_4 >> BIGINT_CHUNK_SHIFT) + (c_0_5 << 1) + (c_1_4 << 1) + (c_2_3 << 1);
+    ADD_STAT_COLLECTION(BASIC_SHIFT)
+    ADD_STAT_COLLECTION(BASIC_ADD_CHUNK) ADD_STAT_COLLECTION(BASIC_ADD_CHUNK) ADD_STAT_COLLECTION(BASIC_ADD_CHUNK)
+        ADD_STAT_COLLECTION(BASIC_SHIFT)
+            ADD_STAT_COLLECTION(BASIC_SHIFT) ADD_STAT_COLLECTION(BASIC_SHIFT)
+                r_6 = (unsigned __int128)(r_5 >> BIGINT_CHUNK_SHIFT) + (c_0_6 << 1) + (c_1_5 << 1) + (c_2_4 << 1) + c_3_3;
+    ADD_STAT_COLLECTION(BASIC_SHIFT)
+    ADD_STAT_COLLECTION(BASIC_ADD_CHUNK) ADD_STAT_COLLECTION(BASIC_ADD_CHUNK) ADD_STAT_COLLECTION(BASIC_ADD_CHUNK) ADD_STAT_COLLECTION(BASIC_ADD_CHUNK)
+        ADD_STAT_COLLECTION(BASIC_SHIFT)
+            ADD_STAT_COLLECTION(BASIC_SHIFT) ADD_STAT_COLLECTION(BASIC_SHIFT)
+                r_7 = (unsigned __int128)(r_6 >> BIGINT_CHUNK_SHIFT) + (c_0_7 << 1) + (c_1_6 << 1) + (c_2_5 << 1) + (c_3_4 << 1);
+    ADD_STAT_COLLECTION(BASIC_SHIFT)
+    ADD_STAT_COLLECTION(BASIC_ADD_CHUNK) ADD_STAT_COLLECTION(BASIC_ADD_CHUNK) ADD_STAT_COLLECTION(BASIC_ADD_CHUNK) ADD_STAT_COLLECTION(BASIC_ADD_CHUNK)
+        ADD_STAT_COLLECTION(BASIC_SHIFT)
+            ADD_STAT_COLLECTION(BASIC_SHIFT) ADD_STAT_COLLECTION(BASIC_SHIFT) ADD_STAT_COLLECTION(BASIC_SHIFT)
+                r_8 = (unsigned __int128)(r_7 >> BIGINT_CHUNK_SHIFT) + (c_1_7 << 1) + (c_2_6 << 1) + (c_3_5 << 1) + c_4_4;
+    ADD_STAT_COLLECTION(BASIC_SHIFT)
+    ADD_STAT_COLLECTION(BASIC_ADD_CHUNK) ADD_STAT_COLLECTION(BASIC_ADD_CHUNK) ADD_STAT_COLLECTION(BASIC_ADD_CHUNK) ADD_STAT_COLLECTION(BASIC_ADD_CHUNK)
+        ADD_STAT_COLLECTION(BASIC_SHIFT)
+            ADD_STAT_COLLECTION(BASIC_SHIFT) ADD_STAT_COLLECTION(BASIC_SHIFT)
+                r_9 = (unsigned __int128)(r_8 >> BIGINT_CHUNK_SHIFT) + (c_2_7 << 1) + (c_3_6 << 1) + (c_4_5 << 1);
+    ADD_STAT_COLLECTION(BASIC_SHIFT)
+    ADD_STAT_COLLECTION(BASIC_SHIFT)
+    ADD_STAT_COLLECTION(BASIC_ADD_CHUNK) ADD_STAT_COLLECTION(BASIC_ADD_CHUNK) ADD_STAT_COLLECTION(BASIC_ADD_CHUNK)
+        ADD_STAT_COLLECTION(BASIC_SHIFT) ADD_STAT_COLLECTION(BASIC_SHIFT)
+            r_10 = (unsigned __int128)(r_9 >> BIGINT_CHUNK_SHIFT) + (c_3_7 << 1) + (c_4_6 << 1) + c_5_5;
+    ADD_STAT_COLLECTION(BASIC_SHIFT)
+    ADD_STAT_COLLECTION(BASIC_ADD_CHUNK) ADD_STAT_COLLECTION(BASIC_ADD_CHUNK) ADD_STAT_COLLECTION(BASIC_ADD_CHUNK)
+        ADD_STAT_COLLECTION(BASIC_SHIFT)
+            ADD_STAT_COLLECTION(BASIC_SHIFT)
+                r_11 = (unsigned __int128)(r_10 >> BIGINT_CHUNK_SHIFT) + (c_4_7 << 1) + (c_5_6 << 1);
+    ADD_STAT_COLLECTION(BASIC_SHIFT)
+    ADD_STAT_COLLECTION(BASIC_SHIFT)
+    ADD_STAT_COLLECTION(BASIC_ADD_CHUNK) ADD_STAT_COLLECTION(BASIC_ADD_CHUNK)
+        ADD_STAT_COLLECTION(BASIC_SHIFT)
+            r_12 = (unsigned __int128)(r_11 >> BIGINT_CHUNK_SHIFT) + (c_5_7 << 1) + c_6_6;
+    ADD_STAT_COLLECTION(BASIC_SHIFT)
+    ADD_STAT_COLLECTION(BASIC_ADD_CHUNK) ADD_STAT_COLLECTION(BASIC_ADD_CHUNK)
+        ADD_STAT_COLLECTION(BASIC_SHIFT)
+            r_13 = (unsigned __int128)(r_12 >> BIGINT_CHUNK_SHIFT) + (c_6_7 << 1);
+    ADD_STAT_COLLECTION(BASIC_SHIFT)
+    ADD_STAT_COLLECTION(BASIC_ADD_CHUNK)
+        ADD_STAT_COLLECTION(BASIC_SHIFT)
+            r_14 = (unsigned __int128)(r_13 >> BIGINT_CHUNK_SHIFT) + c_7_7;
+    ADD_STAT_COLLECTION(BASIC_SHIFT)
+    ADD_STAT_COLLECTION(BASIC_ADD_CHUNK)
+        r_15 = (r_14 >> BIGINT_CHUNK_SHIFT);
+    ADD_STAT_COLLECTION(BASIC_SHIFT)
 
     r->chunks[0] = r_0 & BIGINT_RADIX_FOR_MOD;
+    ADD_STAT_COLLECTION(BASIC_BITWISE)
     r->chunks[1] = r_1 & BIGINT_RADIX_FOR_MOD_128;
+    ADD_STAT_COLLECTION(BASIC_BITWISE)
     r->chunks[2] = r_2 & BIGINT_RADIX_FOR_MOD_128;
+    ADD_STAT_COLLECTION(BASIC_BITWISE)
     r->chunks[3] = r_3 & BIGINT_RADIX_FOR_MOD_128;
+    ADD_STAT_COLLECTION(BASIC_BITWISE)
     r->chunks[4] = r_4 & BIGINT_RADIX_FOR_MOD_128;
+    ADD_STAT_COLLECTION(BASIC_BITWISE)
     r->chunks[5] = r_5 & BIGINT_RADIX_FOR_MOD_128;
+    ADD_STAT_COLLECTION(BASIC_BITWISE)
     r->chunks[6] = r_6 & BIGINT_RADIX_FOR_MOD_128;
+    ADD_STAT_COLLECTION(BASIC_BITWISE)
     r->chunks[7] = r_7 & BIGINT_RADIX_FOR_MOD_128;
+    ADD_STAT_COLLECTION(BASIC_BITWISE)
     r->chunks[8] = r_8 & BIGINT_RADIX_FOR_MOD_128;
+    ADD_STAT_COLLECTION(BASIC_BITWISE)
     r->chunks[9] = r_9 & BIGINT_RADIX_FOR_MOD_128;
+    ADD_STAT_COLLECTION(BASIC_BITWISE)
     r->chunks[10] = r_10 & BIGINT_RADIX_FOR_MOD_128;
+    ADD_STAT_COLLECTION(BASIC_BITWISE)
     r->chunks[11] = r_11 & BIGINT_RADIX_FOR_MOD_128;
+    ADD_STAT_COLLECTION(BASIC_BITWISE)
     r->chunks[12] = r_12 & BIGINT_RADIX_FOR_MOD_128;
+    ADD_STAT_COLLECTION(BASIC_BITWISE)
     r->chunks[13] = r_13 & BIGINT_RADIX_FOR_MOD_128;
+    ADD_STAT_COLLECTION(BASIC_BITWISE)
     r->chunks[14] = r_14 & BIGINT_RADIX_FOR_MOD_128;
+    ADD_STAT_COLLECTION(BASIC_BITWISE)
     r->chunks[15] = r_15 & BIGINT_RADIX_FOR_MOD;
+    ADD_STAT_COLLECTION(BASIC_BITWISE)
 
     // Remove leading zeros
     for (unsigned i = r->size - 1; i > 0; --i)
     {
+        ADD_STAT_COLLECTION(BASIC_ADD_OTHER)
         if (r->chunks[i])
             break;
         r->size--;
+        ADD_STAT_COLLECTION(BASIC_ADD_SIZE)
     }
 
     return r;
@@ -1058,76 +1234,165 @@ BigInt *big_int_square_224(BigInt *r, BigInt *a)
     r->size = 14;
 
     c_0_0 = a_0 * a_0;
+    ADD_STAT_COLLECTION(BASIC_MUL_CHUNK)
     c_0_1 = a_0 * a_1;
+    ADD_STAT_COLLECTION(BASIC_MUL_CHUNK)
     c_0_2 = a_0 * a_2;
+    ADD_STAT_COLLECTION(BASIC_MUL_CHUNK)
     c_0_3 = a_0 * a_3;
+    ADD_STAT_COLLECTION(BASIC_MUL_CHUNK)
     c_0_4 = a_0 * a_4;
+    ADD_STAT_COLLECTION(BASIC_MUL_CHUNK)
     c_0_5 = a_0 * a_5;
+    ADD_STAT_COLLECTION(BASIC_MUL_CHUNK)
     c_0_6 = a_0 * a_6;
+    ADD_STAT_COLLECTION(BASIC_MUL_CHUNK)
 
     c_1_1 = a_1 * a_1;
+    ADD_STAT_COLLECTION(BASIC_MUL_CHUNK)
     c_1_2 = a_1 * a_2;
+    ADD_STAT_COLLECTION(BASIC_MUL_CHUNK)
     c_1_3 = a_1 * a_3;
+    ADD_STAT_COLLECTION(BASIC_MUL_CHUNK)
     c_1_4 = a_1 * a_4;
+    ADD_STAT_COLLECTION(BASIC_MUL_CHUNK)
     c_1_5 = a_1 * a_5;
+    ADD_STAT_COLLECTION(BASIC_MUL_CHUNK)
     c_1_6 = a_1 * a_6;
+    ADD_STAT_COLLECTION(BASIC_MUL_CHUNK)
 
     c_2_2 = a_2 * a_2;
+    ADD_STAT_COLLECTION(BASIC_MUL_CHUNK)
     c_2_3 = a_2 * a_3;
+    ADD_STAT_COLLECTION(BASIC_MUL_CHUNK)
     c_2_4 = a_2 * a_4;
+    ADD_STAT_COLLECTION(BASIC_MUL_CHUNK)
     c_2_5 = a_2 * a_5;
+    ADD_STAT_COLLECTION(BASIC_MUL_CHUNK)
     c_2_6 = a_2 * a_6;
+    ADD_STAT_COLLECTION(BASIC_MUL_CHUNK)
 
     c_3_3 = a_3 * a_3;
+    ADD_STAT_COLLECTION(BASIC_MUL_CHUNK)
     c_3_4 = a_3 * a_4;
+    ADD_STAT_COLLECTION(BASIC_MUL_CHUNK)
     c_3_5 = a_3 * a_5;
+    ADD_STAT_COLLECTION(BASIC_MUL_CHUNK)
     c_3_6 = a_3 * a_6;
+    ADD_STAT_COLLECTION(BASIC_MUL_CHUNK)
 
     c_4_4 = a_4 * a_4;
+    ADD_STAT_COLLECTION(BASIC_MUL_CHUNK)
     c_4_5 = a_4 * a_5;
+    ADD_STAT_COLLECTION(BASIC_MUL_CHUNK)
     c_4_6 = a_4 * a_6;
+    ADD_STAT_COLLECTION(BASIC_MUL_CHUNK)
 
     c_5_5 = a_5 * a_5;
+    ADD_STAT_COLLECTION(BASIC_MUL_CHUNK)
     c_5_6 = a_5 * a_6;
+    ADD_STAT_COLLECTION(BASIC_MUL_CHUNK)
 
     c_6_6 = a_6 * a_6;
+    ADD_STAT_COLLECTION(BASIC_MUL_CHUNK)
 
     r_0 = c_0_0;
     r_1 = (unsigned __int128)(r_0 >> BIGINT_CHUNK_SHIFT) + (c_0_1 << 1);
-    r_2 = (unsigned __int128)(r_1 >> BIGINT_CHUNK_SHIFT) + (c_0_2 << 1) + c_1_1;
-    r_3 = (unsigned __int128)(r_2 >> BIGINT_CHUNK_SHIFT) + (c_0_3 << 1) + (c_1_2 << 1);
-    r_4 = (unsigned __int128)(r_3 >> BIGINT_CHUNK_SHIFT) + (c_0_4 << 1) + (c_1_3 << 1) + c_2_2;
-    r_5 = (unsigned __int128)(r_4 >> BIGINT_CHUNK_SHIFT) + (c_0_5 << 1) + (c_1_4 << 1) + (c_2_3 << 1);
-    r_6 = (unsigned __int128)(r_5 >> BIGINT_CHUNK_SHIFT) + (c_0_6 << 1) + (c_1_5 << 1) + (c_2_4 << 1) + c_3_3;
-    r_7 = (unsigned __int128)(r_6 >> BIGINT_CHUNK_SHIFT) + (c_1_6 << 1) + (c_2_5 << 1) + (c_3_4 << 1);
-    r_8 = (unsigned __int128)(r_7 >> BIGINT_CHUNK_SHIFT) + (c_2_6 << 1) + (c_3_5 << 1) + c_4_4;
-    r_9 = (unsigned __int128)(r_8 >> BIGINT_CHUNK_SHIFT) + (c_3_6 << 1) + (c_4_5 << 1);
-    r_10 = (unsigned __int128)(r_9 >> BIGINT_CHUNK_SHIFT) + (c_4_6 << 1) + c_5_5;
-    r_11 = (unsigned __int128)(r_10 >> BIGINT_CHUNK_SHIFT) + (c_5_6 << 1);
-    r_12 = (unsigned __int128)(r_11 >> BIGINT_CHUNK_SHIFT) + c_6_6;
-    r_13 = (r_12 >> BIGINT_CHUNK_SHIFT);
+    ADD_STAT_COLLECTION(BASIC_SHIFT)
+    ADD_STAT_COLLECTION(BASIC_ADD_CHUNK)
+        ADD_STAT_COLLECTION(BASIC_SHIFT)
+            r_2 = (unsigned __int128)(r_1 >> BIGINT_CHUNK_SHIFT) + (c_0_2 << 1) + c_1_1;
+    ADD_STAT_COLLECTION(BASIC_SHIFT)
+    ADD_STAT_COLLECTION(BASIC_ADD_CHUNK) ADD_STAT_COLLECTION(BASIC_ADD_CHUNK)
+        ADD_STAT_COLLECTION(BASIC_SHIFT)
+            r_3 = (unsigned __int128)(r_2 >> BIGINT_CHUNK_SHIFT) + (c_0_3 << 1) + (c_1_2 << 1);
+    ADD_STAT_COLLECTION(BASIC_SHIFT)
+    ADD_STAT_COLLECTION(BASIC_ADD_CHUNK) ADD_STAT_COLLECTION(BASIC_ADD_CHUNK)
+        ADD_STAT_COLLECTION(BASIC_SHIFT)
+            ADD_STAT_COLLECTION(BASIC_SHIFT)
+                r_4 = (unsigned __int128)(r_3 >> BIGINT_CHUNK_SHIFT) + (c_0_4 << 1) + (c_1_3 << 1) + c_2_2;
+    ADD_STAT_COLLECTION(BASIC_SHIFT)
+    ADD_STAT_COLLECTION(BASIC_ADD_CHUNK) ADD_STAT_COLLECTION(BASIC_ADD_CHUNK) ADD_STAT_COLLECTION(BASIC_ADD_CHUNK)
+        ADD_STAT_COLLECTION(BASIC_SHIFT)
+            ADD_STAT_COLLECTION(BASIC_SHIFT)
+                r_5 = (unsigned __int128)(r_4 >> BIGINT_CHUNK_SHIFT) + (c_0_5 << 1) + (c_1_4 << 1) + (c_2_3 << 1);
+    ADD_STAT_COLLECTION(BASIC_SHIFT)
+    ADD_STAT_COLLECTION(BASIC_ADD_CHUNK) ADD_STAT_COLLECTION(BASIC_ADD_CHUNK) ADD_STAT_COLLECTION(BASIC_ADD_CHUNK)
+        ADD_STAT_COLLECTION(BASIC_SHIFT)
+            ADD_STAT_COLLECTION(BASIC_SHIFT) ADD_STAT_COLLECTION(BASIC_SHIFT)
+                r_6 = (unsigned __int128)(r_5 >> BIGINT_CHUNK_SHIFT) + (c_0_6 << 1) + (c_1_5 << 1) + (c_2_4 << 1) + c_3_3;
+    ADD_STAT_COLLECTION(BASIC_SHIFT)
+    ADD_STAT_COLLECTION(BASIC_ADD_CHUNK) ADD_STAT_COLLECTION(BASIC_ADD_CHUNK) ADD_STAT_COLLECTION(BASIC_ADD_CHUNK) ADD_STAT_COLLECTION(BASIC_ADD_CHUNK)
+        ADD_STAT_COLLECTION(BASIC_SHIFT)
+            ADD_STAT_COLLECTION(BASIC_SHIFT) ADD_STAT_COLLECTION(BASIC_SHIFT)
+                r_7 = (unsigned __int128)(r_6 >> BIGINT_CHUNK_SHIFT) + (c_1_6 << 1) + (c_2_5 << 1) + (c_3_4 << 1);
+    ADD_STAT_COLLECTION(BASIC_SHIFT)
+    ADD_STAT_COLLECTION(BASIC_ADD_CHUNK) ADD_STAT_COLLECTION(BASIC_ADD_CHUNK) ADD_STAT_COLLECTION(BASIC_ADD_CHUNK)
+        ADD_STAT_COLLECTION(BASIC_SHIFT)
+            ADD_STAT_COLLECTION(BASIC_SHIFT) ADD_STAT_COLLECTION(BASIC_SHIFT)
+                r_8 = (unsigned __int128)(r_7 >> BIGINT_CHUNK_SHIFT) + (c_2_6 << 1) + (c_3_5 << 1) + c_4_4;
+    ADD_STAT_COLLECTION(BASIC_SHIFT)
+    ADD_STAT_COLLECTION(BASIC_ADD_CHUNK) ADD_STAT_COLLECTION(BASIC_ADD_CHUNK) ADD_STAT_COLLECTION(BASIC_ADD_CHUNK)
+        ADD_STAT_COLLECTION(BASIC_SHIFT)
+            ADD_STAT_COLLECTION(BASIC_SHIFT) ADD_STAT_COLLECTION(BASIC_SHIFT)
+                r_9 = (unsigned __int128)(r_8 >> BIGINT_CHUNK_SHIFT) + (c_3_6 << 1) + (c_4_5 << 1);
+    ADD_STAT_COLLECTION(BASIC_SHIFT)
+    ADD_STAT_COLLECTION(BASIC_ADD_CHUNK) ADD_STAT_COLLECTION(BASIC_ADD_CHUNK)
+        ADD_STAT_COLLECTION(BASIC_SHIFT)
+            ADD_STAT_COLLECTION(BASIC_SHIFT)
+                r_10 = (unsigned __int128)(r_9 >> BIGINT_CHUNK_SHIFT) + (c_4_6 << 1) + c_5_5;
+    ADD_STAT_COLLECTION(BASIC_SHIFT)
+    ADD_STAT_COLLECTION(BASIC_ADD_CHUNK) ADD_STAT_COLLECTION(BASIC_ADD_CHUNK)
+        ADD_STAT_COLLECTION(BASIC_SHIFT)
+            ADD_STAT_COLLECTION(BASIC_SHIFT)
+                r_11 = (unsigned __int128)(r_10 >> BIGINT_CHUNK_SHIFT) + (c_5_6 << 1);
+    ADD_STAT_COLLECTION(BASIC_SHIFT)
+    ADD_STAT_COLLECTION(BASIC_ADD_CHUNK)
+        ADD_STAT_COLLECTION(BASIC_SHIFT)
+            r_12 = (unsigned __int128)(r_11 >> BIGINT_CHUNK_SHIFT) + c_6_6;
+    ADD_STAT_COLLECTION(BASIC_SHIFT)
+    ADD_STAT_COLLECTION(BASIC_ADD_CHUNK)
+        ADD_STAT_COLLECTION(BASIC_SHIFT)
+            r_13 = (r_12 >> BIGINT_CHUNK_SHIFT);
+    ADD_STAT_COLLECTION(BASIC_SHIFT)
 
     r->chunks[0] = r_0 & BIGINT_RADIX_FOR_MOD;
+    ADD_STAT_COLLECTION(BASIC_BITWISE)
     r->chunks[1] = r_1 & BIGINT_RADIX_FOR_MOD_128;
+    ADD_STAT_COLLECTION(BASIC_BITWISE)
     r->chunks[2] = r_2 & BIGINT_RADIX_FOR_MOD_128;
+    ADD_STAT_COLLECTION(BASIC_BITWISE)
     r->chunks[3] = r_3 & BIGINT_RADIX_FOR_MOD_128;
+    ADD_STAT_COLLECTION(BASIC_BITWISE)
     r->chunks[4] = r_4 & BIGINT_RADIX_FOR_MOD_128;
+    ADD_STAT_COLLECTION(BASIC_BITWISE)
     r->chunks[5] = r_5 & BIGINT_RADIX_FOR_MOD_128;
+    ADD_STAT_COLLECTION(BASIC_BITWISE)
     r->chunks[6] = r_6 & BIGINT_RADIX_FOR_MOD_128;
+    ADD_STAT_COLLECTION(BASIC_BITWISE)
     r->chunks[7] = r_7 & BIGINT_RADIX_FOR_MOD_128;
+    ADD_STAT_COLLECTION(BASIC_BITWISE)
     r->chunks[8] = r_8 & BIGINT_RADIX_FOR_MOD_128;
+    ADD_STAT_COLLECTION(BASIC_BITWISE)
     r->chunks[9] = r_9 & BIGINT_RADIX_FOR_MOD_128;
+    ADD_STAT_COLLECTION(BASIC_BITWISE)
     r->chunks[10] = r_10 & BIGINT_RADIX_FOR_MOD_128;
+    ADD_STAT_COLLECTION(BASIC_BITWISE)
     r->chunks[11] = r_11 & BIGINT_RADIX_FOR_MOD_128;
+    ADD_STAT_COLLECTION(BASIC_BITWISE)
     r->chunks[12] = r_12 & BIGINT_RADIX_FOR_MOD_128;
+    ADD_STAT_COLLECTION(BASIC_BITWISE)
     r->chunks[13] = r_13 & BIGINT_RADIX_FOR_MOD;
+    ADD_STAT_COLLECTION(BASIC_BITWISE)
 
     // Remove leading zeros
     for (unsigned i = r->size - 1; i > 0; --i)
     {
+        ADD_STAT_COLLECTION(BASIC_ADD_OTHER)
         if (r->chunks[i])
             break;
         r->size--;
+        ADD_STAT_COLLECTION(BASIC_ADD_SIZE)
     }
 
     return r;
@@ -1159,64 +1424,134 @@ BigInt *big_int_square_192(BigInt *r, BigInt *a)
     r->size = 12;
 
     c_0_0 = a_0 * a_0;
+    ADD_STAT_COLLECTION(BASIC_MUL_CHUNK)
     c_0_1 = a_0 * a_1;
+    ADD_STAT_COLLECTION(BASIC_MUL_CHUNK)
     c_0_2 = a_0 * a_2;
+    ADD_STAT_COLLECTION(BASIC_MUL_CHUNK)
     c_0_3 = a_0 * a_3;
+    ADD_STAT_COLLECTION(BASIC_MUL_CHUNK)
     c_0_4 = a_0 * a_4;
+    ADD_STAT_COLLECTION(BASIC_MUL_CHUNK)
     c_0_5 = a_0 * a_5;
+    ADD_STAT_COLLECTION(BASIC_MUL_CHUNK)
 
     c_1_1 = a_1 * a_1;
+    ADD_STAT_COLLECTION(BASIC_MUL_CHUNK)
     c_1_2 = a_1 * a_2;
+    ADD_STAT_COLLECTION(BASIC_MUL_CHUNK)
     c_1_3 = a_1 * a_3;
+    ADD_STAT_COLLECTION(BASIC_MUL_CHUNK)
     c_1_4 = a_1 * a_4;
+    ADD_STAT_COLLECTION(BASIC_MUL_CHUNK)
     c_1_5 = a_1 * a_5;
+    ADD_STAT_COLLECTION(BASIC_MUL_CHUNK)
 
     c_2_2 = a_2 * a_2;
+    ADD_STAT_COLLECTION(BASIC_MUL_CHUNK)
     c_2_3 = a_2 * a_3;
+    ADD_STAT_COLLECTION(BASIC_MUL_CHUNK)
     c_2_4 = a_2 * a_4;
+    ADD_STAT_COLLECTION(BASIC_MUL_CHUNK)
     c_2_5 = a_2 * a_5;
+    ADD_STAT_COLLECTION(BASIC_MUL_CHUNK)
 
     c_3_3 = a_3 * a_3;
+    ADD_STAT_COLLECTION(BASIC_MUL_CHUNK)
     c_3_4 = a_3 * a_4;
+    ADD_STAT_COLLECTION(BASIC_MUL_CHUNK)
     c_3_5 = a_3 * a_5;
+    ADD_STAT_COLLECTION(BASIC_MUL_CHUNK)
 
     c_4_4 = a_4 * a_4;
+    ADD_STAT_COLLECTION(BASIC_MUL_CHUNK)
     c_4_5 = a_4 * a_5;
+    ADD_STAT_COLLECTION(BASIC_MUL_CHUNK)
 
     c_5_5 = a_5 * a_5;
+    ADD_STAT_COLLECTION(BASIC_MUL_CHUNK)
 
     r_0 = c_0_0;
     r_1 = (unsigned __int128)(r_0 >> BIGINT_CHUNK_SHIFT) + (c_0_1 << 1);
-    r_2 = (unsigned __int128)(r_1 >> BIGINT_CHUNK_SHIFT) + (c_0_2 << 1) + c_1_1;
-    r_3 = (unsigned __int128)(r_2 >> BIGINT_CHUNK_SHIFT) + (c_0_3 << 1) + (c_1_2 << 1);
-    r_4 = (unsigned __int128)(r_3 >> BIGINT_CHUNK_SHIFT) + (c_0_4 << 1) + (c_1_3 << 1) + c_2_2;
-    r_5 = (unsigned __int128)(r_4 >> BIGINT_CHUNK_SHIFT) + (c_0_5 << 1) + (c_1_4 << 1) + (c_2_3 << 1);
-    r_6 = (unsigned __int128)(r_5 >> BIGINT_CHUNK_SHIFT) + (c_1_5 << 1) + (c_2_4 << 1) + c_3_3;
-    r_7 = (unsigned __int128)(r_6 >> BIGINT_CHUNK_SHIFT) + (c_2_5 << 1) + (c_3_4 << 1);
-    r_8 = (unsigned __int128)(r_7 >> BIGINT_CHUNK_SHIFT) + (c_3_5 << 1) + c_4_4;
-    r_9 = (unsigned __int128)(r_8 >> BIGINT_CHUNK_SHIFT) + (c_4_5 << 1);
-    r_10 = (unsigned __int128)(r_9 >> BIGINT_CHUNK_SHIFT) + c_5_5;
-    r_11 = (r_10 >> BIGINT_CHUNK_SHIFT);
+    ADD_STAT_COLLECTION(BASIC_SHIFT)
+    ADD_STAT_COLLECTION(BASIC_ADD_CHUNK)
+        ADD_STAT_COLLECTION(BASIC_SHIFT)
+            r_2 = (unsigned __int128)(r_1 >> BIGINT_CHUNK_SHIFT) + (c_0_2 << 1) + c_1_1;
+    ADD_STAT_COLLECTION(BASIC_SHIFT)
+    ADD_STAT_COLLECTION(BASIC_ADD_CHUNK) ADD_STAT_COLLECTION(BASIC_ADD_CHUNK)
+        ADD_STAT_COLLECTION(BASIC_SHIFT)
+            r_3 = (unsigned __int128)(r_2 >> BIGINT_CHUNK_SHIFT) + (c_0_3 << 1) + (c_1_2 << 1);
+    ADD_STAT_COLLECTION(BASIC_SHIFT)
+    ADD_STAT_COLLECTION(BASIC_ADD_CHUNK) ADD_STAT_COLLECTION(BASIC_ADD_CHUNK)
+        ADD_STAT_COLLECTION(BASIC_SHIFT)
+            ADD_STAT_COLLECTION(BASIC_SHIFT)
+                r_4 = (unsigned __int128)(r_3 >> BIGINT_CHUNK_SHIFT) + (c_0_4 << 1) + (c_1_3 << 1) + c_2_2;
+    ADD_STAT_COLLECTION(BASIC_SHIFT)
+    ADD_STAT_COLLECTION(BASIC_ADD_CHUNK) ADD_STAT_COLLECTION(BASIC_ADD_CHUNK) ADD_STAT_COLLECTION(BASIC_ADD_CHUNK)
+        ADD_STAT_COLLECTION(BASIC_SHIFT)
+            ADD_STAT_COLLECTION(BASIC_SHIFT)
+                r_5 = (unsigned __int128)(r_4 >> BIGINT_CHUNK_SHIFT) + (c_0_5 << 1) + (c_1_4 << 1) + (c_2_3 << 1);
+    ADD_STAT_COLLECTION(BASIC_SHIFT)
+    ADD_STAT_COLLECTION(BASIC_ADD_CHUNK) ADD_STAT_COLLECTION(BASIC_ADD_CHUNK) ADD_STAT_COLLECTION(BASIC_ADD_CHUNK)
+        ADD_STAT_COLLECTION(BASIC_SHIFT)
+            ADD_STAT_COLLECTION(BASIC_SHIFT) ADD_STAT_COLLECTION(BASIC_SHIFT)
+                r_6 = (unsigned __int128)(r_5 >> BIGINT_CHUNK_SHIFT) + (c_1_5 << 1) + (c_2_4 << 1) + c_3_3;
+    ADD_STAT_COLLECTION(BASIC_SHIFT)
+    ADD_STAT_COLLECTION(BASIC_ADD_CHUNK) ADD_STAT_COLLECTION(BASIC_ADD_CHUNK) ADD_STAT_COLLECTION(BASIC_ADD_CHUNK)
+        ADD_STAT_COLLECTION(BASIC_SHIFT)
+            ADD_STAT_COLLECTION(BASIC_SHIFT)
+                r_7 = (unsigned __int128)(r_6 >> BIGINT_CHUNK_SHIFT) + (c_2_5 << 1) + (c_3_4 << 1);
+    ADD_STAT_COLLECTION(BASIC_SHIFT)
+    ADD_STAT_COLLECTION(BASIC_ADD_CHUNK) ADD_STAT_COLLECTION(BASIC_ADD_CHUNK)
+        ADD_STAT_COLLECTION(BASIC_SHIFT)
+            ADD_STAT_COLLECTION(BASIC_SHIFT)
+                r_8 = (unsigned __int128)(r_7 >> BIGINT_CHUNK_SHIFT) + (c_3_5 << 1) + c_4_4;
+    ADD_STAT_COLLECTION(BASIC_SHIFT)
+    ADD_STAT_COLLECTION(BASIC_ADD_CHUNK) ADD_STAT_COLLECTION(BASIC_ADD_CHUNK)
+        ADD_STAT_COLLECTION(BASIC_SHIFT)
+            r_9 = (unsigned __int128)(r_8 >> BIGINT_CHUNK_SHIFT) + (c_4_5 << 1);
+    ADD_STAT_COLLECTION(BASIC_SHIFT)
+    ADD_STAT_COLLECTION(BASIC_ADD_CHUNK)
+        ADD_STAT_COLLECTION(BASIC_SHIFT)
+            r_10 = (unsigned __int128)(r_9 >> BIGINT_CHUNK_SHIFT) + c_5_5;
+    ADD_STAT_COLLECTION(BASIC_SHIFT)
+    ADD_STAT_COLLECTION(BASIC_ADD_CHUNK)
+        r_11 = (r_10 >> BIGINT_CHUNK_SHIFT);
+    ADD_STAT_COLLECTION(BASIC_SHIFT)
 
     r->chunks[0] = r_0 & BIGINT_RADIX_FOR_MOD;
+    ADD_STAT_COLLECTION(BASIC_BITWISE)
     r->chunks[1] = r_1 & BIGINT_RADIX_FOR_MOD_128;
+    ADD_STAT_COLLECTION(BASIC_BITWISE)
     r->chunks[2] = r_2 & BIGINT_RADIX_FOR_MOD_128;
+    ADD_STAT_COLLECTION(BASIC_BITWISE)
     r->chunks[3] = r_3 & BIGINT_RADIX_FOR_MOD_128;
+    ADD_STAT_COLLECTION(BASIC_BITWISE)
     r->chunks[4] = r_4 & BIGINT_RADIX_FOR_MOD_128;
+    ADD_STAT_COLLECTION(BASIC_BITWISE)
     r->chunks[5] = r_5 & BIGINT_RADIX_FOR_MOD_128;
+    ADD_STAT_COLLECTION(BASIC_BITWISE)
     r->chunks[6] = r_6 & BIGINT_RADIX_FOR_MOD_128;
+    ADD_STAT_COLLECTION(BASIC_BITWISE)
     r->chunks[7] = r_7 & BIGINT_RADIX_FOR_MOD_128;
+    ADD_STAT_COLLECTION(BASIC_BITWISE)
     r->chunks[8] = r_8 & BIGINT_RADIX_FOR_MOD_128;
+    ADD_STAT_COLLECTION(BASIC_BITWISE)
     r->chunks[9] = r_9 & BIGINT_RADIX_FOR_MOD_128;
+    ADD_STAT_COLLECTION(BASIC_BITWISE)
     r->chunks[10] = r_10 & BIGINT_RADIX_FOR_MOD_128;
+    ADD_STAT_COLLECTION(BASIC_BITWISE)
     r->chunks[11] = r_11 & BIGINT_RADIX_FOR_MOD;
+    ADD_STAT_COLLECTION(BASIC_BITWISE)
 
     // Remove leading zeros
     for (unsigned i = r->size - 1; i > 0; --i)
     {
+        ADD_STAT_COLLECTION(BASIC_ADD_OTHER)
         if (r->chunks[i])
             break;
         r->size--;
+        ADD_STAT_COLLECTION(BASIC_ADD_SIZE)
     }
 
     return r;
@@ -1246,53 +1581,107 @@ BigInt *big_int_square_160(BigInt *r, BigInt *a)
     r->size = 10;
 
     c_0_0 = a_0 * a_0;
+    ADD_STAT_COLLECTION(BASIC_MUL_CHUNK)
     c_0_1 = a_0 * a_1;
+    ADD_STAT_COLLECTION(BASIC_MUL_CHUNK)
     c_0_2 = a_0 * a_2;
+    ADD_STAT_COLLECTION(BASIC_MUL_CHUNK)
     c_0_3 = a_0 * a_3;
+    ADD_STAT_COLLECTION(BASIC_MUL_CHUNK)
     c_0_4 = a_0 * a_4;
+    ADD_STAT_COLLECTION(BASIC_MUL_CHUNK)
 
     c_1_1 = a_1 * a_1;
+    ADD_STAT_COLLECTION(BASIC_MUL_CHUNK)
     c_1_2 = a_1 * a_2;
+    ADD_STAT_COLLECTION(BASIC_MUL_CHUNK)
     c_1_3 = a_1 * a_3;
+    ADD_STAT_COLLECTION(BASIC_MUL_CHUNK)
     c_1_4 = a_1 * a_4;
+    ADD_STAT_COLLECTION(BASIC_MUL_CHUNK)
 
     c_2_2 = a_2 * a_2;
+    ADD_STAT_COLLECTION(BASIC_MUL_CHUNK)
     c_2_3 = a_2 * a_3;
+    ADD_STAT_COLLECTION(BASIC_MUL_CHUNK)
     c_2_4 = a_2 * a_4;
+    ADD_STAT_COLLECTION(BASIC_MUL_CHUNK)
 
     c_3_3 = a_3 * a_3;
+    ADD_STAT_COLLECTION(BASIC_MUL_CHUNK)
     c_3_4 = a_3 * a_4;
+    ADD_STAT_COLLECTION(BASIC_MUL_CHUNK)
 
     c_4_4 = a_4 * a_4;
+    ADD_STAT_COLLECTION(BASIC_MUL_CHUNK)
 
     r_0 = c_0_0;
     r_1 = (unsigned __int128)(r_0 >> BIGINT_CHUNK_SHIFT) + (c_0_1 << 1);
-    r_2 = (unsigned __int128)(r_1 >> BIGINT_CHUNK_SHIFT) + (c_0_2 << 1) + c_1_1;
-    r_3 = (unsigned __int128)(r_2 >> BIGINT_CHUNK_SHIFT) + (c_0_3 << 1) + (c_1_2 << 1);
-    r_4 = (unsigned __int128)(r_3 >> BIGINT_CHUNK_SHIFT) + (c_0_4 << 1) + (c_1_3 << 1) + c_2_2;
-    r_5 = (unsigned __int128)(r_4 >> BIGINT_CHUNK_SHIFT) + (c_1_4 << 1) + (c_2_3 << 1);
-    r_6 = (unsigned __int128)(r_5 >> BIGINT_CHUNK_SHIFT) + (c_2_4 << 1) + c_3_3;
-    r_7 = (unsigned __int128)(r_6 >> BIGINT_CHUNK_SHIFT) + (c_3_4 << 1);
-    r_8 = (unsigned __int128)(r_7 >> BIGINT_CHUNK_SHIFT) + c_4_4;
-    r_9 = (r_8 >> BIGINT_CHUNK_SHIFT);
+    ADD_STAT_COLLECTION(BASIC_SHIFT)
+    ADD_STAT_COLLECTION(BASIC_ADD_CHUNK)
+        ADD_STAT_COLLECTION(BASIC_SHIFT)
+            r_2 = (unsigned __int128)(r_1 >> BIGINT_CHUNK_SHIFT) + (c_0_2 << 1) + c_1_1;
+    ADD_STAT_COLLECTION(BASIC_SHIFT)
+    ADD_STAT_COLLECTION(BASIC_ADD_CHUNK) ADD_STAT_COLLECTION(BASIC_ADD_CHUNK)
+        ADD_STAT_COLLECTION(BASIC_SHIFT)
+            r_3 = (unsigned __int128)(r_2 >> BIGINT_CHUNK_SHIFT) + (c_0_3 << 1) + (c_1_2 << 1);
+    ADD_STAT_COLLECTION(BASIC_SHIFT)
+    ADD_STAT_COLLECTION(BASIC_ADD_CHUNK) ADD_STAT_COLLECTION(BASIC_ADD_CHUNK)
+        ADD_STAT_COLLECTION(BASIC_SHIFT)
+            ADD_STAT_COLLECTION(BASIC_SHIFT)
+                r_4 = (unsigned __int128)(r_3 >> BIGINT_CHUNK_SHIFT) + (c_0_4 << 1) + (c_1_3 << 1) + c_2_2;
+    ADD_STAT_COLLECTION(BASIC_SHIFT)
+    ADD_STAT_COLLECTION(BASIC_ADD_CHUNK) ADD_STAT_COLLECTION(BASIC_ADD_CHUNK) ADD_STAT_COLLECTION(BASIC_ADD_CHUNK)
+        ADD_STAT_COLLECTION(BASIC_SHIFT)
+            ADD_STAT_COLLECTION(BASIC_SHIFT)
+                r_5 = (unsigned __int128)(r_4 >> BIGINT_CHUNK_SHIFT) + (c_1_4 << 1) + (c_2_3 << 1);
+    ADD_STAT_COLLECTION(BASIC_SHIFT)
+    ADD_STAT_COLLECTION(BASIC_ADD_CHUNK) ADD_STAT_COLLECTION(BASIC_ADD_CHUNK)
+        ADD_STAT_COLLECTION(BASIC_SHIFT)
+            ADD_STAT_COLLECTION(BASIC_SHIFT)
+                r_6 = (unsigned __int128)(r_5 >> BIGINT_CHUNK_SHIFT) + (c_2_4 << 1) + c_3_3;
+    ADD_STAT_COLLECTION(BASIC_SHIFT)
+    ADD_STAT_COLLECTION(BASIC_ADD_CHUNK) ADD_STAT_COLLECTION(BASIC_ADD_CHUNK)
+        ADD_STAT_COLLECTION(BASIC_SHIFT)
+            r_7 = (unsigned __int128)(r_6 >> BIGINT_CHUNK_SHIFT) + (c_3_4 << 1);
+    ADD_STAT_COLLECTION(BASIC_SHIFT)
+    ADD_STAT_COLLECTION(BASIC_ADD_CHUNK)
+        ADD_STAT_COLLECTION(BASIC_SHIFT)
+            r_8 = (unsigned __int128)(r_7 >> BIGINT_CHUNK_SHIFT) + c_4_4;
+    ADD_STAT_COLLECTION(BASIC_SHIFT)
+    ADD_STAT_COLLECTION(BASIC_ADD_CHUNK)
+        r_9 = (r_8 >> BIGINT_CHUNK_SHIFT);
+    ADD_STAT_COLLECTION(BASIC_SHIFT)
 
     r->chunks[0] = r_0 & BIGINT_RADIX_FOR_MOD;
+    ADD_STAT_COLLECTION(BASIC_BITWISE)
     r->chunks[1] = r_1 & BIGINT_RADIX_FOR_MOD_128;
+    ADD_STAT_COLLECTION(BASIC_BITWISE)
     r->chunks[2] = r_2 & BIGINT_RADIX_FOR_MOD_128;
+    ADD_STAT_COLLECTION(BASIC_BITWISE)
     r->chunks[3] = r_3 & BIGINT_RADIX_FOR_MOD_128;
+    ADD_STAT_COLLECTION(BASIC_BITWISE)
     r->chunks[4] = r_4 & BIGINT_RADIX_FOR_MOD_128;
+    ADD_STAT_COLLECTION(BASIC_BITWISE)
     r->chunks[5] = r_5 & BIGINT_RADIX_FOR_MOD_128;
+    ADD_STAT_COLLECTION(BASIC_BITWISE)
     r->chunks[6] = r_6 & BIGINT_RADIX_FOR_MOD_128;
+    ADD_STAT_COLLECTION(BASIC_BITWISE)
     r->chunks[7] = r_7 & BIGINT_RADIX_FOR_MOD_128;
+    ADD_STAT_COLLECTION(BASIC_BITWISE)
     r->chunks[8] = r_8 & BIGINT_RADIX_FOR_MOD_128;
+    ADD_STAT_COLLECTION(BASIC_BITWISE)
     r->chunks[9] = r_9 & BIGINT_RADIX_FOR_MOD;
+    ADD_STAT_COLLECTION(BASIC_BITWISE)
 
     // Remove leading zeros
     for (unsigned i = r->size - 1; i > 0; --i)
     {
+        ADD_STAT_COLLECTION(BASIC_ADD_OTHER)
         if (r->chunks[i])
             break;
         r->size--;
+        ADD_STAT_COLLECTION(BASIC_ADD_SIZE)
     }
 
     return r;
@@ -1320,43 +1709,82 @@ BigInt *big_int_square_128(BigInt *r, BigInt *a)
     r->size = 8;
 
     c_0_0 = a_0 * a_0;
+    ADD_STAT_COLLECTION(BASIC_MUL_CHUNK)
     c_0_1 = a_0 * a_1;
+    ADD_STAT_COLLECTION(BASIC_MUL_CHUNK)
     c_0_2 = a_0 * a_2;
+    ADD_STAT_COLLECTION(BASIC_MUL_CHUNK)
     c_0_3 = a_0 * a_3;
+    ADD_STAT_COLLECTION(BASIC_MUL_CHUNK)
 
     c_1_1 = a_1 * a_1;
+    ADD_STAT_COLLECTION(BASIC_MUL_CHUNK)
     c_1_2 = a_1 * a_2;
+    ADD_STAT_COLLECTION(BASIC_MUL_CHUNK)
     c_1_3 = a_1 * a_3;
+    ADD_STAT_COLLECTION(BASIC_MUL_CHUNK)
 
     c_2_2 = a_2 * a_2;
+    ADD_STAT_COLLECTION(BASIC_MUL_CHUNK)
     c_2_3 = a_2 * a_3;
+    ADD_STAT_COLLECTION(BASIC_MUL_CHUNK)
 
     c_3_3 = a_3 * a_3;
+    ADD_STAT_COLLECTION(BASIC_MUL_CHUNK)
 
     r_0 = c_0_0;
     r_1 = (unsigned __int128)(r_0 >> BIGINT_CHUNK_SHIFT) + (c_0_1 << 1);
-    r_2 = (unsigned __int128)(r_1 >> BIGINT_CHUNK_SHIFT) + (c_0_2 << 1) + c_1_1;
-    r_3 = (unsigned __int128)(r_2 >> BIGINT_CHUNK_SHIFT) + (c_0_3 << 1) + (c_1_2 << 1);
-    r_4 = (unsigned __int128)(r_3 >> BIGINT_CHUNK_SHIFT) + (c_1_3 << 1) + c_2_2;
-    r_5 = (unsigned __int128)(r_4 >> BIGINT_CHUNK_SHIFT) + (c_2_3 << 1);
-    r_6 = (unsigned __int128)(r_5 >> BIGINT_CHUNK_SHIFT) + c_3_3;
-    r_7 = (r_6 >> BIGINT_CHUNK_SHIFT);
+    ADD_STAT_COLLECTION(BASIC_SHIFT)
+    ADD_STAT_COLLECTION(BASIC_ADD_CHUNK)
+        ADD_STAT_COLLECTION(BASIC_SHIFT)
+            r_2 = (unsigned __int128)(r_1 >> BIGINT_CHUNK_SHIFT) + (c_0_2 << 1) + c_1_1;
+    ADD_STAT_COLLECTION(BASIC_SHIFT)
+    ADD_STAT_COLLECTION(BASIC_ADD_CHUNK) ADD_STAT_COLLECTION(BASIC_ADD_CHUNK)
+        ADD_STAT_COLLECTION(BASIC_SHIFT)
+            r_3 = (unsigned __int128)(r_2 >> BIGINT_CHUNK_SHIFT) + (c_0_3 << 1) + (c_1_2 << 1);
+    ADD_STAT_COLLECTION(BASIC_SHIFT)
+    ADD_STAT_COLLECTION(BASIC_ADD_CHUNK) ADD_STAT_COLLECTION(BASIC_ADD_CHUNK)
+        ADD_STAT_COLLECTION(BASIC_SHIFT)
+            ADD_STAT_COLLECTION(BASIC_SHIFT)
+                r_4 = (unsigned __int128)(r_3 >> BIGINT_CHUNK_SHIFT) + (c_1_3 << 1) + c_2_2;
+    ADD_STAT_COLLECTION(BASIC_SHIFT)
+    ADD_STAT_COLLECTION(BASIC_ADD_CHUNK) ADD_STAT_COLLECTION(BASIC_ADD_CHUNK)
+        ADD_STAT_COLLECTION(BASIC_SHIFT)
+            r_5 = (unsigned __int128)(r_4 >> BIGINT_CHUNK_SHIFT) + (c_2_3 << 1);
+    ADD_STAT_COLLECTION(BASIC_SHIFT)
+    ADD_STAT_COLLECTION(BASIC_ADD_CHUNK)
+        ADD_STAT_COLLECTION(BASIC_SHIFT)
+            r_6 = (unsigned __int128)(r_5 >> BIGINT_CHUNK_SHIFT) + c_3_3;
+    ADD_STAT_COLLECTION(BASIC_SHIFT)
+    ADD_STAT_COLLECTION(BASIC_ADD_CHUNK)
+        r_7 = (r_6 >> BIGINT_CHUNK_SHIFT);
+    ADD_STAT_COLLECTION(BASIC_SHIFT)
 
     r->chunks[0] = r_0 & BIGINT_RADIX_FOR_MOD;
+    ADD_STAT_COLLECTION(BASIC_BITWISE)
     r->chunks[1] = r_1 & BIGINT_RADIX_FOR_MOD_128;
+    ADD_STAT_COLLECTION(BASIC_BITWISE)
     r->chunks[2] = r_2 & BIGINT_RADIX_FOR_MOD_128;
+    ADD_STAT_COLLECTION(BASIC_BITWISE)
     r->chunks[3] = r_3 & BIGINT_RADIX_FOR_MOD_128;
+    ADD_STAT_COLLECTION(BASIC_BITWISE)
     r->chunks[4] = r_4 & BIGINT_RADIX_FOR_MOD_128;
+    ADD_STAT_COLLECTION(BASIC_BITWISE)
     r->chunks[5] = r_5 & BIGINT_RADIX_FOR_MOD_128;
+    ADD_STAT_COLLECTION(BASIC_BITWISE)
     r->chunks[6] = r_6 & BIGINT_RADIX_FOR_MOD_128;
+    ADD_STAT_COLLECTION(BASIC_BITWISE)
     r->chunks[7] = r_7 & BIGINT_RADIX_FOR_MOD;
+    ADD_STAT_COLLECTION(BASIC_BITWISE)
 
     // Remove leading zeros
     for (unsigned i = r->size - 1; i > 0; --i)
     {
+        ADD_STAT_COLLECTION(BASIC_ADD_OTHER)
         if (r->chunks[i])
             break;
         r->size--;
+        ADD_STAT_COLLECTION(BASIC_ADD_SIZE)
     }
 
     return r;
@@ -1382,33 +1810,59 @@ BigInt *big_int_square_96(BigInt *r, BigInt *a)
     r->size = 6;
 
     c_0_0 = a_0 * a_0;
+    ADD_STAT_COLLECTION(BASIC_MUL_CHUNK)
     c_0_1 = a_0 * a_1;
+    ADD_STAT_COLLECTION(BASIC_MUL_CHUNK)
     c_0_2 = a_0 * a_2;
+    ADD_STAT_COLLECTION(BASIC_MUL_CHUNK)
 
     c_1_1 = a_1 * a_1;
+    ADD_STAT_COLLECTION(BASIC_MUL_CHUNK)
     c_1_2 = a_1 * a_2;
+    ADD_STAT_COLLECTION(BASIC_MUL_CHUNK)
 
     c_2_2 = a_2 * a_2;
+    ADD_STAT_COLLECTION(BASIC_MUL_CHUNK)
 
     r_0 = c_0_0;
     r_1 = (unsigned __int128)(r_0 >> BIGINT_CHUNK_SHIFT) + (c_0_1 << 1);
-    r_2 = (unsigned __int128)(r_1 >> BIGINT_CHUNK_SHIFT) + (c_0_2 << 1) + c_1_1;
-    r_3 = (unsigned __int128)(r_2 >> BIGINT_CHUNK_SHIFT) + (c_1_2 << 1);
-    r_4 = (unsigned __int128)(r_3 >> BIGINT_CHUNK_SHIFT) + c_2_2;
-    r_5 = (r_4 >> BIGINT_CHUNK_SHIFT);
+    ADD_STAT_COLLECTION(BASIC_SHIFT)
+    ADD_STAT_COLLECTION(BASIC_ADD_CHUNK)
+        ADD_STAT_COLLECTION(BASIC_SHIFT)
+            r_2 = (unsigned __int128)(r_1 >> BIGINT_CHUNK_SHIFT) + (c_0_2 << 1) + c_1_1;
+    ADD_STAT_COLLECTION(BASIC_SHIFT)
+    ADD_STAT_COLLECTION(BASIC_ADD_CHUNK) ADD_STAT_COLLECTION(BASIC_ADD_CHUNK)
+        ADD_STAT_COLLECTION(BASIC_SHIFT)
+            r_3 = (unsigned __int128)(r_2 >> BIGINT_CHUNK_SHIFT) + (c_1_2 << 1);
+    ADD_STAT_COLLECTION(BASIC_SHIFT)
+    ADD_STAT_COLLECTION(BASIC_ADD_CHUNK)
+        ADD_STAT_COLLECTION(BASIC_SHIFT)
+            r_4 = (unsigned __int128)(r_3 >> BIGINT_CHUNK_SHIFT) + c_2_2;
+    ADD_STAT_COLLECTION(BASIC_SHIFT)
+    ADD_STAT_COLLECTION(BASIC_ADD_CHUNK)
+        r_5 = (r_4 >> BIGINT_CHUNK_SHIFT);
+    ADD_STAT_COLLECTION(BASIC_SHIFT)
 
     r->chunks[0] = r_0 & BIGINT_RADIX_FOR_MOD;
+    ADD_STAT_COLLECTION(BASIC_BITWISE)
     r->chunks[1] = r_1 & BIGINT_RADIX_FOR_MOD_128;
+    ADD_STAT_COLLECTION(BASIC_BITWISE)
     r->chunks[2] = r_2 & BIGINT_RADIX_FOR_MOD_128;
+    ADD_STAT_COLLECTION(BASIC_BITWISE)
     r->chunks[3] = r_3 & BIGINT_RADIX_FOR_MOD_128;
+    ADD_STAT_COLLECTION(BASIC_BITWISE)
     r->chunks[4] = r_4 & BIGINT_RADIX_FOR_MOD_128;
+    ADD_STAT_COLLECTION(BASIC_BITWISE)
     r->chunks[5] = r_5 & BIGINT_RADIX_FOR_MOD;
+    ADD_STAT_COLLECTION(BASIC_BITWISE)
 
     // Remove leading zeros
     for (unsigned i = r->size - 1; i > 0; --i) {
+        ADD_STAT_COLLECTION(BASIC_ADD_OTHER)
         if (r->chunks[i])
             break;
         r->size--;
+        ADD_STAT_COLLECTION(BASIC_ADD_SIZE)
     }
 
     return r;
@@ -1432,26 +1886,41 @@ BigInt *big_int_square_64(BigInt *r, BigInt *a)
     r->size = 4;
 
     c_0_0 = a_0 * a_0;
+    ADD_STAT_COLLECTION(BASIC_MUL_CHUNK)
     c_0_1 = a_0 * a_1;
+    ADD_STAT_COLLECTION(BASIC_MUL_CHUNK)
 
     c_1_1 = a_1 * a_1;
+    ADD_STAT_COLLECTION(BASIC_MUL_CHUNK)
 
     r_0 = c_0_0;
     r_1 = (unsigned __int128)(r_0 >> BIGINT_CHUNK_SHIFT) + (c_0_1 << 1);
-    r_2 = (unsigned __int128)(r_1 >> BIGINT_CHUNK_SHIFT) + c_1_1;
-    r_3 = (r_2 >> BIGINT_CHUNK_SHIFT);
+    ADD_STAT_COLLECTION(BASIC_SHIFT)
+    ADD_STAT_COLLECTION(BASIC_ADD_CHUNK)
+        ADD_STAT_COLLECTION(BASIC_SHIFT)
+            r_2 = (unsigned __int128)(r_1 >> BIGINT_CHUNK_SHIFT) + c_1_1;
+    ADD_STAT_COLLECTION(BASIC_SHIFT)
+    ADD_STAT_COLLECTION(BASIC_ADD_CHUNK)
+        r_3 = (r_2 >> BIGINT_CHUNK_SHIFT);
+    ADD_STAT_COLLECTION(BASIC_SHIFT)
 
     r->chunks[0] = r_0 & BIGINT_RADIX_FOR_MOD;
+    ADD_STAT_COLLECTION(BASIC_BITWISE)
     r->chunks[1] = r_1 & BIGINT_RADIX_FOR_MOD_128;
+    ADD_STAT_COLLECTION(BASIC_BITWISE)
     r->chunks[2] = r_2 & BIGINT_RADIX_FOR_MOD_128;
+    ADD_STAT_COLLECTION(BASIC_BITWISE)
     r->chunks[3] = r_3 & BIGINT_RADIX_FOR_MOD;
+    ADD_STAT_COLLECTION(BASIC_BITWISE)
 
     // Remove leading zeros
     for (unsigned i = r->size - 1; i > 0; --i)
     {
+        ADD_STAT_COLLECTION(BASIC_ADD_OTHER)
         if (r->chunks[i])
             break;
         r->size--;
+        ADD_STAT_COLLECTION(BASIC_ADD_SIZE)
     }
 
     return r;
@@ -1472,19 +1941,25 @@ BigInt *big_int_square_32(BigInt *r, BigInt *a)
     r->size = 2;
 
     c_0_0 = a_0 * a_0;
+    ADD_STAT_COLLECTION(BASIC_MUL_CHUNK)
 
     r_0 = c_0_0;
     r_1 = (r_0 >> BIGINT_CHUNK_SHIFT);
+    ADD_STAT_COLLECTION(BASIC_SHIFT)
 
     r->chunks[0] = r_0 & BIGINT_RADIX_FOR_MOD;
+    ADD_STAT_COLLECTION(BASIC_BITWISE)
     r->chunks[1] = r_1 & BIGINT_RADIX_FOR_MOD;
+    ADD_STAT_COLLECTION(BASIC_BITWISE)
 
     // Remove leading zeros
     for (unsigned i = r->size - 1; i > 0; --i)
     {
+        ADD_STAT_COLLECTION(BASIC_ADD_OTHER)
         if (r->chunks[i])
             break;
         r->size--;
+        ADD_STAT_COLLECTION(BASIC_ADD_SIZE)
     }
 
     return r;
@@ -1507,13 +1982,14 @@ BigInt *big_int_mul(BigInt *r, BigInt *a, BigInt *b)
     {
         return big_int_mul_256(r, a, b);
     }
-
+    ADD_STAT_COLLECTION(BASIC_BITWISE)
     int64_t i, j;
     dbl_chunk_size_t carry;
 
     *r = (BigInt){0};
 
     r->sign = a->sign ^ b->sign;
+    ADD_STAT_COLLECTION(BASIC_BITWISE)
     r->size = a->size + b->size;
     ADD_STAT_COLLECTION(BASIC_ADD_SIZE)
 
@@ -1542,6 +2018,7 @@ BigInt *big_int_mul(BigInt *r, BigInt *a, BigInt *b)
                 r->chunks[i + j] = carry & BIGINT_RADIX_FOR_MOD;
                 ADD_STAT_COLLECTION(BASIC_ADD_OTHER)
                 carry >>= BIGINT_CHUNK_BIT_SIZE;
+                ADD_STAT_COLLECTION(BASIC_SHIFT)
                 r->chunks[i + a->size] = carry;
                 ADD_STAT_COLLECTION(BASIC_ADD_OTHER)
             }
@@ -1588,122 +2065,234 @@ BigInt *big_int_mul_256(BigInt *r, BigInt *a, BigInt *b)
 
     unsigned __int128 r_0, r_1, r_2, r_3, r_4, r_5, r_6, r_7, r_8, r_9, r_10, r_11, r_12, r_13, r_14, r_15;
 
-    unsigned __int128 a0_b0 = a0*b0;
-    unsigned __int128 a0_b1 = a0*b1;
-    unsigned __int128 a0_b2 = a0*b2;
-    unsigned __int128 a0_b3 = a0*b3;
-    unsigned __int128 a0_b4 = a0*b4;
-    unsigned __int128 a0_b5 = a0*b5;
-    unsigned __int128 a0_b6 = a0*b6;
-    unsigned __int128 a0_b7 = a0*b7;
+    unsigned __int128 a0_b0 = a0 * b0;
+    ADD_STAT_COLLECTION(BASIC_MUL_CHUNK)
+    unsigned __int128 a0_b1 = a0 * b1;
+    ADD_STAT_COLLECTION(BASIC_MUL_CHUNK)
+    unsigned __int128 a0_b2 = a0 * b2;
+    ADD_STAT_COLLECTION(BASIC_MUL_CHUNK)
+    unsigned __int128 a0_b3 = a0 * b3;
+    ADD_STAT_COLLECTION(BASIC_MUL_CHUNK)
+    unsigned __int128 a0_b4 = a0 * b4;
+    ADD_STAT_COLLECTION(BASIC_MUL_CHUNK)
+    unsigned __int128 a0_b5 = a0 * b5;
+    ADD_STAT_COLLECTION(BASIC_MUL_CHUNK)
+    unsigned __int128 a0_b6 = a0 * b6;
+    ADD_STAT_COLLECTION(BASIC_MUL_CHUNK)
+    unsigned __int128 a0_b7 = a0 * b7;
+    ADD_STAT_COLLECTION(BASIC_MUL_CHUNK)
 
-    unsigned __int128 a1_b0 = a1*b0;
-    unsigned __int128 a1_b1 = a1*b1;
-    unsigned __int128 a1_b2 = a1*b2;
-    unsigned __int128 a1_b3 = a1*b3;
-    unsigned __int128 a1_b4 = a1*b4;
-    unsigned __int128 a1_b5 = a1*b5;
-    unsigned __int128 a1_b6 = a1*b6;
-    unsigned __int128 a1_b7 = a1*b7;
+    unsigned __int128 a1_b0 = a1 * b0;
+    ADD_STAT_COLLECTION(BASIC_MUL_CHUNK)
+    unsigned __int128 a1_b1 = a1 * b1;
+    ADD_STAT_COLLECTION(BASIC_MUL_CHUNK)
+    unsigned __int128 a1_b2 = a1 * b2;
+    ADD_STAT_COLLECTION(BASIC_MUL_CHUNK)
+    unsigned __int128 a1_b3 = a1 * b3;
+    ADD_STAT_COLLECTION(BASIC_MUL_CHUNK)
+    unsigned __int128 a1_b4 = a1 * b4;
+    ADD_STAT_COLLECTION(BASIC_MUL_CHUNK)
+    unsigned __int128 a1_b5 = a1 * b5;
+    ADD_STAT_COLLECTION(BASIC_MUL_CHUNK)
+    unsigned __int128 a1_b6 = a1 * b6;
+    ADD_STAT_COLLECTION(BASIC_MUL_CHUNK)
+    unsigned __int128 a1_b7 = a1 * b7;
+    ADD_STAT_COLLECTION(BASIC_MUL_CHUNK)
 
-    unsigned __int128 a2_b0 = a2*b0;
-    unsigned __int128 a2_b1 = a2*b1;
-    unsigned __int128 a2_b2 = a2*b2;
-    unsigned __int128 a2_b3 = a2*b3;
-    unsigned __int128 a2_b4 = a2*b4;
-    unsigned __int128 a2_b5 = a2*b5;
-    unsigned __int128 a2_b6 = a2*b6;
-    unsigned __int128 a2_b7 = a2*b7;
+    unsigned __int128 a2_b0 = a2 * b0;
+    ADD_STAT_COLLECTION(BASIC_MUL_CHUNK)
+    unsigned __int128 a2_b1 = a2 * b1;
+    ADD_STAT_COLLECTION(BASIC_MUL_CHUNK)
+    unsigned __int128 a2_b2 = a2 * b2;
+    ADD_STAT_COLLECTION(BASIC_MUL_CHUNK)
+    unsigned __int128 a2_b3 = a2 * b3;
+    ADD_STAT_COLLECTION(BASIC_MUL_CHUNK)
+    unsigned __int128 a2_b4 = a2 * b4;
+    ADD_STAT_COLLECTION(BASIC_MUL_CHUNK)
+    unsigned __int128 a2_b5 = a2 * b5;
+    ADD_STAT_COLLECTION(BASIC_MUL_CHUNK)
+    unsigned __int128 a2_b6 = a2 * b6;
+    ADD_STAT_COLLECTION(BASIC_MUL_CHUNK)
+    unsigned __int128 a2_b7 = a2 * b7;
+    ADD_STAT_COLLECTION(BASIC_MUL_CHUNK)
 
-    unsigned __int128 a3_b0 = a3*b0;
-    unsigned __int128 a3_b1 = a3*b1;
-    unsigned __int128 a3_b2 = a3*b2;
-    unsigned __int128 a3_b3 = a3*b3;
-    unsigned __int128 a3_b4 = a3*b4;
-    unsigned __int128 a3_b5 = a3*b5;
-    unsigned __int128 a3_b6 = a3*b6;
-    unsigned __int128 a3_b7 = a3*b7;
+    unsigned __int128 a3_b0 = a3 * b0;
+    ADD_STAT_COLLECTION(BASIC_MUL_CHUNK)
+    unsigned __int128 a3_b1 = a3 * b1;
+    ADD_STAT_COLLECTION(BASIC_MUL_CHUNK)
+    unsigned __int128 a3_b2 = a3 * b2;
+    ADD_STAT_COLLECTION(BASIC_MUL_CHUNK)
+    unsigned __int128 a3_b3 = a3 * b3;
+    ADD_STAT_COLLECTION(BASIC_MUL_CHUNK)
+    unsigned __int128 a3_b4 = a3 * b4;
+    ADD_STAT_COLLECTION(BASIC_MUL_CHUNK)
+    unsigned __int128 a3_b5 = a3 * b5;
+    ADD_STAT_COLLECTION(BASIC_MUL_CHUNK)
+    unsigned __int128 a3_b6 = a3 * b6;
+    ADD_STAT_COLLECTION(BASIC_MUL_CHUNK)
+    unsigned __int128 a3_b7 = a3 * b7;
+    ADD_STAT_COLLECTION(BASIC_MUL_CHUNK)
 
-    unsigned __int128 a4_b0 = a4*b0;
-    unsigned __int128 a4_b1 = a4*b1;
-    unsigned __int128 a4_b2 = a4*b2;
-    unsigned __int128 a4_b3 = a4*b3;
-    unsigned __int128 a4_b4 = a4*b4;
-    unsigned __int128 a4_b5 = a4*b5;
-    unsigned __int128 a4_b6 = a4*b6;
-    unsigned __int128 a4_b7 = a4*b7;
+    unsigned __int128 a4_b0 = a4 * b0;
+    ADD_STAT_COLLECTION(BASIC_MUL_CHUNK)
+    unsigned __int128 a4_b1 = a4 * b1;
+    ADD_STAT_COLLECTION(BASIC_MUL_CHUNK)
+    unsigned __int128 a4_b2 = a4 * b2;
+    ADD_STAT_COLLECTION(BASIC_MUL_CHUNK)
+    unsigned __int128 a4_b3 = a4 * b3;
+    ADD_STAT_COLLECTION(BASIC_MUL_CHUNK)
+    unsigned __int128 a4_b4 = a4 * b4;
+    ADD_STAT_COLLECTION(BASIC_MUL_CHUNK)
+    unsigned __int128 a4_b5 = a4 * b5;
+    ADD_STAT_COLLECTION(BASIC_MUL_CHUNK)
+    unsigned __int128 a4_b6 = a4 * b6;
+    ADD_STAT_COLLECTION(BASIC_MUL_CHUNK)
+    unsigned __int128 a4_b7 = a4 * b7;
+    ADD_STAT_COLLECTION(BASIC_MUL_CHUNK)
 
-    unsigned __int128 a5_b0 = a5*b0;
-    unsigned __int128 a5_b1 = a5*b1;
-    unsigned __int128 a5_b2 = a5*b2;
-    unsigned __int128 a5_b3 = a5*b3;
-    unsigned __int128 a5_b4 = a5*b4;
-    unsigned __int128 a5_b5 = a5*b5;
-    unsigned __int128 a5_b6 = a5*b6;
-    unsigned __int128 a5_b7 = a5*b7;
+    unsigned __int128 a5_b0 = a5 * b0;
+    ADD_STAT_COLLECTION(BASIC_MUL_CHUNK)
+    unsigned __int128 a5_b1 = a5 * b1;
+    ADD_STAT_COLLECTION(BASIC_MUL_CHUNK)
+    unsigned __int128 a5_b2 = a5 * b2;
+    ADD_STAT_COLLECTION(BASIC_MUL_CHUNK)
+    unsigned __int128 a5_b3 = a5 * b3;
+    ADD_STAT_COLLECTION(BASIC_MUL_CHUNK)
+    unsigned __int128 a5_b4 = a5 * b4;
+    ADD_STAT_COLLECTION(BASIC_MUL_CHUNK)
+    unsigned __int128 a5_b5 = a5 * b5;
+    ADD_STAT_COLLECTION(BASIC_MUL_CHUNK)
+    unsigned __int128 a5_b6 = a5 * b6;
+    ADD_STAT_COLLECTION(BASIC_MUL_CHUNK)
+    unsigned __int128 a5_b7 = a5 * b7;
+    ADD_STAT_COLLECTION(BASIC_MUL_CHUNK)
 
-    unsigned __int128 a6_b0 = a6*b0;
-    unsigned __int128 a6_b1 = a6*b1;
-    unsigned __int128 a6_b2 = a6*b2;
-    unsigned __int128 a6_b3 = a6*b3;
-    unsigned __int128 a6_b4 = a6*b4;
-    unsigned __int128 a6_b5 = a6*b5;
-    unsigned __int128 a6_b6 = a6*b6;
-    unsigned __int128 a6_b7 = a6*b7;
+    unsigned __int128 a6_b0 = a6 * b0;
+    ADD_STAT_COLLECTION(BASIC_MUL_CHUNK)
+    unsigned __int128 a6_b1 = a6 * b1;
+    ADD_STAT_COLLECTION(BASIC_MUL_CHUNK)
+    unsigned __int128 a6_b2 = a6 * b2;
+    ADD_STAT_COLLECTION(BASIC_MUL_CHUNK)
+    unsigned __int128 a6_b3 = a6 * b3;
+    ADD_STAT_COLLECTION(BASIC_MUL_CHUNK)
+    unsigned __int128 a6_b4 = a6 * b4;
+    ADD_STAT_COLLECTION(BASIC_MUL_CHUNK)
+    unsigned __int128 a6_b5 = a6 * b5;
+    ADD_STAT_COLLECTION(BASIC_MUL_CHUNK)
+    unsigned __int128 a6_b6 = a6 * b6;
+    ADD_STAT_COLLECTION(BASIC_MUL_CHUNK)
+    unsigned __int128 a6_b7 = a6 * b7;
+    ADD_STAT_COLLECTION(BASIC_MUL_CHUNK)
 
-    unsigned __int128 a7_b0 = a7*b0;
-    unsigned __int128 a7_b1 = a7*b1;
-    unsigned __int128 a7_b2 = a7*b2;
-    unsigned __int128 a7_b3 = a7*b3;
-    unsigned __int128 a7_b4 = a7*b4;
-    unsigned __int128 a7_b5 = a7*b5;
-    unsigned __int128 a7_b6 = a7*b6;
-    unsigned __int128 a7_b7 = a7*b7;
+    unsigned __int128 a7_b0 = a7 * b0;
+    ADD_STAT_COLLECTION(BASIC_MUL_CHUNK)
+    unsigned __int128 a7_b1 = a7 * b1;
+    ADD_STAT_COLLECTION(BASIC_MUL_CHUNK)
+    unsigned __int128 a7_b2 = a7 * b2;
+    ADD_STAT_COLLECTION(BASIC_MUL_CHUNK)
+    unsigned __int128 a7_b3 = a7 * b3;
+    ADD_STAT_COLLECTION(BASIC_MUL_CHUNK)
+    unsigned __int128 a7_b4 = a7 * b4;
+    ADD_STAT_COLLECTION(BASIC_MUL_CHUNK)
+    unsigned __int128 a7_b5 = a7 * b5;
+    ADD_STAT_COLLECTION(BASIC_MUL_CHUNK)
+    unsigned __int128 a7_b6 = a7 * b6;
+    ADD_STAT_COLLECTION(BASIC_MUL_CHUNK)
+    unsigned __int128 a7_b7 = a7 * b7;
+    ADD_STAT_COLLECTION(BASIC_MUL_CHUNK)
 
     r_0 = a0_b0;
     r_1 = (r_0 >> BIGINT_CHUNK_SHIFT) + a0_b1 + a1_b0;
-    r_2 = (r_1 >> BIGINT_CHUNK_SHIFT) + a0_b2 + a1_b1 + a2_b0;
-    r_3 = (r_2 >> BIGINT_CHUNK_SHIFT) + a0_b3 + a1_b2 + a2_b1 + a3_b0;
-    r_4 = (r_3 >> BIGINT_CHUNK_SHIFT) + a0_b4 + a1_b3 + a2_b2 + a3_b1 + a4_b0;
-    r_5 = (r_4 >> BIGINT_CHUNK_SHIFT) + a0_b5 + a1_b4 + a2_b3 + a3_b2 + a4_b1 + a5_b0;
-    r_6 = (r_5 >> BIGINT_CHUNK_SHIFT) + a0_b6 + a1_b5 + a2_b4 + a3_b3 + a4_b2 + a5_b1 + a6_b0;
-    r_7 = (r_6 >> BIGINT_CHUNK_SHIFT) + a0_b7 + a1_b6 + a2_b5 + a3_b4 + a4_b3 + a5_b2 + a6_b1 + a7_b0;
-    r_8 = (r_7 >> BIGINT_CHUNK_SHIFT) + a1_b7 + a2_b6 + a3_b5 + a4_b4 + a5_b3 + a6_b2 + a7_b1;
-    r_9 = (r_8 >> BIGINT_CHUNK_SHIFT) + a2_b7 + a3_b6 + a4_b5 + a5_b4 + a6_b3 + a7_b2;
-    r_10 = (r_9 >> BIGINT_CHUNK_SHIFT) + a3_b7 + a4_b6 + a5_b5 + a6_b4 + a7_b3;
-    r_11 = (r_10 >> BIGINT_CHUNK_SHIFT) + a4_b7 + a5_b6 + a6_b5 + a7_b4;
-    r_12 = (r_11 >> BIGINT_CHUNK_SHIFT) + a5_b7 + a6_b6 + a7_b5;
-    r_13 = (r_12 >> BIGINT_CHUNK_SHIFT) + a6_b7 + a7_b6;
-    r_14 = (r_13 >> BIGINT_CHUNK_SHIFT) + a7_b7;
-    r_15 = (r_14 >> BIGINT_CHUNK_SHIFT);
+    ADD_STAT_COLLECTION(BASIC_SHIFT)
+    ADD_STAT_COLLECTION(BASIC_ADD_CHUNK) ADD_STAT_COLLECTION(BASIC_ADD_CHUNK)
+        r_2 = (r_1 >> BIGINT_CHUNK_SHIFT) + a0_b2 + a1_b1 + a2_b0;
+    ADD_STAT_COLLECTION(BASIC_SHIFT)
+    ADD_STAT_COLLECTION(BASIC_ADD_CHUNK) ADD_STAT_COLLECTION(BASIC_ADD_CHUNK) ADD_STAT_COLLECTION(BASIC_ADD_CHUNK)
+        r_3 = (r_2 >> BIGINT_CHUNK_SHIFT) + a0_b3 + a1_b2 + a2_b1 + a3_b0;
+    ADD_STAT_COLLECTION(BASIC_SHIFT)
+    ADD_STAT_COLLECTION(BASIC_ADD_CHUNK) ADD_STAT_COLLECTION(BASIC_ADD_CHUNK) ADD_STAT_COLLECTION(BASIC_ADD_CHUNK) ADD_STAT_COLLECTION(BASIC_ADD_CHUNK)
+        r_4 = (r_3 >> BIGINT_CHUNK_SHIFT) + a0_b4 + a1_b3 + a2_b2 + a3_b1 + a4_b0;
+    ADD_STAT_COLLECTION(BASIC_SHIFT)
+    ADD_STAT_COLLECTION(BASIC_ADD_CHUNK) ADD_STAT_COLLECTION(BASIC_ADD_CHUNK) ADD_STAT_COLLECTION(BASIC_ADD_CHUNK) ADD_STAT_COLLECTION(BASIC_ADD_CHUNK) ADD_STAT_COLLECTION(BASIC_ADD_CHUNK)
+        r_5 = (r_4 >> BIGINT_CHUNK_SHIFT) + a0_b5 + a1_ b4 + a2_b3 + a3_b2 + a4_b1 + a5_b0;
+    ADD_STAT_COLLECTION(BASIC_SHIFT)
+    ADD_STAT_COLLECTION(BASIC_ADD_CHUNK) ADD_STAT_COLLECTION(BASIC_ADD_CHUNK) ADD_STAT_COLLECTION(BASIC_ADD_CHUNK) ADD_STAT_COLLECTION(BASIC_ADD_CHUNK) ADD_STAT_COLLECTION(BASIC_ADD_CHUNK) ADD_STAT_COLLECTION(BASIC_ADD_CHUNK)
+        r_6 = (r_5 >> BIGINT_CHUNK_SHIFT) + a0_b6 + a1_b5 + a2_b4 + a3_b3 + a4_b2 + a5_b1 + a6_b0;
+    ADD_STAT_COLLECTION(BASIC_SHIFT)
+    ADD_STAT_COLLECTION(BASIC_ADD_CHUNK) ADD_STAT_COLLECTION(BASIC_ADD_CHUNK) ADD_STAT_COLLECTION(BASIC_ADD_CHUNK) ADD_STAT_COLLECTION(BASIC_ADD_CHUNK) ADD_STAT_COLLECTION(BASIC_ADD_CHUNK) ADD_STAT_COLLECTION(BASIC_ADD_CHUNK) ADD_STAT_COLLECTION(BASIC_ADD_CHUNK)
+        r_7 = (r_6 >> BIGINT_CHUNK_SHIFT) + a0_b7 + a1_b6 + a2_b5 + a3_b4 + a4_b3 + a5_b2 + a6_b1 + a7_b0;
+    ADD_STAT_COLLECTION(BASIC_SHIFT)
+    ADD_STAT_COLLECTION(BASIC_ADD_CHUNK) ADD_STAT_COLLECTION(BASIC_ADD_CHUNK) ADD_STAT_COLLECTION(BASIC_ADD_CHUNK) ADD_STAT_COLLECTION(BASIC_ADD_CHUNK) ADD_STAT_COLLECTION(BASIC_ADD_CHUNK) ADD_STAT_COLLECTION(BASIC_ADD_CHUNK) ADD_STAT_COLLECTION(BASIC_ADD_CHUNK) ADD_STAT_COLLECTION(BASIC_ADD_CHUNK)
+        r_8 = (r_7 >> BIGINT_CHUNK_SHIFT) + a1_b7 + a2_b6 + a3_b5 + a4_b4 + a5_b3 + a6_b2 + a7_b1;
+    ADD_STAT_COLLECTION(BASIC_SHIFT)
+    ADD_STAT_COLLECTION(BASIC_ADD_CHUNK) ADD_STAT_COLLECTION(BASIC_ADD_CHUNK) ADD_STAT_COLLECTION(BASIC_ADD_CHUNK) ADD_STAT_COLLECTION(BASIC_ADD_CHUNK) ADD_STAT_COLLECTION(BASIC_ADD_CHUNK) ADD_STAT_COLLECTION(BASIC_ADD_CHUNK) ADD_STAT_COLLECTION(BASIC_ADD_CHUNK)
+        r_9 = (r_8 >> BIGINT_CHUNK_SHIFT) + a2_b7 + a3_b6 + a4_b5 + a5_b4 + a6_b3 + a7_b2;
+    ADD_STAT_COLLECTION(BASIC_SHIFT)
+    ADD_STAT_COLLECTION(BASIC_ADD_CHUNK) ADD_STAT_COLLECTION(BASIC_ADD_CHUNK) ADD_STAT_COLLECTION(BASIC_ADD_CHUNK) ADD_STAT_COLLECTION(BASIC_ADD_CHUNK) ADD_STAT_COLLECTION(BASIC_ADD_CHUNK) ADD_STAT_COLLECTION(BASIC_ADD_CHUNK)
+        r_10 = (r_9 >> BIGINT_CHUNK_SHIFT) + a3_b7 + a4_b6 + a5_b5 + a6_b4 + a7_b3;
+    ADD_STAT_COLLECTION(BASIC_SHIFT)
+    ADD_STAT_COLLECTION(BASIC_ADD_CHUNK) ADD_STAT_COLLECTION(BASIC_ADD_CHUNK) ADD_STAT_COLLECTION(BASIC_ADD_CHUNK) ADD_STAT_COLLECTION(BASIC_ADD_CHUNK) ADD_STAT_COLLECTION(BASIC_ADD_CHUNK)
+        r_11 = (r_10 >> BIGINT_CHUNK_SHIFT) + a4_b7 + a5_b6 + a6_b5 + a7_b4;
+    ADD_STAT_COLLECTION(BASIC_SHIFT)
+    ADD_STAT_COLLECTION(BASIC_ADD_CHUNK) ADD_STAT_COLLECTION(BASIC_ADD_CHUNK) ADD_STAT_COLLECTION(BASIC_ADD_CHUNK) ADD_STAT_COLLECTION(BASIC_ADD_CHUNK)
+        r_12 = (r_11 >> BIGINT_CHUNK_SHIFT) + a5_b7 + a6_b6 + a7_b5;
+    ADD_STAT_COLLECTION(BASIC_SHIFT)
+    ADD_STAT_COLLECTION(BASIC_ADD_CHUNK) ADD_STAT_COLLECTION(BASIC_ADD_CHUNK) ADD_STAT_COLLECTION(BASIC_ADD_CHUNK)
+        r_13 = (r_12 >> BIGINT_CHUNK_SHIFT) + a6_b7 + a7_b6;
+    ADD_STAT_COLLECTION(BASIC_SHIFT)
+    ADD_STAT_COLLECTION(BASIC_ADD_CHUNK) ADD_STAT_COLLECTION(BASIC_ADD_CHUNK)
+        r_14 = (r_13 >> BIGINT_CHUNK_SHIFT) + a7_b7;
+    ADD_STAT_COLLECTION(BASIC_SHIFT)
+    ADD_STAT_COLLECTION(BASIC_ADD_CHUNK)
+        r_15 = (r_14 >> BIGINT_CHUNK_SHIFT);
+    ADD_STAT_COLLECTION(BASIC_SHIFT)
 
     *r = (BigInt){0};
     r->sign = a->sign ^ b->sign;
+    ADD_STAT_COLLECTION(BASIC_BITWISE)
     r->size = 16;
 
     r->chunks[0] = r_0 & BIGINT_RADIX_FOR_MOD_128;
+    ADD_STAT_COLLECTION(BASIC_BITWISE)
     r->chunks[1] = r_1 & BIGINT_RADIX_FOR_MOD_128;
+    ADD_STAT_COLLECTION(BASIC_BITWISE)
     r->chunks[2] = r_2 & BIGINT_RADIX_FOR_MOD_128;
+    ADD_STAT_COLLECTION(BASIC_BITWISE)
     r->chunks[3] = r_3 & BIGINT_RADIX_FOR_MOD_128;
+    ADD_STAT_COLLECTION(BASIC_BITWISE)
     r->chunks[4] = r_4 & BIGINT_RADIX_FOR_MOD_128;
+    ADD_STAT_COLLECTION(BASIC_BITWISE)
     r->chunks[5] = r_5 & BIGINT_RADIX_FOR_MOD_128;
+    ADD_STAT_COLLECTION(BASIC_BITWISE)
     r->chunks[6] = r_6 & BIGINT_RADIX_FOR_MOD_128;
+    ADD_STAT_COLLECTION(BASIC_BITWISE)
     r->chunks[7] = r_7 & BIGINT_RADIX_FOR_MOD_128;
+    ADD_STAT_COLLECTION(BASIC_BITWISE)
     r->chunks[8] = r_8 & BIGINT_RADIX_FOR_MOD_128;
+    ADD_STAT_COLLECTION(BASIC_BITWISE)
     r->chunks[9] = r_9 & BIGINT_RADIX_FOR_MOD_128;
+    ADD_STAT_COLLECTION(BASIC_BITWISE)
     r->chunks[10] = r_10 & BIGINT_RADIX_FOR_MOD_128;
+    ADD_STAT_COLLECTION(BASIC_BITWISE)
     r->chunks[11] = r_11 & BIGINT_RADIX_FOR_MOD_128;
+    ADD_STAT_COLLECTION(BASIC_BITWISE)
     r->chunks[12] = r_12 & BIGINT_RADIX_FOR_MOD_128;
+    ADD_STAT_COLLECTION(BASIC_BITWISE)
     r->chunks[13] = r_13 & BIGINT_RADIX_FOR_MOD_128;
+    ADD_STAT_COLLECTION(BASIC_BITWISE)
     r->chunks[14] = r_14 & BIGINT_RADIX_FOR_MOD_128;
+    ADD_STAT_COLLECTION(BASIC_BITWISE)
     r->chunks[15] = r_15 & BIGINT_RADIX_FOR_MOD_128;
+    ADD_STAT_COLLECTION(BASIC_BITWISE)
 
     // Prune leading zeros
     for (int64_t i = r->size - 1; i > 0; --i)
     {
+        ADD_STAT_COLLECTION(BASIC_ADD_OTHER)
         if (r->chunks[i])
             break;
         r->size--;
+        ADD_STAT_COLLECTION(BASIC_ADD_SIZE)
     }
 
     return r;
@@ -1724,11 +2313,11 @@ BigInt *big_int_mul_256avx(BigInt *r, BigInt *a, BigInt *b)
     __m256i a6_b_0_3, a6_b_4_7;
     __m256i a7_b_0_3, a7_b_4_7;
 
-    a_0_3 = _mm256_loadu_si256 ((__m256i *) &(a->chunks[0]));
-    a_4_7 = _mm256_loadu_si256 ((__m256i *) &(a->chunks[4]));
+    a_0_3 = _mm256_loadu_si256((__m256i *)&(a->chunks[0]));
+    a_4_7 = _mm256_loadu_si256((__m256i *)&(a->chunks[4]));
 
-    b_0_3 = _mm256_loadu_si256 ((__m256i *) &(b->chunks[0]));
-    b_4_7 = _mm256_loadu_si256 ((__m256i *) &(b->chunks[4]));
+    b_0_3 = _mm256_loadu_si256((__m256i *)&(b->chunks[0]));
+    b_4_7 = _mm256_loadu_si256((__m256i *)&(b->chunks[4]));
 
     a_0 = _mm256_permute4x64_epi64(a_0_3, 0);
     a_1 = _mm256_permute4x64_epi64(a_0_3, 85);
@@ -1741,28 +2330,44 @@ BigInt *big_int_mul_256avx(BigInt *r, BigInt *a, BigInt *b)
     a_7 = _mm256_permute4x64_epi64(a_4_7, 255);
 
     a0_b_0_3 = _mm256_mul_epu32(a_0, b_0_3);
+    ADD_STAT_COLLECTION(AVX_MUL)
     a0_b_4_7 = _mm256_mul_epu32(a_0, b_4_7);
+    ADD_STAT_COLLECTION(AVX_MUL)
 
     a1_b_0_3 = _mm256_mul_epu32(a_1, b_0_3);
+    ADD_STAT_COLLECTION(AVX_MUL)
     a1_b_4_7 = _mm256_mul_epu32(a_1, b_4_7);
+    ADD_STAT_COLLECTION(AVX_MUL)
 
     a2_b_0_3 = _mm256_mul_epu32(a_2, b_0_3);
+    ADD_STAT_COLLECTION(AVX_MUL)
     a2_b_4_7 = _mm256_mul_epu32(a_2, b_4_7);
+    ADD_STAT_COLLECTION(AVX_MUL)
 
     a3_b_0_3 = _mm256_mul_epu32(a_3, b_0_3);
+    ADD_STAT_COLLECTION(AVX_MUL)
     a3_b_4_7 = _mm256_mul_epu32(a_3, b_4_7);
+    ADD_STAT_COLLECTION(AVX_MUL)
 
     a4_b_0_3 = _mm256_mul_epu32(a_4, b_0_3);
+    ADD_STAT_COLLECTION(AVX_MUL)
     a4_b_4_7 = _mm256_mul_epu32(a_4, b_4_7);
+    ADD_STAT_COLLECTION(AVX_MUL)
 
     a5_b_0_3 = _mm256_mul_epu32(a_5, b_0_3);
+    ADD_STAT_COLLECTION(AVX_MUL)
     a5_b_4_7 = _mm256_mul_epu32(a_5, b_4_7);
+    ADD_STAT_COLLECTION(AVX_MUL)
 
     a6_b_0_3 = _mm256_mul_epu32(a_6, b_0_3);
+    ADD_STAT_COLLECTION(AVX_MUL)
     a6_b_4_7 = _mm256_mul_epu32(a_6, b_4_7);
+    ADD_STAT_COLLECTION(AVX_MUL)
 
     a7_b_0_3 = _mm256_mul_epu32(a_7, b_0_3);
+    ADD_STAT_COLLECTION(AVX_MUL)
     a7_b_4_7 = _mm256_mul_epu32(a_7, b_4_7);
+    ADD_STAT_COLLECTION(AVX_MUL)
 
     unsigned __int128 r_0, r_1, r_2, r_3, r_4, r_5, r_6, r_7, r_8, r_9, r_10, r_11, r_12, r_13, r_14, r_15;
 
@@ -1840,53 +2445,100 @@ BigInt *big_int_mul_256avx(BigInt *r, BigInt *a, BigInt *b)
 
     r_0 = a0_b0;
     r_1 = (r_0 >> BIGINT_CHUNK_SHIFT) + a0_b1 + a1_b0;
-    r_2 = (r_1 >> BIGINT_CHUNK_SHIFT) + a0_b2 + a1_b1 + a2_b0;
-    r_3 = (r_2 >> BIGINT_CHUNK_SHIFT) + a0_b3 + a1_b2 + a2_b1 + a3_b0;
-    r_4 = (r_3 >> BIGINT_CHUNK_SHIFT) + a0_b4 + a1_b3 + a2_b2 + a3_b1 + a4_b0;
-    r_5 = (r_4 >> BIGINT_CHUNK_SHIFT) + a0_b5 + a1_b4 + a2_b3 + a3_b2 + a4_b1 + a5_b0;
-    r_6 = (r_5 >> BIGINT_CHUNK_SHIFT) + a0_b6 + a1_b5 + a2_b4 + a3_b3 + a4_b2 + a5_b1 + a6_b0;
-    r_7 = (r_6 >> BIGINT_CHUNK_SHIFT) + a0_b7 + a1_b6 + a2_b5 + a3_b4 + a4_b3 + a5_b2 + a6_b1 + a7_b0;
-    r_8 = (r_7 >> BIGINT_CHUNK_SHIFT) + a1_b7 + a2_b6 + a3_b5 + a4_b4 + a5_b3 + a6_b2 + a7_b1;
-    r_9 = (r_8 >> BIGINT_CHUNK_SHIFT) + a2_b7 + a3_b6 + a4_b5 + a5_b4 + a6_b3 + a7_b2;
-    r_10 = (r_9 >> BIGINT_CHUNK_SHIFT) + a3_b7 + a4_b6 + a5_b5 + a6_b4 + a7_b3;
-    r_11 = (r_10 >> BIGINT_CHUNK_SHIFT) + a4_b7 + a5_b6 + a6_b5 + a7_b4;
-    r_12 = (r_11 >> BIGINT_CHUNK_SHIFT) + a5_b7 + a6_b6 + a7_b5;
-    r_13 = (r_12 >> BIGINT_CHUNK_SHIFT) + a6_b7 + a7_b6;
-    r_14 = (r_13 >> BIGINT_CHUNK_SHIFT) + a7_b7;
-    r_15 = (r_14 >> BIGINT_CHUNK_SHIFT);
+    ADD_STAT_COLLECTION(BASIC_SHIFT)
+    ADD_STAT_COLLECTION(BASIC_ADD_CHUNK) ADD_STAT_COLLECTION(BASIC_ADD_CHUNK)
+        r_2 = (r_1 >> BIGINT_CHUNK_SHIFT) + a0_b2 + a1_b1 + a2_b0;
+    ADD_STAT_COLLECTION(BASIC_SHIFT)
+    ADD_STAT_COLLECTION(BASIC_ADD_CHUNK) ADD_STAT_COLLECTION(BASIC_ADD_CHUNK) ADD_STAT_COLLECTION(BASIC_ADD_CHUNK)
+        r_3 = (r_2 >> BIGINT_CHUNK_SHIFT) + a0_b3 + a1_b2 + a2_b1 + a3_b0;
+    ADD_STAT_COLLECTION(BASIC_SHIFT)
+    ADD_STAT_COLLECTION(BASIC_ADD_CHUNK) ADD_STAT_COLLECTION(BASIC_ADD_CHUNK) ADD_STAT_COLLECTION(BASIC_ADD_CHUNK) ADD_STAT_COLLECTION(BASIC_ADD_CHUNK)
+        r_4 = (r_3 >> BIGINT_CHUNK_SHIFT) + a0_b4 + a1_b3 + a2_b2 + a3_b1 + a4_b0;
+    ADD_STAT_COLLECTION(BASIC_SHIFT)
+    ADD_STAT_COLLECTION(BASIC_ADD_CHUNK) ADD_STAT_COLLECTION(BASIC_ADD_CHUNK) ADD_STAT_COLLECTION(BASIC_ADD_CHUNK) ADD_STAT_COLLECTION(BASIC_ADD_CHUNK) ADD_STAT_COLLECTION(BASIC_ADD_CHUNK)
+        r_5 = (r_4 >> BIGINT_CHUNK_SHIFT) + a0_b5 + a1_b4 + a2_b3 + a3_b2 + a4_b1 + a5_b0;
+    ADD_STAT_COLLECTION(BASIC_SHIFT)
+    ADD_STAT_COLLECTION(BASIC_ADD_CHUNK) ADD_STAT_COLLECTION(BASIC_ADD_CHUNK) ADD_STAT_COLLECTION(BASIC_ADD_CHUNK) ADD_STAT_COLLECTION(BASIC_ADD_CHUNK) ADD_STAT_COLLECTION(BASIC_ADD_CHUNK) ADD_STAT_COLLECTION(BASIC_ADD_CHUNK)
+        r_6 = (r_5 >> BIGINT_CHUNK_SHIFT) + a0_b6 + a1_b5 + a2_b4 + a3_b3 + a4_b2 + a5_b1 + a6_b0;
+    ADD_STAT_COLLECTION(BASIC_SHIFT)
+    ADD_STAT_COLLECTION(BASIC_ADD_CHUNK) ADD_STAT_COLLECTION(BASIC_ADD_CHUNK) ADD_STAT_COLLECTION(BASIC_ADD_CHUNK) ADD_STAT_COLLECTION(BASIC_ADD_CHUNK) ADD_STAT_COLLECTION(BASIC_ADD_CHUNK) ADD_STAT_COLLECTION(BASIC_ADD_CHUNK) ADD_STAT_COLLECTION(BASIC_ADD_CHUNK)
+        r_7 = (r_6 >> BIGINT_CHUNK_SHIFT) + a0_b7 + a1_b6 + a2_b5 + a3_b4 + a4_b3 + a5_b2 + a6_b1 + a7_b0;
+    ADD_STAT_COLLECTION(BASIC_SHIFT)
+    ADD_STAT_COLLECTION(BASIC_ADD_CHUNK) ADD_STAT_COLLECTION(BASIC_ADD_CHUNK) ADD_STAT_COLLECTION(BASIC_ADD_CHUNK) ADD_STAT_COLLECTION(BASIC_ADD_CHUNK) ADD_STAT_COLLECTION(BASIC_ADD_CHUNK) ADD_STAT_COLLECTION(BASIC_ADD_CHUNK) ADD_STAT_COLLECTION(BASIC_ADD_CHUNK) ADD_STAT_COLLECTION(BASIC_ADD_CHUNK)
+        r_8 = (r_7 >> BIGINT_CHUNK_SHIFT) + a1_b7 + a2_b6 + a3_b5 + a4_b4 + a5_b3 + a6_b2 + a7_b1;
+    ADD_STAT_COLLECTION(BASIC_SHIFT)
+    ADD_STAT_COLLECTION(BASIC_ADD_CHUNK) ADD_STAT_COLLECTION(BASIC_ADD_CHUNK) ADD_STAT_COLLECTION(BASIC_ADD_CHUNK) ADD_STAT_COLLECTION(BASIC_ADD_CHUNK) ADD_STAT_COLLECTION(BASIC_ADD_CHUNK) ADD_STAT_COLLECTION(BASIC_ADD_CHUNK) ADD_STAT_COLLECTION(BASIC_ADD_CHUNK)
+        r_9 = (r_8 >> BIGINT_CHUNK_SHIFT) + a2_b7 + a3_b6 + a4_b5 + a5_b4 + a6_b3 + a7_b2;
+    ADD_STAT_COLLECTION(BASIC_SHIFT)
+    ADD_STAT_COLLECTION(BASIC_ADD_CHUNK) ADD_STAT_COLLECTION(BASIC_ADD_CHUNK) ADD_STAT_COLLECTION(BASIC_ADD_CHUNK) ADD_STAT_COLLECTION(BASIC_ADD_CHUNK) ADD_STAT_COLLECTION(BASIC_ADD_CHUNK) ADD_STAT_COLLECTION(BASIC_ADD_CHUNK)
+        r_10 = (r_9 >> BIGINT_CHUNK_SHIFT) + a3_b7 + a4_b6 + a5_b5 + a6_b4 + a7_b3;
+    ADD_STAT_COLLECTION(BASIC_SHIFT)
+    ADD_STAT_COLLECTION(BASIC_ADD_CHUNK) ADD_STAT_COLLECTION(BASIC_ADD_CHUNK) ADD_STAT_COLLECTION(BASIC_ADD_CHUNK) ADD_STAT_COLLECTION(BASIC_ADD_CHUNK) ADD_STAT_COLLECTION(BASIC_ADD_CHUNK)
+        r_11 = (r_10 >> BIGINT_CHUNK_SHIFT) + a4_b7 + a5_b6 + a6_b5 + a7_b4;
+    ADD_STAT_COLLECTION(BASIC_SHIFT)
+    ADD_STAT_COLLECTION(BASIC_ADD_CHUNK) ADD_STAT_COLLECTION(BASIC_ADD_CHUNK) ADD_STAT_COLLECTION(BASIC_ADD_CHUNK) ADD_STAT_COLLECTION(BASIC_ADD_CHUNK)
+        r_12 = (r_11 >> BIGINT_CHUNK_SHIFT) + a5_b7 + a6_b6 + a7_b5;
+    ADD_STAT_COLLECTION(BASIC_SHIFT)
+    ADD_STAT_COLLECTION(BASIC_ADD_CHUNK) ADD_STAT_COLLECTION(BASIC_ADD_CHUNK) ADD_STAT_COLLECTION(BASIC_ADD_CHUNK)
+        r_13 = (r_12 >> BIGINT_CHUNK_SHIFT) + a6_b7 + a7_b6;
+    ADD_STAT_COLLECTION(BASIC_SHIFT)
+    ADD_STAT_COLLECTION(BASIC_ADD_CHUNK) ADD_STAT_COLLECTION(BASIC_ADD_CHUNK)
+        r_14 = (r_13 >> BIGINT_CHUNK_SHIFT) + a7_b7;
+    ADD_STAT_COLLECTION(BASIC_SHIFT)
+    ADD_STAT_COLLECTION(BASIC_ADD_CHUNK)
+        r_15 = (r_14 >> BIGINT_CHUNK_SHIFT);
+    ADD_STAT_COLLECTION(BASIC_SHIFT)
 
     *r = (BigInt){0};
     r->sign = a->sign ^ b->sign;
+    ADD_STAT_COLLECTION(BASIC_BITWISE)
     r->size = 16;
 
     r->chunks[0] = r_0 & BIGINT_RADIX_FOR_MOD_128;
+    ADD_STAT_COLLECTION(BASIC_BITWISE)
     r->chunks[1] = r_1 & BIGINT_RADIX_FOR_MOD_128;
+    ADD_STAT_COLLECTION(BASIC_BITWISE)
     r->chunks[2] = r_2 & BIGINT_RADIX_FOR_MOD_128;
+    ADD_STAT_COLLECTION(BASIC_BITWISE)
     r->chunks[3] = r_3 & BIGINT_RADIX_FOR_MOD_128;
+    ADD_STAT_COLLECTION(BASIC_BITWISE)
     r->chunks[4] = r_4 & BIGINT_RADIX_FOR_MOD_128;
+    ADD_STAT_COLLECTION(BASIC_BITWISE)
     r->chunks[5] = r_5 & BIGINT_RADIX_FOR_MOD_128;
+    ADD_STAT_COLLECTION(BASIC_BITWISE)
     r->chunks[6] = r_6 & BIGINT_RADIX_FOR_MOD_128;
+    ADD_STAT_COLLECTION(BASIC_BITWISE)
     r->chunks[7] = r_7 & BIGINT_RADIX_FOR_MOD_128;
+    ADD_STAT_COLLECTION(BASIC_BITWISE)
     r->chunks[8] = r_8 & BIGINT_RADIX_FOR_MOD_128;
+    ADD_STAT_COLLECTION(BASIC_BITWISE)
     r->chunks[9] = r_9 & BIGINT_RADIX_FOR_MOD_128;
+    ADD_STAT_COLLECTION(BASIC_BITWISE)
     r->chunks[10] = r_10 & BIGINT_RADIX_FOR_MOD_128;
+    ADD_STAT_COLLECTION(BASIC_BITWISE)
     r->chunks[11] = r_11 & BIGINT_RADIX_FOR_MOD_128;
+    ADD_STAT_COLLECTION(BASIC_BITWISE)
     r->chunks[12] = r_12 & BIGINT_RADIX_FOR_MOD_128;
+    ADD_STAT_COLLECTION(BASIC_BITWISE)
     r->chunks[13] = r_13 & BIGINT_RADIX_FOR_MOD_128;
+    ADD_STAT_COLLECTION(BASIC_BITWISE)
     r->chunks[14] = r_14 & BIGINT_RADIX_FOR_MOD_128;
+    ADD_STAT_COLLECTION(BASIC_BITWISE)
     r->chunks[15] = r_15 & BIGINT_RADIX_FOR_MOD_128;
+    ADD_STAT_COLLECTION(BASIC_BITWISE)
 
     // Prune leading zeros
     for (int64_t i = r->size - 1; i > 0; --i)
     {
+        ADD_STAT_COLLECTION(BASIC_ADD_OTHER)
         if (r->chunks[i])
             break;
         r->size--;
+        ADD_STAT_COLLECTION(BASIC_ADD_SIZE)
     }
 
     return r;
 }
-
 
 /**
  * \brief Calculate quotient q and remainder r, such that: a = q * b + r
@@ -1951,7 +2603,9 @@ BigInt *big_int_div_rem(BigInt *q, BigInt *r, BigInt *a, BigInt *b)
     else if (a->size == 1)
     {
         big_int_create_from_chunk(q, a->chunks[0] / b->chunks[0], 0);
+        ADD_STAT_COLLECTION(BASIC_DIV)
         q->sign = a->sign ^ b->sign;
+        ADD_STAT_COLLECTION(BASIC_BITWISE)
         big_int_create_from_chunk(r_loc, a->chunks[0] % b->chunks[0], 0);
     }
     // Since we do operations on double chunks, we can also do the shortcut for length 2
@@ -1966,15 +2620,19 @@ BigInt *big_int_div_rem(BigInt *q, BigInt *r, BigInt *a, BigInt *b)
         ADD_STAT_COLLECTION(BASIC_ADD_CHUNK)
         ADD_STAT_COLLECTION(BASIC_MUL_CHUNK)
         q_sign = a->sign ^ b->sign;
+        ADD_STAT_COLLECTION(BASIC_BITWISE)
 
         q = big_int_create_from_dbl_chunk(q, a_tmp / b_tmp, q_sign);
+        ADD_STAT_COLLECTION(BASIC_DIV)
         r_loc = big_int_create_from_dbl_chunk(r_loc, a_tmp % b_tmp, 0);
+        ADD_STAT_COLLECTION(BASIC_MOD)
     }
     else
     {
         // Below: Division for a->size > 2
 
         q->sign = a->sign ^ b->sign;
+        ADD_STAT_COLLECTION(BASIC_BITWISE)
         q->size = a->size - b->size + 1;
         ADD_STAT_COLLECTION(BASIC_ADD_SIZE)
         ADD_STAT_COLLECTION(BASIC_ADD_SIZE)
@@ -1997,6 +2655,7 @@ BigInt *big_int_div_rem(BigInt *q, BigInt *r, BigInt *a, BigInt *b)
             ++factor;
             ADD_STAT_COLLECTION(BASIC_ADD_OTHER)
             tmp <<= 1;
+            ADD_STAT_COLLECTION(BASIC_SHIFT)
         }
 
         if (factor > 0)
@@ -2034,7 +2693,8 @@ BigInt *big_int_div_rem(BigInt *q, BigInt *r, BigInt *a, BigInt *b)
             ADD_STAT_COLLECTION(BASIC_ADD_CHUNK)
             ADD_STAT_COLLECTION(BASIC_ADD_OTHER)
             ADD_STAT_COLLECTION(BASIC_MUL_CHUNK)
-                r_c = q_c % b_loc->chunks[b->size - 1];
+            r_c = q_c % b_loc->chunks[b->size - 1];
+            ADD_STAT_COLLECTION(BASIC_MOD)
             ADD_STAT_COLLECTION(BASIC_ADD_OTHER)
             q_c /= b_loc->chunks[b->size - 1];
             ADD_STAT_COLLECTION(BASIC_ADD_OTHER)
@@ -2046,9 +2706,8 @@ BigInt *big_int_div_rem(BigInt *q, BigInt *r, BigInt *a, BigInt *b)
                 ADD_STAT_COLLECTION(BASIC_ADD_OTHER)
                 ADD_STAT_COLLECTION(BASIC_MUL_CHUNK)
                 ADD_STAT_COLLECTION(BASIC_MUL_CHUNK)
-                if (q_c >= BIGINT_RADIX
-                    || (b->size > 1 && q_c * b_loc->chunks[b->size - 2]
-                        > BIGINT_RADIX * r_c + a_loc->chunks[a_idx - 2]))
+                ADD_STAT_COLLECTION(BASIC_BITWISE)
+                if (q_c >= BIGINT_RADIX || (b->size > 1 && q_c * b_loc->chunks[b->size - 2] > BIGINT_RADIX * r_c + a_loc->chunks[a_idx - 2]))
                 {
                     --q_c;
                     ADD_STAT_COLLECTION(BASIC_ADD_OTHER)
@@ -2095,7 +2754,8 @@ BigInt *big_int_div_rem(BigInt *q, BigInt *r, BigInt *a, BigInt *b)
                 {
                     ADD_STAT_COLLECTION(BASIC_ADD_OTHER)
                     ADD_STAT_COLLECTION(BASIC_ADD_OTHER)
-                    if (q_idx + i >= a_loc->size) break;
+                    if (q_idx + i >= a_loc->size)
+                        break;
                     a_loc->chunks[q_idx + i] = qb->chunks[i];
                     ADD_STAT_COLLECTION(BASIC_ADD_OTHER)
                 }
@@ -2106,7 +2766,8 @@ BigInt *big_int_div_rem(BigInt *q, BigInt *r, BigInt *a, BigInt *b)
                 {
                     ADD_STAT_COLLECTION(BASIC_ADD_OTHER)
                     ADD_STAT_COLLECTION(BASIC_ADD_OTHER)
-                    if (q_idx + i >= a_loc->size) break;
+                    if (q_idx + i >= a_loc->size)
+                        break;
 
                     a_loc->chunks[q_idx + i] = qb->chunks[i];
                     ADD_STAT_COLLECTION(BASIC_ADD_OTHER)
@@ -2124,7 +2785,7 @@ BigInt *big_int_div_rem(BigInt *q, BigInt *r, BigInt *a, BigInt *b)
 
         big_int_prune_leading_zeros(q, q);
     }
-
+    ADD_STAT_COLLECTION(BASIC_BITWISE)
     // Round towards -inf if either operand is negative
     if (a->sign ^ b->sign && !big_int_is_zero(r_loc))
     {
@@ -2133,6 +2794,7 @@ BigInt *big_int_div_rem(BigInt *q, BigInt *r, BigInt *a, BigInt *b)
         big_int_abs(b_loc, b);
         big_int_sub(r_loc, b_loc, r_loc);
     }
+    ADD_STAT_COLLECTION(BASIC_BITWISE)
     // If b is negative, flip the sign of the remainder to maintain the
     // invariant q * b + r = a
     if (b->sign)
@@ -2179,12 +2841,15 @@ BigInt *big_int_sll_small(BigInt *r, BigInt *a, uint64_t shift)
 
     // Shift the other chunks by the chunk internal shift
     shift %= BIGINT_CHUNK_BIT_SIZE;
+    ADD_STAT_COLLECTION(BASIC_MOD)
     carry = 0;
     for (i = 0; i < a->size; ++i)
     {
         ADD_STAT_COLLECTION(BASIC_ADD_OTHER)
         carry = (a->chunks[i] << shift) | carry;
+        ADD_STAT_COLLECTION(BASIC_BITWISE)
         r->chunks[r_idx] = carry % BIGINT_RADIX;
+        ADD_STAT_COLLECTION(BASIC_MOD)
         carry /= BIGINT_RADIX;
 
         ++r_idx;
@@ -2233,14 +2898,19 @@ BigInt *big_int_srl_small(BigInt *r, BigInt *a, uint64_t shift)
     if (shift / BIGINT_CHUNK_BIT_SIZE >= a->size)
     {
         ADD_STAT_COLLECTION(BASIC_ADD_OTHER)
+        ADD_STAT_COLLECTION(BASIC_DIV)
         ADD_STAT_COLLECTION(BASIC_ADD_OTHER)
         ADD_STAT_COLLECTION(BASIC_ADD_OTHER)
-            // Special case for rounding towards -inf
-            if (a->sign && (shift - 1) / BIGINT_CHUNK_BIT_SIZE < a->size)
+        ADD_STAT_COLLECTION(BASIC_BITWISE)
+        // Special case for rounding towards -inf
+        if (a->sign && (shift - 1) / BIGINT_CHUNK_BIT_SIZE < a->size)
         {
             big_int_create_from_chunk(r,
                                       a->chunks[a->size - 1] >> (((shift - 1) % BIGINT_CHUNK_BIT_SIZE)),
                                       1);
+            ADD_STAT_COLLECTION(BASIC_SHIFT)
+            ADD_STAT_COLLECTION(BASIC_DIV)
+            ADD_STAT_COLLECTION(BASIC_MOD)
         }
         else
         {
@@ -2251,13 +2921,19 @@ BigInt *big_int_srl_small(BigInt *r, BigInt *a, uint64_t shift)
 
     r->size = a->size - shift / BIGINT_CHUNK_BIT_SIZE;
     ADD_STAT_COLLECTION(BASIC_ADD_SIZE)
+    ADD_STAT_COLLECTION(BASIC_DIV)
 
     // Take the chunks of a that are not all completely shifted away
     a_idx = (int64_t)(shift / BIGINT_CHUNK_BIT_SIZE);
+    ADD_STAT_COLLECTION(BASIC_DIV)
     shift %= BIGINT_CHUNK_BIT_SIZE;
+    ADD_STAT_COLLECTION(BASIC_MOD)
+    ADD_STAT_COLLECTION(BASIC_MOD)
 
     // Store the last bit that is shifted away to implement rounding towards -inf
     last_bit = (a->chunks[a_idx] >> (shift - 1)) & 1;
+    ADD_STAT_COLLECTION(BASIC_BITWISE)
+    ADD_STAT_COLLECTION(BASIC_SHIFT)
     ADD_STAT_COLLECTION(BASIC_ADD_CHUNK)
 
     // Go upwards to avoid aliasing, since we always write r[i] and read
@@ -2266,22 +2942,29 @@ BigInt *big_int_srl_small(BigInt *r, BigInt *a, uint64_t shift)
     {
         ADD_STAT_COLLECTION(BASIC_ADD_OTHER)
         carry = (a->chunks[a_idx + 1] << (BIGINT_CHUNK_BIT_SIZE - shift)) % BIGINT_RADIX;
+        ADD_STAT_COLLECTION(BASIC_SHIFT)
+        ADD_STAT_COLLECTION(BASIC_MOD)
         ADD_STAT_COLLECTION(BASIC_ADD_OTHER)
+        ADD_STAT_COLLECTION(BASIC_MOD)
         r->chunks[i] = carry | (a->chunks[a_idx] >> shift);
+        ADD_STAT_COLLECTION(BASIC_BITWISE)
+        ADD_STAT_COLLECTION(BASIC_SHIFT)
         ++a_idx;
         ADD_STAT_COLLECTION(BASIC_ADD_OTHER)
     }
     // Write MSB entry
     r->chunks[r->size - 1] = a->chunks[a_idx] >> shift;
+    ADD_STAT_COLLECTION(BASIC_SHIFT)
     ADD_STAT_COLLECTION(BASIC_ADD_OTHER)
 
     // Add last bit (round towards -inf)
     if (a->sign && last_bit)
     {
         big_int_create_from_chunk(last_bit_bigint, last_bit, 0);
+        ADD_STAT_COLLECTION(BASIC_BITWISE)
         big_int_sub(r, r, last_bit_bigint);
     }
-
+    ADD_STAT_COLLECTION(BASIC_BITWISE)
     r->overflow = 0;
     r->sign = a->sign;
 
@@ -2482,6 +3165,7 @@ int8_t big_int_is_zero(BigInt *a)
     ADD_STAT_COLLECTION(BIGINT_TYPE_BIG_INT_IS_ZERO);
 
     return a->size == 1 && a->chunks[0] == 0;
+    ADD_STAT_COLLECTION(BASIC_BITWISE)
 }
 
 /**
@@ -2492,8 +3176,9 @@ int8_t big_int_is_zero(BigInt *a)
 int8_t big_int_is_odd(BigInt *a)
 {
     ADD_STAT_COLLECTION(BIGINT_TYPE_BIG_INT_IS_ODD);
-
+    ADD_STAT_COLLECTION(BASIC_BITWISE)
     return (a->size > 0) && (a->chunks[0] & 1);
+    ADD_STAT_COLLECTION(BASIC_BITWISE)
 }
 
 /**
@@ -2581,6 +3266,7 @@ EgcdResult *big_int_egcd(EgcdResult *r, BigInt *a, BigInt *b)
     if (big_int_is_zero(a) && big_int_is_zero(b))
     {
         big_int_create_from_chunk(x0, 0, 0);
+        ADD_STAT_COLLECTION(BASIC_BITWISE)
         big_int_create_from_chunk(y0, 0, 0);
         big_int_create_from_chunk(b_loc, 0, 0);
         return r;
@@ -2617,7 +3303,9 @@ EgcdResult *big_int_egcd(EgcdResult *r, BigInt *a, BigInt *b)
 
     // Account for signs of a and b
     x0->sign ^= a->sign;
+    ADD_STAT_COLLECTION(BASIC_BITWISE)
     y0->sign ^= b->sign;
+    ADD_STAT_COLLECTION(BASIC_BITWISE)
 
     return r;
 }
@@ -2652,7 +3340,7 @@ BigInt *big_int_chi(BigInt *r, BigInt *t, BigInt *q)
 
     if (!big_int_compare(r, big_int_zero) || !big_int_compare(r, big_int_one))
         return r;
-
+    ADD_STAT_COLLECTION(BASIC_BITWISE)
     // XXX: [Optimization] change return value to int8_t
     big_int_create_from_chunk(r, 1, 1); // r = -1
     return r;
