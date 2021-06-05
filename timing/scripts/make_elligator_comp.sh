@@ -92,8 +92,9 @@ BENCHMARKS="${BENCH_TYPES_INT}" \
 # Get log path
 NEW_LOG_DIR=$(cat "${LATEST_LOG_PATH}")
 LOG_SUBDIR="${LOG_SUBDIR}${SEP}${NEW_LOG_DIR}"
-LOGS_NAMES="${LOGS_NAMES}${SEP}V${VERSION}"
+LOGS_NAMES="${LOGS_NAMES}${SEP}gmp"
 SEP=";"
+echo $LOG_SUBDIR
 
 #
 # Sage benchmark
@@ -115,7 +116,7 @@ LOGS_NAMES="${LOGS_NAMES}${SEP}sage"
 echo -e "\t- Create benchmark plots"
 
 ${SCRIPTS_DIR}/gen_runtime_plots.py                                            \
-    --title "Runtime Comparison for differnt Elligator implementations (${SETS} sets, ${REPS} reps)" \
+    --title "Runtime Comparison for different Elligator implementations (${SETS} sets, ${REPS} reps)" \
     --plot_fname "${PLOTS_SUBDIR}/comparison_bar_log_scale.png"                \
     --logs_dir "${LOG_SUBDIR}"                                                 \
     --logs_names "${LOGS_NAMES}"                                               \
@@ -123,7 +124,7 @@ ${SCRIPTS_DIR}/gen_runtime_plots.py                                            \
     --log_yaxis
 
 ${SCRIPTS_DIR}/gen_runtime_plots.py                                            \
-    --title "Speedup Comparison for differnt Elligator implementations (${SETS} sets, ${REPS} reps)" \
+    --title "Speedup Comparison for different Elligator implementations (${SETS} sets, ${REPS} reps)" \
     --plot_fname "${PLOTS_SUBDIR}/speedup_comparison_bar_log_scale.png"                \
     --logs_dir "${LOG_SUBDIR}"                                                 \
     --logs_names "${LOGS_NAMES}"                                               \
