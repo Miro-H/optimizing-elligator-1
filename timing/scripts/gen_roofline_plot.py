@@ -41,6 +41,7 @@ Y_LABEL = "P(n) [flops/cycle]"
 BW_LINE_LABEL = "$P(n) \\leq \\beta \cdot I(n)$"
 
 ADD_RE_PATTERN = r"basic_add_.*, (\d+)"
+BITWISE_RE_PATTERN = r"basic_bitwise_.*, (\d+)"
 MUL_RE_PATTERN = r"basic_mul_.*, (\d+)"
 SHIFT_RE_PATTERN = r"basic_shift_.*, (\d+)"
 DIV_RE_PATTERN = r"basic_div_.*, (\d+)"
@@ -114,15 +115,16 @@ if __name__ == "__main__":
 
                 add_ops = re.compile(ADD_RE_PATTERN).findall(data)
                 shift_ops = re.compile(SHIFT_RE_PATTERN).findall(data)
+                bitwise_ops = re.compile(BITWISE_RE_PATTERN).findall(data)
                 mul_ops = re.compile(MUL_RE_PATTERN).findall(data)
                 div_ops = re.compile(DIV_RE_PATTERN).findall(data)
 
-                add_ops_tot = sum(map(int, add_ops))
+                alu_ops_tot = sum(map(int, add_ops)) + sum(map(int, bitwise_ops))
                 shift_ops_tot = sum(map(int, shift_ops))
                 mul_ops_tot = sum(map(int, mul_ops))
                 div_ops_tot = sum(map(int, div_ops))
 
-                ops_tot = add_ops_tot + shift_ops_tot + mul_ops_tot + div_ops_tot
+                ops_tot = alu_ops_tot + shift_ops_tot + mul_ops_tot + div_ops_tot
 
                 mapping_type = "map" if "string_to_point" in in_file else "inv map"
                 print(f"Instruction mix for {label}, {mapping_type}:")
@@ -130,7 +132,7 @@ if __name__ == "__main__":
                 if ops_tot == 0:
                     print(f"\t- NO OPS")
                 else:
-                    print(f"\t- ADD: {round(add_ops_tot/ops_tot, 2)}%")
+                    print(f"\t- ALU: {round(alu_ops_tot/ops_tot, 2)}%")
                     print(f"\t- SHIFT: {round(shift_ops_tot/ops_tot, 2)}%")
                     print(f"\t- MUL: {round(mul_ops_tot/ops_tot, 2)}%")
                     print(f"\t- DIV: {round(div_ops_tot/ops_tot, 2)}%")
