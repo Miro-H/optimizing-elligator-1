@@ -107,9 +107,10 @@ if __name__ == "__main__":
     dots_labels = []
 
     for i, logs_dir in enumerate(logs_dirs):
-        label = logs_names[i]
 
         for in_file in os.listdir(logs_dir):
+            label = logs_names[i]
+
             with open(os.path.join(logs_dir, in_file), "r") as in_fp:
                 data = in_fp.read()
 

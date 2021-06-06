@@ -85,7 +85,7 @@ echo "#####################################################################"
 ${SCRIPTS_DIR}/gen_roofline_plot.py                                            \
     --beta 8.9                                                                 \
     --pis "4;unvec" "16;vec"                                                   \
-    --max_x_val 256                                                            \
+    --max_x_val 1024                                                           \
     --title "Roofline Plot for Elligator V${MIN_VERSION} to V${MAX_VERSION}"   \
     --plot_fname "${PLOTS_SUBDIR}/roofline_plot_V${MIN_VERSION}_to_V${MAX_VERSION}.png" \
     --logs_names "${LOGS_NAMES}"                                               \
