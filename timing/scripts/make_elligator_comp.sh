@@ -118,6 +118,8 @@ if [[ ! -z $COMP_TO_SAGE ]]; then
     LOGS_NAMES="${LOGS_NAMES}${SEP}sage"
 fi
 
+echo -e "\t- Paths to log files: ${LOG_SUBDIR}"
+
 echo -e "\t- Create benchmark plots"
 
 ${SCRIPTS_DIR}/gen_runtime_plots.py                                            \
