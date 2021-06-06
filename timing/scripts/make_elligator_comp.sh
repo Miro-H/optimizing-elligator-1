@@ -13,8 +13,11 @@ fi
 SETS="${SETS:-$DEFAULT_SETS}"
 REPS="${REPS:-$DEFAULT_REPS}"
 
-MIN_VERSION=1
-MAX_VERSION=3
+DEFAULT_MIN_VERSION=1
+DEFAULT_MAX_VERSION=3
+
+MIN_VERSION="${MIN_VERSION:-$DEFAULT_MIN_VERSION}"
+MAX_VERSION="${MAX_VERSION:-$DEFAULT_MAX_VERSION}"
 COMP_NAME=comp_elligator
 
 SDIR=${TIMING_BASE_DIR}/src
@@ -66,13 +69,19 @@ SEP=""
 
 for VERSION in `seq ${MIN_VERSION} ${MAX_VERSION}`;
 do
+    if [ "${VERSION}" = "1" ]; then
+        MAKEFILE_RUNTIME_TARGETS="run-runtime-benchmark"
+    else
+        MAKEFILE_RUNTIME_TARGETS="run-runtime-benchmark run-runtime-benchmark-curve1174"
+    fi
+
     echo -e "\t\t- run-runtime-benchmark for V${VERSION}"
     BENCHMARKS="${BENCH_TYPES_INT}" \
         VERSION=${VERSION} \
         SETS=${SETS} \
         REPS=${REPS} \
         make \
-        run-runtime-benchmark run-runtime-benchmark-curve1174 >> ${COMP_LOG}
+        ${MAKEFILE_RUNTIME_TARGETS} >> ${COMP_LOG}
 
     # Get log path
     NEW_LOG_DIR=$(cat "${LATEST_LOG_PATH}")
@@ -84,37 +93,40 @@ done
 #
 # GMP benchmark
 #
-echo -e "\t\t- run-gmp-benchmark"
-BENCHMARKS="${BENCH_TYPES_INT}" \
-    VERSION=1 \
-    SETS=${SETS} \
-    REPS=${REPS} \
-    make \
-    run-gmp-benchmark >> ${COMP_LOG}
+if [[ -z $SKIP_COMP_TO_GMP ]]; then
+    echo -e "\t\t- run-gmp-benchmark"
+    BENCHMARKS="${BENCH_TYPES_INT}" \
+        VERSION=1 \
+        SETS=${SETS} \
+        REPS=${REPS} \
+        make \
+        run-gmp-benchmark >> ${COMP_LOG}
 
-# Get log path
-NEW_LOG_DIR=$(cat "${LATEST_LOG_PATH}")
-LOG_SUBDIR="${LOG_SUBDIR}${SEP}${NEW_LOG_DIR}"
-LOGS_NAMES="${LOGS_NAMES}${SEP}gmp"
-SEP=";"
-echo $LOG_SUBDIR
+    # Get log path
+    NEW_LOG_DIR=$(cat "${LATEST_LOG_PATH}")
+    LOG_SUBDIR="${LOG_SUBDIR}${SEP}${NEW_LOG_DIR}"
+    LOGS_NAMES="${LOGS_NAMES}${SEP}gmp"
+    SEP=";"
+fi
 
 #
 # Sage benchmark
 #
-echo -e "\t\t- running sage benchmark (this takes a while)"
-SAGE_ELLIGATOR_LDIR=${LDIR}/sage_elligator
-mkdir -p ${SAGE_ELLIGATOR_LDIR}
+if [[ ! -z $COMP_TO_SAGE ]]; then
+    echo -e "\t\t- running sage benchmark (this takes a while)"
+    SAGE_ELLIGATOR_LDIR=${LDIR}/sage_elligator
+    mkdir -p ${SAGE_ELLIGATOR_LDIR}
 
-sage ${SAGE_ELLIGATOR}                                                         \
-    --sets ${SETS}                                                             \
-    --reps ${REPS}                                                             \
-    --logs_dir ${SAGE_ELLIGATOR_LDIR} >> ${COMP_LOG}
+    sage ${SAGE_ELLIGATOR}                                                         \
+        --sets ${SETS}                                                             \
+        --reps ${REPS}                                                             \
+        --logs_dir ${SAGE_ELLIGATOR_LDIR} >> ${COMP_LOG}
 
-# Store log path
-NEW_LOG_DIR=$(cat "${LATEST_LOG_PATH}")
-LOG_SUBDIR="${LOG_SUBDIR}${SEP}${NEW_LOG_DIR}"
-LOGS_NAMES="${LOGS_NAMES}${SEP}sage"
+    # Store log path
+    NEW_LOG_DIR=$(cat "${LATEST_LOG_PATH}")
+    LOG_SUBDIR="${LOG_SUBDIR}${SEP}${NEW_LOG_DIR}"
+    LOGS_NAMES="${LOGS_NAMES}${SEP}sage"
+fi
 
 echo -e "\t- Create benchmark plots"
 
