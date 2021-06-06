@@ -2155,20 +2155,20 @@ void big_int_mul_4_fast(BigInt *r0, BigInt *r1, BigInt *r2, BigInt *r3,
     int64_t i, j;
     uint32_t a_size, b_size, r_size;
 
-    r0->sign = a0->sign ^ b0->sign;
-    r1->sign = a1->sign ^ b1->sign;
-    r2->sign = a2->sign ^ b2->sign;
-    r3->sign = a3->sign ^ b3->sign;
+    r0->sign = a0->sign ^ b0->sign; ADD_STAT_COLLECTION(BASIC_BITWISE)
+    r1->sign = a1->sign ^ b1->sign; ADD_STAT_COLLECTION(BASIC_BITWISE)
+    r2->sign = a2->sign ^ b2->sign; ADD_STAT_COLLECTION(BASIC_BITWISE)
+    r3->sign = a3->sign ^ b3->sign; ADD_STAT_COLLECTION(BASIC_BITWISE)
 
     // All have the same size (see assumptions)
     a_size = a0->size;
     b_size = b0->size;
-    r_size = a0->size + b0->size;
+    r_size = a0->size + b0->size; ADD_STAT_COLLECTION(BASIC_ADD_SIZE)
 
-    r0->size = r_size; ADD_STAT_COLLECTION(BASIC_ADD_SIZE)
-    r1->size = r_size; ADD_STAT_COLLECTION(BASIC_ADD_SIZE)
-    r2->size = r_size; ADD_STAT_COLLECTION(BASIC_ADD_SIZE)
-    r3->size = r_size; ADD_STAT_COLLECTION(BASIC_ADD_SIZE)
+    r0->size = r_size;
+    r1->size = r_size;
+    r2->size = r_size;
+    r3->size = r_size;
 
 
     dbl_chunk_size_t repacked_bigint_a[4 * BIGINT_FIXED_SIZE];
@@ -2179,16 +2179,16 @@ void big_int_mul_4_fast(BigInt *r0, BigInt *r1, BigInt *r2, BigInt *r3,
     memset((void *) repacked_bigint_r, 0, 4 * BIGINT_FIXED_SIZE_INTERNAL * BIGINT_INTERNAL_CHUNK_BYTE);
 
     for (i = 0; i < a_size; i++) {
-        repacked_bigint_a[4 * i + 0] = a0->chunks[i];
-        repacked_bigint_a[4 * i + 1] = a1->chunks[i];
-        repacked_bigint_a[4 * i + 2] = a2->chunks[i];
-        repacked_bigint_a[4 * i + 3] = a3->chunks[i];
+        repacked_bigint_a[4 * i + 0] = a0->chunks[i]; 
+        repacked_bigint_a[4 * i + 1] = a1->chunks[i]; ADD_STAT_COLLECTION(BASIC_ADD_OTHER)
+        repacked_bigint_a[4 * i + 2] = a2->chunks[i]; ADD_STAT_COLLECTION(BASIC_ADD_OTHER)
+        repacked_bigint_a[4 * i + 3] = a3->chunks[i]; ADD_STAT_COLLECTION(BASIC_ADD_OTHER)
     }
     for (i = 0; i < b_size; i++) {
-        repacked_bigint_b[4 * i + 0] = b0->chunks[i];
-        repacked_bigint_b[4 * i + 1] = b1->chunks[i];
-        repacked_bigint_b[4 * i + 2] = b2->chunks[i];
-        repacked_bigint_b[4 * i + 3] = b3->chunks[i];
+        repacked_bigint_b[4 * i + 0] = b0->chunks[i]; 
+        repacked_bigint_b[4 * i + 1] = b1->chunks[i]; ADD_STAT_COLLECTION(BASIC_ADD_OTHER)
+        repacked_bigint_b[4 * i + 2] = b2->chunks[i]; ADD_STAT_COLLECTION(BASIC_ADD_OTHER)
+        repacked_bigint_b[4 * i + 3] = b3->chunks[i]; ADD_STAT_COLLECTION(BASIC_ADD_OTHER)
     }
 
     __m256i carry;
@@ -2201,31 +2201,31 @@ void big_int_mul_4_fast(BigInt *r0, BigInt *r1, BigInt *r2, BigInt *r3,
 
         for (j = 0; j < 4 * a_size; j += 4) { ADD_STAT_COLLECTION(BASIC_ADD_OTHER)
 
-            __m256i r_ = _mm256_loadu_si256((__m256i *)(repacked_bigint_r + i + j));
-            __m256i a_ = _mm256_loadu_si256((__m256i *)(repacked_bigint_a + j));
-            __m256i b_ = _mm256_loadu_si256((__m256i *)(repacked_bigint_b + i));
+            __m256i r_ = _mm256_loadu_si256((__m256i *)(repacked_bigint_r + i + j)); ADD_STAT_COLLECTION(BASIC_ADD_OTHER)
+            __m256i a_ = _mm256_loadu_si256((__m256i *)(repacked_bigint_a + j)); ADD_STAT_COLLECTION(BASIC_ADD_OTHER)
+            __m256i b_ = _mm256_loadu_si256((__m256i *)(repacked_bigint_b + i)); ADD_STAT_COLLECTION(BASIC_ADD_OTHER)
 
-            __m256i mul = _mm256_mul_epu32(a_, b_);
-            carry = _mm256_add_epi64(carry, r_);
-            carry = _mm256_add_epi64(carry, mul);
+            __m256i mul = _mm256_mul_epu32(a_, b_); ADD_STAT_COLLECTION(AVX_MUL)
+            carry = _mm256_add_epi64(carry, r_); ADD_STAT_COLLECTION(AVX_ADD)
+            carry = _mm256_add_epi64(carry, mul); ADD_STAT_COLLECTION(AVX_ADD)
 
-            r_ = _mm256_and_si256(carry, mod_);
-            _mm256_storeu_si256((__m256i *)(repacked_bigint_r + i + j), r_);
+            r_ = _mm256_and_si256(carry, mod_); ADD_STAT_COLLECTION(AVX_OTHER)
+            _mm256_storeu_si256((__m256i *)(repacked_bigint_r + i + j), r_); ADD_STAT_COLLECTION(BASIC_ADD_OTHER)
 
 
-            carry = _mm256_srli_epi64(carry, BIGINT_CHUNK_BIT_SIZE);
+            carry = _mm256_srli_epi64(carry, BIGINT_CHUNK_BIT_SIZE); ADD_STAT_COLLECTION(AVX_OTHER)
 
-            _mm256_storeu_si256((__m256i *)(repacked_bigint_r + i + 4 * a_size), carry);
+            _mm256_storeu_si256((__m256i *)(repacked_bigint_r + i + 4 * a_size), carry); ADD_STAT_COLLECTION(BASIC_ADD_OTHER)
         }
 
     }
 
     for (i = 0; i < r_size; i++)
     {
-        r0->chunks[i] = repacked_bigint_r[4 * i + 0];
-        r1->chunks[i] = repacked_bigint_r[4 * i + 1];
-        r2->chunks[i] = repacked_bigint_r[4 * i + 2];
-        r3->chunks[i] = repacked_bigint_r[4 * i + 3];
+        r0->chunks[i] = repacked_bigint_r[4 * i + 0]; ADD_STAT_COLLECTION(BASIC_ADD_OTHER) 
+        r1->chunks[i] = repacked_bigint_r[4 * i + 1]; ADD_STAT_COLLECTION(BASIC_ADD_OTHER)
+        r2->chunks[i] = repacked_bigint_r[4 * i + 2]; ADD_STAT_COLLECTION(BASIC_ADD_OTHER)
+        r3->chunks[i] = repacked_bigint_r[4 * i + 3]; ADD_STAT_COLLECTION(BASIC_ADD_OTHER)
     }
 
 

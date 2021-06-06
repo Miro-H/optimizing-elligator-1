@@ -91,6 +91,10 @@ ifeq ($(OPT_FLAGS),)
 endif
 CFLAGS += $(OPT_FLAGS)
 
+ifeq ($(VERSION), 3)
+	CFLAGS += -mavx2
+endif
+
 export CFLAGS
 
 #
