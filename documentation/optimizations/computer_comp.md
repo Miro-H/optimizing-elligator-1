@@ -14,7 +14,8 @@ git pull
 ## Chris
 Laptop model:
 ```
-TODO
+AMD Ryzen 9 3900X
+3200 MHz RAM
 ```
 
 Command to create logs for Elligator V1 to V3:
