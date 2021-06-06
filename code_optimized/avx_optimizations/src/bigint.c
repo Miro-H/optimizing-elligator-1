@@ -2005,147 +2005,6 @@ void big_int_mul_4(BigInt *r0, BigInt *r1, BigInt *r2, BigInt *r3,
  *      \assumption a<i>->size = a<j>->size
  *      \assumption b<i>->size = b<j>->size
  */
-void big_int_mul_4_fast2(BigInt *r0, BigInt *r1, BigInt *r2, BigInt *r3,
-                        BigInt *a0, BigInt *a1, BigInt *a2, BigInt *a3,
-                        BigInt *b0, BigInt *b1, BigInt *b2, BigInt *b3)
-{
-    ADD_STAT_COLLECTION(BIGINT_TYPE_BIG_INT_MUL_4_FAST);
-
-    //__m256i a_sign;
-    //__m256i b_sign;
-    //__m256i r_sign;
-
-    //__m256i a_size;
-    //__m256i b_size;
-    //__m256i r_size;
-    //__m256i carry;
-
-    int64_t i, j;
-    dbl_chunk_size_t carry0;
-    dbl_chunk_size_t carry1;
-    dbl_chunk_size_t carry2;
-    dbl_chunk_size_t carry3;
-
-    uint32_t a_size, b_size, r_size;
-
-    //a_sign = _mm256_set_epi64x(a0->sign, a1->sign, a2->sign, a3->sign);
-    //b_sign = _mm256_set_epi64x(b0->sign, b1->sign, b2->sign, b3->sign);
-
-    //a_size = _mm256_set_epi64x(a0->size, a1->size, a2->size, a3->size);
-    //b_size = _mm256_set_epi64x(b0->size, b1->size, b2->size, b3->size);
-
-    *r0 = (BigInt) {0};
-    *r1 = (BigInt) {0};
-    *r2 = (BigInt) {0};
-    *r3 = (BigInt) {0};
-
-    r0->sign = a0->sign ^ b0->sign;
-    r1->sign = a1->sign ^ b1->sign;
-    r2->sign = a2->sign ^ b2->sign;
-    r3->sign = a3->sign ^ b3->sign;
-
-    //r_sign = _mm256_and_si256(a_sign, b_sign);
-
-    // All have the same size (see assumptions)
-    a_size = BIGINT_FIXED_SIZE;
-    b_size = BIGINT_FIXED_SIZE;
-    r_size = 2 * BIGINT_FIXED_SIZE;
-
-    r0->size = r_size; ADD_STAT_COLLECTION(BASIC_ADD_SIZE)
-    r1->size = r_size; ADD_STAT_COLLECTION(BASIC_ADD_SIZE)
-    r2->size = r_size; ADD_STAT_COLLECTION(BASIC_ADD_SIZE)
-    r3->size = r_size; ADD_STAT_COLLECTION(BASIC_ADD_SIZE)
-
-    //r_size = _mm256_add_epi64(a_size, b_size);
-
-    for (i = 0; i < b_size; ++i) { ADD_STAT_COLLECTION(BASIC_ADD_OTHER)
-        // shortcut for zero chunk
-        // XXX: @Chris, it's a bit unfortunate, but it seems to me that this is
-        // a price we need to pay when we operate on four values in parallel:
-        // we can only take the shortcut when all of them have it.
-        // On the other hand, this shortcut is probably (?) not often taken in our code
-        // so maybe that doesn't matter at all.
-        if (b0->chunks[i] == 0 && b1->chunks[i] == 0 && b2->chunks[i] == 0 && b3->chunks[i] == 0)
-        {
-            r0->chunks[i + a_size] = 0; ADD_STAT_COLLECTION(BASIC_ADD_OTHER)
-            r1->chunks[i + a_size] = 0; ADD_STAT_COLLECTION(BASIC_ADD_OTHER)
-            r2->chunks[i + a_size] = 0; ADD_STAT_COLLECTION(BASIC_ADD_OTHER)
-            r3->chunks[i + a_size] = 0; ADD_STAT_COLLECTION(BASIC_ADD_OTHER)
-        }
-        else {
-            // Multiply and add chunks
-            carry0 = 0;
-            carry1 = 0;
-            carry2 = 0;
-            carry3 = 0;
-
-            //carry = _mm256_setzero_si256();
-
-            for (j = 0; j < a_size; ++j) { ADD_STAT_COLLECTION(BASIC_ADD_OTHER)
-                carry0 += a0->chunks[j] * b0->chunks[i] + r0->chunks[i + j];
-                carry1 += a1->chunks[j] * b1->chunks[i] + r1->chunks[i + j];
-                carry2 += a2->chunks[j] * b2->chunks[i] + r2->chunks[i + j];
-                carry3 += a3->chunks[j] * b3->chunks[i] + r3->chunks[i + j];
-
-                ADD_STAT_COLLECTION(BASIC_ADD_CHUNK) ADD_STAT_COLLECTION(BASIC_ADD_CHUNK)
-                ADD_STAT_COLLECTION(BASIC_ADD_OTHER) ADD_STAT_COLLECTION(BASIC_MUL_CHUNK)
-                ADD_STAT_COLLECTION(BASIC_ADD_CHUNK) ADD_STAT_COLLECTION(BASIC_ADD_CHUNK)
-                ADD_STAT_COLLECTION(BASIC_ADD_OTHER) ADD_STAT_COLLECTION(BASIC_MUL_CHUNK)
-                ADD_STAT_COLLECTION(BASIC_ADD_CHUNK) ADD_STAT_COLLECTION(BASIC_ADD_CHUNK)
-                ADD_STAT_COLLECTION(BASIC_ADD_OTHER) ADD_STAT_COLLECTION(BASIC_MUL_CHUNK)
-                ADD_STAT_COLLECTION(BASIC_ADD_CHUNK) ADD_STAT_COLLECTION(BASIC_ADD_CHUNK)
-                ADD_STAT_COLLECTION(BASIC_ADD_OTHER) ADD_STAT_COLLECTION(BASIC_MUL_CHUNK)
-
-                r0->chunks[i + j] = carry0 & BIGINT_RADIX_FOR_MOD; ADD_STAT_COLLECTION(BASIC_ADD_OTHER)
-                r1->chunks[i + j] = carry1 & BIGINT_RADIX_FOR_MOD; ADD_STAT_COLLECTION(BASIC_ADD_OTHER)
-                r2->chunks[i + j] = carry2 & BIGINT_RADIX_FOR_MOD; ADD_STAT_COLLECTION(BASIC_ADD_OTHER)
-                r3->chunks[i + j] = carry3 & BIGINT_RADIX_FOR_MOD; ADD_STAT_COLLECTION(BASIC_ADD_OTHER)
-
-                carry0 >>= BIGINT_CHUNK_BIT_SIZE;
-                carry1 >>= BIGINT_CHUNK_BIT_SIZE;
-                carry2 >>= BIGINT_CHUNK_BIT_SIZE;
-                carry3 >>= BIGINT_CHUNK_BIT_SIZE;
-                //carry = _mm256_sll_epi64(carry, 1)
-
-                r0->chunks[i + a_size] = carry0; ADD_STAT_COLLECTION(BASIC_ADD_OTHER)
-                r1->chunks[i + a_size] = carry1; ADD_STAT_COLLECTION(BASIC_ADD_OTHER)
-                r2->chunks[i + a_size] = carry2; ADD_STAT_COLLECTION(BASIC_ADD_OTHER)
-                r3->chunks[i + a_size] = carry3; ADD_STAT_COLLECTION(BASIC_ADD_OTHER)
-            }
-        }
-    }
-
-    // Prune leading zeros
-    for (i = r_size - 1; i > 0; --i) { ADD_STAT_COLLECTION(BASIC_ADD_OTHER)
-        if (r0->chunks[i])
-            break;
-        r0->size--; ADD_STAT_COLLECTION(BASIC_ADD_SIZE)
-    }
-
-    for (i = r_size - 1; i > 0; --i) { ADD_STAT_COLLECTION(BASIC_ADD_OTHER)
-        if (r1->chunks[i])
-            break;
-        r1->size--; ADD_STAT_COLLECTION(BASIC_ADD_SIZE)
-    }
-
-    for (i = r_size - 1; i > 0; --i) { ADD_STAT_COLLECTION(BASIC_ADD_OTHER)
-        if (r2->chunks[i])
-            break;
-        r2->size--; ADD_STAT_COLLECTION(BASIC_ADD_SIZE)
-    }
-
-    for (i = r_size - 1; i > 0; --i) { ADD_STAT_COLLECTION(BASIC_ADD_OTHER)
-        if (r3->chunks[i])
-            break;
-        r3->size--; ADD_STAT_COLLECTION(BASIC_ADD_SIZE)
-    }
-
-}
-
-
-
-
-
 void big_int_mul_4_fast(BigInt *r0, BigInt *r1, BigInt *r2, BigInt *r3,
                         BigInt *a0, BigInt *a1, BigInt *a2, BigInt *a3,
                         BigInt *b0, BigInt *b1, BigInt *b2, BigInt *b3)
@@ -2179,13 +2038,13 @@ void big_int_mul_4_fast(BigInt *r0, BigInt *r1, BigInt *r2, BigInt *r3,
     memset((void *) repacked_bigint_r, 0, 4 * BIGINT_FIXED_SIZE_INTERNAL * BIGINT_INTERNAL_CHUNK_BYTE);
 
     for (i = 0; i < a_size; i++) {
-        repacked_bigint_a[4 * i + 0] = a0->chunks[i]; 
+        repacked_bigint_a[4 * i + 0] = a0->chunks[i];
         repacked_bigint_a[4 * i + 1] = a1->chunks[i]; ADD_STAT_COLLECTION(BASIC_ADD_OTHER)
         repacked_bigint_a[4 * i + 2] = a2->chunks[i]; ADD_STAT_COLLECTION(BASIC_ADD_OTHER)
         repacked_bigint_a[4 * i + 3] = a3->chunks[i]; ADD_STAT_COLLECTION(BASIC_ADD_OTHER)
     }
     for (i = 0; i < b_size; i++) {
-        repacked_bigint_b[4 * i + 0] = b0->chunks[i]; 
+        repacked_bigint_b[4 * i + 0] = b0->chunks[i];
         repacked_bigint_b[4 * i + 1] = b1->chunks[i]; ADD_STAT_COLLECTION(BASIC_ADD_OTHER)
         repacked_bigint_b[4 * i + 2] = b2->chunks[i]; ADD_STAT_COLLECTION(BASIC_ADD_OTHER)
         repacked_bigint_b[4 * i + 3] = b3->chunks[i]; ADD_STAT_COLLECTION(BASIC_ADD_OTHER)
@@ -2222,7 +2081,7 @@ void big_int_mul_4_fast(BigInt *r0, BigInt *r1, BigInt *r2, BigInt *r3,
 
     for (i = 0; i < r_size; i++)
     {
-        r0->chunks[i] = repacked_bigint_r[4 * i + 0]; ADD_STAT_COLLECTION(BASIC_ADD_OTHER) 
+        r0->chunks[i] = repacked_bigint_r[4 * i + 0]; ADD_STAT_COLLECTION(BASIC_ADD_OTHER)
         r1->chunks[i] = repacked_bigint_r[4 * i + 1]; ADD_STAT_COLLECTION(BASIC_ADD_OTHER)
         r2->chunks[i] = repacked_bigint_r[4 * i + 2]; ADD_STAT_COLLECTION(BASIC_ADD_OTHER)
         r3->chunks[i] = repacked_bigint_r[4 * i + 3]; ADD_STAT_COLLECTION(BASIC_ADD_OTHER)
@@ -2254,16 +2113,6 @@ void big_int_mul_4_fast(BigInt *r0, BigInt *r1, BigInt *r2, BigInt *r3,
         r3->size--; ADD_STAT_COLLECTION(BASIC_ADD_SIZE)
     }
 }
-
-
-
-
-
-
-
-
-
-
 
 
 // === === === === === === === === === === === === === === === === === === ===
