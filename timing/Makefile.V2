@@ -10,11 +10,11 @@ IDIR_BENCHED		= $(BENCHED_ROOT_DIR)/include
 CFLAGS += -I$(IDIR_BENCHED) -I$(IDIR)
 
 ifeq ($(VERSION),2)
-	CFLAGS += -mavx -march=native
+	CFLAGS += -march=native
 endif
 
 ifeq ($(VERSION),3)
-	CFLAGS += -mavx -march=native
+	CFLAGS += -mavx2 -march=native
 endif
 
 
