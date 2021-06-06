@@ -260,3 +260,19 @@ Command:
 ```
 MAX_VERSION=2 PATTERN=".*(basic_add_chunk|alloc|memcpy|destroy|copy).*" ./scripts/make_elligator_stats_comp.sh
 ```
+
+## Commands to run for final plots
+Comparison V1 to V3:
+```
+SKIP_COMP_TO_GMP=1 SETS=10 REPS=10000 ./scripts/make_elligator_comp.sh
+```
+
+Comparison V3 to gmp:
+```
+MIN_VERSION=3 SETS=10 REPS=10000 ./scripts/make_elligator_comp.sh
+```
+
+Speedup V1 to V2 of using Curve1174-specific functions
+```
+SETS=10 REPS=10000 ./scripts/make_curve1174_vs_bigint_comp.sh
+```
