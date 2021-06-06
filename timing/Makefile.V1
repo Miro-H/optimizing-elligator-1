@@ -1,6 +1,6 @@
 ODIR				= src/obj
 
-BENCHED_ROOT_DIR	=../code_unoptimized
+BENCHED_ROOT_DIR	= ../code_unoptimized
 SRC_BENCHED			= $(BENCHED_ROOT_DIR)/src
 ODIR_BENCHED		= $(SRC_BENCHED)/obj
 IDIR_BENCHED		= $(BENCHED_ROOT_DIR)/include
