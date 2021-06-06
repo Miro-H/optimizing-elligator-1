@@ -29,11 +29,8 @@ SAGE_ELLIGATOR=${TIMING_BASE_DIR}/scripts/runtime_elligator.sage
 LATEST_LOG_PATH=${TIMING_BASE_DIR}/logs/latest_log_path.txt
 
 BENCH_TYPES=\
-"BENCH_TYPE_CURVE_1174_POW_Q_M2"
-
-# BENCH_TYPES=\
-# "BENCH_TYPE_ELLIGATOR1_STR2PNT\
-#  BENCH_TYPE_ELLIGATOR1_PNT2STR"
+"BENCH_TYPE_ELLIGATOR1_STR2PNT\
+ BENCH_TYPE_ELLIGATOR1_PNT2STR"
 
 echo "#####################################################################"
 echo "#       Generate comparison plots for Elligator from V${MIN_VERSION} to V${MAX_VERSION}       #"
