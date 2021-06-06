@@ -40,11 +40,11 @@ Y_LABEL = "P(n) [flops/cycle]"
 
 BW_LINE_LABEL = "$P(n) \\leq \\beta \cdot I(n)$"
 
-ADD_RE_PATTERN = r"basic_add_.*, (\d+)"
-BITWISE_RE_PATTERN = r"basic_bitwise_.*, (\d+)"
-MUL_RE_PATTERN = r"basic_mul_.*, (\d+)"
-SHIFT_RE_PATTERN = r"basic_shift_.*, (\d+)"
-DIV_RE_PATTERN = r"basic_div_.*, (\d+)"
+ALU_RE_PATTERN = r"basic_(add|bitwise).*, (\d+)"
+BITWISE_RE_PATTERN = r"basic_bitwise.*, (\d+)"
+MUL_RE_PATTERN = r"basic_mul.*, (\d+)"
+SHIFT_RE_PATTERN = r"basic_shift.*, (\d+)"
+DIV_RE_PATTERN = r"basic_div.*, (\d+)"
 
 
 if __name__ == "__main__":
@@ -113,13 +113,12 @@ if __name__ == "__main__":
             with open(os.path.join(logs_dir, in_file), "r") as in_fp:
                 data = in_fp.read()
 
-                add_ops = re.compile(ADD_RE_PATTERN).findall(data)
+                alu_ops = re.compile(ALU_RE_PATTERN).findall(data)
                 shift_ops = re.compile(SHIFT_RE_PATTERN).findall(data)
-                bitwise_ops = re.compile(BITWISE_RE_PATTERN).findall(data)
                 mul_ops = re.compile(MUL_RE_PATTERN).findall(data)
                 div_ops = re.compile(DIV_RE_PATTERN).findall(data)
 
-                alu_ops_tot = sum(map(int, add_ops)) + sum(map(int, bitwise_ops))
+                alu_ops_tot = sum(map(lambda x: int(x[1]), alu_ops))
                 shift_ops_tot = sum(map(int, shift_ops))
                 mul_ops_tot = sum(map(int, mul_ops))
                 div_ops_tot = sum(map(int, div_ops))
@@ -140,9 +139,11 @@ if __name__ == "__main__":
                 # Instruction mix indep
                 if "string_to_point" in in_file:
                     # 1 BigInt, 1 curve
+                    label += " str2pnt"
                     read_bw = 12672
                 elif "point_to_string" in in_file:
                     # 1 curve point, 1 curve
+                    label += " pnt2str"
                     read_bw = 13824
                 else:
                     print("ERROR: invalid log file!")
@@ -194,7 +195,7 @@ if __name__ == "__main__":
         color_idx = (color_idx + 1) % len(colors)
 
     # Plot dots
-    markers = ["x", "+", "1", "2", "3", "4"]
+    markers = ["x", "1", "+", "2", "|", "3", "4"]
     for i in range(len(dots_x)):
         ax.plot(dots_x[i], dots_y[i], marker=markers[i],
             color=colors[color_idx], label=dots_labels[i], linestyle="None")
