@@ -35,14 +35,14 @@ PLOTS_DEFAULT_PATH  = "./plot.png"
 TITLE_FONT_SIZE = 20
 LABEL_FONT_SIZE = 12
 
-X_LABEL = "I(n) [flops/byte]"
-Y_LABEL = "P(n) [flops/cycle]"
+X_LABEL = "I(n) [iops/byte]"
+Y_LABEL = "P(n) [iops/cycle]"
 
 BW_LINE_LABEL = "$P(n) \\leq \\beta \cdot I(n)$"
 
-ALU_RE_PATTERN = r"basic_(add|bitwise).*, (\d+)"
+ALU_RE_PATTERN = r"(basic|avx)_(add|bitwise|other).*, (\d+)"
 BITWISE_RE_PATTERN = r"basic_bitwise.*, (\d+)"
-MUL_RE_PATTERN = r"basic_mul.*, (\d+)"
+MUL_RE_PATTERN = r"(basic|avx)_mul.*, (\d+)"
 SHIFT_RE_PATTERN = r"basic_shift.*, (\d+)"
 DIV_RE_PATTERN = r"basic_div.*, (\d+)"
 
@@ -119,9 +119,9 @@ if __name__ == "__main__":
                 mul_ops = re.compile(MUL_RE_PATTERN).findall(data)
                 div_ops = re.compile(DIV_RE_PATTERN).findall(data)
 
-                alu_ops_tot = sum(map(lambda x: int(x[1]), alu_ops))
+                alu_ops_tot = sum(map(lambda x: int(x[2]), alu_ops))
                 shift_ops_tot = sum(map(int, shift_ops))
-                mul_ops_tot = sum(map(int, mul_ops))
+                mul_ops_tot = sum(map(lambda x: int(x[1]), mul_ops))
                 div_ops_tot = sum(map(int, div_ops))
 
                 ops_tot = alu_ops_tot + shift_ops_tot + mul_ops_tot + div_ops_tot
@@ -198,7 +198,7 @@ if __name__ == "__main__":
     # Plot dots
     markers = ["x", "1", "+", "2", "|", "3", "4"]
     for i in range(len(dots_x)):
-        ax.plot(dots_x[i], dots_y[i], marker=markers[i],
+        ax.plot(dots_x[i], dots_y[i], marker=markers[i], markersize=10,
             color=colors[color_idx], label=dots_labels[i], linestyle="None")
         color_idx = (color_idx + 1) % len(colors)
 
