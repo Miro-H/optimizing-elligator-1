@@ -64,21 +64,14 @@ LOG_SUBDIR=""
 LOGS_NAMES=""
 SEP=""
 
-for VERSION in `seq ${MIN_VERSION} ${MAX_VERSION}`;
-do
-    if [ "${VERSION}" = "1" ]; then
-        MAKEFILE_RUNTIME_TARGETS="run-runtime-benchmark"
-    else
-        MAKEFILE_RUNTIME_TARGETS="run-runtime-benchmark run-runtime-benchmark-curve1174"
-    fi
-
+for VERSION in `seq ${MIN_VERSION} ${MAX_VERSION}`; do
     echo -e "\t\t- run-runtime-benchmark for V${VERSION}"
     BENCHMARKS="${BENCH_TYPES_INT}" \
         VERSION=${VERSION} \
         SETS=${SETS} \
         REPS=${REPS} \
         make \
-        ${MAKEFILE_RUNTIME_TARGETS} >> ${COMP_LOG}
+        run-runtime-benchmark >> ${COMP_LOG}
 
     # Get log path
     NEW_LOG_DIR=$(cat "${LATEST_LOG_PATH}")

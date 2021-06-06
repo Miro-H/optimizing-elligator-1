@@ -150,7 +150,7 @@ def plot(plot_title, plot_fname, log_xaxis, log_yaxis, bar_plot, speedup_plot, l
         y_label = "speedup"
     ax.set_ylabel(y_label, rotation=0, loc="top")
 
-    if nr_of_versions > 1 and not speedup_plot:
+    if nr_of_versions > 1:
         ax.legend()
 
         legend = ax.get_legend()

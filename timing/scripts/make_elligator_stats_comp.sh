@@ -71,8 +71,6 @@ do
     LOG_SUBDIR="${LOG_SUBDIR}${SEP}${NEW_LOG_DIR}"
     LOGS_NAMES="${LOGS_NAMES}${SEP}V${VERSION}"
     SEP=";"
-
-    # Extract roofline values
 done
 
 echo -e "\t- Create benchmark plots"
