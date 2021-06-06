@@ -254,3 +254,9 @@ Pow for special exponent:
             - BigInt: `64B + 17 * 64 B = 1152 B` (64B metadata, 17 chunks with 64B)
             - curve: 10 BigInts, i.e., `11520 B`
             - point: 2 BigInts, i.e., `2304 B`
+
+## Create mem ops plot
+Command:
+```
+MAX_VERSION=2 PATTERN=".*(basic_add_chunk|alloc|memcpy|destroy|copy).*" ./scripts/make_elligator_stats_comp.sh
+```

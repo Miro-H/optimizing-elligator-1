@@ -4,7 +4,12 @@ SCRIPTS_DIR=$(cd $(dirname $0) && pwd)
 TIMING_BASE_DIR=$(dirname ${SCRIPTS_DIR})
 
 COMP_NAME=comp_square_stats
-VERSION=3
+
+DEFAULT_VERSION=3
+if [[ -z $VERSION ]]; then
+    echo "WARNING: using default value for VERSION (V${VERSION})"
+fi
+VERSION="${VERSION:-$DEFAULT_VERSION}"
 
 SDIR=${TIMING_BASE_DIR}/src
 IDIR=${TIMING_BASE_DIR}/include
