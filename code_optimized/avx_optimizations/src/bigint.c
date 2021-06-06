@@ -1986,6 +1986,11 @@ void big_int_mul_4(BigInt *r0, BigInt *r1, BigInt *r2, BigInt *r3,
         && b0->size == b1->size && b1->size == b2->size && b2->size == b3->size)
     {
         big_int_mul_4_fast(r0, r1, r2, r3, a0, a1, a2, a3, b0, b1, b2, b3);
+        DEBUG_BIGINT(r0, "v1 r0 ")
+        //DEBUG_BIGINT(r1, "v1 r1 ")
+        //DEBUG_BIGINT(r2, "v1 r2 ")
+        //DEBUG_BIGINT(r3, "v1 r3 ")
+
     }
     else {
         big_int_mul(r0, a0, b0);
@@ -1993,6 +1998,16 @@ void big_int_mul_4(BigInt *r0, BigInt *r1, BigInt *r2, BigInt *r3,
         big_int_mul(r2, a2, b2);
         big_int_mul(r3, a3, b3);
     }
+    big_int_mul(r0, a0, b0);
+    //big_int_mul(r1, a1, b1);
+    //big_int_mul(r2, a2, b2);
+    //big_int_mul(r3, a3, b3);
+    DEBUG_BIGINT(r0, "v2 r0 ")
+    //DEBUG_BIGINT(r1, "v2 r1 ")
+    //DEBUG_BIGINT(r2, "v2 r2 ")
+    //DEBUG_BIGINT(r3, "v2 r3 ")
+
+
 }
 
 /**
@@ -2047,9 +2062,9 @@ void big_int_mul_4_fast2(BigInt *r0, BigInt *r1, BigInt *r2, BigInt *r3,
     //r_sign = _mm256_and_si256(a_sign, b_sign);
 
     // All have the same size (see assumptions)
-    a_size = a0->size;
-    b_size = b0->size;
-    r_size = a0->size + b0->size;
+    a_size = BIGINT_FIXED_SIZE;
+    b_size = BIGINT_FIXED_SIZE;
+    r_size = 2 * BIGINT_FIXED_SIZE;
 
     r0->size = r_size; ADD_STAT_COLLECTION(BASIC_ADD_SIZE)
     r1->size = r_size; ADD_STAT_COLLECTION(BASIC_ADD_SIZE)
@@ -2139,6 +2154,7 @@ void big_int_mul_4_fast2(BigInt *r0, BigInt *r1, BigInt *r2, BigInt *r3,
             break;
         r3->size--; ADD_STAT_COLLECTION(BASIC_ADD_SIZE)
     }
+    
 }
 
 
@@ -2175,9 +2191,9 @@ void big_int_mul_4_fast(BigInt *r0, BigInt *r1, BigInt *r2, BigInt *r3,
     r3->size = r_size; ADD_STAT_COLLECTION(BASIC_ADD_SIZE)
 
 
-    dbl_chunk_size_t repacked_bigint_a[4*a_size];
-    dbl_chunk_size_t repacked_bigint_b[4*b_size]; 
-    dbl_chunk_size_t repacked_bigint_r[4*r_size];
+    dbl_chunk_size_t repacked_bigint_a[4 * BIGINT_FIXED_SIZE];
+    dbl_chunk_size_t repacked_bigint_b[4 * BIGINT_FIXED_SIZE]; 
+    dbl_chunk_size_t repacked_bigint_r[4 * BIGINT_FIXED_SIZE_INTERNAL];
     
     *repacked_bigint_a = (dbl_chunk_size_t) {0};
     *repacked_bigint_b = (dbl_chunk_size_t) {0};
