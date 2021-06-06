@@ -14,8 +14,9 @@ git pull
 ## Chris
 Laptop model:
 ```
-AMD Ryzen 9 3900X
+AMD Ryzen 9 3900X @4.1GHz
 3200 MHz RAM
+Win10 WSL Ubuntu
 ```
 
 Command to create logs for Elligator V1 to V3:
