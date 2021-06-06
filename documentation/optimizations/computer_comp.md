@@ -4,6 +4,13 @@ Please run the following commands on your device, while it is **idle** and with 
 
 After running the command, you need to send me the log files (see below).
 
+## Preparation
+Make sure you are on `dev` and have the latest version of the code:
+```
+git checkout dev
+git pull
+```
+
 ## Chris
 Laptop model:
 ```
