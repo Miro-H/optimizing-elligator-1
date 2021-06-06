@@ -12,6 +12,9 @@ PDIR=${TIMING_BASE_DIR}/plots/local/${COMP_NAME}
 GEN_SCRIPT=${TIMING_BASE_DIR}/../scripts/gen_types.py
 LATEST_LOG_PATH=${TIMING_BASE_DIR}/logs/latest_log_path.txt
 
+DEFAULT_PATTERN=".*"
+PATTERN="${PATTERN:-$DEFAULT_PATTERN}"
+
 MIN_VERSION=1
 MAX_VERSION=3
 
@@ -76,6 +79,7 @@ ${SCRIPTS_DIR}/gen_stats_plots.py                                              \
     --plot_dir "${PLOTS_SUBDIR}"                                               \
     --logs_dir "${LOG_SUBDIR}"                                                 \
     --logs_names "${LOGS_NAMES}"                                               \
+    --pattern "${PATTERN}"                                                     \
     --bar_plot                                                                 \
     --log_yaxis
 
