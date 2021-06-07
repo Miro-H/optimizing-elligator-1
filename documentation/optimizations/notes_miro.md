@@ -284,3 +284,16 @@ $ ../scripts/gen_types.py --src_file src/runtime_benchmark_curve1174.c  src/runt
 
 $ SETS=100 REPS=100000 BENCHMARKS="2 3 6" VERSION=3 make plot-runtime-benchmark
 ```
+
+Plot heap vs. stack hacked back to v2.0:
+- Checkout branch `v2.0_backported_plotting`
+- Run `SKIP_COMP_TO_GMP=1 SETS=10 REPS=10 MAX_VERSION=2 ./scripts/make_elligator_comp.sh`
+- Generate plots manually, as follows:
+    - Runtime:
+        ```
+        ./scripts/gen_runtime_plots.py --title "Heap vs Stack Runtime Comparison for Elligator (10 sets, 10000 reps)" --plot_fname /Users/MiroETH/Documents/ETH/Msc/Semester_4/Advanced_Systems_Lab_Pueschel_263-0007-00/Project/team36/timing/plots/presentation/heap_vs_stack_elligator_comparison_bar_log_scale.png --logs_dir "/Users/MiroETH/Documents/ETH/Msc/Semester_4/Advanced_Systems_Lab_Pueschel_263-0007-00/Project/tmp/team36/timing/logs/V1/runtime/2021-06-07_09-15-21;/Users/MiroETH/Documents/ETH/Msc/Semester_4/Advanced_Systems_Lab_Pueschel_263-0007-00/Project/tmp/team36/timing/logs/V2/runtime/2021-06-07_09-24-04"  --logs_names "heap;stack" --bar_plot --log_yaxis
+        ```
+    - Speedup:
+        ```
+        ./scripts/gen_runtime_plots.py --title "Heap vs Stack Speedup for Elligator (10 sets, 10000 reps)" --plot_fname /Users/MiroETH/Documents/ETH/Msc/Semester_4/Advanced_Systems_Lab_Pueschel_263-0007-00/Project/team36/timing/plots/presentation/heap_vs_stack_elligator_speedup.png --logs_dir "/Users/MiroETH/Documents/ETH/Msc/Semester_4/Advanced_Systems_Lab_Pueschel_263-0007-00/Project/tmp/team36/timing/logs/V1/runtime/2021-06-07_09-15-21;/Users/MiroETH/Documents/ETH/Msc/Semester_4/Advanced_Systems_Lab_Pueschel_263-0007-00/Project/tmp/team36/timing/logs/V2/runtime/2021-06-07_09-24-04"  --logs_names "heap;stack" --bar_plot --log_yaxis
+        ```
