@@ -1,6 +1,6 @@
 ODIR				= src/obj
 
-BENCHED_ROOT_DIR	=../code_unoptimized
+BENCHED_ROOT_DIR	= ../code_unoptimized
 SRC_BENCHED			= $(BENCHED_ROOT_DIR)/src
 ODIR_BENCHED		= $(SRC_BENCHED)/obj
 IDIR_BENCHED		= $(BENCHED_ROOT_DIR)/include
@@ -66,20 +66,63 @@ compile-runtime-benchmark: prepare-logs-runtime-benchmark all-benched gen-bench-
 .PHONY: run-runtime-benchmark
 run-runtime-benchmark: OUT_SUB_PATH = $(RUNTIME_SUB_PATH)
 run-runtime-benchmark: LOG_PATH = $(LOG_BASE_PATH)/$(OUT_SUB_PATH)
-run-runtime-benchmark: compile-runtime-benchmark
+run-runtime-benchmark: clean compile-runtime-benchmark
 	echo "${LOG_PATH}" > ${LATEST_LOG_PATH}
 	./$(BDIR)/runtime-benchmark $(BENCHMARKS)
 
 .PHONY: plot-runtime-benchmark
 plot-runtime-benchmark: OUT_SUB_PATH = $(RUNTIME_SUB_PATH)
 plot-runtime-benchmark: LOG_PATH = $(LOG_BASE_PATH)/$(OUT_SUB_PATH)
-plot-runtime-benchmark: clean run-runtime-benchmark
+plot-runtime-benchmark: run-runtime-benchmark
 	# Needs to be repeated to execute multiple times in same make call
 	PUBLISH=$(PUBLISH) COLLECT_STATS=$(COLLECT_STATS) SETS=$(SETS) \
 	REPS=$(REPS) LOGS_DIR=$(LOG_PATH) OUT_SUB_PATH=$(OUT_SUB_PATH) \
 	$(SCRIPTS_DIR)/make_all_plots.sh
 
 runtime-benchmark: $(OBJ_BENCHED) $(OBJ)
+	$(CC) -o $(BDIR)/$@ $^ $(CFLAGS) $(LIBS)
+
+################################################################################
+#						   		GMP Benchmarks								   #
+################################################################################
+
+GMP_SUB_PATH = gmp/$(LOG_SUBDIRS)
+
+# Specify the C files constituting the test
+_GMP_SRC	= benchmark_helpers.c gmp_benchmark.c
+GMP_SRC		= $(patsubst %,$(SDIR)/%,$(_GMP_SRC))
+# Specify the object files of the benched functions
+_OBJ_BENCHED 	= gmp_elligator.o
+OBJ_BENCHED		= $(patsubst %,$(ODIR_BENCHED)/%,$(_OBJ_BENCHED))
+
+.PHONY: prepare-logs-gmp-benchmark
+prepare-logs-gmp-benchmark:
+	mkdir -p $(LOG_PATH)
+
+.PHONY: compile-gmp-benchmark
+compile-gmp-benchmark: OUT_SUB_PATH = $(GMP_SUB_PATH)
+compile-gmp-benchmark: LOG_PATH = $(LOG_BASE_PATH)/$(OUT_SUB_PATH)
+compile-gmp-benchmark: LIBS = -lgmp
+compile-gmp-benchmark: CFLAGS += -DLOG_PATH=\"$(LOG_PATH)\"
+compile-gmp-benchmark: prepare-logs-gmp-benchmark gmp-benchmark
+
+.PHONY: run-gmp-benchmark
+run-gmp-benchmark: OUT_SUB_PATH = $(GMP_SUB_PATH)
+run-gmp-benchmark: LOG_PATH = $(LOG_BASE_PATH)/$(OUT_SUB_PATH)
+run-gmp-benchmark: clean compile-gmp-benchmark
+	echo "${LOG_PATH}" > ${LATEST_LOG_PATH}
+	./$(BDIR)/gmp-benchmark $(BENCHMARKS)
+
+.PHONY: plot-gmp-benchmark
+plot-gmp-benchmark: OUT_SUB_PATH = $(GMP_SUB_PATH)
+plot-gmp-benchmark: LOG_PATH = $(LOG_BASE_PATH)/$(OUT_SUB_PATH)
+plot-gmp-benchmark: run-gmp-benchmark
+	# Needs to be repeated to execute multiple times in same make call
+	PUBLISH=$(PUBLISH) COLLECT_STATS=$(COLLECT_STATS) SETS=$(SETS) \
+	REPS=$(REPS) LOGS_DIR=$(LOG_PATH) OUT_SUB_PATH=$(OUT_SUB_PATH) \
+	$(SCRIPTS_DIR)/make_all_plots.sh
+
+gmp-benchmark: $(OBJ_BENCHED) $(GMP_SRC)
 	$(CC) -o $(BDIR)/$@ $^ $(CFLAGS) $(LIBS)
 
 .PHONY: plots

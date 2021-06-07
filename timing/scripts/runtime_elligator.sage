@@ -112,7 +112,9 @@ def runtime(setup_f, f, title, path, sets, reps):
 
 if __name__ == '__main__':
     script_dir = os.path.dirname(os.path.realpath(__file__))
-    default_logs_dir = f"{script_dir}/../logs/runtime"
+    logs_dir = f"{script_dir}/../logs"
+    latest_log_file = f"{logs_dir}/latest_log_path.txt"
+    default_logs_dir = f"{logs_dir}/runtime"
 
     # Read arguments
     parser = argparse.ArgumentParser()
@@ -131,6 +133,9 @@ if __name__ == '__main__':
     timestamp_dir_name = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
     logs_dir = f"{logs_dir}/{timestamp_dir_name}"
     os.mkdir(logs_dir)
+
+    with open(latest_log_file, "w+") as latest_log_fp:
+        latest_log_fp.write(logs_dir)
 
     runtime(elligator1_map_prep, elligator1_map, "Elligator str2pnt",
         f"{logs_dir}/runtime_sage_elligator_1_string_to_point.log", sets, reps)

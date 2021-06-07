@@ -6,6 +6,7 @@ TARGETS := 								\
 	rebuild 							\
 	run-all 							\
 	gen-bench-types 					\
+	gen-bigint-types 					\
 	run-runtime-benchmark				\
 	plot-runtime-benchmark 				\
 	runtime-benchmark 					\
@@ -29,7 +30,7 @@ TARGETS := 								\
 #	- Version 3 (in the future): C including AVX optimizations
 #
 ifeq ($(VERSION),)
-	VERSION = 2
+	VERSION = 3
 endif
 export VERSION
 
@@ -66,18 +67,20 @@ endif
 ifeq ($(REPS),)
 	REPS = 10000
 endif
-export SETS
-export REPS
-CFLAGS += -DSETS=$(SETS) -DREPS=$(REPS) -DVERSION=$(VERSION)
 
 # Forward COLLECT_STATS env variable to compiled binaries
 export LOG_BASE_PATH = $(abspath $(LOG_DIR))
 ifneq ($(COLLECT_STATS),)
+	SETS = 1
+	REPS = 1
 	LOG_SUBDIRS = stats
 	CFLAGS += -DCOLLECT_STATS=${COLLECT_STATS}
 else
 	LOG_SUBDIRS = runtime
 endif
+export SETS
+export REPS
+CFLAGS += -DSETS=$(SETS) -DREPS=$(REPS) -DVERSION=$(VERSION)
 
 LOG_SUBDIRS := $(LOG_SUBDIRS)/$(shell date "+%Y-%m-%d_%H-%M-%S")
 export LOG_SUBDIRS
@@ -88,6 +91,10 @@ ifeq ($(OPT_FLAGS),)
 endif
 CFLAGS += $(OPT_FLAGS)
 
+ifeq ($(VERSION), 3)
+	CFLAGS += -mavx2
+endif
+
 export CFLAGS
 
 #
@@ -97,12 +104,12 @@ ifeq ($(VERSION),1)
 
 .PHONY: $(TARGETS)
 $(TARGETS):
-	make -f Makefile.V1 $(MAKECMDGOALS)
+	make -f Makefile.V1 $@
 
-else ifeq ($(VERSION), 2)
+else
 
 .PHONY: $(TARGETS)
 $(TARGETS):
-	make -f Makefile.V2 $(MAKECMDGOALS)
+	make -f Makefile.V2 $@
 
 endif

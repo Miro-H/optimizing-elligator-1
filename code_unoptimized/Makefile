@@ -25,7 +25,7 @@ LIBS    =
 
 LIB_NAME 	= $(LDIR)/elligator.a
 # Add the name of every .c file that you want to compile here
-_LIB_SRCS		= elligator.c bigint.c
+_LIB_SRCS		= elligator.c bigint.c gmp_elligator.c
 LIB_SRCS 		= $(patsubst %,$(SDIR)/%,$(_LIB_SRCS))
 # This assumes the library depends on all header files in IDIR
 LIB_HEADERS = $(wildcard $(IDIR)/*.h)
@@ -37,7 +37,7 @@ LIB_OBJS 	= $(patsubst %,$(ODIR)/%,$(_LIB_SRCS:.c=.o))
 all: gen-bigint-types $(LIB_NAME) build-lib
 
 $(ODIR)/%.o: $(SDIR)/%.c
-	$(CC) -c -o $@ $< $(CFLAGS)
+	$(CC) -c -o $@ $< $(CFLAGS) $(LIBS)
 
 # Fresh build
 rebuild: clean all
@@ -50,11 +50,13 @@ build-lib:
 .PHONY: gen-bigint-types
 gen-bigint-types:
 	${ROOT_SCRIPTS_DIR}/gen_types.py \
-		--src_file ${SDIR}/bigint.c \
+		--src_files ${SDIR}/bigint.c \
 		--dest_file ${IDIR}/bigint_types.h \
 		--add_translation \
 		--array_name "big_int_type_names" \
+		--pattern "(BASIC_[A-Z\d_]+|[A-Z\d_]+TYPE_[A-Z\d_]+)[^A-Z]+" \
 		--strip_prefix "BIGINT_TYPE_"
+
 
 $(LIB_NAME): $(LIB_OBJS)
 

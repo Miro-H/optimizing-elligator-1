@@ -10,16 +10,18 @@ BIN_FILES   = $(filter-out $(wildcard $(BDIR)/.*), $(wildcard $(BDIR)/*))
 # The following versions exist:
 #	- Version 1: Straightforward C, unoptimized
 #	- Version 2: Uptimized C using standard techniques
-#	- Version 3 (in the future): C including AVX optimizations
+#	- Version 3: C including AVX optimizations
 #
 ifeq ($(VERSION),)
-	VERSION = 2
+	VERSION = 3
 endif
 
 ifeq ($(VERSION), 1)
 	TESTED_ROOT_DIR = ../code_unoptimized
 else ifeq ($(VERSION), 2)
 	TESTED_ROOT_DIR = ../code_optimized/standard_optimizations
+else ifeq ($(VERSION), 3)
+	TESTED_ROOT_DIR = ../code_optimized/avx_optimizations
 endif
 
 SRC_TESTED	= $(TESTED_ROOT_DIR)/src
@@ -30,6 +32,12 @@ CFLAGS  	= -I$(IDIR_TESTED) -I$(IDIR)
 
 # Add additional compilation flags to improve code quality
 CFLAGS += -Wall -Werror
+
+ifeq ($(VERSION),3)
+	CFLAGS += -mavx2 -march=native
+endif
+
+
 
 ifneq ($(DEBUG),)
 	CFLAGS += -Wno-unused-variable
@@ -64,7 +72,7 @@ endif
 ifneq ($(VERSION), 1)
 all: compile-bigint-test compile-elligator-test compile-bigint-curve1174-test
 else
-all: compile-bigint-test compile-elligator-test
+all: compile-bigint-test compile-elligator-test compile-gmp-elligator-test
 endif
 
 .PHONY: print-compile-msg
@@ -144,6 +152,25 @@ compile-elligator-test: print-compile-msg elligator-test
 
 elligator-test: $(ELLIGATOR_SRC) $(ELLIGATOR_TESTED_SRC)
 	$(CC) -o $(BDIR)/$@ $^ $(CFLAGS) $(LIBS)
+
+
+################################################################################
+#                           GMP Elligator Tests                                #
+################################################################################
+
+# Specify the C files constituting the test
+_GMP_ELLIGATOR_SRC	= gmp_elligator_test.c
+GMP_ELLIGATOR_SRC	= $(patsubst %,$(SDIR)/%,$(_GMP_ELLIGATOR_SRC))
+
+_GMP_ELLIGATOR_TESTED_SRC	= gmp_elligator.c
+GMP_ELLIGATOR_TESTED_SRC	= $(patsubst %,$(SRC_TESTED)/%,$(_GMP_ELLIGATOR_TESTED_SRC))
+
+.PHONY: compile-gmp-elligator-test
+compile-gmp-elligator-test: print-compile-msg gmp-elligator-test
+
+gmp-elligator-test: $(GMP_ELLIGATOR_SRC) $(GMP_ELLIGATOR_TESTED_SRC)
+	$(CC) -o $(BDIR)/$@ $^ $(CFLAGS) $(LIBS) -lgmp
+
 
 ################################################################################
 #                            Other targets                                     #

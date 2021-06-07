@@ -1,0 +1,33 @@
+#ifndef BIGINT_CURVE1174_H_    /* Include guard */
+#define BIGINT_CURVE1174_H_
+
+#include "bigint_types.h"
+#include "bigint.h"
+#include "bigint_curve1174_constants.h"
+
+// Modular arithmetic. Note q = 2^251 - 9 is FIXED for all the functions below!
+BigInt *big_int_curve1174_mod(BigInt *r);
+BigInt *big_int_curve1174_add_mod(BigInt *r, BigInt *a, BigInt *b);
+BigInt *big_int_curve1174_sub_mod(BigInt *r, BigInt *a, BigInt *b);
+BigInt *big_int_curve1174_mul_mod(BigInt *r, BigInt *a, BigInt *b);
+void big_int_curve1174_mul_mod_4(BigInt *r0, BigInt *r1, BigInt *r2, BigInt *r3,
+                                    BigInt *a0, BigInt *a1, BigInt *a2, BigInt *a3,
+                                    BigInt *b0, BigInt *b1, BigInt *b2, BigInt *b3);
+BigInt *big_int_curve1174_square_mod(BigInt *r, BigInt *a);
+BigInt *big_int_curve1174_div_mod(BigInt *r, BigInt *a, BigInt *b);
+BigInt *big_int_curve1174_inv_fermat(BigInt *r, BigInt *a);
+
+// Special comparison
+int8_t big_int_curve1174_compare_to_q(BigInt *a);
+int8_t big_int_curve1174_gt_q_m1_d2(BigInt *a);
+int8_t big_int_curve1174_lt_aq(BigInt *b, BigInt *aq);
+
+// Advanced operations
+BigInt *big_int_curve1174_pow_small(BigInt *r, BigInt *b, uint64_t e);
+BigInt *big_int_curve1174_pow(BigInt *r, BigInt *b, BigInt *e);
+BigInt *big_int_curve1174_pow_q_m1_d2(BigInt *r, BigInt *b);
+BigInt *big_int_curve1174_pow_q_p1_d4(BigInt *r, BigInt *b);
+BigInt *big_int_curve1174_pow_q_m2(BigInt *r, BigInt *b);
+int8_t big_int_curve1174_chi(BigInt *t);
+
+#endif // BIGINT_CURVE1174_H_

@@ -224,3 +224,97 @@ I changed the makefiles to compile everything together instead of using object f
 Pow for special exponent:
 - Remove `b * 1` and `b * b` and instead use square function and set r directly to `b * b^2`
 - Remove all copies by usual loop unrolling and clever variable juggling
+
+## Roofline Plots
+- Intel Manual: table 2-13 and 2-14 show the following exec units and ports:
+    - ALU: 0, 1, 5, 6
+    - SHIFT: 0, 6
+    - Divide: 0
+    - Slow int: 1
+- Memory bandwidth:
+    - Theoretical: probably < 30 GB/s ([src](https://apple.stackexchange.com/questions/276543/finding-peak-memory-bandwidth-on-macbook-pro))
+    - Practical: 24.833 GB/s (measured with Novabench)
+        - 2.8 GHz processor, so that gives:
+        ```
+            24.833 GB/s / 2.8 GHz = 8.868... ~= 8.9 B/cycle
+        ```
+- Peak performance:
+    - Normal: 4 iops per cycle, since we have 4 ALUs behind different ports
+    - Vectorized: 16 iops per cycle, since we mostly operate on 64 bit integers. One vector has 4 operands.
+    - Depending on instruction mix:
+        - The script `./scripts/make_elligator_stats_comp.sh` prints the instruction mix
+        - Use this to add another peak performance line
+- Intensity:
+    - Work W: We count the ops, annotated by our macros
+    - Transferred bytes Q:
+        - This is pretty small if we only look at the function inputs.
+        - map: 1 BigInt + curve = `12'672 B`
+        - inv map: 1 point + curve = `13'824 B`
+        - Sizes:
+            - BigInt: `64B + 17 * 64 B = 1152 B` (64B metadata, 17 chunks with 64B)
+            - curve: 10 BigInts, i.e., `11520 B`
+            - point: 2 BigInts, i.e., `2304 B`
+
+## Create mem ops plot
+Command:
+```
+MAX_VERSION=2 PATTERN=".*(basic_add_chunk|alloc|memcpy|destroy|copy).*" ./scripts/make_elligator_stats_comp.sh
+```
+
+## Commands to run for final plots
+Comparison V1 to V3:
+```
+SKIP_COMP_TO_GMP=1 SETS=10 REPS=10000 ./scripts/make_elligator_comp.sh
+```
+
+Comparison V3 to gmp:
+```
+MIN_VERSION=3 SETS=10 REPS=10000 ./scripts/make_elligator_comp.sh
+```
+
+Speedup V1 to V2 of using Curve1174-specific functions
+```
+SETS=10 REPS=10000 ./scripts/make_curve1174_vs_bigint_comp.sh
+```
+
+Plot to show benefit of using AVX for adds:
+```
+$ ../scripts/gen_types.py --src_file src/runtime_benchmark_curve1174.c  src/runtime_benchmark.c --dest_file include/benchmark_types.h --lookup_names BENCH_TYPE_ADD_256 BENCH_TYPE_ADD_GENERAL BENCH_TYPE_ADD_UPPER_BOUND
+2 3 6
+
+$ SETS=100 REPS=100000 BENCHMARKS="2 3 6" VERSION=3 make plot-runtime-benchmark
+```
+
+Plot heap vs. stack hacked back to v2.0:
+- Checkout branch `v2.0_backported_plotting`
+- Run `SKIP_COMP_TO_GMP=1 SETS=10 REPS=10 MAX_VERSION=2 ./scripts/make_elligator_comp.sh`
+- Generate plots manually, as follows:
+    - Runtime:
+        ```
+        ./scripts/gen_runtime_plots.py --title "Heap vs Stack Runtime Comparison for Elligator (10 sets, 10000 reps)" --plot_fname /Users/MiroETH/Documents/ETH/Msc/Semester_4/Advanced_Systems_Lab_Pueschel_263-0007-00/Project/team36/timing/plots/presentation/heap_vs_stack_elligator_comparison_bar_log_scale.png --logs_dir "/Users/MiroETH/Documents/ETH/Msc/Semester_4/Advanced_Systems_Lab_Pueschel_263-0007-00/Project/tmp/team36/timing/logs/V1/runtime/2021-06-07_09-15-21;/Users/MiroETH/Documents/ETH/Msc/Semester_4/Advanced_Systems_Lab_Pueschel_263-0007-00/Project/tmp/team36/timing/logs/V2/runtime/2021-06-07_09-24-04"  --logs_names "heap;stack" --bar_plot --log_yaxis
+        ```
+    - Speedup:
+        ```
+        ./scripts/gen_runtime_plots.py --title "Heap vs Stack Speedup for Elligator (10 sets, 10000 reps)" --plot_fname /Users/MiroETH/Documents/ETH/Msc/Semester_4/Advanced_Systems_Lab_Pueschel_263-0007-00/Project/team36/timing/plots/presentation/heap_vs_stack_elligator_speedup.png --logs_dir "/Users/MiroETH/Documents/ETH/Msc/Semester_4/Advanced_Systems_Lab_Pueschel_263-0007-00/Project/tmp/team36/timing/logs/V1/runtime/2021-06-07_09-15-21;/Users/MiroETH/Documents/ETH/Msc/Semester_4/Advanced_Systems_Lab_Pueschel_263-0007-00/Project/tmp/team36/timing/logs/V2/runtime/2021-06-07_09-24-04"  --logs_names "heap;stack" --speedup_plot
+        ```
+
+Laptop comparison:
+- For instructions on which commands to run, see [here](./computer_comp.md)
+- Manually create this folder structure (for `pnt2str`, the same for `str2pnt`):
+    - `logs/V1_to_V3/pnt2str/V1/`
+    - `logs/V1_to_V3/pnt2str/V2/`
+    - `logs/V1_to_V3/pnt2str/V2/`
+- Change the data label of each log file to the identifier (name, laptop model)
+- Plot manually with the following commands
+    - Runtime:
+        ```
+        ./scripts/gen_runtime_plots.py --title "Laptop Runtime Comparison for Elligator str2pnt (10 sets, 10000 reps)" --plot_fname ./plots/presentation/laptop_runtime_comparison_elligator_str2pnt.png --logs_dir "logs/V1_to_V3/str2pnt/V1;logs/V1_to_V3/str2pnt/V2;logs/V1_to_V3/str2pnt/V3"  --logs_names "V1;V2;V3" --bar_plot --log_yaxis
+
+        ./scripts/gen_runtime_plots.py --title "Laptop Runtime Comparison for Elligator pnt2str (10 sets, 10000 reps)" --plot_fname ./plots/presentation/laptop_runtime_comparison_elligator_pnt2str.png --logs_dir "logs/V1_to_V3/pnt2str/V1;logs/V1_to_V3/pnt2str/V2;logs/V1_to_V3/pnt2str/V3"  --logs_names "V1;V2;V3" --bar_plot --log_yaxis
+        ```
+    Speedup:
+        ```
+        ./scripts/gen_runtime_plots.py --title "Laptop Speedup Comparison for Elligator str2pnt (10 sets, 10000 reps)" --plot_fname ./plots/presentation/laptop_speedup_comparison_elligator_str2pnt.png --logs_dir "logs/V1_to_V3/str2pnt/V1;logs/V1_to_V3/str2pnt/V2;logs/V1_to_V3/str2pnt/V3"  --logs_names "V1;V2;V3" --speedup_plot
+
+        ./scripts/gen_runtime_plots.py --title "Laptop Speedup Comparison for Elligator pnt2str (10 sets, 10000 reps)" --plot_fname ./plots/presentation/laptop_speedup_comparison_elligator_pnt2str.png --logs_dir "logs/V1_to_V3/pnt2str/V1;logs/V1_to_V3/pnt2str/V2;logs/V1_to_V3/pnt2str/V3"  --logs_names "V1;V2;V3" --speedup_plot
+        ```

@@ -6,75 +6,94 @@
 #ifndef BIGINT_TYPES_H_
 #define BIGINT_TYPES_H_
 
-#define BIGINT_TYPE_BIG_INT_ALLOC                 0
-#define BIGINT_TYPE_BIG_INT_CALLOC                1
-#define BIGINT_TYPE_BIG_INT_GET_RES               2
-#define BIGINT_TYPE_BIG_INT_PRUNE_LEADING_ZEROS   3
-#define BIGINT_TYPE_BIG_CREATE                    4
-#define BIGINT_TYPE_BIG_INT_CREATE_FROM_DBL_CHUNK 5
-#define BIGINT_TYPE_BIG_INT_CREATE_FROM_HEX       6
-#define BIGINT_TYPE_BIG_INT_CREATE_RANDOM         7
-#define BIGINT_TYPE_BIG_INT_DESTROY               8
-#define BIGINT_TYPE_BIG_INT_COPY                  9
-#define BIGINT_TYPE_BIG_INT_DUPLICATE             10
-#define BIGINT_TYPE_BIG_INT_NEG                   11
-#define BIGINT_TYPE_BIG_INT_ABS                   12
-#define BIGINT_TYPE_BIG_INT_ADD                   13
-#define BIGINT_TYPE_BIG_INT_SUB                   14
-#define BIGINT_TYPE_BIG_INT_MUL                   15
-#define BIGINT_TYPE_BIG_INT_DEV_REM               16
-#define BIGINT_TYPE_BIG_INT_DIV                   17
-#define BIGINT_TYPE_BIG_INT_SLL_SMALL             18
-#define BIGINT_TYPE_BIG_INT_SRL_SMALL             19
-#define BIGINT_TYPE_BIG_INT_MOD                   20
-#define BIGINT_TYPE_BIG_INT_ADD_MOD               21
-#define BIGINT_TYPE_BIG_INT_SUB_MOD               22
-#define BIGINT_TYPE_BIG_INT_MUL_MOD               23
-#define BIGINT_TYPE_BIG_INT_DIV_MOD               24
-#define BIGINT_TYPE_BIG_INT_INV                   25
-#define BIGINT_TYPE_BIG_INT_POW                   26
-#define BIGINT_TYPE_BIG_INT_IS_ZERO               27
-#define BIGINT_TYPE_BIG_INT_IS_ODD                28
-#define BIGINT_TYPE_BIG_INT_COMPARE               29
-#define BIGINT_TYPE_BIG_INT_EGCD                  30
-#define BIGINT_TYPE_BIG_INT_CHI                   31
-#define BIGINT_TYPE_LAST                          32
+#define BASIC_ADD_CHUNK                           0
+#define BASIC_ADD_OTHER                           1
+#define BASIC_ADD_SIZE                            2
+#define BASIC_BITWISE                             3
+#define BASIC_DIV                                 4
+#define BASIC_MOD                                 5
+#define BASIC_MUL_CHUNK                           6
+#define BASIC_MUL_SIZE                            7
+#define BASIC_SHIFT                               8
+#define BIGINT_TYPE_BIG_CREATE                    9
+#define BIGINT_TYPE_BIG_INT_ABS                   10
+#define BIGINT_TYPE_BIG_INT_ADD                   11
+#define BIGINT_TYPE_BIG_INT_ADD_MOD               12
+#define BIGINT_TYPE_BIG_INT_ALLOC                 13
+#define BIGINT_TYPE_BIG_INT_CALLOC                14
+#define BIGINT_TYPE_BIG_INT_CHI                   15
+#define BIGINT_TYPE_BIG_INT_COMPARE               16
+#define BIGINT_TYPE_BIG_INT_COPY                  17
+#define BIGINT_TYPE_BIG_INT_CREATE_FROM_DBL_CHUNK 18
+#define BIGINT_TYPE_BIG_INT_CREATE_FROM_HEX       19
+#define BIGINT_TYPE_BIG_INT_CREATE_RANDOM         20
+#define BIGINT_TYPE_BIG_INT_DESTROY               21
+#define BIGINT_TYPE_BIG_INT_DIV                   22
+#define BIGINT_TYPE_BIG_INT_DIV_MOD               23
+#define BIGINT_TYPE_BIG_INT_DIV_REM               24
+#define BIGINT_TYPE_BIG_INT_DUPLICATE             25
+#define BIGINT_TYPE_BIG_INT_EGCD                  26
+#define BIGINT_TYPE_BIG_INT_GET_RES               27
+#define BIGINT_TYPE_BIG_INT_INV                   28
+#define BIGINT_TYPE_BIG_INT_IS_ODD                29
+#define BIGINT_TYPE_BIG_INT_IS_ZERO               30
+#define BIGINT_TYPE_BIG_INT_MOD                   31
+#define BIGINT_TYPE_BIG_INT_MUL                   32
+#define BIGINT_TYPE_BIG_INT_MUL_MOD               33
+#define BIGINT_TYPE_BIG_INT_NEG                   34
+#define BIGINT_TYPE_BIG_INT_POW                   35
+#define BIGINT_TYPE_BIG_INT_PRUNE_LEADING_ZEROS   36
+#define BIGINT_TYPE_BIG_INT_SLL_SMALL             37
+#define BIGINT_TYPE_BIG_INT_SRL_SMALL             38
+#define BIGINT_TYPE_BIG_INT_SUB                   39
+#define BIGINT_TYPE_BIG_INT_SUB_MOD               40
+#define BIGINT_TYPE_LAST                          41
 
 __attribute__((unused))
 static char *big_int_type_names[] = {
+    "basic_add_chunk",
+    "basic_add_other",
+    "basic_add_size",
+    "basic_bitwise",
+    "basic_div",
+    "basic_mod",
+    "basic_mul_chunk",
+    "basic_mul_size",
+    "basic_shift",
+    "big_create",
+    "big_int_abs",
+    "big_int_add",
+    "big_int_add_mod",
     "big_int_alloc",
     "big_int_calloc",
-    "big_int_get_res",
-    "big_int_prune_leading_zeros",
-    "big_create",
+    "big_int_chi",
+    "big_int_compare",
+    "big_int_copy",
     "big_int_create_from_dbl_chunk",
     "big_int_create_from_hex",
     "big_int_create_random",
     "big_int_destroy",
-    "big_int_copy",
-    "big_int_duplicate",
-    "big_int_neg",
-    "big_int_abs",
-    "big_int_add",
-    "big_int_sub",
-    "big_int_mul",
-    "big_int_dev_rem",
     "big_int_div",
+    "big_int_div_mod",
+    "big_int_div_rem",
+    "big_int_duplicate",
+    "big_int_egcd",
+    "big_int_get_res",
+    "big_int_inv",
+    "big_int_is_odd",
+    "big_int_is_zero",
+    "big_int_mod",
+    "big_int_mul",
+    "big_int_mul_mod",
+    "big_int_neg",
+    "big_int_pow",
+    "big_int_prune_leading_zeros",
     "big_int_sll_small",
     "big_int_srl_small",
-    "big_int_mod",
-    "big_int_add_mod",
+    "big_int_sub",
     "big_int_sub_mod",
-    "big_int_mul_mod",
-    "big_int_div_mod",
-    "big_int_inv",
-    "big_int_pow",
-    "big_int_is_zero",
-    "big_int_is_odd",
-    "big_int_compare",
-    "big_int_egcd",
-    "big_int_chi",
-    "last"
+    "BIGINT_TYPE_LAST",
+    "big_int_chi"
 };
 
 #endif // BIGINT_TYPES_H_
