@@ -297,3 +297,24 @@ Plot heap vs. stack hacked back to v2.0:
         ```
         ./scripts/gen_runtime_plots.py --title "Heap vs Stack Speedup for Elligator (10 sets, 10000 reps)" --plot_fname /Users/MiroETH/Documents/ETH/Msc/Semester_4/Advanced_Systems_Lab_Pueschel_263-0007-00/Project/team36/timing/plots/presentation/heap_vs_stack_elligator_speedup.png --logs_dir "/Users/MiroETH/Documents/ETH/Msc/Semester_4/Advanced_Systems_Lab_Pueschel_263-0007-00/Project/tmp/team36/timing/logs/V1/runtime/2021-06-07_09-15-21;/Users/MiroETH/Documents/ETH/Msc/Semester_4/Advanced_Systems_Lab_Pueschel_263-0007-00/Project/tmp/team36/timing/logs/V2/runtime/2021-06-07_09-24-04"  --logs_names "heap;stack" --speedup_plot
         ```
+
+Laptop comparison:
+- For instructions on which commands to run, see [here](./computer_comp.md)
+- Manually create this folder structure (for `pnt2str`, the same for `str2pnt`):
+    - `logs/V1_to_V3/pnt2str/V1/`
+    - `logs/V1_to_V3/pnt2str/V2/`
+    - `logs/V1_to_V3/pnt2str/V2/`
+- Change the data label of each log file to the identifier (name, laptop model)
+- Plot manually with the following commands
+    - Runtime:
+        ```
+        ./scripts/gen_runtime_plots.py --title "Laptop Runtime Comparison for Elligator str2pnt (10 sets, 10000 reps)" --plot_fname ./plots/presentation/laptop_runtime_comparison_elligator_str2pnt.png --logs_dir "logs/V1_to_V3/str2pnt/V1;logs/V1_to_V3/str2pnt/V2;logs/V1_to_V3/str2pnt/V3"  --logs_names "V1;V2;V3" --bar_plot --log_yaxis
+
+        ./scripts/gen_runtime_plots.py --title "Laptop Runtime Comparison for Elligator pnt2str (10 sets, 10000 reps)" --plot_fname ./plots/presentation/laptop_runtime_comparison_elligator_pnt2str.png --logs_dir "logs/V1_to_V3/pnt2str/V1;logs/V1_to_V3/pnt2str/V2;logs/V1_to_V3/pnt2str/V3"  --logs_names "V1;V2;V3" --bar_plot --log_yaxis
+        ```
+    Speedup:
+        ```
+        ./scripts/gen_runtime_plots.py --title "Laptop Speedup Comparison for Elligator str2pnt (10 sets, 10000 reps)" --plot_fname ./plots/presentation/laptop_speedup_comparison_elligator_str2pnt.png --logs_dir "logs/V1_to_V3/str2pnt/V1;logs/V1_to_V3/str2pnt/V2;logs/V1_to_V3/str2pnt/V3"  --logs_names "V1;V2;V3" --speedup_plot
+
+        ./scripts/gen_runtime_plots.py --title "Laptop Speedup Comparison for Elligator pnt2str (10 sets, 10000 reps)" --plot_fname ./plots/presentation/laptop_speedup_comparison_elligator_pnt2str.png --logs_dir "logs/V1_to_V3/pnt2str/V1;logs/V1_to_V3/pnt2str/V2;logs/V1_to_V3/pnt2str/V3"  --logs_names "V1;V2;V3" --speedup_plot
+        ```
