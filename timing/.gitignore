@@ -5,7 +5,8 @@ bin/*
 # Ignore generated log files from tests
 logs/*
 !logs/.keep
-!logs/V1_to_V3/
+!logs/V1_to_V3
+!logs/V1_to_V3/*/*/*.log
 
 # Ignore plots generated locally, move plots from plots/local to plots/ to upload them.
 plots/local/*
