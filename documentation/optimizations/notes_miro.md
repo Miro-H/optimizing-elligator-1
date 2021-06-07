@@ -295,5 +295,5 @@ Plot heap vs. stack hacked back to v2.0:
         ```
     - Speedup:
         ```
-        ./scripts/gen_runtime_plots.py --title "Heap vs Stack Speedup for Elligator (10 sets, 10000 reps)" --plot_fname /Users/MiroETH/Documents/ETH/Msc/Semester_4/Advanced_Systems_Lab_Pueschel_263-0007-00/Project/team36/timing/plots/presentation/heap_vs_stack_elligator_speedup.png --logs_dir "/Users/MiroETH/Documents/ETH/Msc/Semester_4/Advanced_Systems_Lab_Pueschel_263-0007-00/Project/tmp/team36/timing/logs/V1/runtime/2021-06-07_09-15-21;/Users/MiroETH/Documents/ETH/Msc/Semester_4/Advanced_Systems_Lab_Pueschel_263-0007-00/Project/tmp/team36/timing/logs/V2/runtime/2021-06-07_09-24-04"  --logs_names "heap;stack" --bar_plot --log_yaxis
+        ./scripts/gen_runtime_plots.py --title "Heap vs Stack Speedup for Elligator (10 sets, 10000 reps)" --plot_fname /Users/MiroETH/Documents/ETH/Msc/Semester_4/Advanced_Systems_Lab_Pueschel_263-0007-00/Project/team36/timing/plots/presentation/heap_vs_stack_elligator_speedup.png --logs_dir "/Users/MiroETH/Documents/ETH/Msc/Semester_4/Advanced_Systems_Lab_Pueschel_263-0007-00/Project/tmp/team36/timing/logs/V1/runtime/2021-06-07_09-15-21;/Users/MiroETH/Documents/ETH/Msc/Semester_4/Advanced_Systems_Lab_Pueschel_263-0007-00/Project/tmp/team36/timing/logs/V2/runtime/2021-06-07_09-24-04"  --logs_names "heap;stack" --speedup_plot
         ```
