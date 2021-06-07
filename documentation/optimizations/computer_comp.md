@@ -21,7 +21,7 @@ Win10 WSL Ubuntu
 
 Command to create logs for Elligator V1 to V3:
 ```
-SKIP_COMP_TO_GMP=1 SETS=10 REPS=10 ./scripts/make_elligator_comp.sh
+SKIP_COMP_TO_GMP=1 SETS=10 REPS=10000 ./scripts/make_elligator_comp.sh
 ```
 
 ## Freya
@@ -32,7 +32,7 @@ TODO
 
 Command to create logs for Elligator V1 to V2:
 ```
-MAX_VERSION=2 SKIP_COMP_TO_GMP=1 SETS=10 REPS=10 ./scripts/make_elligator_comp.sh
+MAX_VERSION=2 SKIP_COMP_TO_GMP=1 SETS=10 REPS=10000 ./scripts/make_elligator_comp.sh
 ```
 
 ## Finding the log files
