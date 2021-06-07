@@ -343,13 +343,23 @@ BigInt *big_int_fast_add(BigInt *r, BigInt *a, BigInt *b)
 {
     ADD_STAT_COLLECTION(BIGINT_TYPE_BIG_INT_ADD);
 
-    if (a->size == 8 && b->size == 8)
-    {
-        big_int_add_256(r, a, b);
-        ADD_STAT_COLLECTION(BASIC_BITWISE)
-        return r;
+    if (a->size == 8 && b->size == 8) {
+        return big_int_add_256(r, a, b);
     }
+    else {
+        return big_int_add_general(r, a, b);
+    }
+}
 
+/**
+ * r = a + b, general case (no avx)
+ *
+ * \assumption r, a, b != NULL
+ * \assumption a->sign == b->sign
+ * \assumption no overflow for a + b, i.e., #chunks <= BIGINT_FIXED_SIZE_INTERNAL
+ */
+BigInt *big_int_add_general(BigInt *r, BigInt *a, BigInt *b)
+{
     // Pointer used to point to a or b depending on which is larger
     BigInt *aa, *bb;
 
@@ -363,13 +373,11 @@ BigInt *big_int_fast_add(BigInt *r, BigInt *a, BigInt *b)
 
     // Simplify implementation by making sure we know the larger BigInt (in
     // terms of chunks, not numerical value)
-    if (a->size < b->size)
-    {
+    if (a->size < b->size) {
         aa = b;
         bb = a;
     }
-    else
-    {
+    else {
         aa = a;
         bb = b;
     }
@@ -380,8 +388,7 @@ BigInt *big_int_fast_add(BigInt *r, BigInt *a, BigInt *b)
 
     carry = 0;
     r_size = 0;
-    for (i = 0; i < bb->size; ++i)
-    {
+    for (i = 0; i < bb->size; ++i) {
         ADD_STAT_COLLECTION(BASIC_ADD_OTHER)
         sum = aa->chunks[i] + bb->chunks[i] + carry;
         ADD_STAT_COLLECTION(BASIC_ADD_CHUNK)
@@ -396,8 +403,7 @@ BigInt *big_int_fast_add(BigInt *r, BigInt *a, BigInt *b)
     }
 
     // Second, finish possible remaining chunks of larger integer
-    for (; i < aa->size; ++i)
-    {
+    for (; i < aa->size; ++i) {
         ADD_STAT_COLLECTION(BASIC_ADD_OTHER)
         sum = aa->chunks[i] + carry;
         ADD_STAT_COLLECTION(BASIC_ADD_CHUNK)
@@ -414,8 +420,7 @@ BigInt *big_int_fast_add(BigInt *r, BigInt *a, BigInt *b)
     // (ignoring overflows)
 
     r->sign = aa->sign;
-    if (carry && i < BIGINT_FIXED_SIZE_INTERNAL)
-    {
+    if (carry && i < BIGINT_FIXED_SIZE_INTERNAL) {
         r->chunks[i] = 1;
         ADD_STAT_COLLECTION(BASIC_BITWISE)
         r_size = i;
@@ -437,7 +442,6 @@ BigInt *big_int_fast_add(BigInt *r, BigInt *a, BigInt *b)
  */
 BigInt *big_int_add_256(BigInt *r, BigInt *a, BigInt *b)
 {
-
     __m256i a_0_3 = _mm256_loadu_si256((__m256i *)&(a->chunks[0]));
     __m256i a_1_4 = _mm256_loadu_si256((__m256i *)&(a->chunks[1]));
     __m256i a_2_5 = _mm256_loadu_si256((__m256i *)&(a->chunks[2]));

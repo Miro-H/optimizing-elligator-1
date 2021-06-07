@@ -276,3 +276,11 @@ Speedup V1 to V2 of using Curve1174-specific functions
 ```
 SETS=10 REPS=10000 ./scripts/make_curve1174_vs_bigint_comp.sh
 ```
+
+Plot to show benefit of using AVX for adds:
+```
+$ ../scripts/gen_types.py --src_file src/runtime_benchmark_curve1174.c  src/runtime_benchmark.c --dest_file include/benchmark_types.h --lookup_names BENCH_TYPE_ADD_256 BENCH_TYPE_ADD_GENERAL BENCH_TYPE_ADD_UPPER_BOUND
+2 3 6
+
+$ SETS=100 REPS=100000 BENCHMARKS="2 3 6" VERSION=3 make plot-runtime-benchmark
+```
