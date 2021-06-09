@@ -68,6 +68,8 @@ if __name__ == "__main__":
                         default=PLOTS_DEFAULT_PATH)
     parser.add_argument("--logs_names", help="Labels for each log file.")
     parser.add_argument("--logs_dirs", help="Log files with the stat counts.")
+    parser.add_argument("--pis_idx", help="Index of upper bound relevant for this data set.")
+    parser.add_argument("--runtimes", help="Runtime for this data set.")
 
     args = parser.parse_args()
 
@@ -81,12 +83,20 @@ if __name__ == "__main__":
     do_plot_border  = args.no_border
     logs_dirs       = args.logs_dirs
     logs_names      = args.logs_names
+    pis_idx         = args.pis_idx
+    runtimes        = args.runtimes
 
     if logs_dirs:
         logs_dirs = logs_dirs.split(";")
 
     if logs_names:
         logs_names = logs_names.split(";")
+
+    if pis_idx:
+        pis_idx = list(map(int, pis_idx.split(";")))
+
+    if runtimes:
+        runtimes = list(map(int, runtimes.split(";")))
 
     fig, ax = plt.subplots()
 
@@ -106,8 +116,8 @@ if __name__ == "__main__":
     dots_y = []
     dots_labels = []
 
+    idx = 0
     for i, logs_dir in enumerate(logs_dirs):
-
         for in_file in os.listdir(logs_dir):
             label = logs_names[i]
 
@@ -150,20 +160,19 @@ if __name__ == "__main__":
                     print("ERROR: invalid log file!")
                     exit(1)
 
-                x = (ops_tot) / read_bw
+                x = ops_tot / read_bw
 
-                # Plot every point for every peak performance bound
-                min_pi = min(pis)
-                y_val = min(min_pi, beta * x)
-
-                if min_pi < beta * x:
-                    y_val = min_pi
-                else:
-                    y_val = beta * x
+                # Upper bound
+                print(pis[pis_idx[idx]])
+                y_max = min(pis[pis_idx[idx]], beta * x)
+                # y = #iops / #runtime
+                y = min(y_max, ops_tot / runtimes[idx])
 
                 dots_x.append(x)
-                dots_y.append(y_val)
+                dots_y.append(y)
                 dots_labels.append(label)
+
+                idx += 1
 
     #
     # Create roofline plot

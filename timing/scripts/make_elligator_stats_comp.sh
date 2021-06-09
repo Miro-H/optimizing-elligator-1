@@ -94,4 +94,6 @@ ${SCRIPTS_DIR}/gen_roofline_plot.py                                            \
     --title "Roofline Plot for Elligator V${MIN_VERSION} to V${MAX_VERSION}"   \
     --plot_fname "${PLOTS_SUBDIR}/roofline_plot_V${MIN_VERSION}_to_V${MAX_VERSION}.png" \
     --logs_names "${LOGS_NAMES}"                                               \
-    --logs_dirs "${LOG_SUBDIR}"
+    --logs_dirs "${LOG_SUBDIR}"                                                \
+    --pis_idx "0;0;0;0;1;1"                                                    \
+    --runtimes "37911124;54957742;1219868;1811504;884499;1236013"
