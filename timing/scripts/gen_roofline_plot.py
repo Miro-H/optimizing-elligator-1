@@ -40,12 +40,16 @@ Y_LABEL = "P(n) [iops/cycle]"
 
 BW_LINE_LABEL = "$P(n) \\leq \\beta \cdot I(n)$"
 
-ALU_RE_PATTERN = r"(basic|avx)_(add|bitwise|other).*, (\d+)"
+AVX_ALU_RE_PATTERN = r"avx_(add|bitwise|other).*, (\d+)"
+ALU_RE_PATTERN = r"basic_(add|bitwise|other).*, (\d+)"
 BITWISE_RE_PATTERN = r"basic_bitwise.*, (\d+)"
-MUL_RE_PATTERN = r"(basic|avx)_mul.*, (\d+)"
+AVX_MUL_RE_PATTERN = r"avx_mul.*, (\d+)"
+MUL_RE_PATTERN = r"basic_mul.*, (\d+)"
 SHIFT_RE_PATTERN = r"basic_shift.*, (\d+)"
 DIV_RE_PATTERN = r"basic_div.*, (\d+)"
 
+# We assume all our BigInts are 64 bits, so only 4 fit into one 256 bit vector
+OPS_PER_VEC = 4
 
 if __name__ == "__main__":
     # Read arguments
@@ -124,17 +128,22 @@ if __name__ == "__main__":
             with open(os.path.join(logs_dir, in_file), "r") as in_fp:
                 data = in_fp.read()
 
+                avx_alu_ops = re.compile(AVX_ALU_RE_PATTERN).findall(data)
                 alu_ops = re.compile(ALU_RE_PATTERN).findall(data)
                 shift_ops = re.compile(SHIFT_RE_PATTERN).findall(data)
                 mul_ops = re.compile(MUL_RE_PATTERN).findall(data)
+                avx_mul_ops = re.compile(AVX_MUL_RE_PATTERN).findall(data)
                 div_ops = re.compile(DIV_RE_PATTERN).findall(data)
 
-                alu_ops_tot = sum(map(lambda x: int(x[2]), alu_ops))
+                alu_ops_tot = sum(map(lambda x: int(x[1]), alu_ops))
+                avx_alu_ops_tot = sum(map(lambda x: int(x[1]), avx_alu_ops))
                 shift_ops_tot = sum(map(int, shift_ops))
-                mul_ops_tot = sum(map(lambda x: int(x[1]), mul_ops))
+                mul_ops_tot = sum(map(int, mul_ops))
+                avx_mul_ops_tot = sum(map(int, avx_mul_ops))
                 div_ops_tot = sum(map(int, div_ops))
 
-                ops_tot = alu_ops_tot + shift_ops_tot + mul_ops_tot + div_ops_tot
+                ops_tot = alu_ops_tot + OPS_PER_VEC * avx_alu_ops_tot + shift_ops_tot \
+                            + mul_ops_tot + OPS_PER_VEC * avx_mul_ops_tot + div_ops_tot
 
                 mapping_type = "map" if "string_to_point" in in_file else "inv map"
                 print(f"Instruction mix for {label}, {mapping_type}:")
@@ -163,7 +172,6 @@ if __name__ == "__main__":
                 x = ops_tot / read_bw
 
                 # Upper bound
-                print(pis[pis_idx[idx]])
                 y_max = min(pis[pis_idx[idx]], beta * x)
                 # y = #iops / #runtime
                 y = min(y_max, ops_tot / runtimes[idx])
