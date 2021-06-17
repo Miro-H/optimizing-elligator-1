@@ -62,7 +62,7 @@ def plot(plot_title, plot_fname, log_xaxis, log_yaxis, bar_plot, ys_arr,
     colors = [next(colors_iter) for i in range(len(x_labels))]
 
     hatches_iter = cycle(hatches_strs)
-    hatches = [next(hatches_iter) for i in range(len(x_labels))]
+    hatches = [next(hatches_iter) for i in range(len(data_labels))]
 
     xs = np.arange(len(x_labels))
 

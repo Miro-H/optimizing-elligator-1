@@ -142,19 +142,22 @@ if __name__ == "__main__":
                 avx_mul_ops_tot = sum(map(int, avx_mul_ops))
                 div_ops_tot = sum(map(int, div_ops))
 
+                instr_tot = alu_ops_tot + avx_alu_ops_tot + shift_ops_tot \
+                            + mul_ops_tot + avx_mul_ops_tot + div_ops_tot
+
                 ops_tot = alu_ops_tot + OPS_PER_VEC * avx_alu_ops_tot + shift_ops_tot \
                             + mul_ops_tot + OPS_PER_VEC * avx_mul_ops_tot + div_ops_tot
 
                 mapping_type = "map" if "string_to_point" in in_file else "inv map"
                 print(f"Instruction mix for {label}, {mapping_type}:")
 
-                if ops_tot == 0:
-                    print(f"\t- NO OPS")
+                if instr_tot == 0:
+                    print(f"\t- NO INSTRUCTIONS")
                 else:
-                    print(f"\t- ALU: {round(alu_ops_tot/ops_tot, 2)}%")
-                    print(f"\t- SHIFT: {round(shift_ops_tot/ops_tot, 2)}%")
-                    print(f"\t- MUL: {round(mul_ops_tot/ops_tot, 2)}%")
-                    print(f"\t- DIV: {round(div_ops_tot/ops_tot, 2)}%")
+                    print(f"\t- ALU: {round((alu_ops_tot + avx_alu_ops_tot)/instr_tot, 2)}%")
+                    print(f"\t- SHIFT: {round(shift_ops_tot/instr_tot, 2)}%")
+                    print(f"\t- MUL: {round((mul_ops_tot + avx_mul_ops_tot)/instr_tot, 2)}%")
+                    print(f"\t- DIV: {round(div_ops_tot/instr_tot, 2)}%")
 
                 # Instruction mix indep
                 if "string_to_point" in in_file:
@@ -213,11 +216,16 @@ if __name__ == "__main__":
         color_idx = (color_idx + 1) % len(colors)
 
     # Plot dots
-    markers = ["x", "1", "+", "2", "|", "3", "4"]
+    markers = ["o", "^", "x", "1", "+", "2", "|", "3", "4"]
+
+    # XXX: Makes the assumption that we plot x versions and for each version two functions!
+    TYPES_PER_VERSION = 2
     for i in range(len(dots_x)):
-        ax.plot(dots_x[i], dots_y[i], marker=markers[i], markersize=10,
+        ax.plot(dots_x[i], dots_y[i], marker=markers[i % TYPES_PER_VERSION],
             color=colors[color_idx], label=dots_labels[i], linestyle="None")
-        color_idx = (color_idx + 1) % len(colors)
+
+        if i % 2 == 1:
+            color_idx = (color_idx + 1) % len(colors)
 
     plt.grid(linestyle="-", axis="y", color="white")
     ax.set_xlabel(X_LABEL)
