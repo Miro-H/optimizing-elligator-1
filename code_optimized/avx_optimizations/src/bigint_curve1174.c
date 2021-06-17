@@ -59,7 +59,7 @@ BigInt *big_int_curve1174_mod(BigInt *r)
 
         // Intentionally no mod reduction, since we do one later. We know that
         // our intermediate values are never larger than (q-1)^2 and 288 * (q-1)^2 < 2^512
-        big_int_mul(r_upper_288, r_upper, big_int_288); // a1 * 288
+        big_int_mul_single_chunk(r_upper_288, r_upper, 288); // a1 * 288
 
         r_lower = r;
         r_lower->size = 8;
