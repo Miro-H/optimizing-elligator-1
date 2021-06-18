@@ -12,7 +12,7 @@
 #define BENCH_TYPE_ADD_GENERAL            3
 #define BENCH_TYPE_ADD_MOD_CURVE          4
 #define BENCH_TYPE_ADD_MOD_RANDOM         5
-#define BENCH_TYPE_ADD_UPPER_BOUND        6
+#define BENCH_TYPE_ADD_OPTIMAL_BOUND      6
 #define BENCH_TYPE_ALLOC                  7
 #define BENCH_TYPE_CALLOC                 8
 #define BENCH_TYPE_CHI                    9
@@ -71,6 +71,6 @@
 #define BENCH_TYPE_SUB                    62
 #define BENCH_TYPE_SUB_MOD_CURVE          63
 #define BENCH_TYPE_SUB_MOD_RANDOM         64
-#define BENCH_TYPE_SUB_UPPER_BOUND        65
+#define BENCH_TYPE_SUB_OPTIMAL_BOUND      65
 
 #endif // BENCHMARK_TYPES_H_

@@ -86,8 +86,10 @@ LOG_SUBDIRS := $(LOG_SUBDIRS)/$(shell date "+%Y-%m-%d_%H-%M-%S")
 export LOG_SUBDIRS
 
 # Add standard optimization flags if no others are specified
-ifeq ($(OPT_FLAGS),)
-	OPT_FLAGS = -Ofast
+ifneq ($(VERSION), 1)
+	ifeq ($(OPT_FLAGS),)
+		OPT_FLAGS = -Ofast
+	endif
 endif
 CFLAGS += $(OPT_FLAGS)
 

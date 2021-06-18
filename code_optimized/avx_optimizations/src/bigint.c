@@ -566,7 +566,7 @@ BigInt *big_int_add_256(BigInt *r, BigInt *a, BigInt *b)
  * \assumption a, b positive and has only 256 bits
  * \assumption overflow is not cleaned up
  */
-BigInt *big_int_add_upper_bound(BigInt *r, BigInt *a, BigInt *b)
+BigInt *big_int_add_optimal_bound(BigInt *r, BigInt *a, BigInt *b)
 {
     __m256i a_lo = _mm256_loadu_si256((__m256i *)&(a->chunks));
     __m256i a_hi = _mm256_loadu_si256((__m256i *)&(a->chunks[8]));
@@ -705,7 +705,7 @@ BigInt *big_int_fast_sub(BigInt *r, BigInt *a, BigInt *b)
  * \assumption a->sign == b->sign
  * \assumption overflow is not cleaned up
  */
-BigInt *big_int_sub_upper_bound(BigInt *r, BigInt *a, BigInt *b)
+BigInt *big_int_sub_optimal_bound(BigInt *r, BigInt *a, BigInt *b)
 {
 
     __m256i a_lo = _mm256_loadu_si256((__m256i *)&(a->chunks));

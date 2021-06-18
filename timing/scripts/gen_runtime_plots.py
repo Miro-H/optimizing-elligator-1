@@ -120,11 +120,32 @@ def plot(plot_title, plot_fname, log_xaxis, log_yaxis, bar_plot, speedup_plot, l
               + "\n\\hline")
 
         for i in range(len(x_labels)):
-            print(f"\\texttt{{{x_labels[i]}}}", end="")
+            print(x_labels[i], end="")
             for version in versions[1:]:
                 speedup = round(ys_norm[version][i], 1)
                 print(f" & {speedup}", end="")
             print("\\\\\n\\hline")
+    else:
+        print("Latex table for runtime:\n\\hline")
+        VERSION_MACROS = {"V1": r"\VOne{}", "V2": r"\VTwo{}", "V3": r"\VThree{}"}
+
+        print(r"\textbf{function}", end="", )
+        for version in versions:
+            if version not in VERSION_MACROS:
+                # WARING, using V3 as default version!
+                version_label = VERSION_MACROS["V3"]
+            else:
+                version_label = VERSION_MACROS[version]
+
+            print(f" & \\textbf{{{version_label}}}", end="")
+        print(" \\\\\n\\hline")
+
+        for i in range(len(x_labels)):
+            print(x_labels[i], end="")
+            for version in versions:
+                cycles = round(ys_norm[version][i])
+                print(f" & {cycles}", end="")
+            print(" \\\\\n\\hline")
 
     xs = np.arange(len(x_labels))
     nr_of_versions = len(versions)

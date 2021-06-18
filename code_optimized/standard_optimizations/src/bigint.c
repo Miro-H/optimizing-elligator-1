@@ -545,7 +545,7 @@ BigInt *big_int_add_256(BigInt *r, BigInt *a, BigInt *b)
  * \assumption a, b positive and has only 256 bits
  * \assumption overflow is not cleaned up
  */
-BigInt *big_int_add_upper_bound(BigInt *r, BigInt *a, BigInt *b)
+BigInt *big_int_add_optimal_bound(BigInt *r, BigInt *a, BigInt *b)
 {
     dbl_chunk_size_t a_c_0 = a->chunks[0];
     dbl_chunk_size_t a_c_1 = a->chunks[1];
@@ -721,7 +721,7 @@ BigInt *big_int_fast_sub(BigInt *r, BigInt *a, BigInt *b)
  * \assumption a->sign == b->sign
  * \assumption overflow is not cleaned up
  */
-BigInt *big_int_sub_upper_bound(BigInt *r, BigInt *a, BigInt *b)
+BigInt *big_int_sub_optimal_bound(BigInt *r, BigInt *a, BigInt *b)
 {
 
     dbl_chunk_size_t a_c_0 = a->chunks[0];

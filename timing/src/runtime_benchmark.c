@@ -1200,19 +1200,19 @@ void bench_big_int_add_256(void *bench_args, char *bench_name, char *path)
 //=== === === === === === === === === === === === === === ===
 
 #if VERSION > 2
-void bench_big_int_add_upper_bound_fn(void *arg)
+void bench_big_int_add_optimal_bound_fn(void *arg)
 {
     int64_t i = *((int64_t *) arg);
-    big_int_add_upper_bound(RUNTIME_DEREF(big_int_array_1, i),
+    big_int_add_optimal_bound(RUNTIME_DEREF(big_int_array_1, i),
         RUNTIME_DEREF(big_int_array_2, i), RUNTIME_DEREF(big_int_array_3, i));
 }
 
-void bench_big_int_add_upper_bound(void *bench_args, char *bench_name, char *path)
+void bench_big_int_add_optimal_bound(void *bench_args, char *bench_name, char *path)
 {
     BenchmarkClosure bench_closure = {
         .bench_prep_args = bench_args,
         .bench_prep_fn = bench_big_int_prep,
-        .bench_fn = bench_big_int_add_upper_bound_fn,
+        .bench_fn = bench_big_int_add_optimal_bound_fn,
         .bench_cleanup_fn = bench_big_int_cleanup,
     };
     benchmark_runner(bench_closure, bench_name, path, SETS, REPS, 0);
@@ -1222,19 +1222,19 @@ void bench_big_int_add_upper_bound(void *bench_args, char *bench_name, char *pat
 //=== === === === === === === === === === === === === === ===
 
 #if VERSION > 1
-void bench_big_int_sub_upper_bound_fn(void *arg)
+void bench_big_int_sub_optimal_bound_fn(void *arg)
 {
     int64_t i = *((int64_t *) arg);
-    big_int_sub_upper_bound(RUNTIME_DEREF(big_int_array_1, i),
+    big_int_sub_optimal_bound(RUNTIME_DEREF(big_int_array_1, i),
         RUNTIME_DEREF(big_int_array_2, i), RUNTIME_DEREF(big_int_array_3, i));
 }
 
-void bench_big_int_sub_upper_bound(void *bench_args, char *bench_name, char *path)
+void bench_big_int_sub_optimal_bound(void *bench_args, char *bench_name, char *path)
 {
     BenchmarkClosure bench_closure = {
         .bench_prep_args = bench_args,
         .bench_prep_fn = bench_big_int_prep,
-        .bench_fn = bench_big_int_sub_upper_bound_fn,
+        .bench_fn = bench_big_int_sub_optimal_bound_fn,
         .bench_cleanup_fn = bench_big_int_cleanup,
     };
     benchmark_runner(bench_closure, bench_name, path, SETS, REPS, 0);
@@ -1279,9 +1279,9 @@ int main(int argc, char const *argv[])
 
         #elif VERSION == 2
 
-        BENCHMARK(bench_type, BENCH_TYPE_SUB_UPPER_BOUND,
-            bench_big_int_sub_upper_bound((void *)bench_big_int_size_256_args,
-                "sub (upper bound)", LOG_PATH "/runtime_big_int_sub_upper_bound.log"));
+        BENCHMARK(bench_type, BENCH_TYPE_SUB_OPTIMAL_BOUND,
+            bench_big_int_sub_optimal_bound((void *)bench_big_int_size_256_args,
+                "sub (optimal)", LOG_PATH "/runtime_big_int_sub_optimal_bound.log"));
 
         BENCHMARK(bench_type, BENCH_TYPE_MUL_SINGLE_CHUNK,
                 bench_big_int_mul_single_chunk((void *)bench_big_int_size_256_args,
@@ -1305,9 +1305,9 @@ int main(int argc, char const *argv[])
         bench_big_int_add_general((void *)bench_big_int_size_256_args,
         "add (general)", LOG_PATH "/runtime_big_int_add_general.log"));
 
-        BENCHMARK(bench_type, BENCH_TYPE_ADD_UPPER_BOUND,
-        bench_big_int_add_upper_bound((void *)bench_big_int_size_256_args,
-        "add (upper bound)", LOG_PATH "/runtime_big_int_add_upper_bound.log"));
+        BENCHMARK(bench_type, BENCH_TYPE_ADD_OPTIMAL_BOUND,
+        bench_big_int_add_optimal_bound((void *)bench_big_int_size_256_args,
+        "add (optimal)", LOG_PATH "/runtime_big_int_add_optimal_bound.log"));
 
         #endif
 
