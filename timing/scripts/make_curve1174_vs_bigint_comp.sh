@@ -116,15 +116,15 @@ LOGS_NAMES="bigint;curve1174"
 ${SCRIPTS_DIR}/gen_runtime_plots.py                                            \
     --title "Runtime Comparison for V${VERSION} Curve1174 vs V1 BigInt \
     (${SETS} sets, ${REPS} reps)"                                              \
-    --plot_fname "${PLOTS_SUBDIR}/comparison_bar_log_scale.png"                \
+    --plot_fname "${PLOTS_SUBDIR}/comparison_bar_log_scale.eps"                \
     --logs_dir "${LOG_SUBDIR}"                                                 \
     --logs_names "${LOGS_NAMES}"                                               \
     --bar_plot                                                                 \
-    --log_yaxis
+    --log_xaxis
 
 ${SCRIPTS_DIR}/gen_runtime_plots.py                                            \
     --title "Speedup Comparison for V${VERSION} Curve1174 vs V1 BigInt (${SETS} sets, ${REPS} reps)"                                              \
-    --plot_fname "${PLOTS_SUBDIR}/speedup_comparison_bar_log_scale.png"        \
+    --plot_fname "${PLOTS_SUBDIR}/speedup_comparison_bar_log_scale.eps"        \
     --logs_dir "${LOG_SUBDIR}"                                                 \
     --logs_names "${LOGS_NAMES}"                                               \
     --speedup_plot

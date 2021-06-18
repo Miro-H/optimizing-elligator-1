@@ -13,6 +13,9 @@ fi
 SETS="${SETS:-$DEFAULT_SETS}"
 REPS="${REPS:-$DEFAULT_REPS}"
 
+DEFAULT_PATTERN=".*"
+PATTERN="${PATTERN:-$DEFAULT_PATTERN}"
+
 DEFAULT_MIN_VERSION=1
 DEFAULT_MAX_VERSION=3
 
@@ -124,15 +127,17 @@ echo -e "\t- Create benchmark plots"
 
 ${SCRIPTS_DIR}/gen_runtime_plots.py                                            \
     --title "Runtime Comparison for different Elligator implementations (${SETS} sets, ${REPS} reps)" \
-    --plot_fname "${PLOTS_SUBDIR}/comparison_bar_log_scale.png"                \
+    --plot_fname "${PLOTS_SUBDIR}/comparison_bar_log_scale.eps"                \
     --logs_dir "${LOG_SUBDIR}"                                                 \
     --logs_names "${LOGS_NAMES}"                                               \
+    --pattern "${PATTERN}"                                                     \
     --bar_plot                                                                 \
-    --log_yaxis
+    --log_xaxis
 
 ${SCRIPTS_DIR}/gen_runtime_plots.py                                            \
     --title "Speedup Comparison for different Elligator implementations (${SETS} sets, ${REPS} reps)" \
-    --plot_fname "${PLOTS_SUBDIR}/speedup_comparison_bar_log_scale.png"                \
+    --plot_fname "${PLOTS_SUBDIR}/speedup_comparison_bar_log_scale.eps"                \
     --logs_dir "${LOG_SUBDIR}"                                                 \
     --logs_names "${LOGS_NAMES}"                                               \
+    --pattern "${PATTERN}"                                                     \
     --speedup_plot

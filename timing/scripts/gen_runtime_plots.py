@@ -5,6 +5,7 @@ import matplotlib
 import matplotlib.pyplot as plt
 import os
 import numpy as np
+import re
 
 from statistics import median
 from ast import literal_eval
@@ -44,8 +45,8 @@ TITLE_FONT_SIZE = 20
 LABEL_FONT_SIZE = 12
 
 
-def plot(plot_title, plot_fname, log_xaxis, log_yaxis, bar_plot, speedup_plot, logs_dirs, logs_names):
-    plt.rcParams["figure.figsize"] = (14,8)
+def plot(plot_title, plot_fname, log_xaxis, log_yaxis, bar_plot, speedup_plot, logs_dirs, logs_names, pattern):
+    plt.rcParams["figure.figsize"] = (8,14)
 
     x_label, y_label = "", ""
     is_first_data_set = True
@@ -57,13 +58,13 @@ def plot(plot_title, plot_fname, log_xaxis, log_yaxis, bar_plot, speedup_plot, l
     color_idx = 0
 
     first = True
-    x_labels = []
+    y_labels = []
     versions = []
-    ys = dict()
+    xs = dict()
     for i, logs_dir in enumerate(logs_dirs):
         version = logs_names[i]
         versions.append(version)
-        ys[version] = dict()
+        xs[version] = dict()
 
         for i, in_file in enumerate(os.listdir(logs_dir)):
             with open(os.path.join(logs_dir, in_file), "r") as in_fp:
@@ -73,13 +74,13 @@ def plot(plot_title, plot_fname, log_xaxis, log_yaxis, bar_plot, speedup_plot, l
                     continue
 
                 data_label = lines[0].rstrip()
-                _, data_y_label = lines[1].split(", ")
-                data_x_label = "Benchmark"
+                _, data_x_label = lines[1].split(", ")
+                data_y_label = "Benchmark"
 
                 if is_first_data_set:
-                    x_label, y_label = data_x_label, data_y_label
+                    y_labelTODO, x_label = data_y_label, data_x_label
                     is_first_data_set = False
-                elif x_label != data_x_label or y_label != data_y_label:
+                elif y_labelTODO != data_y_label or x_label != data_x_label:
                     print("ERROR: trying to plot data with different x/y axis labels!")
                     exit(1)
 
@@ -88,30 +89,32 @@ def plot(plot_title, plot_fname, log_xaxis, log_yaxis, bar_plot, speedup_plot, l
                     cycles.append(literal_eval(line.split(", ")[1]))
 
                 cycles_median = median(cycles)
-                ys[version][data_label] = cycles_median
+                xs[version][data_label] = cycles_median
 
         first = False
 
     # Gather all data labels
-    x_labels = set()
+    y_labels = set()
     for version in versions:
-        x_labels = x_labels.union(set(ys[version].keys()))
-    x_labels = sorted(list(x_labels))
+        for y_label in xs[version].keys():
+            if y_label not in y_labels and re.match(pattern, y_label):
+                y_labels.add(y_label)
+    y_labels = sorted(list(y_labels))
 
 
     # Normalize data and add zero values for non-existant data
-    ys_norm = dict()
+    xs_norm = dict()
     for version in versions:
-        ys_norm[version] = []
-        for x_label in x_labels:
-            if x_label not in ys[version]:
-                ys_norm[version].append(0)
+        xs_norm[version] = []
+        for y_label in y_labels:
+            if y_label not in xs[version]:
+                xs_norm[version].append(0)
             else:
                 if speedup_plot:
                     # normalize all data in relation to first version
-                    ys_norm[version].append(ys[versions[0]][x_label] / ys[version][x_label])
+                    xs_norm[version].append(xs[versions[0]][y_label] / xs[version][y_label])
                 else:
-                    ys_norm[version].append(ys[version][x_label])
+                    xs_norm[version].append(xs[version][y_label])
 
     # print latex table of speedup plot
     if speedup_plot:
@@ -119,10 +122,10 @@ def plot(plot_title, plot_fname, log_xaxis, log_yaxis, bar_plot, speedup_plot, l
         print(r"\textbf{function} & \textbf{\VTwo{}} & \textbf{\VThree{}} \\"
               + "\n\\hline")
 
-        for i in range(len(x_labels)):
-            print(x_labels[i], end="")
+        for i in range(len(y_labels)):
+            print(y_labels[i], end="")
             for version in versions[1:]:
-                speedup = round(ys_norm[version][i], 1)
+                speedup = round(xs_norm[version][i], 1)
                 print(f" & {speedup}", end="")
             print("\\\\\n\\hline")
     else:
@@ -140,18 +143,18 @@ def plot(plot_title, plot_fname, log_xaxis, log_yaxis, bar_plot, speedup_plot, l
             print(f" & \\textbf{{{version_label}}}", end="")
         print(" \\\\\n\\hline")
 
-        for i in range(len(x_labels)):
-            print(x_labels[i], end="")
+        for i in range(len(y_labels)):
+            print(y_labels[i], end="")
             for version in versions:
-                cycles = round(ys_norm[version][i])
+                cycles = round(xs_norm[version][i])
                 print(f" & {cycles}", end="")
             print(" \\\\\n\\hline")
 
-    xs = np.arange(len(x_labels))
+    ys = np.arange(len(y_labels))
     nr_of_versions = len(versions)
 
     colors_iter = cycle(color_codes)
-    colors = [next(colors_iter) for i in range(len(x_labels))]
+    colors = [next(colors_iter) for i in range(len(y_labels))]
 
     hatches_iter = cycle(hatches_strs)
     hatches = [next(hatches_iter) for i in range(nr_of_versions)]
@@ -163,25 +166,27 @@ def plot(plot_title, plot_fname, log_xaxis, log_yaxis, bar_plot, speedup_plot, l
 
     fig, ax = plt.subplots()
 
-    x_off = -bar_width * len(versions) / 2
+    y_off = -bar_width * len(versions) / 2
     for i, version in enumerate(versions):
         if bar_plot or speedup_plot:
             if nr_of_versions > 1 or speedup_plot:
-                ax.bar(xs + x_off, ys_norm[version], bar_width, label=version,
+                ax.barh(ys + y_off, xs_norm[version], bar_width, label=version,
                        align="edge", color=colors, hatch=hatches[i])
             else:
-                ax.bar(xs + x_off, ys_norm[version], bar_width, label=version,
+                ax.barh(ys + y_off, xs_norm[version], bar_width, label=version,
                        align="edge", color=colors)
-            x_off += bar_width
+            y_off += bar_width
         else:
-            ax.scatter(xs, ys_norm[version], marker='x', c=colors)
+            ax.scatter(ys, xs_norm[version], marker='x', c=colors)
 
-    plt.xticks(ticks=xs, labels=x_labels, rotation='vertical')
+    ax.set_yticks(ys)
+    ax.set_yticklabels(y_labels)
+    ax.invert_yaxis()  # labels read top-to-bottom
     plt.grid(linestyle="-", axis="y", color="white")
 
     if speedup_plot:
-        y_label = "speedup"
-    ax.set_ylabel(y_label, rotation=0, loc="top")
+        x_label = "speedup"
+    ax.set_xlabel(x_label)
 
     if nr_of_versions > 1:
         ax.legend()
@@ -232,6 +237,8 @@ if __name__ == "__main__":
     parser.add_argument("--speedup_plot", help="Toggle speedup plots. The first "\
                         "log name is taken as baseline.",
                         action="store_true")
+    parser.add_argument("--pattern", help="Only plot stats matching the given regex pattern.",
+                        default=r".*")
 
     args = parser.parse_args()
 
@@ -243,6 +250,7 @@ if __name__ == "__main__":
     log_yaxis       = args.log_yaxis
     bar_plot        = args.bar_plot
     speedup_plot    = args.speedup_plot
+    pattern         = args.pattern
 
     if logs_dirs:
         logs_dirs = logs_dirs.split(";")
@@ -257,4 +265,4 @@ if __name__ == "__main__":
         print("ERROR: comparisons are only supported for bar or speedup plots.")
         exit(1)
 
-    plot(title, plot_fname, log_xaxis, log_yaxis, bar_plot, speedup_plot, logs_dirs, logs_names)
+    plot(title, plot_fname, log_xaxis, log_yaxis, bar_plot, speedup_plot, logs_dirs, logs_names, pattern)
