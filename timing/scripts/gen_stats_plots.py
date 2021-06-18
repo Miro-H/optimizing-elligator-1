@@ -197,10 +197,10 @@ if __name__ == "__main__":
                 continue
 
             fn_name = x_labels[i].replace("big_int_", "").replace("_", r"\_")
-            print(f"\\texttt{{{fn_name}}}")
+            print(f"\\texttt{{{fn_name}}}", end="")
             for log_name in logs_names:
-                print(f" & {ys_arr[log_name][i]}")
-            print("\\\\\n\\hline")
+                print(f" & {ys_arr[log_name][i]}", end="")
+            print(" \\\\\n\\hline")
 
         title = f"{title_prefix} for '{data_label}'"
         plot_fname = plot_dir + "/" + in_file.split("/")[-1].split(".")[0] + ".png"

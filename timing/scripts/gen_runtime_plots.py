@@ -113,6 +113,18 @@ def plot(plot_title, plot_fname, log_xaxis, log_yaxis, bar_plot, speedup_plot, l
                 else:
                     ys_norm[version].append(ys[version][x_label])
 
+    # print latex table of speedup plot
+    if speedup_plot:
+        print("Latex table for speedup compared to V1:\n\\hline")
+        print(r"\textbf{function} & \textbf{\VTwo{}} & \textbf{\VThree{}} \\"
+              + "\n\\hline")
+
+        for i in range(len(x_labels)):
+            print(f"\\texttt{{{x_labels[i]}}}", end="")
+            for version in versions[1:]:
+                speedup = round(ys_norm[version][i], 1)
+                print(f" & {speedup}", end="")
+            print("\\\\\n\\hline")
 
     xs = np.arange(len(x_labels))
     nr_of_versions = len(versions)
