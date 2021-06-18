@@ -127,10 +127,8 @@ if __name__ == "__main__":
           + "& \\textbf{\\execShift{}} & \\textbf{\\execMul{}} & \\textbf{\\execDiv{}} \\\\")
     idx = 0
     for i, logs_dir in enumerate(logs_dirs):
-        label = logs_names[i]
-
         # XXX: Makes the assumption that we plot 2 values per version
-        print(f"\\hline\n\\multirow{{2}}{{*}}{{{VERSION_MACROS[label]}}}", end="")
+        print(f"\\hline\n\\multirow{{2}}{{*}}{{{VERSION_MACROS[logs_names[i]]}}}", end="")
 
         for in_file in os.listdir(logs_dir):
             with open(os.path.join(logs_dir, in_file), "r") as in_fp:
@@ -169,7 +167,6 @@ if __name__ == "__main__":
                           + f"{round(100 * div_ops_tot/instr_tot, 1)} \\\\")
 
                 # Instruction mix indep
-                label += f" {mapping_type}"
                 if "string_to_point" in in_file:
                     # 1 BigInt, 1 curve
                     read_bw = 12672
@@ -187,6 +184,7 @@ if __name__ == "__main__":
                 # y = #iops / #runtime
                 y = min(y_max, ops_tot / runtimes[idx])
 
+                label = f"{logs_names[i]} {mapping_type}"
                 dots_x.append(x)
                 dots_y.append(y)
                 dots_labels.append(label)
@@ -202,7 +200,7 @@ if __name__ == "__main__":
     xs = np.linspace(2**(-10), max_x_val, 1000)
     ys = [beta * x for x in xs]
     ax.loglog(xs, ys, linewidth=.8, base=2)
-    ax.text(xs[-1] * 0.05, ys[-1] * 1.1, BW_LINE_LABEL,
+    ax.text(xs[-1] * 0.05, ys[-1] * 1.05, BW_LINE_LABEL,
         fontsize=LABEL_FONT_SIZE, color=colors[color_idx])
 
     # Plot peak performance bound(s)
@@ -246,7 +244,7 @@ if __name__ == "__main__":
     ax.spines['top'].set_visible(False)
 
     if len(dots_x) > 0:
-        ax.legend(loc="upper left", numpoints=1)
+        ax.legend(loc="upper left", numpoints=1, fontsize=LABEL_FONT_SIZE)
 
     fig.tight_layout()
 
