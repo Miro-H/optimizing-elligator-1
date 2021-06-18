@@ -41,8 +41,8 @@ plt.rcParams["mathtext.default"] = "regular"
 #
 PLOTS_DIR_DEFAULT_PATH  = "../plots"
 LOGS_DIR_DEFAULT_PATH  = "../logs"
-TITLE_FONT_SIZE = 20
-LABEL_FONT_SIZE = 12
+TITLE_FONT_SIZE = 28
+LABEL_FONT_SIZE = 20
 
 
 def plot(plot_title, plot_fname, log_xaxis, log_yaxis, bar_plot, speedup_plot, logs_dirs, logs_names, pattern):
@@ -180,13 +180,13 @@ def plot(plot_title, plot_fname, log_xaxis, log_yaxis, bar_plot, speedup_plot, l
             ax.scatter(ys, xs_norm[version], marker='x', c=colors)
 
     ax.set_yticks(ys)
-    ax.set_yticklabels(y_labels)
+    ax.set_yticklabels(y_labels, fontsize=LABEL_FONT_SIZE)
     ax.invert_yaxis()  # labels read top-to-bottom
     plt.grid(linestyle="-", axis="y", color="white")
 
     if speedup_plot:
         x_label = "speedup"
-    ax.set_xlabel(x_label)
+    ax.set_xlabel(x_label, fontsize=LABEL_FONT_SIZE)
 
     if nr_of_versions > 1:
         ax.legend()
