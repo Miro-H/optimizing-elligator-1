@@ -27,13 +27,14 @@ plt.rcParams["mathtext.default"] = "regular"
 
 plt.rcParams["figure.figsize"] = (10,8)
 
+plt.rcParams["text.usetex"] = True
 
 #
 # Constants
 #
 PLOTS_DEFAULT_PATH  = "./plot.png"
-TITLE_FONT_SIZE = 20
-LABEL_FONT_SIZE = 12
+TITLE_FONT_SIZE = 28
+LABEL_FONT_SIZE = 20
 
 X_LABEL = "I(n) [iops/byte]"
 Y_LABEL = "P(n) [iops/cycle]"
@@ -120,11 +121,18 @@ if __name__ == "__main__":
     dots_y = []
     dots_labels = []
 
+    VERSION_MACROS = { "V1": "\VOne{}", "V2": "\VTwo{}", "V3": "\VThree{}" }
+    FN_MACROS = {"str2pnt": "\StrToPnt{}", "pnt2str": "\PntToStr{}" }
+    print("Instruction mix table:\n\\textbf{version} & \\textbf{function} & \\textbf{\\execALU{}} "
+          + "& \\textbf{\\execShift{}} & \\textbf{\\execMul{}} & \\textbf{\\execDiv{}} \\\\")
     idx = 0
     for i, logs_dir in enumerate(logs_dirs):
-        for in_file in os.listdir(logs_dir):
-            label = logs_names[i]
+        label = logs_names[i]
 
+        # XXX: Makes the assumption that we plot 2 values per version
+        print(f"\\hline\n\\multirow{{2}}{{*}}{{{VERSION_MACROS[label]}}}", end="")
+
+        for in_file in os.listdir(logs_dir):
             with open(os.path.join(logs_dir, in_file), "r") as in_fp:
                 data = in_fp.read()
 
@@ -148,25 +156,25 @@ if __name__ == "__main__":
                 ops_tot = alu_ops_tot + OPS_PER_VEC * avx_alu_ops_tot + shift_ops_tot \
                             + mul_ops_tot + OPS_PER_VEC * avx_mul_ops_tot + div_ops_tot
 
-                mapping_type = "map" if "string_to_point" in in_file else "inv map"
-                print(f"Instruction mix for {label}, {mapping_type}:")
+                mapping_type = "str2pnt" if "string_to_point" in in_file else "pnt2str"
+                # print(f"Instruction mix for {label}, {mapping_type}:")
 
                 if instr_tot == 0:
                     print(f"\t- NO INSTRUCTIONS")
                 else:
-                    print(f"\t- ALU: {round((alu_ops_tot + avx_alu_ops_tot)/instr_tot, 2)}%")
-                    print(f"\t- SHIFT: {round(shift_ops_tot/instr_tot, 2)}%")
-                    print(f"\t- MUL: {round((mul_ops_tot + avx_mul_ops_tot)/instr_tot, 2)}%")
-                    print(f"\t- DIV: {round(div_ops_tot/instr_tot, 2)}%")
+                    print(f" & {FN_MACROS[mapping_type]} & "
+                          + f"{round(100 * (alu_ops_tot + avx_alu_ops_tot)/instr_tot, 1)}\ & "
+                          + f"{round(100 * shift_ops_tot/instr_tot, 1)} & "
+                          + f"{round(100 * (mul_ops_tot + avx_mul_ops_tot)/instr_tot, 1)} & "
+                          + f"{round(100 * div_ops_tot/instr_tot, 1)} \\\\")
 
                 # Instruction mix indep
+                label += f" {mapping_type}"
                 if "string_to_point" in in_file:
                     # 1 BigInt, 1 curve
-                    label += " str2pnt"
                     read_bw = 12672
                 elif "point_to_string" in in_file:
                     # 1 curve point, 1 curve
-                    label += " pnt2str"
                     read_bw = 13824
                 else:
                     print("ERROR: invalid log file!")
@@ -191,10 +199,10 @@ if __name__ == "__main__":
     color_idx = 0
 
     # Plot bandwidth bound
-    xs = np.linspace(2**(-6), max_x_val, 1000)
+    xs = np.linspace(2**(-10), max_x_val, 1000)
     ys = [beta * x for x in xs]
     ax.loglog(xs, ys, linewidth=.8, base=2)
-    ax.text(xs[-1] * 0.3, ys[-1] * 1.1, BW_LINE_LABEL,
+    ax.text(xs[-1] * 0.05, ys[-1] * 1.1, BW_LINE_LABEL,
         fontsize=LABEL_FONT_SIZE, color=colors[color_idx])
 
     # Plot peak performance bound(s)
@@ -203,15 +211,15 @@ if __name__ == "__main__":
         xs = np.linspace(0, max_x_val, 1000)
         ys = [pis[i] for x in xs]
         ax.loglog(xs, ys, linewidth=.8, base=2)
-        ax.text(xs[-1]**(1/3), ys[-1] * 1.05, f"{pi_labels[i]}; $P(n) \\leq {pis[i]}$",
+        ax.text(xs[-1]**(1/3), ys[-1] * 1.2, f"{pi_labels[i]}; $P(n) \\leq {pis[i]}$",
             fontsize=LABEL_FONT_SIZE, color=colors[color_idx])
 
         if do_plot_border:
             # Plot border between memory and compute bounded areas
             intersec_x = pis[i]/beta
             ax.vlines(intersec_x, 0, pis[i], color="gray", linestyle="--", linewidth=.8)
-            ax.text(intersec_x * 0.6, 0.3, f"$x = {round(pis[i]/beta, 2)}$",
-                    fontsize=LABEL_FONT_SIZE, color="gray")
+            # ax.text(intersec_x * 0.6, 0.3, f"$x = {round(pis[i]/beta, 2)}$",
+            #         fontsize=LABEL_FONT_SIZE, color="gray")
 
         color_idx = (color_idx + 1) % len(colors)
 
@@ -228,9 +236,12 @@ if __name__ == "__main__":
             color_idx = (color_idx + 1) % len(colors)
 
     plt.grid(linestyle="-", axis="y", color="white")
-    ax.set_xlabel(X_LABEL)
-    ax.set_ylabel(Y_LABEL, rotation=0, loc="top")
-    ax.set_title(plot_title, loc="left", fontsize=TITLE_FONT_SIZE)
+    ax.set_xlabel(X_LABEL, fontsize=LABEL_FONT_SIZE)
+    # ax.set_ylabel(Y_LABEL, rotation=0, loc="top")
+    plt.title(f"\\fontsize{{{TITLE_FONT_SIZE}pt}}{{3em}}\\selectfont{{}}{{{plot_title}}}\n"
+              + f"\\fontsize{{{LABEL_FONT_SIZE}pt}}{{3em}}\\selectfont{{}}{{{Y_LABEL}}}",
+              loc="left")
+
     ax.spines['right'].set_visible(False)
     ax.spines['top'].set_visible(False)
 
