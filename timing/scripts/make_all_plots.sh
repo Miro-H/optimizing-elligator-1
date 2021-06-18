@@ -28,12 +28,13 @@ if [[ ! -z "${LOGS_DIRS}" ]]; then
     echo "#        Generate comparison plots for runtime measurements         #"
     echo "#####################################################################"
 
-    ${SCRIPTS_DIR}/gen_runtime_plots.py                                             \
-        --title "Median Runtime Comparison (log scale, ${SETS} sets, ${REPS} reps)" \
-        --plot_fname "${PLOTS_DIR}/comparison_bar_log_scale.eps"                    \
-        --logs_dir "${LOGS_DIRS}"                                                     \
-        --logs_names "${LOGS_NAMES}"                                                  \
-        --bar_plot                                                                  \
+        # --title "Median Runtime Comparison (${SETS} sets, ${REPS} reps)"        \
+    ${SCRIPTS_DIR}/gen_runtime_plots.py                                         \
+        --title "Median Runtime Comparison"                                     \
+        --plot_fname "${PLOTS_DIR}/comparison_bar_log_scale.eps"                \
+        --logs_dir "${LOGS_DIRS}"                                               \
+        --logs_names "${LOGS_NAMES}"                                            \
+        --bar_plot                                                              \
         --log_xaxis
 
 elif [[ -z "${COLLECT_STATS}" ]]; then
@@ -59,7 +60,7 @@ elif [[ -z "${COLLECT_STATS}" ]]; then
         --bar_plot
 
     ${SCRIPTS_DIR}/gen_runtime_plots.py                                            \
-        --title "Overview Median Runtime (log scale, ${SETS} sets, ${REPS} reps)"  \
+        --title "Overview Median Runtime (${SETS} sets, ${REPS} reps)"  \
         --plot_fname "${PLOTS_DIR}/overview_bar_log_scale.eps"                     \
         --logs_dir "${LOGS_DIR}"                                                   \
         --bar_plot                                                                 \
