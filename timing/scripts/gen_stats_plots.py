@@ -179,6 +179,29 @@ if __name__ == "__main__":
                 else:
                     ys_arr[log_name].append(ys_dict[log_name][x_label])
 
+        # print table in latex syntax
+        print("Latex table for stats:\n\\hline")
+        print(r"\textbf{function} & \textbf{\VOne{}} & "
+              r"\textbf{\VTwo{}} & \textbf{\VThree{}} \\"
+              + "\n\\hline")
+
+        for i in range(len(x_labels)):
+            # skip entries with all zeros
+            non_zero = False
+            for log_name in logs_names:
+                if ys_arr[log_name][i] != 0:
+                    non_zero = True
+                    break
+
+            if not non_zero:
+                continue
+
+            fn_name = x_labels[i].replace("big_int_", "").replace("_", r"\_")
+            print(f"\\texttt{{{fn_name}}}")
+            for log_name in logs_names:
+                print(f" & {ys_arr[log_name][i]}")
+            print("\\\\\n\\hline")
+
         title = f"{title_prefix} for '{data_label}'"
         plot_fname = plot_dir + "/" + in_file.split("/")[-1].split(".")[0] + ".png"
 

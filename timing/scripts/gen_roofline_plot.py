@@ -122,7 +122,7 @@ if __name__ == "__main__":
 
     VERSION_MACROS = { "V1": "\VOne{}", "V2": "\VTwo{}", "V3": "\VThree{}" }
     FN_MACROS = {"str2pnt": "\StrToPnt{}", "pnt2str": "\PntToStr{}" }
-    print("Instruction mix table:\n\\textbf{version} & \\textbf{function} & \\textbf{\\execALU{}} "
+    print("Instruction mix table:\n\hline\\textbf{version} & \\textbf{function} & \\textbf{\\execALU{}} "
           + "& \\textbf{\\execShift{}} & \\textbf{\\execMul{}} & \\textbf{\\execDiv{}} \\\\")
     idx = 0
     for i, logs_dir in enumerate(logs_dirs):
@@ -189,7 +189,7 @@ if __name__ == "__main__":
                 dots_labels.append(label)
 
                 idx += 1
-
+    print("\\hline")
     #
     # Create roofline plot
     #
