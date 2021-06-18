@@ -75,14 +75,14 @@ done
 
 echo -e "\t- Create benchmark plots"
 
-${SCRIPTS_DIR}/gen_stats_plots.py                                              \
-    --title "Stats Comparison for Elligator for V${MIN_VERSION} to V${MAX_VERSION}" \
-    --plot_dir "${PLOTS_SUBDIR}"                                               \
-    --logs_dir "${LOG_SUBDIR}"                                                 \
-    --logs_names "${LOGS_NAMES}"                                               \
-    --pattern "${PATTERN}"                                                     \
-    --bar_plot                                                                 \
-    --log_yaxis
+# ${SCRIPTS_DIR}/gen_stats_plots.py                                              \
+#     --title "Stats Comparison for Elligator for V${MIN_VERSION} to V${MAX_VERSION}" \
+#     --plot_dir "${PLOTS_SUBDIR}"                                               \
+#     --logs_dir "${LOG_SUBDIR}"                                                 \
+#     --logs_names "${LOGS_NAMES}"                                               \
+#     --pattern "${PATTERN}"                                                     \
+#     --bar_plot                                                                 \
+#     --log_yaxis
 
 echo "#####################################################################"
 echo "#     Generate roofline plot for the stats in different versions    #"

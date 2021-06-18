@@ -11,9 +11,8 @@ from ast import literal_eval
 from matplotlib import cycler
 
 # Use nicer colors
-colors = ["#0e4748", "#7fba67", "#b2552c", "#942727", "#1e2740",
-          "#9bdb87", "#407294", "#660066", "#008080", "#daa520", "#8b0000",
-          "#ff7373"]
+colors = ["#0e4748", "#407294", "#b2552c", "#942727", "#1e2740",
+          "#7fba67", "#660066", "#008080", "#daa520", "#8b0000", "#ff7373"]
 plt.rc("axes", facecolor="#E6E6E6", axisbelow=True,
         prop_cycle=cycler('color', colors))
 
