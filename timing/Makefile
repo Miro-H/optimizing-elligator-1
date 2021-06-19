@@ -88,7 +88,7 @@ export LOG_SUBDIRS
 # Add standard optimization flags if no others are specified
 ifneq ($(VERSION), 1)
 	ifeq ($(OPT_FLAGS),)
-		OPT_FLAGS = -Ofast
+		OPT_FLAGS = -O3
 	endif
 endif
 CFLAGS += $(OPT_FLAGS)
