@@ -46,7 +46,7 @@ LABEL_FONT_SIZE = 20
 
 
 def plot(plot_title, plot_fname, log_xaxis, log_yaxis, bar_plot, speedup_plot, logs_dirs, logs_names, pattern):
-    plt.rcParams["figure.figsize"] = (8,14)
+    plt.rcParams["figure.figsize"] = (8,8)
 
     x_label, y_label = "", ""
     is_first_data_set = True

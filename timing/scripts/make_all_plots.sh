@@ -13,6 +13,9 @@ fi
 SETS="${SETS:-$DEFAULT_SETS}"
 REPS="${REPS:-$DEFAULT_REPS}"
 
+DEFAULT_PATTERN=".*"
+PATTERN="${PATTERN:-$DEFAULT_PATTERN}"
+
 # Only plots outside the local directory will be checked in for git
 PLOTS_DIR=${TIMING_BASE_DIR}/plots
 if [[ -z "${PUBLISH}" ]]; then
@@ -34,6 +37,7 @@ if [[ ! -z "${LOGS_DIRS}" ]]; then
         --plot_fname "${PLOTS_DIR}/comparison_bar_log_scale.eps"                \
         --logs_dir "${LOGS_DIRS}"                                               \
         --logs_names "${LOGS_NAMES}"                                            \
+        --pattern "${PATTERN}"                                                  \
         --bar_plot                                                              \
         --log_xaxis
 
