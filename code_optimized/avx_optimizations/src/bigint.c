@@ -888,7 +888,7 @@ BigInt *big_int_mul_single_chunk(BigInt *r, BigInt *a, dbl_chunk_size_t b)
  */
 BigInt *big_int_square(BigInt *r, BigInt *a)
 {
-    ADD_STAT_COLLECTION(BIGINT_TYPE_BIG_INT_SQUARED);
+    ADD_STAT_COLLECTION(BIGINT_TYPE_BIG_INT_SQUARE);
 
     if (a->size == 8)
     {
@@ -990,7 +990,7 @@ BigInt *big_int_square(BigInt *r, BigInt *a)
 
 BigInt *big_int_square_256(BigInt *r, BigInt *a)
 {
-    ADD_STAT_COLLECTION(BIGINT_TYPE_BIG_INT_SQUARED_256);
+    ADD_STAT_COLLECTION(BIGINT_TYPE_BIG_INT_SQUARE_256);
 
     dbl_chunk_size_t a_0, a_1, a_2, a_3, a_4, a_5, a_6, a_7;
     dbl_chunk_size_t r_0, r_15;
@@ -1213,7 +1213,7 @@ BigInt *big_int_square_256(BigInt *r, BigInt *a)
 
 BigInt *big_int_square_224(BigInt *r, BigInt *a)
 {
-    ADD_STAT_COLLECTION(BIGINT_TYPE_BIG_INT_SQUARED_224);
+    ADD_STAT_COLLECTION(BIGINT_TYPE_BIG_INT_SQUARE_224);
 
     dbl_chunk_size_t a_0, a_1, a_2, a_3, a_4, a_5, a_6;
     dbl_chunk_size_t r_0, r_13;
@@ -1405,7 +1405,7 @@ BigInt *big_int_square_224(BigInt *r, BigInt *a)
 
 BigInt *big_int_square_192(BigInt *r, BigInt *a)
 {
-    ADD_STAT_COLLECTION(BIGINT_TYPE_BIG_INT_SQUARED_192);
+    ADD_STAT_COLLECTION(BIGINT_TYPE_BIG_INT_SQUARE_192);
 
     dbl_chunk_size_t a_0, a_1, a_2, a_3, a_4, a_5;
     dbl_chunk_size_t r_0, r_11;
@@ -1564,7 +1564,7 @@ BigInt *big_int_square_192(BigInt *r, BigInt *a)
 
 BigInt *big_int_square_160(BigInt *r, BigInt *a)
 {
-    ADD_STAT_COLLECTION(BIGINT_TYPE_BIG_INT_SQUARED_160);
+    ADD_STAT_COLLECTION(BIGINT_TYPE_BIG_INT_SQUARE_160);
 
     dbl_chunk_size_t a_0, a_1, a_2, a_3, a_4;
     dbl_chunk_size_t r_0, r_9;
@@ -1694,7 +1694,7 @@ BigInt *big_int_square_160(BigInt *r, BigInt *a)
 
 BigInt *big_int_square_128(BigInt *r, BigInt *a)
 {
-    ADD_STAT_COLLECTION(BIGINT_TYPE_BIG_INT_SQUARED_128);
+    ADD_STAT_COLLECTION(BIGINT_TYPE_BIG_INT_SQUARE_128);
 
     dbl_chunk_size_t a_0, a_1, a_2, a_3;
     dbl_chunk_size_t r_0, r_7;
@@ -1797,7 +1797,7 @@ BigInt *big_int_square_128(BigInt *r, BigInt *a)
 
 BigInt *big_int_square_96(BigInt *r, BigInt *a)
 {
-    ADD_STAT_COLLECTION(BIGINT_TYPE_BIG_INT_SQUARED_96);
+    ADD_STAT_COLLECTION(BIGINT_TYPE_BIG_INT_SQUARE_96);
 
     dbl_chunk_size_t a_0, a_1, a_2;
     dbl_chunk_size_t r_0, r_5;
@@ -1875,7 +1875,7 @@ BigInt *big_int_square_96(BigInt *r, BigInt *a)
 
 BigInt *big_int_square_64(BigInt *r, BigInt *a)
 {
-    ADD_STAT_COLLECTION(BIGINT_TYPE_BIG_INT_SQUARED_64);
+    ADD_STAT_COLLECTION(BIGINT_TYPE_BIG_INT_SQUARE_64);
 
     dbl_chunk_size_t a_0, a_1;
     dbl_chunk_size_t r_0, r_3;
@@ -1933,7 +1933,7 @@ BigInt *big_int_square_64(BigInt *r, BigInt *a)
 
 BigInt *big_int_square_32(BigInt *r, BigInt *a)
 {
-    ADD_STAT_COLLECTION(BIGINT_TYPE_BIG_INT_SQUARED_32);
+    ADD_STAT_COLLECTION(BIGINT_TYPE_BIG_INT_SQUARE_32);
 
     dbl_chunk_size_t a_0;
     dbl_chunk_size_t r_0, r_1;
@@ -3199,7 +3199,7 @@ BigInt *big_int_mul_mod(BigInt *r, BigInt *a, BigInt *b, BigInt *q)
  */
 BigInt *big_int_square_mod(BigInt *r, BigInt *a, BigInt *q)
 {
-    ADD_STAT_COLLECTION(BIGINT_TYPE_BIG_INT_SQUARED_MOD);
+    ADD_STAT_COLLECTION(BIGINT_TYPE_BIG_INT_SQUARE_MOD);
 
     BIG_INT_DEFINE_PTR(r_loc);
 

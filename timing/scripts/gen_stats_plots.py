@@ -179,27 +179,43 @@ if __name__ == "__main__":
                 else:
                     ys_arr[log_name].append(ys_dict[log_name][x_label])
 
+        label_grps = {
+            "add/sub": ["big_int_add", "big_int_sub"],
+            "chi": ["big_int_chi", "big_int_curve1174_chi"],
+            "comparisons": ["big_int_compare", "big_int_curve1174_compare_to_q", "big_int_is_odd", "big_int_is_zero"],
+            "div": ["big_int_div_rem"],
+            "inv": ["big_int_inv", "big_int_curve1174_inv"],
+            "memory ops": ["big_int_alloc", "big_int_calloc", "big_int_copy", "big_int_destroy", "big_int_duplicate"],
+            "mod": ["big_int_mod", "big_int_curve1174_mod"],
+            "mul": ["big_int_mul"],
+            "mul4": ["big_int_mul_4"],
+            "mul single chunk": ["big_int_mul_single_chunk"],
+            "other": ["big_int_neg", "big_int_abs", "big_int_sll_small", "big_int_srl_small", "big_int_prune_leading_zeros", "big_int_get_res"],
+            "pow general": ["big_int_pow"],
+            "pow const. exp.": ["big_int_curve1174_pow_q_m1_d2", "big_int_curve1174_pow_q_p1_d4", "big_int_curve1174_pow_q_m2"],
+            "square": ["big_int_square"],
+        }
         # print table in latex syntax
         print("Latex table for stats:\n\\hline")
         print(r"\textbf{function} & \textbf{\VOne{}} & "
               r"\textbf{\VTwo{}} & \textbf{\VThree{}} \\"
               + "\n\\hline")
 
-        for i in range(len(x_labels)):
-            # skip entries with all zeros
-            non_zero = False
+        for grp_name, fns in label_grps.items():
+            sums = []
             for log_name in logs_names:
-                if ys_arr[log_name][i] != 0:
-                    non_zero = True
-                    break
+                s = 0
+                for fn in fns:
+                    s += ys_arr[log_name][x_labels.index(fn)]
+                sums.append(s)
 
-            if not non_zero:
+            # skip entries with all zeros
+            if sum(sums) == 0:
                 continue
 
-            fn_name = x_labels[i].replace("big_int_", "").replace("_", r"\_")
-            print(f"\\texttt{{{fn_name}}}", end="")
-            for log_name in logs_names:
-                print(f" & {ys_arr[log_name][i]}", end="")
+            print(grp_name, end="")
+            for s in sums:
+                print(f" & {s}", end="")
             print(" \\\\\n\\hline")
 
         title = f"{title_prefix} for '{data_label}'"

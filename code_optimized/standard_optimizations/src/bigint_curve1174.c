@@ -850,6 +850,8 @@ int8_t big_int_curve1174_chi(BigInt *t)
  */
 int8_t big_int_curve1174_compare_to_q(BigInt *a)
 {
+    ADD_STAT_COLLECTION(BIGINT_TYPE_BIG_INT_CURVE1174_COMPARE_TO_Q);
+
     // Easy cases where a is clearly larger/smaller
     if (a->size > Q_CHUNKS)
         return 1;
