@@ -196,7 +196,7 @@ if __name__ == "__main__":
     color_idx = 0
 
     # Plot bandwidth bound
-    xs = np.linspace(2**(-10), max_x_val, 1000)
+    xs = np.linspace(2**(-3), max_x_val, 1000)
     ys = [beta * x for x in xs]
     ax.loglog(xs, ys, linewidth=.8, base=2)
     ax.text(xs[-1] * 0.05, ys[-1] * 1.05, BW_LINE_LABEL,
