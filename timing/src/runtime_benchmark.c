@@ -660,6 +660,72 @@ void bench_big_int_mul(void *bench_args, char *bench_name, char *path)
 
 //=== === === === === === === === === === === === === === ===
 
+#if VERSION > 2
+void bench_big_int_mul_general_fn(void *arg)
+{
+    int64_t i = *((int64_t *) arg);
+    big_int_mul_general(RUNTIME_DEREF(big_int_array_1, i),
+        RUNTIME_DEREF(big_int_array_2, i), RUNTIME_DEREF(big_int_array_3, i));
+}
+
+void bench_big_int_mul_general(void *bench_args, char *bench_name, char *path)
+{
+    BenchmarkClosure bench_closure = {
+        .bench_prep_args = bench_args,
+        .bench_prep_fn = bench_big_int_prep,
+        .bench_fn = bench_big_int_mul_general_fn,
+        .bench_cleanup_fn = bench_big_int_cleanup,
+    };
+    benchmark_runner(bench_closure, bench_name, path, SETS, REPS, 0);
+}
+#endif
+
+//=== === === === === === === === === === === === === === ===
+
+#if VERSION > 2
+void bench_big_int_mul_256_fn(void *arg)
+{
+    int64_t i = *((int64_t *) arg);
+    big_int_mul_256(RUNTIME_DEREF(big_int_array_1, i),
+        RUNTIME_DEREF(big_int_array_2, i), RUNTIME_DEREF(big_int_array_3, i));
+}
+
+void bench_big_int_mul_256(void *bench_args, char *bench_name, char *path)
+{
+    BenchmarkClosure bench_closure = {
+        .bench_prep_args = bench_args,
+        .bench_prep_fn = bench_big_int_prep,
+        .bench_fn = bench_big_int_mul_256_fn,
+        .bench_cleanup_fn = bench_big_int_cleanup,
+    };
+    benchmark_runner(bench_closure, bench_name, path, SETS, REPS, 0);
+}
+#endif
+
+//=== === === === === === === === === === === === === === ===
+
+#if VERSION > 2
+void bench_big_int_mul_256_avx_fn(void *arg)
+{
+    int64_t i = *((int64_t *) arg);
+    big_int_mul_256_avx(RUNTIME_DEREF(big_int_array_1, i),
+        RUNTIME_DEREF(big_int_array_2, i), RUNTIME_DEREF(big_int_array_3, i));
+}
+
+void bench_big_int_mul_256_avx(void *bench_args, char *bench_name, char *path)
+{
+    BenchmarkClosure bench_closure = {
+        .bench_prep_args = bench_args,
+        .bench_prep_fn = bench_big_int_prep,
+        .bench_fn = bench_big_int_mul_256_avx_fn,
+        .bench_cleanup_fn = bench_big_int_cleanup,
+    };
+    benchmark_runner(bench_closure, bench_name, path, SETS, REPS, 0);
+}
+#endif
+
+//=== === === === === === === === === === === === === === ===
+
 #if VERSION > 1
 void bench_big_int_mul_single_chunk_fn(void *arg)
 {
@@ -1198,6 +1264,27 @@ void bench_big_int_add_256(void *bench_args, char *bench_name, char *path)
 #endif
 
 //=== === === === === === === === === === === === === === ===
+#if VERSION > 2
+void bench_big_int_add_256_avx_fn(void *arg)
+{
+    int64_t i = *((int64_t *) arg);
+    big_int_add_256_avx(RUNTIME_DEREF(big_int_array_1, i),
+        RUNTIME_DEREF(big_int_array_2, i), RUNTIME_DEREF(big_int_array_3, i));
+}
+
+void bench_big_int_add_256_avx(void *bench_args, char *bench_name, char *path)
+{
+    BenchmarkClosure bench_closure = {
+        .bench_prep_args = bench_args,
+        .bench_prep_fn = bench_big_int_prep,
+        .bench_fn = bench_big_int_add_256_avx_fn,
+        .bench_cleanup_fn = bench_big_int_cleanup,
+    };
+    benchmark_runner(bench_closure, bench_name, path, SETS, REPS, 0);
+}
+#endif
+
+//=== === === === === === === === === === === === === === ===
 
 #if VERSION > 2
 void bench_big_int_add_optimal_bound_fn(void *arg)
@@ -1297,9 +1384,25 @@ int main(int argc, char const *argv[])
 
         #else
 
+        BENCHMARK(bench_type, BENCH_TYPE_MUL_GENERAL,
+            bench_big_int_mul_general((void *)bench_big_int_size_256_args, "mul (general)",
+                LOG_PATH "/runtime_big_int_mul_general.log"));
+
+        BENCHMARK(bench_type, BENCH_TYPE_MUL_256,
+            bench_big_int_mul_256((void *)bench_big_int_size_256_args, "mul (256, no avx)",
+                LOG_PATH "/runtime_big_int_mul_256.log"));
+
+        BENCHMARK(bench_type, BENCH_TYPE_MUL_256_AVX,
+            bench_big_int_mul_256_avx((void *)bench_big_int_size_256_args, "mul (256, avx)",
+                LOG_PATH "/runtime_big_int_mul_256_avx.log"));
+
         BENCHMARK(bench_type, BENCH_TYPE_ADD_256,
         bench_big_int_add_256((void *)bench_big_int_size_256_args,
-            "add (256)", LOG_PATH "/runtime_big_int_add_256.log"));
+            "add (256, no avx)", LOG_PATH "/runtime_big_int_add_256.log"));
+
+        BENCHMARK(bench_type, BENCH_TYPE_ADD_256_AVX,
+        bench_big_int_add_256_avx((void *)bench_big_int_size_256_args,
+            "add (256, avx)", LOG_PATH "/runtime_big_int_add_256_avx.log"));
 
         BENCHMARK(bench_type, BENCH_TYPE_ADD_GENERAL,
         bench_big_int_add_general((void *)bench_big_int_size_256_args,

@@ -184,6 +184,7 @@ BigInt *big_int_chi(BigInt *r, BigInt *t, BigInt *q);
 //New operations
 BigInt *big_int_square(BigInt *r, BigInt *a);
 BigInt *big_int_add_256(BigInt *r, BigInt *a, BigInt *b);
+BigInt *big_int_add_256_avx(BigInt *r, BigInt *a, BigInt *b);
 BigInt *big_int_add_general(BigInt *r, BigInt *a, BigInt *b);
 BigInt *big_int_add_optimal_bound(BigInt *r, BigInt *a, BigInt *b);
 BigInt *big_int_sub_256(BigInt *r, BigInt *a, BigInt *b);
@@ -198,8 +199,9 @@ BigInt *big_int_square_128(BigInt *r, BigInt *a);
 BigInt *big_int_square_96(BigInt *r, BigInt *a);
 BigInt *big_int_square_64(BigInt *r, BigInt *a);
 BigInt *big_int_square_32(BigInt *r, BigInt *a);
-BigInt *big_int_mul_256avx(BigInt *r, BigInt *a, BigInt *b);
+BigInt *big_int_mul_256_avx(BigInt *r, BigInt *a, BigInt *b);
 BigInt *big_int_mul_256(BigInt *r, BigInt *a, BigInt *b);
+BigInt *big_int_mul_general(BigInt *r, BigInt *a, BigInt *b);
 void big_int_mul_4(BigInt *r0, BigInt *r1, BigInt *r2, BigInt *r3,
                    BigInt *a0, BigInt *a1, BigInt *a2, BigInt *a3,
                    BigInt *b0, BigInt *b1, BigInt *b2, BigInt *b3);
