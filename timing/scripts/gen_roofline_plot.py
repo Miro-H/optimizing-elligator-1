@@ -51,6 +51,8 @@ DIV_RE_PATTERN = r"basic_div.*, (\d+)"
 # We assume all our BigInts are 64 bits, so only 4 fit into one 256 bit vector
 OPS_PER_VEC = 4
 
+PRINT_INSTR_MIX = False
+
 if __name__ == "__main__":
     # Read arguments
     parser = argparse.ArgumentParser()
@@ -159,11 +161,15 @@ if __name__ == "__main__":
                 if instr_tot == 0:
                     print(f"\t- NO INSTRUCTIONS")
                 else:
-                    print(f" & {FN_MACROS[mapping_type]} & "
-                          + f"{round(100 * (alu_ops_tot + avx_alu_ops_tot)/instr_tot, 1)}\ & "
-                          + f"{round(100 * shift_ops_tot/instr_tot, 1)} & "
-                          + f"{round(100 * (mul_ops_tot + avx_mul_ops_tot)/instr_tot, 1)} & "
-                          + f"{round(100 * div_ops_tot/instr_tot, 1)} \\\\")
+                    if PRINT_INSTR_MIX:
+                        print(f" & {FN_MACROS[mapping_type]} & "
+                              + f"{round(100 * (alu_ops_tot + avx_alu_ops_tot)/instr_tot, 1)}\ & "
+                              + f"{round(100 * shift_ops_tot/instr_tot, 1)} & "
+                              + f"{round(100 * (mul_ops_tot + avx_mul_ops_tot)/instr_tot, 1)} & "
+                              + f"{round(100 * div_ops_tot/instr_tot, 1)} \\\\")
+                    else:
+                        print(f" & {FN_MACROS[mapping_type]} & "
+                              + f"{instr_tot} \\\\")
 
                 # Instruction mix indep
                 if "string_to_point" in in_file:
