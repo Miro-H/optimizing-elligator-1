@@ -26,19 +26,26 @@ PSUBDIR=local/V${VERSION}/opt_flags
 GEN_SCRIPT=${TIMING_BASE_DIR}/../scripts/gen_types.py
 LATEST_LOG_PATH=${TIMING_BASE_DIR}/logs/latest_log_path.txt
 
+# BENCH_TYPE_CURVE_1174_POW\
+#  BENCH_TYPE_CURVE_1174_CHI\
 BENCH_TYPES=\
-"BENCH_TYPE_CURVE_1174_POW\
- BENCH_TYPE_CURVE_1174_CHI\
- BENCH_TYPE_ELLIGATOR1_STR2PNT\
+"BENCH_TYPE_ELLIGATOR1_STR2PNT\
  BENCH_TYPE_ELLIGATOR1_PNT2STR"
 
 declare -a OPT_FLAGS=(\
+    "-O0 -fno-tree-vectorize" \
+    "-O1 -fno-tree-vectorize" \
+    "-O2 -fno-tree-vectorize" \
+    "-O3 -fno-tree-vectorize" \
+    # "-O3 -m64 -march=haswell" \
+    # "-O3 -m64 -march=native" \
+    "-Ofast -fno-tree-vectorize" \
+    "-Ofast -m64 -march=haswell -fno-tree-vectorize" \
+    "-Ofast -m64 -march=native -fno-tree-vectorize"\
     "-O0" \
     "-O1" \
     "-O2" \
     "-O3" \
-    "-O3 -m64 -march=haswell" \
-    "-O3 -m64 -march=native" \
     "-Ofast" \
     "-Ofast -m64 -march=haswell" \
     "-Ofast -m64 -march=native")

@@ -545,7 +545,7 @@ BigInt *big_int_add_256(BigInt *r, BigInt *a, BigInt *b)
  * \assumption a, b positive and has only 256 bits
  * \assumption overflow is not cleaned up
  */
-BigInt *big_int_add_upper_bound(BigInt *r, BigInt *a, BigInt *b)
+BigInt *big_int_add_optimal_bound(BigInt *r, BigInt *a, BigInt *b)
 {
     dbl_chunk_size_t a_c_0 = a->chunks[0];
     dbl_chunk_size_t a_c_1 = a->chunks[1];
@@ -721,7 +721,7 @@ BigInt *big_int_fast_sub(BigInt *r, BigInt *a, BigInt *b)
  * \assumption a->sign == b->sign
  * \assumption overflow is not cleaned up
  */
-BigInt *big_int_sub_upper_bound(BigInt *r, BigInt *a, BigInt *b)
+BigInt *big_int_sub_optimal_bound(BigInt *r, BigInt *a, BigInt *b)
 {
 
     dbl_chunk_size_t a_c_0 = a->chunks[0];
@@ -954,7 +954,7 @@ BigInt *big_int_mul_single_chunk(BigInt *r, BigInt *a, dbl_chunk_size_t b)
  */
 BigInt *big_int_square(BigInt *r, BigInt *a)
 {
-    ADD_STAT_COLLECTION(BIGINT_TYPE_BIG_INT_SQUARED);
+    ADD_STAT_COLLECTION(BIGINT_TYPE_BIG_INT_SQUARE);
 
     int64_t i, j;
     unsigned __int128 carry;
@@ -1597,7 +1597,7 @@ BigInt *big_int_mul_mod(BigInt *r, BigInt *a, BigInt *b, BigInt *q)
  */
 BigInt *big_int_square_mod(BigInt *r, BigInt *a, BigInt *q)
 {
-    ADD_STAT_COLLECTION(BIGINT_TYPE_BIG_INT_SQUARED_MOD);
+    ADD_STAT_COLLECTION(BIGINT_TYPE_BIG_INT_SQUARE_MOD);
 
     BIG_INT_DEFINE_PTR(r_loc);
 

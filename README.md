@@ -7,6 +7,9 @@ This project is developed by the following people:
 - Freya Murphy
 - Miro Haller
 
+## Report
+The final report is [here](./36_report.pdf).
+
 ## Development
 The [development readme](./documentation/DEVELOPMENT.md) provides information on how to contribute to this project.
 

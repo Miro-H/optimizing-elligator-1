@@ -28,35 +28,40 @@ PDIR=${TIMING_BASE_DIR}/plots/local/${COMP_NAME}
 GEN_SCRIPT=${TIMING_BASE_DIR}/../scripts/gen_types.py
 LATEST_LOG_PATH=${TIMING_BASE_DIR}/logs/latest_log_path.txt
 
-BENCH_TYPES=\
-"BENCH_TYPE_CURVE_1174_ADD_MOD\
- BENCH_TYPE_CURVE_1174_SUB_MOD\
- BENCH_TYPE_CURVE_1174_MUL_MOD\
+# BENCH_TYPE_CURVE_1174_ADD_MOD\
+# BENCH_TYPE_CURVE_1174_SUB_MOD\
+# BENCH_TYPE_CURVE_1174_MUL_MOD\
+# BENCH_TYPE_CURVE_1174_MOD_512\
+# BENCH_TYPE_CURVE_1174_DIV_MOD\
+# BENCH_TYPE_CURVE_1174_POW_SMALL\
+# BENCH_TYPE_CURVE_1174_POW_Q_M1_D2\
+# BENCH_TYPE_ADD_MOD_CURVE\
+# BENCH_TYPE_SUB_MOD_CURVE\
+# BENCH_TYPE_MUL_MOD_CURVE\
+# BENCH_TYPE_DIV_MOD_CURVE\
+# BENCH_TYPE_MOD_512_CURVE\
+# BENCH_TYPE_POW_SMALL_CURVE\
+# BENCH_TYPE_POW_Q_M1_D2_CURVE\
+BENCH_TYPES="\
  BENCH_TYPE_CURVE_1174_SQUARE_MOD\
  BENCH_TYPE_CURVE_1174_MOD\
- BENCH_TYPE_CURVE_1174_MOD_512\
- BENCH_TYPE_CURVE_1174_DIV_MOD\
  BENCH_TYPE_CURVE_1174_INV_FERMAT\
  BENCH_TYPE_CURVE_1174_COMPARE\
  BENCH_TYPE_CURVE_1174_POW\
- BENCH_TYPE_CURVE_1174_POW_SMALL\
- BENCH_TYPE_CURVE_1174_POW_Q_M1_D2\
- BENCH_TYPE_CURVE_1174_POW_Q_P1_D4\
  BENCH_TYPE_CURVE_1174_CHI\
- BENCH_TYPE_ADD_MOD_CURVE\
- BENCH_TYPE_SUB_MOD_CURVE\
- BENCH_TYPE_MUL_MOD_CURVE\
+ BENCH_TYPE_CURVE_1174_POW_Q_P1_D4\
  BENCH_TYPE_MUL_SQUARE_MOD_CURVE\
- BENCH_TYPE_DIV_MOD_CURVE\
  BENCH_TYPE_MOD_CURVE\
- BENCH_TYPE_MOD_512_CURVE\
  BENCH_TYPE_INV\
- BENCH_TYPE_POW_CURVE\
- BENCH_TYPE_POW_SMALL_CURVE\
- BENCH_TYPE_POW_Q_M1_D2_CURVE\
- BENCH_TYPE_POW_Q_P1_D4_CURVE\
  BENCH_TYPE_COMPARE_TO_Q\
- BENCH_TYPE_CHI"
+ BENCH_TYPE_POW_CURVE\
+ BENCH_TYPE_CHI\
+ BENCH_TYPE_POW_Q_P1_D4_CURVE"
+
+SHARED_BENCH_TYPES="\
+    BENCH_TYPE_ADD\
+    BENCH_TYPE_SUB\
+    BENCH_TYPE_MUL"
 
 echo "#####################################################################"
 echo "#      Generate comparison plots for V${VERSION} Curve1174 vs V1 BigInt      #"
@@ -74,6 +79,17 @@ BENCH_TYPES_INT=$(\
         "BIGINT_TYPE_" \
     --lookup_names ${BENCH_TYPES})
 
+SHARED_BENCH_TYPES_INT=$(\
+    ${GEN_SCRIPT} \
+    --src_files \
+        ${SDIR}/runtime_benchmark_curve1174.c \
+        ${SDIR}/runtime_benchmark.c \
+    --dest_file \
+        ${IDIR}/benchmark_types.h \
+    --strip_prefix \
+        "BIGINT_TYPE_" \
+    --lookup_names ${SHARED_BENCH_TYPES})
+
 TIMESTAMP_DIR="$(date "+%Y-%m-%d_%H-%M-%S")"
 LOG_SUBDIR=${LDIR}/${TIMESTAMP_DIR}
 PLOTS_SUBDIR=${PDIR}/${TIMESTAMP_DIR}
@@ -87,7 +103,7 @@ COMP_LOG=${LOG_SUBDIR}/${COMP_NAME}.log
 touch ${COMP_LOG}
 
 echo -e "\t\t- run-runtime-benchmark"
-BENCHMARKS="${BENCH_TYPES_INT}" \
+BENCHMARKS="${BENCH_TYPES_INT} ${SHARED_BENCH_TYPES_INT}" \
     VERSION=1 \
     SETS=${SETS} \
     REPS=${REPS} \
@@ -108,6 +124,18 @@ BENCHMARKS="${BENCH_TYPES_INT}" \
 # Get log path
 CURVE1174_LOG_DIR=$(cat "${LATEST_LOG_PATH}")
 
+# Run shared benchmarks separately and copy them to the same folder
+BENCHMARKS="${SHARED_BENCH_TYPES_INT}" \
+    VERSION=${VERSION} \
+    SETS=${SETS} \
+    REPS=${REPS} \
+    make \
+    run-runtime-benchmark >> ${COMP_LOG}
+
+CURVE1174_SHARED_LOG_DIR=$(cat "${LATEST_LOG_PATH}")
+
+cp ${CURVE1174_SHARED_LOG_DIR}/* ${CURVE1174_LOG_DIR}/
+
 echo -e "\t- Create benchmark plots"
 
 LOG_SUBDIR="${BIGINT_LOG_DIR};${CURVE1174_LOG_DIR}"
@@ -116,15 +144,15 @@ LOGS_NAMES="bigint;curve1174"
 ${SCRIPTS_DIR}/gen_runtime_plots.py                                            \
     --title "Runtime Comparison for V${VERSION} Curve1174 vs V1 BigInt \
     (${SETS} sets, ${REPS} reps)"                                              \
-    --plot_fname "${PLOTS_SUBDIR}/comparison_bar_log_scale.png"                \
+    --plot_fname "${PLOTS_SUBDIR}/comparison_bar_log_scale.eps"                \
     --logs_dir "${LOG_SUBDIR}"                                                 \
     --logs_names "${LOGS_NAMES}"                                               \
     --bar_plot                                                                 \
-    --log_yaxis
+    --log_xaxis
 
 ${SCRIPTS_DIR}/gen_runtime_plots.py                                            \
     --title "Speedup Comparison for V${VERSION} Curve1174 vs V1 BigInt (${SETS} sets, ${REPS} reps)"                                              \
-    --plot_fname "${PLOTS_SUBDIR}/speedup_comparison_bar_log_scale.png"        \
+    --plot_fname "${PLOTS_SUBDIR}/speedup_comparison_bar_log_scale.eps"        \
     --logs_dir "${LOG_SUBDIR}"                                                 \
     --logs_names "${LOGS_NAMES}"                                               \
     --speedup_plot

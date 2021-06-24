@@ -432,6 +432,7 @@ BigInt *big_int_add_general(BigInt *r, BigInt *a, BigInt *b)
     return r;
 }
 
+
 /**
  * r = a + b for 256-bit BigInts
  *
@@ -441,6 +442,111 @@ BigInt *big_int_add_general(BigInt *r, BigInt *a, BigInt *b)
  * \assumption no overflow for a + b, i.e., #chunks <= BIGINT_FIXED_SIZE_INTERNAL
  */
 BigInt *big_int_add_256(BigInt *r, BigInt *a, BigInt *b)
+{
+    dbl_chunk_size_t r_c_0, r_c_1, r_c_2, r_c_3, r_c_4, r_c_5, r_c_6, r_c_7;
+
+    dbl_chunk_size_t a_c_0 = a->chunks[0];
+    dbl_chunk_size_t a_c_1 = a->chunks[1];
+    dbl_chunk_size_t a_c_2 = a->chunks[2];
+    dbl_chunk_size_t a_c_3 = a->chunks[3];
+    dbl_chunk_size_t a_c_4 = a->chunks[4];
+    dbl_chunk_size_t a_c_5 = a->chunks[5];
+    dbl_chunk_size_t a_c_6 = a->chunks[6];
+    dbl_chunk_size_t a_c_7 = a->chunks[7];
+
+    dbl_chunk_size_t b_c_0 = b->chunks[0];
+    dbl_chunk_size_t b_c_1 = b->chunks[1];
+    dbl_chunk_size_t b_c_2 = b->chunks[2];
+    dbl_chunk_size_t b_c_3 = b->chunks[3];
+    dbl_chunk_size_t b_c_4 = b->chunks[4];
+    dbl_chunk_size_t b_c_5 = b->chunks[5];
+    dbl_chunk_size_t b_c_6 = b->chunks[6];
+    dbl_chunk_size_t b_c_7 = b->chunks[7];
+
+    r_c_0 = a_c_0 + b_c_0;
+    ADD_STAT_COLLECTION(BASIC_ADD_CHUNK)
+
+    r_c_1 = a_c_1 + b_c_1 + (r_c_0 >> BIGINT_CHUNK_SHIFT);
+    ADD_STAT_COLLECTION(BASIC_ADD_CHUNK)
+    ADD_STAT_COLLECTION(BASIC_ADD_CHUNK)
+    ADD_STAT_COLLECTION(BASIC_SHIFT)
+
+    r_c_2 = a_c_2 + b_c_2 + (r_c_1 >> BIGINT_CHUNK_SHIFT);
+    ADD_STAT_COLLECTION(BASIC_ADD_CHUNK)
+    ADD_STAT_COLLECTION(BASIC_ADD_CHUNK)
+    ADD_STAT_COLLECTION(BASIC_SHIFT)
+
+    r_c_3 = a_c_3 + b_c_3 + (r_c_2 >> BIGINT_CHUNK_SHIFT);
+    ADD_STAT_COLLECTION(BASIC_ADD_CHUNK)
+    ADD_STAT_COLLECTION(BASIC_ADD_CHUNK)
+    ADD_STAT_COLLECTION(BASIC_SHIFT)
+
+    r_c_4 = a_c_4 + b_c_4 + (r_c_3 >> BIGINT_CHUNK_SHIFT);
+    ADD_STAT_COLLECTION(BASIC_ADD_CHUNK)
+    ADD_STAT_COLLECTION(BASIC_ADD_CHUNK)
+    ADD_STAT_COLLECTION(BASIC_SHIFT)
+
+    r_c_5 = a_c_5 + b_c_5 + (r_c_4 >> BIGINT_CHUNK_SHIFT);
+    ADD_STAT_COLLECTION(BASIC_ADD_CHUNK)
+    ADD_STAT_COLLECTION(BASIC_ADD_CHUNK)
+    ADD_STAT_COLLECTION(BASIC_SHIFT)
+
+    r_c_6 = a_c_6 + b_c_6 + (r_c_5 >> BIGINT_CHUNK_SHIFT);
+    ADD_STAT_COLLECTION(BASIC_ADD_CHUNK)
+    ADD_STAT_COLLECTION(BASIC_ADD_CHUNK)
+    ADD_STAT_COLLECTION(BASIC_SHIFT)
+
+    r_c_7 = a_c_7 + b_c_7 + (r_c_6 >> BIGINT_CHUNK_SHIFT);
+    ADD_STAT_COLLECTION(BASIC_ADD_CHUNK)
+    ADD_STAT_COLLECTION(BASIC_ADD_CHUNK)
+    ADD_STAT_COLLECTION(BASIC_SHIFT)
+
+    r->chunks[0] = r_c_0 & BIGINT_CHUNK_MASK;
+    ADD_STAT_COLLECTION(BASIC_BITWISE)
+
+    r->chunks[1] = r_c_1 & BIGINT_CHUNK_MASK;
+    ADD_STAT_COLLECTION(BASIC_BITWISE)
+
+    r->chunks[2] = r_c_2 & BIGINT_CHUNK_MASK;
+    ADD_STAT_COLLECTION(BASIC_BITWISE)
+
+    r->chunks[3] = r_c_3 & BIGINT_CHUNK_MASK;
+    ADD_STAT_COLLECTION(BASIC_BITWISE)
+
+    r->chunks[4] = r_c_4 & BIGINT_CHUNK_MASK;
+    ADD_STAT_COLLECTION(BASIC_BITWISE)
+
+    r->chunks[5] = r_c_5 & BIGINT_CHUNK_MASK;
+    ADD_STAT_COLLECTION(BASIC_BITWISE)
+
+    r->chunks[6] = r_c_6 & BIGINT_CHUNK_MASK;
+    ADD_STAT_COLLECTION(BASIC_BITWISE)
+
+    r->chunks[7] = r_c_7 & BIGINT_CHUNK_MASK;
+    ADD_STAT_COLLECTION(BASIC_BITWISE)
+
+    ADD_STAT_COLLECTION(BASIC_BITWISE)
+    if (r_c_7 >> BIGINT_CHUNK_SHIFT) {
+        r->chunks[8] = 1;
+        r->size = 9;
+    }
+    else {
+        r->size = 8;
+    }
+
+    r->sign = a->sign;
+    return r;
+}
+
+/**
+ * r = a + b for 256-bit BigInts
+ *
+ * \assumption r, a, b != NULL
+ * \assumption a, b are 256-bit (i.e., 8 chunks) BigInts
+ * \assumption a->sign == b->sign
+ * \assumption no overflow for a + b, i.e., #chunks <= BIGINT_FIXED_SIZE_INTERNAL
+ */
+BigInt *big_int_add_256_avx(BigInt *r, BigInt *a, BigInt *b)
 {
     __m256i a_0_3 = _mm256_loadu_si256((__m256i *)&(a->chunks[0]));
     __m256i a_1_4 = _mm256_loadu_si256((__m256i *)&(a->chunks[1]));
@@ -566,7 +672,7 @@ BigInt *big_int_add_256(BigInt *r, BigInt *a, BigInt *b)
  * \assumption a, b positive and has only 256 bits
  * \assumption overflow is not cleaned up
  */
-BigInt *big_int_add_upper_bound(BigInt *r, BigInt *a, BigInt *b)
+BigInt *big_int_add_optimal_bound(BigInt *r, BigInt *a, BigInt *b)
 {
     __m256i a_lo = _mm256_loadu_si256((__m256i *)&(a->chunks));
     __m256i a_hi = _mm256_loadu_si256((__m256i *)&(a->chunks[8]));
@@ -705,7 +811,7 @@ BigInt *big_int_fast_sub(BigInt *r, BigInt *a, BigInt *b)
  * \assumption a->sign == b->sign
  * \assumption overflow is not cleaned up
  */
-BigInt *big_int_sub_upper_bound(BigInt *r, BigInt *a, BigInt *b)
+BigInt *big_int_sub_optimal_bound(BigInt *r, BigInt *a, BigInt *b)
 {
 
     __m256i a_lo = _mm256_loadu_si256((__m256i *)&(a->chunks));
@@ -888,7 +994,7 @@ BigInt *big_int_mul_single_chunk(BigInt *r, BigInt *a, dbl_chunk_size_t b)
  */
 BigInt *big_int_square(BigInt *r, BigInt *a)
 {
-    ADD_STAT_COLLECTION(BIGINT_TYPE_BIG_INT_SQUARED);
+    ADD_STAT_COLLECTION(BIGINT_TYPE_BIG_INT_SQUARE);
 
     if (a->size == 8)
     {
@@ -990,7 +1096,7 @@ BigInt *big_int_square(BigInt *r, BigInt *a)
 
 BigInt *big_int_square_256(BigInt *r, BigInt *a)
 {
-    ADD_STAT_COLLECTION(BIGINT_TYPE_BIG_INT_SQUARED_256);
+    ADD_STAT_COLLECTION(BIGINT_TYPE_BIG_INT_SQUARE_256);
 
     dbl_chunk_size_t a_0, a_1, a_2, a_3, a_4, a_5, a_6, a_7;
     dbl_chunk_size_t r_0, r_15;
@@ -1213,7 +1319,7 @@ BigInt *big_int_square_256(BigInt *r, BigInt *a)
 
 BigInt *big_int_square_224(BigInt *r, BigInt *a)
 {
-    ADD_STAT_COLLECTION(BIGINT_TYPE_BIG_INT_SQUARED_224);
+    ADD_STAT_COLLECTION(BIGINT_TYPE_BIG_INT_SQUARE_224);
 
     dbl_chunk_size_t a_0, a_1, a_2, a_3, a_4, a_5, a_6;
     dbl_chunk_size_t r_0, r_13;
@@ -1405,7 +1511,7 @@ BigInt *big_int_square_224(BigInt *r, BigInt *a)
 
 BigInt *big_int_square_192(BigInt *r, BigInt *a)
 {
-    ADD_STAT_COLLECTION(BIGINT_TYPE_BIG_INT_SQUARED_192);
+    ADD_STAT_COLLECTION(BIGINT_TYPE_BIG_INT_SQUARE_192);
 
     dbl_chunk_size_t a_0, a_1, a_2, a_3, a_4, a_5;
     dbl_chunk_size_t r_0, r_11;
@@ -1564,7 +1670,7 @@ BigInt *big_int_square_192(BigInt *r, BigInt *a)
 
 BigInt *big_int_square_160(BigInt *r, BigInt *a)
 {
-    ADD_STAT_COLLECTION(BIGINT_TYPE_BIG_INT_SQUARED_160);
+    ADD_STAT_COLLECTION(BIGINT_TYPE_BIG_INT_SQUARE_160);
 
     dbl_chunk_size_t a_0, a_1, a_2, a_3, a_4;
     dbl_chunk_size_t r_0, r_9;
@@ -1694,7 +1800,7 @@ BigInt *big_int_square_160(BigInt *r, BigInt *a)
 
 BigInt *big_int_square_128(BigInt *r, BigInt *a)
 {
-    ADD_STAT_COLLECTION(BIGINT_TYPE_BIG_INT_SQUARED_128);
+    ADD_STAT_COLLECTION(BIGINT_TYPE_BIG_INT_SQUARE_128);
 
     dbl_chunk_size_t a_0, a_1, a_2, a_3;
     dbl_chunk_size_t r_0, r_7;
@@ -1797,7 +1903,7 @@ BigInt *big_int_square_128(BigInt *r, BigInt *a)
 
 BigInt *big_int_square_96(BigInt *r, BigInt *a)
 {
-    ADD_STAT_COLLECTION(BIGINT_TYPE_BIG_INT_SQUARED_96);
+    ADD_STAT_COLLECTION(BIGINT_TYPE_BIG_INT_SQUARE_96);
 
     dbl_chunk_size_t a_0, a_1, a_2;
     dbl_chunk_size_t r_0, r_5;
@@ -1875,7 +1981,7 @@ BigInt *big_int_square_96(BigInt *r, BigInt *a)
 
 BigInt *big_int_square_64(BigInt *r, BigInt *a)
 {
-    ADD_STAT_COLLECTION(BIGINT_TYPE_BIG_INT_SQUARED_64);
+    ADD_STAT_COLLECTION(BIGINT_TYPE_BIG_INT_SQUARE_64);
 
     dbl_chunk_size_t a_0, a_1;
     dbl_chunk_size_t r_0, r_3;
@@ -1933,7 +2039,7 @@ BigInt *big_int_square_64(BigInt *r, BigInt *a)
 
 BigInt *big_int_square_32(BigInt *r, BigInt *a)
 {
-    ADD_STAT_COLLECTION(BIGINT_TYPE_BIG_INT_SQUARED_32);
+    ADD_STAT_COLLECTION(BIGINT_TYPE_BIG_INT_SQUARE_32);
 
     dbl_chunk_size_t a_0;
     dbl_chunk_size_t r_0, r_1;
@@ -2136,6 +2242,21 @@ BigInt *big_int_mul(BigInt *r, BigInt *a, BigInt *b)
     {
         return big_int_mul_256(r, a, b);
     }
+    else
+    {
+        return big_int_mul_general(r, a, b);
+    }
+}
+
+/**
+ * \brief Calculate r = a * b
+ *
+ * \assumption r, a, b != NULL
+ * \assumption a->size + b->size <= BIGINT_FIXED_SIZE_INTERNAL
+ * \assumption a != b, i.e., no aliasing
+ */
+BigInt *big_int_mul_general(BigInt *r, BigInt *a, BigInt *b)
+{
     ADD_STAT_COLLECTION(BASIC_BITWISE)
     int64_t i, j;
     dbl_chunk_size_t carry;
@@ -2452,7 +2573,7 @@ BigInt *big_int_mul_256(BigInt *r, BigInt *a, BigInt *b)
     return r;
 }
 
-BigInt *big_int_mul_256avx(BigInt *r, BigInt *a, BigInt *b)
+BigInt *big_int_mul_256_avx(BigInt *r, BigInt *a, BigInt *b)
 {
     ADD_STAT_COLLECTION(BIGINT_TYPE_BIG_INT_MUL_256);
     __m256i a_0, a_1, a_2, a_3, a_4, a_5, a_6, a_7;
@@ -3199,7 +3320,7 @@ BigInt *big_int_mul_mod(BigInt *r, BigInt *a, BigInt *b, BigInt *q)
  */
 BigInt *big_int_square_mod(BigInt *r, BigInt *a, BigInt *q)
 {
-    ADD_STAT_COLLECTION(BIGINT_TYPE_BIG_INT_SQUARED_MOD);
+    ADD_STAT_COLLECTION(BIGINT_TYPE_BIG_INT_SQUARE_MOD);
 
     BIG_INT_DEFINE_PTR(r_loc);
 

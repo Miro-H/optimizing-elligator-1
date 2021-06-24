@@ -279,7 +279,7 @@ SETS=10 REPS=10000 ./scripts/make_curve1174_vs_bigint_comp.sh
 
 Plot to show benefit of using AVX for adds:
 ```
-$ ../scripts/gen_types.py --src_file src/runtime_benchmark_curve1174.c  src/runtime_benchmark.c --dest_file include/benchmark_types.h --lookup_names BENCH_TYPE_ADD_256 BENCH_TYPE_ADD_GENERAL BENCH_TYPE_ADD_UPPER_BOUND
+$ ../scripts/gen_types.py --src_file src/runtime_benchmark_curve1174.c  src/runtime_benchmark.c --dest_file include/benchmark_types.h --lookup_names BENCH_TYPE_ADD_256 BENCH_TYPE_ADD_GENERAL BENCH_TYPE_ADD_OPTIMAL_BOUND
 2 3 6
 
 $ SETS=100 REPS=100000 BENCHMARKS="2 3 6" VERSION=3 make plot-runtime-benchmark
@@ -318,3 +318,22 @@ Laptop comparison:
 
         ./scripts/gen_runtime_plots.py --title "Laptop Speedup Comparison for Elligator pnt2str (10 sets, 10000 reps)" --plot_fname ./plots/presentation/laptop_speedup_comparison_elligator_pnt2str.png --logs_dir "logs/V1_to_V3/pnt2str/V1;logs/V1_to_V3/pnt2str/V2;logs/V1_to_V3/pnt2str/V3"  --logs_names "V1;V2;V3" --speedup_plot
         ```
+
+
+# Report
+## Command to create runtime comparison plots
+A selection of values:
+```
+PATTERN="(add$|sub$|add mod \(curve\)|sub mod \(curve\)|inv|mod \(curve\)|mul$|mul mod \(curve\)|pow \(curve\))" LOGS_DIRS="/Users/MiroETH/Documents/ETH/Msc/Semester_4/Advanced_Systems_Lab_Pueschel_263-0007-00/Project/team36/timing/logs/V3/runtime/2021-06-18_19-45-49;/Users/MiroETH/Documents/ETH/Msc/Semester_4/Advanced_Systems_Lab_Pueschel_263-0007-00/Project/team36/timing/logs/gmp/runtime/2021-06-18_19-45-49" LOGS_NAMES="V3;gmp" PUBLISH= \
+        COLLECT_STATS= SETS=1000 REPS=1000 \
+        OUT_SUB_PATH=comparison/runtime/2021-06-18_19-45-49 \
+        scripts/make_all_plots.sh
+```
+
+All of them:
+```
+LOGS_DIRS="/Users/MiroETH/Documents/ETH/Msc/Semester_4/Advanced_Systems_Lab_Pueschel_263-0007-00/Project/team36/timing/logs/V3/runtime/2021-06-18_19-45-49;/Users/MiroETH/Documents/ETH/Msc/Semester_4/Advanced_Systems_Lab_Pueschel_263-0007-00/Project/team36/timing/logs/gmp/runtime/2021-06-18_19-45-49" LOGS_NAMES="V3;gmp" PUBLISH= \
+        COLLECT_STATS= SETS=1000 REPS=1000 \
+        OUT_SUB_PATH=comparison/runtime/2021-06-18_19-45-49 \
+        scripts/make_all_plots.sh
+```

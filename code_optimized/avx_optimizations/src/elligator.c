@@ -49,7 +49,7 @@ void init_curve1174(Curve *curve)
         "771F18AED833220B34B0FDADEFE83B1C247BCCD1D7983A9438B412D3C3700BA");
 
     // r = c + 1/c
-    big_int_create_from_hex(&(curve->r), 
+    big_int_create_from_hex(&(curve->r),
         "6006FBDA7649C433816B286006FBDA7649C433816B286006FBDA7649C43383");
 
     // r^2 - 2
@@ -96,7 +96,7 @@ CurvePoint *elligator_1_string_to_point(CurvePoint *r, BigInt *t, Curve curve)
 
     big_int_sub(tmp_0, big_int_one, t);
     big_int_add(tmp_1, big_int_one, t);
-    big_int_div_mod(u, tmp_0, tmp_1, &(curve.q)); // u = (1 − t) / (1 + t)
+    big_int_curve1174_div_mod(u, tmp_0, tmp_1); // u = (1 − t) / (1 + t)
 
     big_int_curve1174_square_mod(u_2, u);
     u_3 = tmp_3;
@@ -110,17 +110,14 @@ CurvePoint *elligator_1_string_to_point(CurvePoint *r, BigInt *t, Curve curve)
     big_int_add(v, u_5, u); // u^5 + u
     big_int_add(v, v, tmp_0); // v = u^5 + (r^2 − 2)*u^3 + u
 
-    // Preserve value for later
-    big_int_copy(tmp_0, v);
-
     chiv = big_int_curve1174_chi(v);
 
     X = u;
     X->sign = X->sign ^ chiv; ADD_STAT_COLLECTION(BASIC_BITWISE) // X = χ(v)u
 
-    tmp_0->sign = tmp_0->sign ^ chiv; ADD_STAT_COLLECTION(BASIC_BITWISE) // χ(v)v
+    v->sign = v->sign ^ chiv; ADD_STAT_COLLECTION(BASIC_BITWISE) // χ(v)v
 
-    big_int_curve1174_pow_q_p1_d4(tmp_3, tmp_0); // (χ(v)v)^((q + 1) / 4)
+    big_int_curve1174_pow_q_p1_d4(tmp_3, v); // (χ(v)v)^((q + 1) / 4)
     tmp_3->sign ^= chiv; ADD_STAT_COLLECTION(BASIC_BITWISE) // (χ(v)v)^((q + 1) / 4)χ(v)
 
     big_int_add(tmp_2, u_2, &(curve.c_squared_inverse)); // u^2 + 1 / c^2
