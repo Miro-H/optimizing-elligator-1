@@ -1,7 +1,22 @@
 /*
  * This file is part of the ASL project "Censorship-avoiding high-speed EC
  * (Elligator with Curve1174)"
- * (https://gitlab.inf.ethz.ch/COURSE-ASL/asl21/team36).
+ * (https://github.com/Miro-H/optimizing-elligator-1).
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ *
+ * Contact: miro.haller@alumni.ethz.ch
  *
  * Short description of this file:
  * This file implements the Elligator 1 mapping for Curve 1174 and its inverse
@@ -82,7 +97,7 @@ void gmp_init_curve1174(GMP_Curve *curve)
     mpz_set_si(gmp_two, 2);
 
     // q = 2^251 - 9
-    mpz_set_str(curve->q, 
+    mpz_set_str(curve->q,
         "7FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF7", 16);
 
     mpz_set_si(curve->d, -1174);
@@ -203,7 +218,7 @@ GMP_CurvePoint *gmp_elligator_1_string_to_point(GMP_CurvePoint *r, mpz_t t, GMP_
 
         mpz_chi(CHIV, v, curve.q);
 
-        mpz_mul(X, CHIV, u); 
+        mpz_mul(X, CHIV, u);
         mpz_mod(X, X, curve.q);
 
         mpz_mul(Y0, CHIV, v);
@@ -325,13 +340,13 @@ void gmp_elligator_1_point_to_string(mpz_t t, GMP_CurvePoint p, GMP_Curve curve)
 
     mpz_add_ui(eta1, p.y, 1);
     mpz_mul_ui(eta1, eta1, 2);
-    mpz_mod(eta1, eta1, curve.q); 
+    mpz_mod(eta1, eta1, curve.q);
     mpz_invert(inverse, eta1, curve.q);
     mpz_mul(eta0, eta0, inverse);
     mpz_mod(eta, eta0, curve.q);
     mpz_set(eta0, eta); // η = (y-1)/(2(y+1))
 
-    mpz_mul(eta_r, eta, curve.r); 
+    mpz_mul(eta_r, eta, curve.r);
     mpz_mod(eta_r, eta_r, curve.q);
     mpz_add_ui(eta_r, eta_r, 1);
     mpz_add_ui(q_exp, curve.q, 1);
@@ -372,7 +387,7 @@ void gmp_elligator_1_point_to_string(mpz_t t, GMP_CurvePoint p, GMP_Curve curve)
     mpz_mod(t, t, curve.q); // t = (1 − u)/(1 + u)
 
     mpz_sub_ui(q_half, curve.q, 1);
-    //q_half = big_int_div(q_half, q_half, big_int_two); 
+    //q_half = big_int_div(q_half, q_half, big_int_two);
     mpz_fdiv_q_ui(q_half, q_half, 2); // q_half = (q - 1)/2
 
     if (mpz_cmp(t, q_half) == 1) {

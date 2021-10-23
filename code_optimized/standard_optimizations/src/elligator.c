@@ -1,7 +1,22 @@
 /*
  * This file is part of the ASL project "Censorship-avoiding high-speed EC
  * (Elligator with Curve1174)"
- * (https://gitlab.inf.ethz.ch/COURSE-ASL/asl21/team36).
+ * (https://github.com/Miro-H/optimizing-elligator-1).
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ *
+ * Contact: miro.haller@alumni.ethz.ch
  *
  * Short description of this file:
  * This file implements the Elligator 1 mapping for Curve 1174 and its inverse.
@@ -113,7 +128,7 @@ CurvePoint *elligator_1_string_to_point(CurvePoint *r, BigInt *t, Curve curve)
     chiv = big_int_curve1174_chi(v);
 
     X = u;
-    X->sign = X->sign ^ chiv; ADD_STAT_COLLECTION(BASIC_BITWISE) // X = χ(v)u 
+    X->sign = X->sign ^ chiv; ADD_STAT_COLLECTION(BASIC_BITWISE) // X = χ(v)u
 
     v->sign = v->sign ^ chiv; ADD_STAT_COLLECTION(BASIC_BITWISE) // χ(v)v
 

@@ -1,7 +1,7 @@
 /*
  * This file is part of the ASL project "Censorship-avoiding high-speed EC
  * (Elligator with Curve1174)"
- * (https://gitlab.inf.ethz.ch/COURSE-ASL/asl21/team36).
+ * (https://github.com/Miro-H/optimizing-elligator-1).
  *
  * Short description of this file:
  * Debug header file defining useful macros for debugging.
