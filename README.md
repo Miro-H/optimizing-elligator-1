@@ -7,8 +7,8 @@ As this course solely focussed on optimization techniques, we did not consider p
 
 ## Team Members
 This project is developed by the following people:
-- Christopher Vogelsanger
-- Freya Murphy
+- [Christopher Vogelsanger](https://github.com/ChristopherVogelsanger)
+- [Freya Murphy](https://github.com/freyamurphy)
 - [Miro Haller](https://www.mirohaller.com)
 
 ## Optimizations
